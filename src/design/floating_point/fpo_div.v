@@ -1,0 +1,135 @@
+module fpo_div (
+    input wire clk,
+
+    input wire        start,
+    input wire [31:0] a,
+    input wire [31:0] b,
+
+    output reg        busy,
+    output reg        done,
+    output reg [31:0] result,
+    output reg        exc_underflow,
+    output reg        exc_overflow,
+    output reg        exc_invalid,
+    output reg        exc_div0
+);
+  localparam unsigned ST_IDLE = 2'd0;
+  localparam unsigned ST_ISSUE = 2'd1;
+  localparam unsigned ST_WAIT_RES = 2'd2;
+
+  reg [1:0] state;
+
+  reg [31:0] a_reg, b_reg;
+
+  // -------- AXI-stream to IP --------
+  reg         s_axis_a_tvalid;
+  reg  [31:0] s_axis_a_tdata;
+
+  reg         s_axis_b_tvalid;
+  reg  [31:0] s_axis_b_tdata;
+
+  reg         s_axis_c_tvalid;
+  reg  [31:0] s_axis_c_tdata;
+
+  wire        m_axis_result_tvalid;
+  wire [31:0] m_axis_result_tdata;
+  wire [ 3:0] m_axis_result_tuser;  // 假设只开了3个异常位
+
+  // 仅作为示例：异常位映射
+  localparam EXC_UNDERFLOW_BIT = 0;
+  localparam EXC_OVERFLOW_BIT = 1;
+  localparam EXC_INVALID_BIT = 2;
+  localparam EXC_DIV0_BIT = 3;
+
+  floating_point_div div_inst (
+      .aclk           (clk),              // input wire aclk
+      .s_axis_a_tvalid(s_axis_a_tvalid),  // input wire s_axis_a_tvalid
+      .s_axis_a_tdata (s_axis_a_tdata),   // input wire [31 : 0] s_axis_a_tdata
+
+      .s_axis_b_tvalid(s_axis_b_tvalid),  // input wire s_axis_b_tvalid
+      .s_axis_b_tdata (s_axis_b_tdata),   // input wire [31 : 0] s_axis_b_tdata
+
+      .m_axis_result_tvalid(m_axis_result_tvalid),  // output wire m_axis_result_tvalid
+      .m_axis_result_tdata (m_axis_result_tdata),   // output wire [31 : 0] m_axis_result_tdata
+      .m_axis_result_tuser (m_axis_result_tuser)    // output wire [2 : 0] m_axis_result_tuser
+  );
+
+  initial begin
+    state <= ST_IDLE;
+    busy <= 1'b0;
+    done <= 1'b0;
+
+    a_reg <= 32'd0;
+    b_reg <= 32'd0;
+
+    s_axis_a_tvalid <= 1'b0;
+    s_axis_b_tvalid <= 1'b0;
+
+    s_axis_a_tdata <= 32'd0;
+    s_axis_b_tdata <= 32'd0;
+
+    result <= 32'd0;
+    exc_underflow <= 1'b0;
+    exc_overflow <= 1'b0;
+    exc_invalid <= 1'b0;
+  end
+
+  always @(posedge clk) begin
+    done <= 1'b0;  // 默认单拍脉冲
+
+    case (state)
+      ST_IDLE: begin
+        busy <= 1'b0;
+
+        s_axis_a_tvalid <= 1'b0;
+        s_axis_b_tvalid <= 1'b0;
+
+        if (start) begin
+          // 锁存输入
+          a_reg <= a;
+          b_reg <= b;
+
+          s_axis_a_tdata <= a;
+          s_axis_b_tdata <= b;
+
+          // 开始发数，若tready未就绪则保持tvalid
+          s_axis_a_tvalid <= 1'b1;
+          s_axis_b_tvalid <= 1'b1;
+
+          busy <= 1'b1;
+          state <= ST_ISSUE;
+        end
+      end
+
+      ST_ISSUE: begin
+        busy <= 1'b1;
+
+        s_axis_a_tvalid <= 1'b0;
+        s_axis_b_tvalid <= 1'b0;
+        state <= ST_WAIT_RES;
+      end
+
+      ST_WAIT_RES: begin
+        busy <= 1'b1;
+
+        if (m_axis_result_tvalid) begin
+          result        <= m_axis_result_tdata;
+
+          exc_underflow <= m_axis_result_tuser[EXC_UNDERFLOW_BIT];
+          exc_overflow  <= m_axis_result_tuser[EXC_OVERFLOW_BIT];
+          exc_invalid   <= m_axis_result_tuser[EXC_INVALID_BIT];
+          exc_div0      <= m_axis_result_tuser[EXC_DIV0_BIT];
+
+          done          <= 1'b1;
+          busy          <= 1'b0;
+          state         <= ST_IDLE;
+        end
+      end
+
+      default: begin
+        state <= ST_IDLE;
+      end
+    endcase
+  end
+
+endmodule

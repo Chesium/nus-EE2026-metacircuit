@@ -1,5 +1,6 @@
 vivado_project/*
 metacircuit/*
-vivado.jou
-vivado.log
+*.jou
+*.log
+*.str
 .Xil/*

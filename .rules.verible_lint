@@ -1,4 +1,4 @@
-always-comb
+-always-comb
 always-comb-blocking
 always-ff-non-blocking=catch_modifying_assignments:false;waive_for_locals:false
 -banned-declared-name-patterns

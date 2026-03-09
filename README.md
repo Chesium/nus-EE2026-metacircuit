@@ -8,7 +8,7 @@ A Circuit Simulator built inside an Basys 3 FPGA Board.
 
 1. Make sure that you have add your Vivado Bin Path to the environment variable `Path` (e.g. `...\Xilinx\Vivado\2018.2\bin`)
 2. Open a terminal window in the repo folder, then run `vivado -mode batch -source metacircuit.tcl`
-3. Open the generated Vivado project `metacircuit\metacircuit.xpr`
+3. Open the generated Vivado project `metacircuit\metacircuit.xpr` by `vivado -nojournal -nolog .\metacircuit\metacircuit.xpr`
 
 ## IDE Tools
 

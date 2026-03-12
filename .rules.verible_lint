@@ -44,7 +44,7 @@ parameter-name-style=localparam_style:CamelCase;parameter_style:CamelCase|ALL_CA
 -parameter-type-name-style
 plusarg-assignment
 -port-name-suffix
-positive-meaning-parameter-name
+-positive-meaning-parameter-name
 posix-eof
 -proper-parameter-declaration=package_allow_parameter:false;package_allow_localparam:true
 -signal-name-style=style_regex:[a-z_0-9]+

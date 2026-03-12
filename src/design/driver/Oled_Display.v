@@ -36,12 +36,12 @@
 module Oled_Display(clk, reset, frame_begin, sending_pixels,
   sample_pixel, pixel_index, pixel_data, cs, sdin, sclk, d_cn, resn, vccen,
   pmoden);
-localparam Width = 96;
-localparam Height = 64;
-localparam PixelCount = Width * Height;
-localparam PixelCountWidth = $clog2(PixelCount);
+localparam unsigned Width = 96;
+localparam unsigned Height = 64;
+localparam unsigned PixelCount = Width * Height;
+localparam unsigned PixelCountWidth = $clog2(PixelCount);
 
-parameter ClkFreq = 6250000; // Hz
+localparam unsigned ClkFreq = 6250000; // Hz
 input clk, reset;
 output frame_begin, sending_pixels, sample_pixel;
 output [PixelCountWidth-1:0] pixel_index;
@@ -49,58 +49,58 @@ input [15:0] pixel_data;
 output cs, sdin, sclk, d_cn, resn, vccen, pmoden;
 
 // Frame begin event
-localparam FrameFreq = 60;
-localparam FrameDiv = ClkFreq / FrameFreq;
-localparam FrameDivWidth = $clog2(FrameDiv);
+localparam unsigned FrameFreq = 60;
+localparam unsigned FrameDiv = ClkFreq / FrameFreq;
+localparam unsigned FrameDivWidth = $clog2(FrameDiv);
 
 reg [FrameDivWidth-1:0] frame_counter;
 assign frame_begin = frame_counter == 0;
 
 // State Machine
-localparam PowerDelay = 20; // ms
-localparam ResetDelay = 3; // us
-localparam VccEnDelay = 20; // ms
-localparam StartupCompleteDelay = 100; // ms
+localparam unsigned PowerDelay = 20; // ms
+localparam unsigned ResetDelay = 3; // us
+localparam unsigned VccEnDelay = 20; // ms
+localparam unsigned StartupCompleteDelay = 100; // ms
 
-localparam MaxDelay = StartupCompleteDelay;
-localparam MaxDelayCount = (ClkFreq * MaxDelay) / 1000;
+localparam unsigned MaxDelay = StartupCompleteDelay;
+localparam unsigned MaxDelayCount = (ClkFreq * MaxDelay) / 1000;
 reg [$clog2(MaxDelayCount)-1:0] delay;
 
-localparam StateCount = 32;
-localparam StateWidth = $clog2(StateCount);
+localparam unsigned StateCount = 32;
+localparam unsigned StateWidth = $clog2(StateCount);
 
-localparam PowerUp = 5'b00000;
-localparam Reset = 5'b00001;
-localparam ReleaseReset = 5'b00011;
-localparam EnableDriver = 5'b00010;
-localparam DisplayOff = 5'b00110;
-localparam SetRemapDisplayFormat = 5'b00111;
-localparam SetStartLine = 5'b00101;
-localparam SetOffset = 5'b00100;
-localparam SetNormalDisplay = 5'b01100;
-localparam SetMultiplexRatio = 5'b01101;
-localparam SetMasterConfiguration = 5'b01111;
-localparam DisablePowerSave = 5'b01110;
-localparam SetPhaseAdjust = 5'b01010;
-localparam SetDisplayClock = 5'b01011;
-localparam SetSecondPrechargeA = 5'b01001;
-localparam SetSecondPrechargeB = 5'b01000;
-localparam SetSecondPrechargeC = 5'b11000;
-localparam SetPrechargeLevel = 5'b11001;
-localparam SetVCOMH = 5'b11011;
-localparam SetMasterCurrent = 5'b11010;
-localparam SetContrastA = 5'b11110;
-localparam SetContrastB = 5'b11111;
-localparam SetContrastC = 5'b11101;
-localparam DisableScrolling = 5'b11100;
-localparam ClearScreen = 5'b10100;
-localparam VccEn = 5'b10101;
-localparam DisplayOn = 5'b10111;
-localparam PrepareNextFrame = 5'b10110;
-localparam SetColAddress = 5'b10010;
-localparam SetRowAddress = 5'b10011;
-localparam WaitNextFrame = 5'b10001;
-localparam SendPixel = 5'b10000;
+localparam unsigned PowerUp = 5'b00000;
+localparam unsigned Reset = 5'b00001;
+localparam unsigned ReleaseReset = 5'b00011;
+localparam unsigned EnableDriver = 5'b00010;
+localparam unsigned DisplayOff = 5'b00110;
+localparam unsigned SetRemapDisplayFormat = 5'b00111;
+localparam unsigned SetStartLine = 5'b00101;
+localparam unsigned SetOffset = 5'b00100;
+localparam unsigned SetNormalDisplay = 5'b01100;
+localparam unsigned SetMultiplexRatio = 5'b01101;
+localparam unsigned SetMasterConfiguration = 5'b01111;
+localparam unsigned DisablePowerSave = 5'b01110;
+localparam unsigned SetPhaseAdjust = 5'b01010;
+localparam unsigned SetDisplayClock = 5'b01011;
+localparam unsigned SetSecondPrechargeA = 5'b01001;
+localparam unsigned SetSecondPrechargeB = 5'b01000;
+localparam unsigned SetSecondPrechargeC = 5'b11000;
+localparam unsigned SetPrechargeLevel = 5'b11001;
+localparam unsigned SetVCOMH = 5'b11011;
+localparam unsigned SetMasterCurrent = 5'b11010;
+localparam unsigned SetContrastA = 5'b11110;
+localparam unsigned SetContrastB = 5'b11111;
+localparam unsigned SetContrastC = 5'b11101;
+localparam unsigned DisableScrolling = 5'b11100;
+localparam unsigned ClearScreen = 5'b10100;
+localparam unsigned VccEn = 5'b10101;
+localparam unsigned DisplayOn = 5'b10111;
+localparam unsigned PrepareNextFrame = 5'b10110;
+localparam unsigned SetColAddress = 5'b10010;
+localparam unsigned SetRowAddress = 5'b10011;
+localparam unsigned WaitNextFrame = 5'b10001;
+localparam unsigned SendPixel = 5'b10000;
 
 assign sending_pixels = state == SendPixel;
 
@@ -159,8 +159,8 @@ function [StateWidth-1:0] fsm_next_state;
 endfunction
 
 // SPI Master
-localparam SpiCommandMaxWidth = 40;
-localparam SpiCommandBitCountWidth = $clog2(SpiCommandMaxWidth);
+localparam unsigned SpiCommandMaxWidth = 40;
+localparam unsigned SpiCommandBitCountWidth = $clog2(SpiCommandMaxWidth);
 
 reg [SpiCommandBitCountWidth-1:0] spi_word_bit_count;
 reg [SpiCommandMaxWidth-1:0] spi_word;

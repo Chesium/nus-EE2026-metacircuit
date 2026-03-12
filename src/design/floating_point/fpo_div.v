@@ -13,9 +13,9 @@ module fpo_div (
     output reg        exc_invalid,
     output reg        exc_div0
 );
-  localparam unsigned ST_IDLE = 2'd0;
-  localparam unsigned ST_ISSUE = 2'd1;
-  localparam unsigned ST_WAIT_RES = 2'd2;
+  localparam unsigned StateIdle = 2'd0;
+  localparam unsigned StateIssue = 2'd1;
+  localparam unsigned StateWaitRes = 2'd2;
 
   reg [1:0] state;
 
@@ -36,10 +36,10 @@ module fpo_div (
   wire [ 3:0] m_axis_result_tuser;  // 假设只开了3个异常位
 
   // 仅作为示例：异常位映射
-  localparam EXC_UNDERFLOW_BIT = 0;
-  localparam EXC_OVERFLOW_BIT = 1;
-  localparam EXC_INVALID_BIT = 2;
-  localparam EXC_DIV0_BIT = 3;
+  localparam unsigned ExcUnderflowBit = 0;
+  localparam unsigned ExcOverflowBit = 1;
+  localparam unsigned ExcInvalidBit = 2;
+  localparam unsigned ExcDiv0Bit = 3;
 
   floating_point_div div_inst (
       .aclk           (clk),              // input wire aclk
@@ -55,7 +55,7 @@ module fpo_div (
   );
 
   initial begin
-    state <= ST_IDLE;
+    state <= StateIdle;
     busy <= 1'b0;
     done <= 1'b0;
 
@@ -78,7 +78,7 @@ module fpo_div (
     done <= 1'b0;  // 默认单拍脉冲
 
     case (state)
-      ST_IDLE: begin
+      StateIdle: begin
         busy <= 1'b0;
 
         s_axis_a_tvalid <= 1'b0;
@@ -97,37 +97,37 @@ module fpo_div (
           s_axis_b_tvalid <= 1'b1;
 
           busy <= 1'b1;
-          state <= ST_ISSUE;
+          state <= StateIssue;
         end
       end
 
-      ST_ISSUE: begin
+      StateIssue: begin
         busy <= 1'b1;
 
         s_axis_a_tvalid <= 1'b0;
         s_axis_b_tvalid <= 1'b0;
-        state <= ST_WAIT_RES;
+        state <= StateWaitRes;
       end
 
-      ST_WAIT_RES: begin
+      StateWaitRes: begin
         busy <= 1'b1;
 
         if (m_axis_result_tvalid) begin
           result        <= m_axis_result_tdata;
 
-          exc_underflow <= m_axis_result_tuser[EXC_UNDERFLOW_BIT];
-          exc_overflow  <= m_axis_result_tuser[EXC_OVERFLOW_BIT];
-          exc_invalid   <= m_axis_result_tuser[EXC_INVALID_BIT];
-          exc_div0      <= m_axis_result_tuser[EXC_DIV0_BIT];
+          exc_underflow <= m_axis_result_tuser[ExcUnderflowBit];
+          exc_overflow  <= m_axis_result_tuser[ExcOverflowBit];
+          exc_invalid   <= m_axis_result_tuser[ExcInvalidBit];
+          exc_div0      <= m_axis_result_tuser[ExcDiv0Bit];
 
           done          <= 1'b1;
           busy          <= 1'b0;
-          state         <= ST_IDLE;
+          state         <= StateIdle;
         end
       end
 
       default: begin
-        state <= ST_IDLE;
+        state <= StateIdle;
       end
     endcase
   end

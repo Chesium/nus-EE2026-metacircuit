@@ -15,9 +15,9 @@ module fpo_fma (
     output reg        exc_invalid
     // output reg         exc_div0
 );
-  localparam unsigned StateIdle = 2'd0;
-  localparam unsigned StateIssue = 2'd1;
-  localparam unsigned StateWaitRes = 2'd2;
+  localparam integer StateIdle = 2'd0;
+  localparam integer StateIssue = 2'd1;
+  localparam integer StateWaitRes = 2'd2;
 
   reg [1:0] state;
 
@@ -38,9 +38,9 @@ module fpo_fma (
   wire [ 3:0] m_axis_result_tuser;  // 假设只开了3个异常位
 
   // 仅作为示例：异常位映射
-  localparam unsigned ExcUnderflowBit = 0;
-  localparam unsigned ExcOverflowBit = 1;
-  localparam unsigned ExcInvalidBit = 2;
+  localparam integer ExcUnderflowBit = 0;
+  localparam integer ExcOverflowBit = 1;
+  localparam integer ExcInvalidBit = 2;
   // localparam EXC_DIV0_BIT      = 3;
 
   floating_point_fma fma_inst (

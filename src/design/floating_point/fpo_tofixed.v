@@ -14,9 +14,9 @@ module fpo_tofixed (
     output reg        exc_invalid
     // output reg         exc_div0
 );
-  localparam unsigned StateIdle = 2'd0;
-  localparam unsigned StateIssue = 2'd1;
-  localparam unsigned StateWaitRes = 2'd2;
+  localparam integer StateIdle = 2'd0;
+  localparam integer StateIssue = 2'd1;
+  localparam integer StateWaitRes = 2'd2;
 
   reg [1:0] state;
 
@@ -38,8 +38,8 @@ module fpo_tofixed (
 
   // 仅作为示例：异常位映射
   // localparam EXC_UNDERFLOW_BIT = 0;
-  localparam unsigned ExcOverflowBit = 0;
-  localparam unsigned ExcInvalidBit = 1;
+  localparam integer ExcOverflowBit = 0;
+  localparam integer ExcInvalidBit = 1;
   // localparam EXC_DIV0_BIT      = 3;
 
   floating_point_to_fixed_16_16 to_fixed_16_16_inst (

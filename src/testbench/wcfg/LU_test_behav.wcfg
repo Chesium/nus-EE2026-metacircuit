@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="LU_test_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="LU_test" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="7165000001fs"></ZoomEndTime>
+      <Cursor1Time time="1154000000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="198"></NameColumnWidth>
+      <ValueColumnWidth column_width="106"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="22" />
+   <wvobject fp_name="/LU_test/clk_t_100m" type="logic">
+      <obj_property name="ElementShortName">clk_t_100m</obj_property>
+      <obj_property name="ObjectShortName">clk_t_100m</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/state" type="array">
+      <obj_property name="ElementShortName">state[4:0]</obj_property>
+      <obj_property name="ObjectShortName">state[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFFFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/i" type="array">
+      <obj_property name="ElementShortName">i[3:0]</obj_property>
+      <obj_property name="ObjectShortName">i[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/j" type="array">
+      <obj_property name="ElementShortName">j[3:0]</obj_property>
+      <obj_property name="ObjectShortName">j[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/k" type="array">
+      <obj_property name="ElementShortName">k[3:0]</obj_property>
+      <obj_property name="ObjectShortName">k[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/acc" type="array">
+      <obj_property name="ElementShortName">acc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">acc[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/op1" type="array">
+      <obj_property name="ElementShortName">op1[31:0]</obj_property>
+      <obj_property name="ObjectShortName">op1[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/op2" type="array">
+      <obj_property name="ElementShortName">op2[31:0]</obj_property>
+      <obj_property name="ObjectShortName">op2[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/diag" type="array">
+      <obj_property name="ElementShortName">diag[31:0]</obj_property>
+      <obj_property name="ObjectShortName">diag[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/matrix_a_ram_r_addr" type="array">
+      <obj_property name="ElementShortName">matrix_a_ram_r_addr[3:0]</obj_property>
+      <obj_property name="ObjectShortName">matrix_a_ram_r_addr[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/matrix_a_ram_r_data" type="array">
+      <obj_property name="ElementShortName">matrix_a_ram_r_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">matrix_a_ram_r_data[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/matrix_lu_ram_r_addr" type="array">
+      <obj_property name="ElementShortName">matrix_lu_ram_r_addr[3:0]</obj_property>
+      <obj_property name="ObjectShortName">matrix_lu_ram_r_addr[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/matrix_lu_ram_r_data" type="array">
+      <obj_property name="ElementShortName">matrix_lu_ram_r_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">matrix_lu_ram_r_data[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/matrix_lu_ram_w_en" type="logic">
+      <obj_property name="ElementShortName">matrix_lu_ram_w_en</obj_property>
+      <obj_property name="ObjectShortName">matrix_lu_ram_w_en</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/matrix_lu_ram_w_addr" type="array">
+      <obj_property name="ElementShortName">matrix_lu_ram_w_addr[3:0]</obj_property>
+      <obj_property name="ObjectShortName">matrix_lu_ram_w_addr[3:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/matrix_lu_ram_w_data" type="array">
+      <obj_property name="ElementShortName">matrix_lu_ram_w_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">matrix_lu_ram_w_data[31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/FMA_start" type="logic">
+      <obj_property name="ElementShortName">FMA_start</obj_property>
+      <obj_property name="ObjectShortName">FMA_start</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/FMA_busy" type="logic">
+      <obj_property name="ElementShortName">FMA_busy</obj_property>
+      <obj_property name="ObjectShortName">FMA_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/FMA_done" type="logic">
+      <obj_property name="ElementShortName">FMA_done</obj_property>
+      <obj_property name="ObjectShortName">FMA_done</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/DIV_start" type="logic">
+      <obj_property name="ElementShortName">DIV_start</obj_property>
+      <obj_property name="ObjectShortName">DIV_start</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/DIV_busy" type="logic">
+      <obj_property name="ElementShortName">DIV_busy</obj_property>
+      <obj_property name="ObjectShortName">DIV_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_test/dut/DIV_done" type="logic">
+      <obj_property name="ElementShortName">DIV_done</obj_property>
+      <obj_property name="ObjectShortName">DIV_done</obj_property>
+   </wvobject>
+</wave_config>

@@ -15,3 +15,7 @@ metacircuit/*
 /src/ip/**
 !/src/ip/**/
 !/src/ip/**/*.xci
+
+/src/ip_new/**
+!/src/ip_new/**/
+!/src/ip_new/**/*.xci

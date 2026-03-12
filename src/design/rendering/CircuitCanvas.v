@@ -17,6 +17,10 @@ module CircuitCanvas #(
     output wire [11:0] rgb,
     output wire        rendered,
 
+
+    input wire [11:0] mouse_x_pos,
+    input wire [11:0] mouse_y_pos,
+
     /* Render Stage Data RAM Handles (Read-Only) */
     output wire [AddrWidth-1:0] data_addr,
     input  wire [DataWidth-1:0] incoming_data,
@@ -37,6 +41,11 @@ module CircuitCanvas #(
   assign x_pos_rel_canvas = x_pos - CanvasPosX;
   assign y_pos_rel_canvas = y_pos - CanvasPosY;
 
+  wire [11:0] mouse_x_pos_rel_canvas;
+  wire [11:0] mouse_y_pos_rel_canvas;
+  assign mouse_x_pos_rel_canvas = mouse_x_pos - CanvasPosX;
+  assign mouse_y_pos_rel_canvas = mouse_y_pos - CanvasPosY;
+
   wire [11:0] x_pos_rel_canvas_next;
   wire [11:0] y_pos_rel_canvas_next;
   assign x_pos_rel_canvas_next = x_pos_rel_canvas == CanvasWidth - 1 ? 0 : x_pos_rel_canvas + 1;
@@ -48,6 +57,15 @@ module CircuitCanvas #(
   wire [11:0] required_j;
   assign required_i = x_pos_rel_canvas / CellSize;
   assign required_j = y_pos_rel_canvas / CellSize;
+
+  wire [11:0] mouse_cell_i;
+  wire [11:0] mouse_cell_j;
+  assign mouse_cell_i = mouse_x_pos_rel_canvas / CellSize;
+  assign mouse_cell_j = mouse_y_pos_rel_canvas / CellSize;
+
+  wire hovering;
+
+  assign hovering = required_i == mouse_cell_i && required_j == mouse_cell_j;
 
   wire [11:0] required_i_2;
   wire [11:0] required_j_2;
@@ -813,6 +831,10 @@ module CircuitCanvas #(
 
   localparam integer ColorPos = 12'hFFF;  // #FFF
   localparam integer ColorNeg = 12'h222;  // #222
+  localparam integer ColorNegHovering = 12'h280;  // #280
+
+  wire [11:0] currentColorNeg;
+  assign currentColorNeg = hovering ? ColorNegHovering : ColorNeg;
 
   localparam integer GridMarginWidth = 2;  // multiples of 2
   localparam integer GridColor = 12'h666;  // #666
@@ -822,7 +844,7 @@ module CircuitCanvas #(
                       || cell_offset_y >= CellSize - GridMarginWidth / 2
                       || cell_offset_y >= CellSize - GridMarginWidth / 2;
 
-  assign rgb = sprite_pixel ? ColorPos : (at_grid_edge ? GridColor : ColorNeg);
+  assign rgb = sprite_pixel ? ColorPos : (at_grid_edge ? GridColor : currentColorNeg);
 
   reg [1:0] status = 2'b00;
 

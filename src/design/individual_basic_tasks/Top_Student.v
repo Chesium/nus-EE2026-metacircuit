@@ -61,6 +61,14 @@ module Top_Student (
     wire [15:0] rgb_r;
     wire [15:0] rgb_s;
     wire frame_begin, sending_pixels, sample_pixel;
+    wire [15:0] rgb_kb;
+    wire [7:0]  kb_ascii;
+    wire [23:0] kb_rgb;
+    wire        kb_is_digit;
+    wire        kb_is_unit;
+    wire        kb_is_action;
+    wire [4:0]  kb_key_id;
+    wire        kb_key_valid;
 
     always @(posedge clk6p25m) begin
         if (sw[15]) begin
@@ -72,7 +80,8 @@ module Top_Student (
         end else if (sw[12]) begin
             oled_data <= rgb_p;
         end else begin
-            oled_data <= 0;
+            // Default: show on-screen keyboard
+            oled_data <= rgb_kb;
         end
     end
 
@@ -124,6 +133,26 @@ module Top_Student (
         .btnL(btnL),
         .rgb(rgb_s),
         .CLK100MHZ(CLK100MHZ)
+    );
+
+    // On-screen keyboard (OLED 96x64)
+    Keyboard keyboard_inst (
+        .clk_nav(clk20hz),
+        .btnU(btnU),
+        .btnD(btnD),
+        .btnL(btnL),
+        .btnR(btnR),
+        .btnC(btnC),
+        .x(x_pos),
+        .y(y_pos),
+        .pixel_rgb(rgb_kb),
+        .key_id(kb_key_id),
+        .key_valid(kb_key_valid),
+        .key_ascii(kb_ascii),
+        .key_rgb(kb_rgb),
+        .key_is_digit(kb_is_digit),
+        .key_is_unit(kb_is_unit),
+        .key_is_action(kb_is_action)
     );
     
     Oled_Display oled_inst (

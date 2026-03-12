@@ -10,6 +10,7 @@ metacircuit/*
 **/*.log
 **/*.str
 **/*.tmp
+**/tmp/
 
 /src/ip/**
 !/src/ip/**/

@@ -138,7 +138,9 @@ module CircuitCanvas_top (
       .rendered(circuit_canvas_rendered),
       .data_addr(circuit_canvas_ram_r_addr),
       .incoming_data(circuit_canvas_ram_r_data),
-      .display_grid(1'b1)
+      .display_grid(1'b1),
+      .mouse_x_pos(mouse_xpos),
+      .mouse_y_pos(mouse_ypos)
   );
 
   reg [31:0] init_cycles = 0;

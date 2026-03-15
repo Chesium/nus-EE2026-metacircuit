@@ -34,7 +34,7 @@ module CircuitCanvas #(
                   && x_pos <= CanvasPosX + CellSize * GridWidth
                   && y_pos >= CanvasPosY
                   && y_pos <= CanvasPosY + CanvasHeight
-                  && y_pos <= CanvasPosX + CellSize * GridHeight;
+                  && y_pos <= CanvasPosY + CellSize * GridHeight;
 
   wire [11:0] x_pos_rel_canvas;
   wire [11:0] y_pos_rel_canvas;

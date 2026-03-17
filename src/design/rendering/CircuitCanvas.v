@@ -26,15 +26,44 @@ module CircuitCanvas #(
     input  wire [DataWidth-1:0] incoming_data,
 
     /* Other Configuration Bits */
-    input wire display_grid
+    input wire display_grid,
+
+    /*Detect whether the left mouse is click*/
+    input wire mouse_left_click
 );
+
+  /*Parameter for panning*/
+  localparam signed [12:0] min_grid_x = CanvasWidth - (GridWidth * CellSize);   //minimum x offset the panning can reach (negative number)
+  localparam signed [12:0] min_grid_y = CanvasHeight - (GridHeight * CellSize); //minimum y offset the panning can reach (negative number)
+
+  reg is_dragging = 0;
+  reg signed [12:0] click_start_x = 0;
+  reg signed [12:0] click_start_y = 0;
+  reg signed [12:0] grid_start_x  = 0;
+  reg signed [12:0] grid_start_y  = 0;
+  /*Real grid offset (Panning)*/
+  reg signed [12:0] grid_pos_x = 0; 
+  reg signed [12:0] grid_pos_y = 0;
+
+  /*temporary offset*/
+  wire signed [13:0] delta_x = {1'b0, mouse_x_pos} - click_start_x;
+  wire signed [13:0] delta_y = {1'b0, mouse_y_pos} - click_start_y;
+  wire signed [13:0] next_grid_x = grid_start_x + delta_x;
+  wire signed [13:0] next_grid_y = grid_start_y + delta_y;
 
   assign rendered =  x_pos >= CanvasPosX 
                   && x_pos <= CanvasPosX + CanvasWidth
                   && x_pos <= CanvasPosX + CellSize * GridWidth
                   && y_pos >= CanvasPosY
                   && y_pos <= CanvasPosY + CanvasHeight
-                  && y_pos <= CanvasPosX + CellSize * GridHeight;
+                  && y_pos <= CanvasPosY + CellSize * GridHeight;
+
+  /*the boundary condition for panning for the mouse*/
+  wire mouse_in_canvas;
+  assign mouse_in_canvas = (mouse_x_pos >= CanvasPosX) && 
+                           (mouse_x_pos < CanvasPosX + CanvasWidth) &&
+                           (mouse_y_pos >= CanvasPosY) && 
+                           (mouse_y_pos < CanvasPosY + CanvasHeight);
 
   wire [11:0] x_pos_rel_canvas;
   wire [11:0] y_pos_rel_canvas;
@@ -53,15 +82,24 @@ module CircuitCanvas #(
           ? (y_pos_rel_canvas == CanvasHeight - 1 ? 0 : y_pos_rel_canvas + 1)
           : y_pos_rel_canvas;
 
+  wire [12:0] absolute_grid_x = {1'b0, x_pos_rel_canvas} - grid_pos_x;
+  wire [12:0] absolute_grid_y = {1'b0, y_pos_rel_canvas} - grid_pos_y;
+  
+  wire [12:0] absolute_grid_x_next = {1'b0, x_pos_rel_canvas_next} - grid_pos_x;
+  wire [12:0] absolute_grid_y_next = {1'b0, y_pos_rel_canvas_next} - grid_pos_y;
+  
+  wire [12:0] absolute_mouse_grid_x = {1'b0, mouse_x_pos_rel_canvas} - grid_pos_x;
+  wire [12:0] absolute_mouse_grid_y = {1'b0, mouse_y_pos_rel_canvas} - grid_pos_y;
+
   wire [11:0] required_i;
   wire [11:0] required_j;
-  assign required_i = x_pos_rel_canvas / CellSize;
-  assign required_j = y_pos_rel_canvas / CellSize;
+  assign required_i = absolute_grid_x / CellSize;
+  assign required_j = absolute_grid_y/ CellSize;
 
   wire [11:0] mouse_cell_i;
   wire [11:0] mouse_cell_j;
-  assign mouse_cell_i = mouse_x_pos_rel_canvas / CellSize;
-  assign mouse_cell_j = mouse_y_pos_rel_canvas / CellSize;
+  assign mouse_cell_i = absolute_mouse_grid_x / CellSize;
+  assign mouse_cell_j = absolute_mouse_grid_y / CellSize;
 
   wire hovering;
 
@@ -69,8 +107,8 @@ module CircuitCanvas #(
 
   wire [11:0] required_i_2;
   wire [11:0] required_j_2;
-  assign required_i_2 = x_pos_rel_canvas_next / CellSize;
-  assign required_j_2 = y_pos_rel_canvas_next / CellSize;
+  assign required_i_2 = absolute_grid_x_next / CellSize;
+  assign required_j_2 = absolute_grid_y_next / CellSize;
 
   wire [11:0] next_i;
   wire [11:0] next_j;
@@ -118,10 +156,13 @@ module CircuitCanvas #(
   assign cell_type = cell_data[6:1];
   assign cell_enable = cell_data[0];
 
+
+  wire [12:0] cell_origin_x_signed = {1'b0, CanvasPosX} + grid_pos_x + {1'b0, required_i * CellSize[11:0]};
+  wire [12:0] cell_origin_y_signed = {1'b0, CanvasPosY} + grid_pos_y + {1'b0, required_j * CellSize[11:0]};
   wire [11:0] cell_origin_x;
   wire [11:0] cell_origin_y;
-  assign cell_origin_x = CanvasPosX + required_i * CellSize;
-  assign cell_origin_y = CanvasPosY + required_j * CellSize;
+  assign cell_origin_x = cell_origin_x_signed[11:0];
+  assign cell_origin_y = cell_origin_y_signed[11:0];
   wire [11:0] cell_offset_x;  // [$clog2(CellSize)-1:0] should be enough
   wire [11:0] cell_offset_y;
   assign cell_offset_x = x_pos - cell_origin_x;
@@ -841,7 +882,7 @@ module CircuitCanvas #(
   wire at_grid_edge;
   assign at_grid_edge =  cell_offset_x < GridMarginWidth / 2
                       || cell_offset_y < GridMarginWidth / 2
-                      || cell_offset_y >= CellSize - GridMarginWidth / 2
+                      || cell_offset_x >= CellSize - GridMarginWidth / 2
                       || cell_offset_y >= CellSize - GridMarginWidth / 2;
 
   assign rgb = sprite_pixel ? ColorPos : (at_grid_edge ? GridColor : currentColorNeg);
@@ -880,6 +921,28 @@ module CircuitCanvas #(
       cell_data <= latched_data;
       status <= 2'b11;
     end
+  end
+
+  always @(posedge clk_pixel) begin   
+      if (mouse_left_click) begin
+          if (!is_dragging && mouse_in_canvas) begin
+              // detect the click and assign dragging
+              is_dragging   <= 1;
+              click_start_x <= {1'b0, mouse_x_pos};
+              click_start_y <= {1'b0, mouse_y_pos};
+              grid_start_x  <= grid_pos_x;
+              grid_start_y  <= grid_pos_y;
+          end else begin
+              //update the grid position and ensure the boundary condition
+              grid_pos_x <= (next_grid_x > 0) ? 13'sd0 : 
+                            (next_grid_x < min_grid_x) ? min_grid_x : next_grid_x[12:0];
+                            
+              grid_pos_y <= (next_grid_y > 0) ? 13'sd0 : 
+                            (next_grid_y < min_grid_y) ? min_grid_y : next_grid_y[12:0];
+          end
+      end else begin
+          is_dragging <= 0;
+      end
   end
 
 endmodule

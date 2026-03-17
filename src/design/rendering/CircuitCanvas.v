@@ -58,6 +58,13 @@ module CircuitCanvas #(
                   && y_pos <= CanvasPosY + CanvasHeight
                   && y_pos <= CanvasPosY + CellSize * GridHeight;
 
+  /*the boundary condition for panning for the mouse*/
+  wire mouse_in_canvas;
+  assign mouse_in_canvas = (mouse_x_pos >= CanvasPosX) && 
+                           (mouse_x_pos < CanvasPosX + CanvasWidth) &&
+                           (mouse_y_pos >= CanvasPosY) && 
+                           (mouse_y_pos < CanvasPosY + CanvasHeight);
+
   wire [11:0] x_pos_rel_canvas;
   wire [11:0] y_pos_rel_canvas;
   assign x_pos_rel_canvas = x_pos - CanvasPosX;
@@ -916,17 +923,17 @@ module CircuitCanvas #(
     end
   end
 
-  always @(posedge clk_pixel) begin
+  always @(posedge clk_pixel) begin   
       if (mouse_left_click) begin
-          if (!is_dragging) begin
-              // [剛按下的瞬間]：鎖定起點
+          if (!is_dragging && mouse_in_canvas) begin
+              // detect the click and assign dragging
               is_dragging   <= 1;
               click_start_x <= {1'b0, mouse_x_pos};
               click_start_y <= {1'b0, mouse_y_pos};
               grid_start_x  <= grid_pos_x;
               grid_start_y  <= grid_pos_y;
           end else begin
-              // [持續拖曳中]：更新偏移量，並做邊界限制 (Clamping)
+              //update the grid position and ensure the boundary condition
               grid_pos_x <= (next_grid_x > 0) ? 13'sd0 : 
                             (next_grid_x < min_grid_x) ? min_grid_x : next_grid_x[12:0];
                             
@@ -934,7 +941,6 @@ module CircuitCanvas #(
                             (next_grid_y < min_grid_y) ? min_grid_y : next_grid_y[12:0];
           end
       end else begin
-          // [放開滑鼠]
           is_dragging <= 0;
       end
   end

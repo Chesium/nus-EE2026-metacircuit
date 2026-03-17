@@ -140,7 +140,8 @@ module CircuitCanvas_top (
       .incoming_data(circuit_canvas_ram_r_data),
       .display_grid(1'b1),
       .mouse_x_pos(mouse_xpos),
-      .mouse_y_pos(mouse_ypos)
+      .mouse_y_pos(mouse_ypos),
+      .mouse_left_click(mouse_left)
   );
 
   reg [31:0] init_cycles = 0;

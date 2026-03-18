@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="Canvas_test_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="Canvas_test" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="2500000000fs"></ZoomStartTime>
+      <ZoomEndTime time="10730000001fs"></ZoomEndTime>
+      <Cursor1Time time="7000000000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="175"></NameColumnWidth>
+      <ValueColumnWidth column_width="118"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="29" />
+   <wvobject fp_name="/Canvas_test/clk_t_100m" type="logic">
+      <obj_property name="ElementShortName">clk_t_100m</obj_property>
+      <obj_property name="ObjectShortName">clk_t_100m</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/vga_ctrl_inst/h_count_reg" type="array">
+      <obj_property name="ElementShortName">h_count_reg[11:0]</obj_property>
+      <obj_property name="ObjectShortName">h_count_reg[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/vga_ctrl_inst/v_count_reg" type="array">
+      <obj_property name="ElementShortName">v_count_reg[11:0]</obj_property>
+      <obj_property name="ObjectShortName">v_count_reg[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="group719" type="group">
+      <obj_property name="label">Output VGA</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/vga_ctrl_inst/rgb" type="array">
+         <obj_property name="ElementShortName">rgb[11:0]</obj_property>
+         <obj_property name="ObjectShortName">rgb[11:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/vga_ctrl_inst/hsync" type="logic">
+         <obj_property name="ElementShortName">hsync</obj_property>
+         <obj_property name="ObjectShortName">hsync</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/vga_ctrl_inst/vsync" type="logic">
+         <obj_property name="ElementShortName">vsync</obj_property>
+         <obj_property name="ObjectShortName">vsync</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/vga_ctrl_inst/video_on" type="logic">
+         <obj_property name="ElementShortName">video_on</obj_property>
+         <obj_property name="ObjectShortName">video_on</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group717" type="group">
+      <obj_property name="label">Coordinates</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/x_pos" type="array">
+         <obj_property name="ElementShortName">x_pos[11:0]</obj_property>
+         <obj_property name="ObjectShortName">x_pos[11:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/y_pos" type="array">
+         <obj_property name="ElementShortName">y_pos[11:0]</obj_property>
+         <obj_property name="ObjectShortName">y_pos[11:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/x_pos_rel_canvas" type="array">
+         <obj_property name="ElementShortName">x_pos_rel_canvas[11:0]</obj_property>
+         <obj_property name="ObjectShortName">x_pos_rel_canvas[11:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/y_pos_rel_canvas" type="array">
+         <obj_property name="ElementShortName">y_pos_rel_canvas[11:0]</obj_property>
+         <obj_property name="ObjectShortName">y_pos_rel_canvas[11:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/cell_origin_x" type="array">
+         <obj_property name="ElementShortName">cell_origin_x[11:0]</obj_property>
+         <obj_property name="ObjectShortName">cell_origin_x[11:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/cell_origin_y" type="array">
+         <obj_property name="ElementShortName">cell_origin_y[11:0]</obj_property>
+         <obj_property name="ObjectShortName">cell_origin_y[11:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/cell_offset_x" type="array">
+         <obj_property name="ElementShortName">cell_offset_x[11:0]</obj_property>
+         <obj_property name="ObjectShortName">cell_offset_x[11:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/cell_offset_y" type="array">
+         <obj_property name="ElementShortName">cell_offset_y[11:0]</obj_property>
+         <obj_property name="ObjectShortName">cell_offset_y[11:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group718" type="group">
+      <obj_property name="label">Cell data</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/cell_data" type="array">
+         <obj_property name="ElementShortName">cell_data[15:0]</obj_property>
+         <obj_property name="ObjectShortName">cell_data[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#F0E68C</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/cell_mode" type="array">
+         <obj_property name="ElementShortName">cell_mode[6:0]</obj_property>
+         <obj_property name="ObjectShortName">cell_mode[6:0]</obj_property>
+         <obj_property name="CustomSignalColor">#F0E68C</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/cell_rotation" type="array">
+         <obj_property name="ElementShortName">cell_rotation[1:0]</obj_property>
+         <obj_property name="ObjectShortName">cell_rotation[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#F0E68C</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/cell_type" type="array">
+         <obj_property name="ElementShortName">cell_type[5:0]</obj_property>
+         <obj_property name="ObjectShortName">cell_type[5:0]</obj_property>
+         <obj_property name="CustomSignalColor">#F0E68C</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/cell_enable" type="logic">
+         <obj_property name="ElementShortName">cell_enable</obj_property>
+         <obj_property name="ObjectShortName">cell_enable</obj_property>
+         <obj_property name="CustomSignalColor">#F0E68C</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/sprite_pixel" type="logic">
+         <obj_property name="ElementShortName">sprite_pixel</obj_property>
+         <obj_property name="ObjectShortName">sprite_pixel</obj_property>
+         <obj_property name="CustomSignalColor">#F0E68C</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/rgb" type="array">
+      <obj_property name="ElementShortName">rgb[11:0]</obj_property>
+      <obj_property name="ObjectShortName">rgb[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/rendered" type="logic">
+      <obj_property name="ElementShortName">rendered</obj_property>
+      <obj_property name="ObjectShortName">rendered</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/display_grid" type="logic">
+      <obj_property name="ElementShortName">display_grid</obj_property>
+      <obj_property name="ObjectShortName">display_grid</obj_property>
+      <obj_property name="CustomSignalColor">#F0E68C</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/data_addr" type="array">
+      <obj_property name="ElementShortName">data_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data_addr[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/incoming_data" type="array">
+      <obj_property name="ElementShortName">incoming_data[15:0]</obj_property>
+      <obj_property name="ObjectShortName">incoming_data[15:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/clk_pixel" type="logic">
+      <obj_property name="ElementShortName">clk_pixel</obj_property>
+      <obj_property name="ObjectShortName">clk_pixel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/required_i" type="array">
+      <obj_property name="ElementShortName">required_i[11:0]</obj_property>
+      <obj_property name="ObjectShortName">required_i[11:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/required_j" type="array">
+      <obj_property name="ElementShortName">required_j[11:0]</obj_property>
+      <obj_property name="ObjectShortName">required_j[11:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/next_i" type="array">
+      <obj_property name="ElementShortName">next_i[11:0]</obj_property>
+      <obj_property name="ObjectShortName">next_i[11:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/next_j" type="array">
+      <obj_property name="ElementShortName">next_j[11:0]</obj_property>
+      <obj_property name="ObjectShortName">next_j[11:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/latched_data" type="array">
+      <obj_property name="ElementShortName">latched_data[15:0]</obj_property>
+      <obj_property name="ObjectShortName">latched_data[15:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/latched_data_i" type="array">
+      <obj_property name="ElementShortName">latched_data_i[11:0]</obj_property>
+      <obj_property name="ObjectShortName">latched_data_i[11:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/latched_data_j" type="array">
+      <obj_property name="ElementShortName">latched_data_j[11:0]</obj_property>
+      <obj_property name="ObjectShortName">latched_data_j[11:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/status" type="array">
+      <obj_property name="ElementShortName">status[1:0]</obj_property>
+      <obj_property name="ObjectShortName">status[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/incoming_data_i" type="array">
+      <obj_property name="ElementShortName">incoming_data_i[11:0]</obj_property>
+      <obj_property name="ObjectShortName">incoming_data_i[11:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/incoming_data_j" type="array">
+      <obj_property name="ElementShortName">incoming_data_j[11:0]</obj_property>
+      <obj_property name="ObjectShortName">incoming_data_j[11:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_inst/at_grid_edge" type="logic">
+      <obj_property name="ElementShortName">at_grid_edge</obj_property>
+      <obj_property name="ObjectShortName">at_grid_edge</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_ram_inst/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_ram_inst/w_en" type="logic">
+      <obj_property name="ElementShortName">w_en</obj_property>
+      <obj_property name="ObjectShortName">w_en</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_ram_inst/w_addr" type="array">
+      <obj_property name="ElementShortName">w_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">w_addr[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_ram_inst/r_addr" type="array">
+      <obj_property name="ElementShortName">r_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">r_addr[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_ram_inst/d_in" type="array">
+      <obj_property name="ElementShortName">d_in[15:0]</obj_property>
+      <obj_property name="ObjectShortName">d_in[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Canvas_test/circuit_canvas_top_inst/circuit_canvas_ram_inst/d_out" type="array">
+      <obj_property name="ElementShortName">d_out[15:0]</obj_property>
+      <obj_property name="ObjectShortName">d_out[15:0]</obj_property>
+   </wvobject>
+</wave_config>

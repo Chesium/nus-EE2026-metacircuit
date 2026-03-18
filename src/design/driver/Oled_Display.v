@@ -36,12 +36,12 @@
 module Oled_Display(clk, reset, frame_begin, sending_pixels,
   sample_pixel, pixel_index, pixel_data, cs, sdin, sclk, d_cn, resn, vccen,
   pmoden);
-localparam Width = 96;
-localparam Height = 64;
-localparam PixelCount = Width * Height;
-localparam PixelCountWidth = $clog2(PixelCount);
+localparam integer Width = 96;
+localparam integer Height = 64;
+localparam integer PixelCount = Width * Height;
+localparam integer PixelCountWidth = $clog2(PixelCount);
 
-parameter ClkFreq = 6250000; // Hz
+localparam integer ClkFreq = 6250000; // Hz
 input clk, reset;
 output frame_begin, sending_pixels, sample_pixel;
 output [PixelCountWidth-1:0] pixel_index;
@@ -49,58 +49,58 @@ input [15:0] pixel_data;
 output cs, sdin, sclk, d_cn, resn, vccen, pmoden;
 
 // Frame begin event
-localparam FrameFreq = 60;
-localparam FrameDiv = ClkFreq / FrameFreq;
-localparam FrameDivWidth = $clog2(FrameDiv);
+localparam integer FrameFreq = 60;
+localparam integer FrameDiv = ClkFreq / FrameFreq;
+localparam integer FrameDivWidth = $clog2(FrameDiv);
 
 reg [FrameDivWidth-1:0] frame_counter;
 assign frame_begin = frame_counter == 0;
 
 // State Machine
-localparam PowerDelay = 20; // ms
-localparam ResetDelay = 3; // us
-localparam VccEnDelay = 20; // ms
-localparam StartupCompleteDelay = 100; // ms
+localparam integer PowerDelay = 20; // ms
+localparam integer ResetDelay = 3; // us
+localparam integer VccEnDelay = 20; // ms
+localparam integer StartupCompleteDelay = 100; // ms
 
-localparam MaxDelay = StartupCompleteDelay;
-localparam MaxDelayCount = (ClkFreq * MaxDelay) / 1000;
+localparam integer MaxDelay = StartupCompleteDelay;
+localparam integer MaxDelayCount = (ClkFreq * MaxDelay) / 1000;
 reg [$clog2(MaxDelayCount)-1:0] delay;
 
-localparam StateCount = 32;
-localparam StateWidth = $clog2(StateCount);
+localparam integer StateCount = 32;
+localparam integer StateWidth = $clog2(StateCount);
 
-localparam PowerUp = 5'b00000;
-localparam Reset = 5'b00001;
-localparam ReleaseReset = 5'b00011;
-localparam EnableDriver = 5'b00010;
-localparam DisplayOff = 5'b00110;
-localparam SetRemapDisplayFormat = 5'b00111;
-localparam SetStartLine = 5'b00101;
-localparam SetOffset = 5'b00100;
-localparam SetNormalDisplay = 5'b01100;
-localparam SetMultiplexRatio = 5'b01101;
-localparam SetMasterConfiguration = 5'b01111;
-localparam DisablePowerSave = 5'b01110;
-localparam SetPhaseAdjust = 5'b01010;
-localparam SetDisplayClock = 5'b01011;
-localparam SetSecondPrechargeA = 5'b01001;
-localparam SetSecondPrechargeB = 5'b01000;
-localparam SetSecondPrechargeC = 5'b11000;
-localparam SetPrechargeLevel = 5'b11001;
-localparam SetVCOMH = 5'b11011;
-localparam SetMasterCurrent = 5'b11010;
-localparam SetContrastA = 5'b11110;
-localparam SetContrastB = 5'b11111;
-localparam SetContrastC = 5'b11101;
-localparam DisableScrolling = 5'b11100;
-localparam ClearScreen = 5'b10100;
-localparam VccEn = 5'b10101;
-localparam DisplayOn = 5'b10111;
-localparam PrepareNextFrame = 5'b10110;
-localparam SetColAddress = 5'b10010;
-localparam SetRowAddress = 5'b10011;
-localparam WaitNextFrame = 5'b10001;
-localparam SendPixel = 5'b10000;
+localparam integer PowerUp = 5'b00000;
+localparam integer Reset = 5'b00001;
+localparam integer ReleaseReset = 5'b00011;
+localparam integer EnableDriver = 5'b00010;
+localparam integer DisplayOff = 5'b00110;
+localparam integer SetRemapDisplayFormat = 5'b00111;
+localparam integer SetStartLine = 5'b00101;
+localparam integer SetOffset = 5'b00100;
+localparam integer SetNormalDisplay = 5'b01100;
+localparam integer SetMultiplexRatio = 5'b01101;
+localparam integer SetMasterConfiguration = 5'b01111;
+localparam integer DisablePowerSave = 5'b01110;
+localparam integer SetPhaseAdjust = 5'b01010;
+localparam integer SetDisplayClock = 5'b01011;
+localparam integer SetSecondPrechargeA = 5'b01001;
+localparam integer SetSecondPrechargeB = 5'b01000;
+localparam integer SetSecondPrechargeC = 5'b11000;
+localparam integer SetPrechargeLevel = 5'b11001;
+localparam integer SetVCOMH = 5'b11011;
+localparam integer SetMasterCurrent = 5'b11010;
+localparam integer SetContrastA = 5'b11110;
+localparam integer SetContrastB = 5'b11111;
+localparam integer SetContrastC = 5'b11101;
+localparam integer DisableScrolling = 5'b11100;
+localparam integer ClearScreen = 5'b10100;
+localparam integer VccEn = 5'b10101;
+localparam integer DisplayOn = 5'b10111;
+localparam integer PrepareNextFrame = 5'b10110;
+localparam integer SetColAddress = 5'b10010;
+localparam integer SetRowAddress = 5'b10011;
+localparam integer WaitNextFrame = 5'b10001;
+localparam integer SendPixel = 5'b10000;
 
 assign sending_pixels = state == SendPixel;
 
@@ -159,8 +159,8 @@ function [StateWidth-1:0] fsm_next_state;
 endfunction
 
 // SPI Master
-localparam SpiCommandMaxWidth = 40;
-localparam SpiCommandBitCountWidth = $clog2(SpiCommandMaxWidth);
+localparam integer SpiCommandMaxWidth = 40;
+localparam integer SpiCommandBitCountWidth = $clog2(SpiCommandMaxWidth);
 
 reg [SpiCommandBitCountWidth-1:0] spi_word_bit_count;
 reg [SpiCommandMaxWidth-1:0] spi_word;

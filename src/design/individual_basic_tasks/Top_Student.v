@@ -12,12 +12,12 @@
 
 module Top_Student (
     input wire CLK100MHZ,          // 100MHz system CLK100MHZ
-    input wire btnC,
-    input wire btnU,
-    input wire btnL,
-    input wire btnR,
-    input wire btnD,
-    input wire [15:0] sw,      // Switches
+    input wire BTNC,
+    input wire BTNU,
+    input wire BTNL,
+    input wire BTNR,
+    input wire BTND,
+    input wire [15:0] SW,      // Switches
     output wire [7:0] JC,       // PMOD OLED connections
     output wire [7:0] SEG,
     output wire [3:0] AN
@@ -29,8 +29,8 @@ module Top_Student (
     reg clk6p25m = 0;
     reg clk20hz = 0;
     
-    always @(posedge CLK100MHZ or posedge btnC) begin
-            if (btnC)
+    always @(posedge CLK100MHZ or posedge BTNC) begin
+            if (BTNC)
                 clk_div_counter <= 0;
             else begin
                 if (clk_div_counter == 7) begin  // 100MHz / 6.25MHz / 2 = 8
@@ -61,18 +61,27 @@ module Top_Student (
     wire [15:0] rgb_r;
     wire [15:0] rgb_s;
     wire frame_begin, sending_pixels, sample_pixel;
+    wire [15:0] rgb_kb;
+    wire [7:0]  kb_ascii;
+    wire [23:0] kb_rgb;
+    wire        kb_is_digit;
+    wire        kb_is_unit;
+    wire        kb_is_action;
+    wire [4:0]  kb_key_id;
+    wire        kb_key_valid;
 
     always @(posedge clk6p25m) begin
-        if (sw[15]) begin
+        if (SW[15]) begin
             oled_data <= rgb_s;
-        end else if (sw[14]) begin
+        end else if (SW[14]) begin
             oled_data <= rgb_r;
-        end else if (sw[13]) begin
+        end else if (SW[13]) begin
             oled_data <= rgb_q;
-        end else if (sw[12]) begin
+        end else if (SW[12]) begin
             oled_data <= rgb_p;
         end else begin
-            oled_data <= 0;
+            // Default: show on-screen keyboard
+            oled_data <= rgb_kb;
         end
     end
 
@@ -96,7 +105,7 @@ module Top_Student (
     BasicTaskP task_p_inst (
         .x(x_pos),
         .y(y_pos),
-        .btnU(btnU),
+        .btnU(BTNU),
         .rgb(rgb_p),
         .CLK100MHZ(CLK100MHZ)
     );
@@ -104,7 +113,7 @@ module Top_Student (
     BasicTaskQ task_q_inst (
         .x(x_pos),
         .y(y_pos),
-        .btnD(btnD),
+        .btnD(BTND),
         .rgb(rgb_q),
         .CLK100MHZ(CLK100MHZ)
     );
@@ -112,7 +121,7 @@ module Top_Student (
     BasicTaskR task_r_inst (
         .x(x_pos),
         .y(y_pos),
-        .SW1(sw[1]),
+        .SW1(SW[1]),
         .rgb(rgb_r),
         .CLK100MHZ(CLK100MHZ)
     );
@@ -120,15 +129,35 @@ module Top_Student (
     BasicTaskS task_s_inst (
         .x(x_pos),
         .y(y_pos),
-        .btnR(btnR),
-        .btnL(btnL),
+        .btnR(BTNR),
+        .btnL(BTNL),
         .rgb(rgb_s),
         .CLK100MHZ(CLK100MHZ)
+    );
+
+    // On-screen keyboard (OLED 96x64)
+    Keyboard keyboard_inst (
+        .clk_nav(clk20hz),
+        .btnU(BTNU),
+        .btnD(BTND),
+        .btnL(BTNL),
+        .btnR(BTNR),
+        .btnC(BTNC),
+        .x(x_pos),
+        .y(y_pos),
+        .pixel_rgb(rgb_kb),
+        .key_id(kb_key_id),
+        .key_valid(kb_key_valid),
+        .key_ascii(kb_ascii),
+        .key_rgb(kb_rgb),
+        .key_is_digit(kb_is_digit),
+        .key_is_unit(kb_is_unit),
+        .key_is_action(kb_is_action)
     );
     
     Oled_Display oled_inst (
         .clk(clk6p25m),
-        .reset(btnC),             // can tie to pushbutton or 0
+        .reset(BTNC),             // can tie to pushbutton or 0
         .frame_begin(frame_begin),
         .sending_pixels(sending_pixels),
         .sample_pixel(sample_pixel),

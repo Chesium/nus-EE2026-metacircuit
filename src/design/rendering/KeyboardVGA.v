@@ -3,8 +3,6 @@
 // - Renders directly for a 640x480-style pixel stream using RGB444.
 module KeyboardVGA #(
     parameter integer KEY_COUNT = 20,
-    parameter integer SCREEN_W = 640,
-    parameter integer SCREEN_H = 480,
     parameter integer COLS = 5,
     parameter integer ROWS = 4,
     parameter integer FONT_SCALE = 4,
@@ -54,8 +52,11 @@ module KeyboardVGA #(
     localparam [23:0]
         RGB_BG              = 24'hF8F4EC,
         RGB_PANEL           = 24'hF3EADF,
+        RGB_PANEL_BORDER    = 24'hB8AA97,
         RGB_BORDER          = 24'hCBBFB0,
         RGB_SELECTED_BORDER = 24'hFFD84D,
+        RGB_SELECTED_MARKER = 24'hFFF7D2,
+        RGB_PRESSED_BORDER  = 24'hD9A900,
         RGB_DIGIT           = 24'hAFCBFF,
         RGB_UNIT            = 24'hBEE8B7,
         RGB_DOT             = 24'hF9E79F,
@@ -68,7 +69,13 @@ module KeyboardVGA #(
     localparam integer KEY_H = 12 * FONT_SCALE;
     localparam integer KEYBOARD_W = COLS * KEY_W;
     localparam integer KEYBOARD_H = ROWS * KEY_H;
+    localparam integer PANEL_PAD = 8;
+    localparam integer PANEL_BORDER = 2;
     localparam integer BORDER = 3;
+    localparam integer EDGE_THICK = 2;
+    localparam integer MARKER_OFFSET = 7;
+    localparam integer MARKER_W = 3;
+    localparam integer MARKER_H = 3;
     localparam integer FONT5_SCALE = FONT_SCALE;
     localparam integer FONT3_SCALE = FONT_SCALE - 1;
 
@@ -96,8 +103,18 @@ module KeyboardVGA #(
     reg [11:0] cell_y;
 
     reg [23:0] cell_color;
+    reg [23:0] face_color;
+    reg [23:0] selected_fill_color;
+    reg [23:0] top_left_edge_color;
+    reg [23:0] bottom_right_edge_color;
     reg is_border;
     reg is_selected;
+    reg is_pressed;
+    reg is_selected_marker;
+    reg is_top_edge;
+    reg is_left_edge;
+    reg is_right_edge;
+    reg is_bottom_edge;
     reg is_text;
     reg [2:0] text_cols;
     reg [7:0] t0;
@@ -211,6 +228,37 @@ module KeyboardVGA #(
         end
     endfunction
 
+    function [23:0] lighten_rgb_quarter;
+        input [23:0] c;
+        reg [7:0] r;
+        reg [7:0] g;
+        reg [7:0] b;
+        begin
+            r = c[23:16] + ((8'hFF - c[23:16]) >> 2);
+            g = c[15:8]  + ((8'hFF - c[15:8])  >> 2);
+            b = c[7:0]   + ((8'hFF - c[7:0])   >> 2);
+            lighten_rgb_quarter = {r, g, b};
+        end
+    endfunction
+
+    function [23:0] darken_rgb_quarter;
+        input [23:0] c;
+        begin
+            darken_rgb_quarter = {c[23:16] - (c[23:16] >> 2),
+                                  c[15:8]  - (c[15:8]  >> 2),
+                                  c[7:0]   - (c[7:0]   >> 2)};
+        end
+    endfunction
+
+    function [23:0] darken_rgb_eighth;
+        input [23:0] c;
+        begin
+            darken_rgb_eighth = {c[23:16] - (c[23:16] >> 3),
+                                 c[15:8]  - (c[15:8]  >> 3),
+                                 c[7:0]   - (c[7:0]   >> 3)};
+        end
+    endfunction
+
     function [34:0] glyph5x7;
         input [7:0] c;
         begin
@@ -228,7 +276,7 @@ module KeyboardVGA #(
                 "M": glyph5x7 = 35'b10001_11011_10101_10101_10001_10001_10001;
                 "k": glyph5x7 = 35'b10000_10000_10010_10100_11000_10100_10010;
                 "m": glyph5x7 = 35'b00000_11010_10101_10101_10101_10101_00000;
-                "u": glyph5x7 = 35'b00000_10001_10001_10011_01101_00001_00001;
+                "u": glyph5x7 = 35'b00000_10001_10001_10011_11101_10000_10000;
                 "n": glyph5x7 = 35'b00000_11110_10001_10001_10001_10001_00000;
                 "p": glyph5x7 = 35'b00000_11110_10001_11110_10000_10000_00000;
                 ".": glyph5x7 = 35'b00000_00000_00000_00000_00000_01100_01100;
@@ -286,8 +334,18 @@ module KeyboardVGA #(
     always @(*) begin
         pixel_rgb = rgb888_to_444(RGB_BG);
         cell_color = RGB_NONE;
+        face_color = RGB_NONE;
+        selected_fill_color = RGB_NONE;
+        top_left_edge_color = RGB_NONE;
+        bottom_right_edge_color = RGB_NONE;
         is_border = 1'b0;
         is_selected = 1'b0;
+        is_pressed = 1'b0;
+        is_selected_marker = 1'b0;
+        is_top_edge = 1'b0;
+        is_left_edge = 1'b0;
+        is_right_edge = 1'b0;
+        is_bottom_edge = 1'b0;
         is_text = 1'b0;
         text_cols = 3'd0;
         t0 = 8'h00;
@@ -306,9 +364,16 @@ module KeyboardVGA #(
         row_bits_3x5 = 3'd0;
 
         if (!inside_keyboard) begin
-            if ((x >= (KEYBOARD_X0 - 8)) && (x < (KEYBOARD_X0 + KEYBOARD_W + 8)) &&
-                (y >= (KEYBOARD_Y0 - 8)) && (y < (KEYBOARD_Y0 + KEYBOARD_H + 8))) begin
-                pixel_rgb = rgb888_to_444(RGB_PANEL);
+            if ((x >= (KEYBOARD_X0 - PANEL_PAD)) && (x < (KEYBOARD_X0 + KEYBOARD_W + PANEL_PAD)) &&
+                (y >= (KEYBOARD_Y0 - PANEL_PAD)) && (y < (KEYBOARD_Y0 + KEYBOARD_H + PANEL_PAD))) begin
+                if ((x < (KEYBOARD_X0 - PANEL_PAD + PANEL_BORDER)) ||
+                    (x >= (KEYBOARD_X0 + KEYBOARD_W + PANEL_PAD - PANEL_BORDER)) ||
+                    (y < (KEYBOARD_Y0 - PANEL_PAD + PANEL_BORDER)) ||
+                    (y >= (KEYBOARD_Y0 + KEYBOARD_H + PANEL_PAD - PANEL_BORDER))) begin
+                    pixel_rgb = rgb888_to_444(RGB_PANEL_BORDER);
+                end else begin
+                    pixel_rgb = rgb888_to_444(RGB_PANEL);
+                end
             end
         end else begin
             case (cell_id)
@@ -323,6 +388,35 @@ module KeyboardVGA #(
             is_border = (cell_x < BORDER) || (cell_y < BORDER) ||
                         (cell_x >= (KEY_W - BORDER)) || (cell_y >= (KEY_H - BORDER));
             is_selected = (cell_id == key_id);
+            is_pressed = is_selected && btnC;
+            selected_fill_color = lighten_rgb_quarter(cell_color);
+            if (is_selected) face_color = selected_fill_color;
+            else face_color = cell_color;
+            if (is_pressed) face_color = darken_rgb_eighth(face_color);
+
+            if (is_pressed) begin
+                top_left_edge_color = darken_rgb_eighth(face_color);
+                bottom_right_edge_color = darken_rgb_quarter(face_color);
+            end else begin
+                top_left_edge_color = lighten_rgb_quarter(face_color);
+                bottom_right_edge_color = darken_rgb_quarter(face_color);
+            end
+
+            is_selected_marker = is_selected &&
+                                 (cell_x >= MARKER_OFFSET) &&
+                                 (cell_x < (MARKER_OFFSET + MARKER_W)) &&
+                                 (cell_y >= MARKER_OFFSET) &&
+                                 (cell_y < (MARKER_OFFSET + MARKER_H));
+            is_top_edge = (cell_y >= BORDER) && (cell_y < (BORDER + EDGE_THICK)) &&
+                          (cell_x >= BORDER) && (cell_x < (KEY_W - BORDER));
+            is_left_edge = (cell_x >= BORDER) && (cell_x < (BORDER + EDGE_THICK)) &&
+                           (cell_y >= BORDER) && (cell_y < (KEY_H - BORDER));
+            is_right_edge = (cell_x >= (KEY_W - BORDER - EDGE_THICK)) &&
+                            (cell_x < (KEY_W - BORDER)) &&
+                            (cell_y >= BORDER) && (cell_y < (KEY_H - BORDER));
+            is_bottom_edge = (cell_y >= (KEY_H - BORDER - EDGE_THICK)) &&
+                             (cell_y < (KEY_H - BORDER)) &&
+                             (cell_x >= BORDER) && (cell_x < (KEY_W - BORDER));
 
             case (cell_id)
                 POS_R0C0: begin t0 = "1"; text_cols = 3'd1; end
@@ -412,10 +506,14 @@ module KeyboardVGA #(
             end
 
             if (cell_id < KEY_COUNT) begin
-                if (is_border && is_selected) pixel_rgb = rgb888_to_444(RGB_SELECTED_BORDER);
+                if (is_border && is_pressed) pixel_rgb = rgb888_to_444(RGB_PRESSED_BORDER);
+                else if (is_border && is_selected) pixel_rgb = rgb888_to_444(RGB_SELECTED_BORDER);
                 else if (is_border) pixel_rgb = rgb888_to_444(RGB_BORDER);
                 else if (is_text) pixel_rgb = rgb888_to_444(RGB_TEXT);
-                else pixel_rgb = rgb888_to_444(cell_color);
+                else if (is_top_edge || is_left_edge) pixel_rgb = rgb888_to_444(top_left_edge_color);
+                else if (is_right_edge || is_bottom_edge) pixel_rgb = rgb888_to_444(bottom_right_edge_color);
+                else if (is_selected_marker) pixel_rgb = rgb888_to_444(RGB_SELECTED_MARKER);
+                else pixel_rgb = rgb888_to_444(face_color);
             end
         end
     end

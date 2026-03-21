@@ -136,11 +136,12 @@ module CircuitCanvas #(
   /*
     Data Width = 16
     F E D C B A 9 8 7 6 5 4 3 2 1 0
-    M M M M M M M R R T T T T T T E
-    |             |   |           Enable: 1bit
-    |             |   Type: 6bit (64)
-    |             Rotation: 2bit (4)
-    Mode: 7bit (128)
+    S C C C C C C R R T T T T T T E
+    | |           |   |           Enable: 1bit
+    | |           |   Sprite ID: 6bit (64)
+    | |           Rotation: 2bit (4)
+    | Component Index: 6bit (64)
+    Selected: 1bit
   */
 
   localparam integer EmptyCellData = 16'b0000000_00_000000_0;

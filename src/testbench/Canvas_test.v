@@ -52,6 +52,7 @@ module Canvas_test ();
 
   CircuitCanvas_top #(
       .EnableDemoProducer(0),
+      .EnableInteraction(0),
       .BgStepWaitCycles(0)
   ) dut_stable (
       .CLK100MHZ(clk_t_100m),
@@ -76,6 +77,7 @@ module Canvas_test ();
 
   CircuitCanvas_top #(
       .EnableDemoProducer(1),
+      .EnableInteraction(0),
       .BgStepWaitCycles(0)
   ) dut_demo (
       .CLK100MHZ(clk_t_100m),
@@ -100,6 +102,7 @@ module Canvas_test ();
 
   CircuitCanvas_top #(
       .EnableDemoProducer(0),
+      .EnableInteraction(0),
       .BgStepWaitCycles(OverrunBgStepWaitCycles)
   ) dut_overrun (
       .CLK100MHZ(clk_t_100m),

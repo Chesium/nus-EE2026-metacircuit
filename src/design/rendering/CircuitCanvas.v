@@ -29,7 +29,9 @@ module CircuitCanvas #(
     input wire display_grid,
 
     /*Detect whether the left mouse is click*/
-    input wire mouse_left_click
+    input wire mouse_left_click,
+    output wire signed [12:0] grid_pos_x_out,
+    output wire signed [12:0] grid_pos_y_out
 );
 
   /*Parameter for panning*/
@@ -44,6 +46,9 @@ module CircuitCanvas #(
   /*Real grid offset (Panning)*/
   reg signed [12:0] grid_pos_x = 0; 
   reg signed [12:0] grid_pos_y = 0;
+
+  assign grid_pos_x_out = grid_pos_x;
+  assign grid_pos_y_out = grid_pos_y;
 
   /*temporary offset*/
   wire signed [13:0] delta_x = {1'b0, mouse_x_pos} - click_start_x;

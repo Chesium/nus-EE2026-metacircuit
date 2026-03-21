@@ -2,6 +2,7 @@
 
 module CircuitCanvas_top #(
     parameter integer EnableDemoProducer = 1,
+    parameter integer EnableInteraction  = 1,
     parameter integer BgStepWaitCycles   = 0
 ) (
     input  wire        CLK100MHZ,
@@ -27,6 +28,13 @@ module CircuitCanvas_top #(
   localparam integer CanvasWordWidth = 16;
   localparam integer CanvasWordCount = 256;
   localparam integer CanvasAddrWidth = 8;
+  localparam integer CanvasPosX = 0;
+  localparam integer CanvasPosY = 0;
+  localparam integer CanvasWidth = 400;
+  localparam integer CanvasHeight = 300;
+  localparam integer CanvasCellSize = 32;
+  localparam integer CanvasGridWidth = 16;
+  localparam integer CanvasGridHeight = 16;
 
   localparam integer BgStateInitClearA = 0;
   localparam integer BgStateInitClearB = 1;
@@ -171,12 +179,20 @@ module CircuitCanvas_top #(
   wire [CanvasWordWidth-1:0] canvas_ram_a_render_data;
   wire [CanvasWordWidth-1:0] canvas_ram_b_render_data;
   wire [CanvasWordWidth-1:0] circuit_canvas_ram_render_data;
+  wire signed [12:0] circuit_canvas_grid_pos_x;
+  wire signed [12:0] circuit_canvas_grid_pos_y;
 
   reg active_buf_sel_pix = 1'b0;
   reg active_buf_sel_bg = 1'b0;
   reg buffers_init_done = 1'b0;
   reg frame_prep_done = 1'b0;
   reg bg_overrun_flag = 1'b0;
+  reg signed [12:0] frame_grid_pos_x_pix = 0;
+  reg signed [12:0] frame_grid_pos_y_pix = 0;
+  reg signed [12:0] frame_grid_pos_x_bg_sync0 = 0;
+  reg signed [12:0] frame_grid_pos_y_bg_sync0 = 0;
+  reg signed [12:0] frame_grid_pos_x_bg_sync1 = 0;
+  reg signed [12:0] frame_grid_pos_y_bg_sync1 = 0;
 
   reg canvas_ram_a_bg_w_en = 1'b0;
   reg [CanvasAddrWidth-1:0] canvas_ram_a_bg_w_addr = 0;
@@ -225,8 +241,36 @@ module CircuitCanvas_top #(
 
   wire [11:0] circuit_canvas_rgb;
   wire circuit_canvas_rendered;
+  wire interaction_bg_cmd_valid;
+  wire interaction_bg_cmd_write;
+  wire [CanvasAddrWidth-1:0] interaction_bg_cmd_addr;
+  wire [CanvasWordWidth-1:0] interaction_bg_cmd_wdata;
+  wire interaction_frame_done;
+  wire interaction_frame_tick;
+  wire interaction_bg_cmd_ready;
+  wire demo_cmd_valid;
+  wire demo_cmd_write;
+  wire [CanvasAddrWidth-1:0] demo_cmd_addr;
+  wire [CanvasWordWidth-1:0] demo_cmd_wdata;
+  wire demo_cmd_frame_done;
+  wire bg_cmd_ready;
+  wire bg_cmd_valid;
+  wire bg_cmd_write;
+  wire [CanvasAddrWidth-1:0] bg_cmd_addr;
+  wire [CanvasWordWidth-1:0] bg_cmd_wdata;
+  wire bg_cmd_stream_done;
+  wire serving_demo_cmd;
+  wire serving_interaction_cmd;
 
-  CircuitCanvas circuit_canvas_inst (
+  CircuitCanvas #(
+      .CanvasPosX(CanvasPosX),
+      .CanvasPosY(CanvasPosY),
+      .CanvasWidth(CanvasWidth),
+      .CanvasHeight(CanvasHeight),
+      .CellSize(CanvasCellSize),
+      .GridWidth(CanvasGridWidth),
+      .GridHeight(CanvasGridHeight)
+  ) circuit_canvas_inst (
       .clk_pixel(clk_pixel),
       .x_pos(x_pos),
       .y_pos(y_pos),
@@ -237,7 +281,9 @@ module CircuitCanvas_top #(
       .display_grid(1'b1),
       .mouse_x_pos(mouse_xpos),
       .mouse_y_pos(mouse_ypos),
-      .mouse_left_click(mouse_left)
+      .mouse_left_click(mouse_middle),
+      .grid_pos_x_out(circuit_canvas_grid_pos_x),
+      .grid_pos_y_out(circuit_canvas_grid_pos_y)
   );
 
   reg [31:0] mouse_init_cycles = 0;
@@ -279,6 +325,8 @@ module CircuitCanvas_top #(
     end else begin
       vsync_prev <= VSYNC;
       if (frame_flip_pulse_pix) begin
+        frame_grid_pos_x_pix <= circuit_canvas_grid_pos_x;
+        frame_grid_pos_y_pix <= circuit_canvas_grid_pos_y;
         active_buf_sel_pix <= ~active_buf_sel_pix;
         frame_flip_toggle_pix <= ~frame_flip_toggle_pix;
       end
@@ -294,11 +342,51 @@ module CircuitCanvas_top #(
     if (BTNC) begin
       frame_flip_toggle_bg_sync <= 2'b00;
       frame_flip_toggle_bg_prev <= 1'b0;
+      frame_grid_pos_x_bg_sync0 <= 0;
+      frame_grid_pos_y_bg_sync0 <= 0;
+      frame_grid_pos_x_bg_sync1 <= 0;
+      frame_grid_pos_y_bg_sync1 <= 0;
     end else begin
       frame_flip_toggle_bg_sync <= {frame_flip_toggle_bg_sync[0], frame_flip_toggle_pix};
       frame_flip_toggle_bg_prev <= frame_flip_toggle_bg_sync[1];
+      frame_grid_pos_x_bg_sync0 <= frame_grid_pos_x_pix;
+      frame_grid_pos_y_bg_sync0 <= frame_grid_pos_y_pix;
+      frame_grid_pos_x_bg_sync1 <= frame_grid_pos_x_bg_sync0;
+      frame_grid_pos_y_bg_sync1 <= frame_grid_pos_y_bg_sync0;
     end
   end
+
+  assign interaction_frame_tick = buffers_init_done && frame_flip_pulse_bg;
+
+  InteractionController #(
+      .CanvasPosX(CanvasPosX),
+      .CanvasPosY(CanvasPosY),
+      .CanvasWidth(CanvasWidth),
+      .CanvasHeight(CanvasHeight),
+      .CellSize(CanvasCellSize),
+      .GridWidth(CanvasGridWidth),
+      .GridHeight(CanvasGridHeight),
+      .AddrWidth(CanvasAddrWidth),
+      .DataWidth(CanvasWordWidth)
+  ) interaction_controller_inst (
+      .clk(CLK100MHZ),
+      .reset(BTNC),
+      .frame_start_pulse(interaction_frame_tick),
+      .mode_select(2'd0),
+      .mouse_x(mouse_xpos),
+      .mouse_y(mouse_ypos),
+      .mouse_left(mouse_left),
+      .mouse_middle(mouse_middle),
+      .mouse_right(mouse_right),
+      .grid_pos_x(frame_grid_pos_x_bg_sync1),
+      .grid_pos_y(frame_grid_pos_y_bg_sync1),
+      .bg_cmd_ready(interaction_bg_cmd_ready),
+      .bg_cmd_valid(interaction_bg_cmd_valid),
+      .bg_cmd_write(interaction_bg_cmd_write),
+      .bg_cmd_addr(interaction_bg_cmd_addr),
+      .bg_cmd_wdata(interaction_bg_cmd_wdata),
+      .frame_done(interaction_frame_done)
+  );
 
   reg [3:0] bg_state = BgStateInitClearA;
   reg [CanvasAddrWidth-1:0] bg_init_addr = 0;
@@ -311,19 +399,22 @@ module CircuitCanvas_top #(
 
   reg demo_loaded = 1'b0;
   reg [3:0] demo_cmd_index = 0;
+  assign demo_cmd_valid = EnableDemoProducer && !demo_loaded && (demo_cmd_index < DemoCommandCount);
+  assign demo_cmd_write = 1'b1;
+  assign demo_cmd_addr = DemoAddr(demo_cmd_index);
+  assign demo_cmd_wdata = DemoData(demo_cmd_index);
+  assign demo_cmd_frame_done = !EnableDemoProducer || demo_loaded;
 
-  wire bg_cmd_valid;
-  reg bg_cmd_ready = 1'b0;
-  wire bg_cmd_write;
-  wire [CanvasAddrWidth-1:0] bg_cmd_addr;
-  wire [CanvasWordWidth-1:0] bg_cmd_wdata;
-  wire bg_cmd_stream_done;
-
-  assign bg_cmd_valid = EnableDemoProducer && !demo_loaded && (demo_cmd_index < DemoCommandCount);
-  assign bg_cmd_write = 1'b1;
-  assign bg_cmd_addr = DemoAddr(demo_cmd_index);
-  assign bg_cmd_wdata = DemoData(demo_cmd_index);
-  assign bg_cmd_stream_done = !EnableDemoProducer || demo_loaded;
+  assign bg_cmd_ready = (bg_state == BgStateUpdateIdle) && (bg_step_wait_ctr == 0);
+  assign serving_demo_cmd = demo_cmd_valid;
+  assign serving_interaction_cmd = !demo_cmd_valid && interaction_bg_cmd_valid;
+  assign interaction_bg_cmd_ready = EnableInteraction && bg_cmd_ready && serving_interaction_cmd;
+  assign bg_cmd_valid = serving_demo_cmd || (EnableInteraction && interaction_bg_cmd_valid);
+  assign bg_cmd_write = serving_demo_cmd ? demo_cmd_write : interaction_bg_cmd_write;
+  assign bg_cmd_addr = serving_demo_cmd ? demo_cmd_addr : interaction_bg_cmd_addr;
+  assign bg_cmd_wdata = serving_demo_cmd ? demo_cmd_wdata : interaction_bg_cmd_wdata;
+  assign bg_cmd_stream_done = demo_cmd_frame_done &&
+                              (!EnableInteraction || interaction_frame_done);
 
   always @(posedge CLK100MHZ) begin
     if (BTNC) begin
@@ -339,7 +430,6 @@ module CircuitCanvas_top #(
       bg_rsp_valid <= 1'b0;
       bg_step_wait_ctr <= 0;
       frame_flip_pending_bg <= 1'b0;
-      bg_cmd_ready <= 1'b0;
       demo_loaded <= 1'b0;
       demo_cmd_index <= 0;
 
@@ -355,7 +445,6 @@ module CircuitCanvas_top #(
       canvas_ram_a_bg_w_en <= 1'b0;
       canvas_ram_b_bg_w_en <= 1'b0;
       bg_rsp_valid <= 1'b0;
-      bg_cmd_ready <= 1'b0;
       frame_flip_pending_bg <= frame_flip_pending_bg || frame_flip_pulse_bg;
 
       if (buffers_init_done && (frame_flip_pending_bg || frame_flip_pulse_bg)) begin
@@ -447,7 +536,6 @@ module CircuitCanvas_top #(
           end
 
           BgStateUpdateIdle: begin
-            bg_cmd_ready <= 1'b1;
             if (bg_cmd_valid) begin
               if (bg_cmd_write) begin
                 if (active_buf_sel_bg) begin
@@ -460,10 +548,12 @@ module CircuitCanvas_top #(
                   canvas_ram_b_bg_d_in   <= bg_cmd_wdata;
                 end
 
-                if (demo_cmd_index == DemoCommandCount - 1) begin
-                  demo_loaded <= 1'b1;
-                end else begin
-                  demo_cmd_index <= demo_cmd_index + 1;
+                if (serving_demo_cmd) begin
+                  if (demo_cmd_index == DemoCommandCount - 1) begin
+                    demo_loaded <= 1'b1;
+                  end else begin
+                    demo_cmd_index <= demo_cmd_index + 1;
+                  end
                 end
                 bg_step_wait_ctr <= BgStepWaitCycles;
               end else begin

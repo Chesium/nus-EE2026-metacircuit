@@ -3,7 +3,8 @@
 module CircuitCanvas_top #(
     parameter integer EnableDemoProducer = 1,
     parameter integer EnableInteraction  = 1,
-    parameter integer BgStepWaitCycles   = 0
+    parameter integer BgStepWaitCycles   = 0,
+    parameter integer RotateFramesPerStep = 20
 ) (
     input  wire        CLK100MHZ,
     input  wire [15:0] SW,
@@ -187,7 +188,7 @@ module CircuitCanvas_top #(
   reg buffers_init_done = 1'b0;
   reg frame_prep_done = 1'b0;
   reg bg_overrun_flag = 1'b0;
-  assign LED = {6'd0, interaction_frame_drop_flag, bg_overrun_flag, 5'd0, SW[2:0]};
+  assign LED = {5'd0, interaction_frame_drop_flag, bg_overrun_flag, 5'd0, SW[3:0]};
   reg signed [12:0] frame_grid_pos_x_pix = 0;
   reg signed [12:0] frame_grid_pos_y_pix = 0;
   reg signed [12:0] frame_grid_pos_x_bg_sync0 = 0;
@@ -369,13 +370,14 @@ module CircuitCanvas_top #(
       .CellSize(CanvasCellSize),
       .GridWidth(CanvasGridWidth),
       .GridHeight(CanvasGridHeight),
+      .RotateFramesPerStep(RotateFramesPerStep),
       .AddrWidth(CanvasAddrWidth),
       .DataWidth(CanvasWordWidth)
   ) interaction_controller_inst (
       .clk(CLK100MHZ),
       .reset(BTNC),
       .frame_start_pulse(interaction_frame_tick),
-      .mode_select(SW[2:0]),
+      .mode_select(SW[3:0]),
       .mouse_x(mouse_xpos),
       .mouse_y(mouse_ypos),
       .mouse_left(mouse_left),

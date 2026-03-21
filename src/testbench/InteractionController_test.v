@@ -4,6 +4,7 @@ module InteractionController_test ();
 
   localparam integer AddrWidth = 8;
   localparam integer DataWidth = 16;
+  localparam integer RotateFramesPerStep = 3;
   localparam [DataWidth-1:0] HorizontalWire = 16'b0000000_00_000000_1;
   localparam [DataWidth-1:0] VerticalWire   = 16'b0000000_01_000000_1;
   localparam [DataWidth-1:0] JunctionCell   = 16'b0000000_00_000011_1;
@@ -21,7 +22,7 @@ module InteractionController_test ();
 
   reg reset = 1'b1;
   reg frame_start_pulse = 1'b0;
-  reg [2:0] mode_select = 3'd0;
+  reg [3:0] mode_select = 4'd0;
   reg [11:0] mouse_x = 0;
   reg [11:0] mouse_y = 0;
   reg mouse_left = 1'b0;
@@ -42,7 +43,9 @@ module InteractionController_test ();
 
   integer failure_count = 0;
 
-  InteractionController dut (
+  InteractionController #(
+      .RotateFramesPerStep(RotateFramesPerStep)
+  ) dut (
       .clk(clk),
       .reset(reset),
       .frame_start_pulse(frame_start_pulse),
@@ -147,7 +150,7 @@ module InteractionController_test ();
     expect_true(!bg_cmd_valid, "no click should not generate a command");
     expect_true(frame_done, "empty frame should complete immediately");
 
-    mode_select = 3'd0;
+    mode_select = 4'd0;
     mouse_left = 1'b1;
     pulse_frame();
     expect_true(bg_cmd_valid, "wire mode left click should generate a command");
@@ -168,22 +171,22 @@ module InteractionController_test ();
 
     mouse_right = 1'b0;
     mouse_left = 1'b1;
-    mode_select = 3'd1;
+    mode_select = 4'd1;
     pulse_frame();
     expect_word(bg_cmd_wdata, JunctionCell, "junction mode should place a junction sprite");
     accept_head_command();
 
-    mode_select = 3'd2;
+    mode_select = 4'd2;
     pulse_frame();
     expect_word(bg_cmd_wdata, ElbowCell, "elbow mode should place an elbow sprite");
     accept_head_command();
 
-    mode_select = 3'd3;
+    mode_select = 4'd3;
     pulse_frame();
     expect_word(bg_cmd_wdata, TeeCell, "tee mode should place a tee sprite");
     accept_head_command();
 
-    mode_select = 3'd4;
+    mode_select = 4'd4;
     mouse_x = 12'd20;
     mouse_y = 12'd20;
     pulse_frame();
@@ -196,7 +199,7 @@ module InteractionController_test ();
     expect_word(bg_cmd_wdata, ResRightCell, "resistor mode should place RR second");
     accept_head_command();
 
-    mode_select = 3'd5;
+    mode_select = 4'd5;
     pulse_frame();
     expect_word(bg_cmd_wdata, VoltLeftCell, "voltage mode should place VL first");
     accept_head_command();
@@ -204,7 +207,7 @@ module InteractionController_test ();
     expect_word(bg_cmd_wdata, VoltRightCell, "voltage mode should place VR second");
     accept_head_command();
 
-    mode_select = 3'd6;
+    mode_select = 4'd6;
     pulse_frame();
     expect_word(bg_cmd_wdata, CurrLeftCell, "current mode should place IL first");
     accept_head_command();
@@ -212,7 +215,17 @@ module InteractionController_test ();
     expect_word(bg_cmd_wdata, CurrRightCell, "current mode should place IR second");
     accept_head_command();
 
-    mode_select = 3'd7;
+    mode_select = 4'd8;
+    mouse_x = 12'd50;
+    mouse_y = 12'd40;
+    pulse_frame();
+    expect_true(bg_cmd_valid, "clear mode should generate a command");
+    expect_true(bg_cmd_write, "clear mode should issue a write command");
+    expect_addr(bg_cmd_addr, 8'd17, "clear mode should target the selected cell");
+    expect_word(bg_cmd_wdata, 16'd0, "clear mode should write zero to clear the cell");
+    accept_head_command();
+
+    mode_select = 4'd7;
     mouse_x = 12'd50;
     mouse_y = 12'd40;
     pulse_frame();
@@ -228,14 +241,33 @@ module InteractionController_test ();
                 "rotate mode should increment the cell rotation");
     accept_head_command();
 
-    mode_select = 3'd7;
     pulse_frame();
+    expect_true(!bg_cmd_valid, "rotate mode should wait before issuing another step");
+    pulse_frame();
+    expect_true(!bg_cmd_valid, "rotate mode should keep waiting until the holdoff expires");
+    pulse_frame();
+    expect_true(bg_cmd_valid, "rotate mode should issue the next step after the programmed frame interval");
+    expect_true(!bg_cmd_write, "throttled rotate step should still begin with a read");
+    expect_addr(bg_cmd_addr, 8'd17, "throttled rotate step should keep targeting the selected cell");
     accept_head_command();
     return_read_data(16'd0);
     expect_word(bg_cmd_wdata, 16'd0, "rotate mode should leave empty cells unchanged");
     accept_head_command();
 
-    mode_select = 3'd4;
+    mode_select = 4'd7;
+    mouse_left = 1'b0;
+    pulse_frame();
+    expect_true(!bg_cmd_valid, "releasing rotate input should stop issuing commands immediately");
+    mouse_left = 1'b1;
+    pulse_frame();
+    expect_true(bg_cmd_valid, "rotate holdoff should reset once the input is released");
+    accept_head_command();
+    return_read_data(16'b0000000_00_000111_1);
+    expect_word(bg_cmd_wdata, 16'b0000000_01_000111_1,
+                "rotate mode should restart from the current cell data after a release");
+    accept_head_command();
+
+    mode_select = 4'd4;
     mouse_x = 12'd500;
     mouse_y = 12'd40;
     mouse_left = 1'b1;
@@ -257,7 +289,7 @@ module InteractionController_test ();
     expect_true(!bg_cmd_valid, "middle-button press should suppress placement");
 
     mouse_middle = 1'b0;
-    mode_select = 3'd4;
+    mode_select = 4'd4;
     mouse_x = 12'd395;
     mouse_y = 12'd10;
     grid_pos_x = -13'sd112;
@@ -265,7 +297,7 @@ module InteractionController_test ();
     pulse_frame();
     expect_true(!bg_cmd_valid, "dual-cell modes should ignore placements that would spill past the row edge");
 
-    mode_select = 3'd1;
+    mode_select = 4'd1;
     mouse_x = 12'd10;
     mouse_y = 12'd10;
     grid_pos_x = -13'sd64;
@@ -275,7 +307,7 @@ module InteractionController_test ();
     expect_addr(bg_cmd_addr, 8'd18, "panned placement should target the correct translated cell");
     accept_head_command();
 
-    mode_select = 3'd1;
+    mode_select = 4'd1;
     mouse_x = 12'd10;
     mouse_y = 12'd10;
     mouse_left = 1'b1;
@@ -284,7 +316,7 @@ module InteractionController_test ();
     pulse_frame();
     expect_word(bg_cmd_wdata, JunctionCell, "setup frame should leave a pending command to be replaced");
 
-    mode_select = 3'd5;
+    mode_select = 4'd5;
     pulse_frame();
     expect_word(bg_cmd_wdata, VoltLeftCell, "new frame should replace older pending work with the newest snapshot");
     expect_true(frame_drop_flag, "overwriting a previous unfinished frame should raise the drop flag");

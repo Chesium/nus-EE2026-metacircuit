@@ -3,6 +3,7 @@
 module InteractionCanvas_test ();
 
   localparam integer CanvasWordCount = 256;
+  localparam integer RotateFramesPerStep = 3;
   localparam [15:0] HorizontalWire = 16'b0000000_00_000000_1;
   localparam [15:0] JunctionCell  = 16'b0000000_00_000011_1;
   localparam [15:0] VoltLeftCell  = 16'b0000000_00_000111_1;
@@ -40,7 +41,8 @@ module InteractionCanvas_test ();
   CircuitCanvas_top #(
       .EnableDemoProducer(0),
       .EnableInteraction(1),
-      .BgStepWaitCycles(0)
+      .BgStepWaitCycles(0),
+      .RotateFramesPerStep(RotateFramesPerStep)
   ) dut (
       .CLK100MHZ(clk_t_100m),
       .SW(i_sw),
@@ -130,7 +132,7 @@ module InteractionCanvas_test ();
   end
 
   initial begin
-    #250_000_000;
+    #450_000_000;
     $fatal(1, "InteractionCanvas_test timed out.");
   end
 
@@ -155,7 +157,7 @@ module InteractionCanvas_test ();
     expect_word(dut.canvas_ram_b_inst.mem[17], 16'd0,
                 "interaction DUT buffer B cell 17 should start cleared");
 
-    i_sw[2:0] = 3'd0;
+    i_sw[3:0] = 4'd0;
     sel_before = dut.active_buf_sel_bg;
     drive_mouse(12'd10, 12'd10, 1'b1, 1'b0, 1'b0);
     wait_for_bg_frame_flip();
@@ -185,7 +187,7 @@ module InteractionCanvas_test ();
                   "horizontal wire should become visible after the next flip");
     end
 
-    i_sw[2:0] = 3'd1;
+    i_sw[3:0] = 4'd1;
     drive_mouse(12'd50, 12'd40, 1'b1, 1'b0, 1'b0);
     wait_for_bg_frame_flip();
     wait_for_next_bg_frame_prep_done();
@@ -208,7 +210,7 @@ module InteractionCanvas_test ();
                   "junction should become visible after the next flip");
     end
 
-    i_sw[2:0] = 3'd5;
+    i_sw[3:0] = 4'd5;
     drive_mouse(12'd20, 12'd20, 1'b1, 1'b0, 1'b0);
     wait_for_bg_frame_flip();
     wait_for_next_bg_frame_prep_done();
@@ -239,12 +241,57 @@ module InteractionCanvas_test ();
                   "voltage mode should preserve the adjacent right half after the next flip");
     end
 
-    i_sw[2:0] = 3'd7;
+    i_sw[3:0] = 4'd8;
     drive_mouse(12'd10, 12'd10, 1'b1, 1'b0, 1'b0);
     wait_for_bg_frame_flip();
     wait_for_next_bg_frame_prep_done();
     drive_mouse(12'd10, 12'd10, 1'b0, 1'b0, 1'b0);
     if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], 16'd0,
+                  "clear mode should stage a zeroed cell in the inactive buffer");
+    end else begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], 16'd0,
+                  "clear mode should stage a zeroed cell in the inactive buffer");
+    end
+
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], 16'd0,
+                  "clear mode should become visible after the next flip");
+    end else begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], 16'd0,
+                  "clear mode should become visible after the next flip");
+    end
+
+    i_sw[3:0] = 4'd5;
+    drive_mouse(12'd10, 12'd10, 1'b1, 1'b0, 1'b0);
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    drive_mouse(12'd10, 12'd10, 1'b0, 1'b0, 1'b0);
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], VoltLeftCell,
+                  "voltage mode should restage VL before the rotate test");
+    end else begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], VoltLeftCell,
+                  "voltage mode should restage VL before the rotate test");
+    end
+
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], VoltLeftCell,
+                  "restaged voltage source should become visible before rotate throttling");
+    end else begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], VoltLeftCell,
+                  "restaged voltage source should become visible before rotate throttling");
+    end
+
+    i_sw[3:0] = 4'd7;
+    drive_mouse(12'd10, 12'd10, 1'b1, 1'b0, 1'b0);
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    if (dut.active_buf_sel_bg == 1'b0) begin
       expect_word(dut.canvas_ram_b_inst.mem[0], RotatedVoltLeft,
                   "rotate mode should stage a rotated version of the current cell");
     end else begin
@@ -262,7 +309,38 @@ module InteractionCanvas_test ();
                   "rotate mode should become visible after the next flip");
     end
 
-    i_sw[2:0] = 3'd4;
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], RotatedVoltLeft,
+                  "rotate mode should hold the cell steady while its throttle counter is active");
+    end else begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], RotatedVoltLeft,
+                  "rotate mode should hold the cell steady while its throttle counter is active");
+    end
+
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    drive_mouse(12'd10, 12'd10, 1'b0, 1'b0, 1'b0);
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], 16'b0000000_10_000111_1,
+                  "rotate mode should stage the next rotation after the configured number of frame ticks");
+    end else begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], 16'b0000000_10_000111_1,
+                  "rotate mode should stage the next rotation after the configured number of frame ticks");
+    end
+
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], 16'b0000000_10_000111_1,
+                  "throttled rotate should become visible after the follow-up flip");
+    end else begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], 16'b0000000_10_000111_1,
+                  "throttled rotate should become visible after the follow-up flip");
+    end
+
+    i_sw[3:0] = 4'd4;
     drive_mouse(12'd500, 12'd20, 1'b1, 1'b0, 1'b0);
     wait_for_bg_frame_flip();
     wait_for_next_bg_frame_prep_done();

@@ -8,13 +8,14 @@ module InteractionController #(
     parameter integer CellSize = 32,
     parameter integer GridWidth = 16,
     parameter integer GridHeight = 16,
+    parameter integer RotateFramesPerStep = 20,
     parameter integer AddrWidth = $clog2(GridWidth * GridHeight),
     parameter integer DataWidth = 16
 ) (
     input  wire                      clk,
     input  wire                      reset,
     input  wire                      frame_start_pulse,
-    input  wire [2:0]                mode_select,
+    input  wire [3:0]                mode_select,
     input  wire [11:0]               mouse_x,
     input  wire [11:0]               mouse_y,
     input  wire                      mouse_left,
@@ -33,14 +34,17 @@ module InteractionController #(
     output reg                       frame_drop_flag = 1'b0
 );
 
-  localparam [2:0] ModeDrawWires    = 3'd0;
-  localparam [2:0] ModeDrawJunction = 3'd1;
-  localparam [2:0] ModeDrawElbow    = 3'd2;
-  localparam [2:0] ModeDrawTee      = 3'd3;
-  localparam [2:0] ModeDrawResistor = 3'd4;
-  localparam [2:0] ModeDrawVoltage  = 3'd5;
-  localparam [2:0] ModeDrawCurrent  = 3'd6;
-  localparam [2:0] ModeRotateCell   = 3'd7;
+  localparam integer RotateCtrWidth = (RotateFramesPerStep <= 1) ? 1 : $clog2(RotateFramesPerStep);
+
+  localparam [3:0] ModeDrawWires    = 4'd0;
+  localparam [3:0] ModeDrawJunction = 4'd1;
+  localparam [3:0] ModeDrawElbow    = 4'd2;
+  localparam [3:0] ModeDrawTee      = 4'd3;
+  localparam [3:0] ModeDrawResistor = 4'd4;
+  localparam [3:0] ModeDrawVoltage  = 4'd5;
+  localparam [3:0] ModeDrawCurrent  = 4'd6;
+  localparam [3:0] ModeRotateCell   = 4'd7;
+  localparam [3:0] ModeClearCell    = 4'd8;
 
   localparam [5:0] SpriteWire     = 6'd0;
   localparam [5:0] SpriteElbow    = 6'd1;
@@ -73,6 +77,7 @@ module InteractionController #(
   reg [DataWidth-1:0] cmd1_wdata = 0;
   reg rotate_rsp_pending = 1'b0;
   reg [AddrWidth-1:0] rotate_addr = 0;
+  reg [RotateCtrWidth-1:0] rotate_frame_holdoff = 0;
 
   wire draw_cmd_valid;
   wire [AddrWidth-1:0] draw_cmd_addr;
@@ -178,6 +183,7 @@ module InteractionController #(
       cmd1_wdata <= 0;
       rotate_rsp_pending <= 1'b0;
       rotate_addr <= 0;
+      rotate_frame_holdoff <= 0;
       frame_drop_flag <= 1'b0;
     end else begin
       if (frame_start_pulse) begin
@@ -191,6 +197,16 @@ module InteractionController #(
       end else begin
         if (decode_pending) begin
           decode_pending <= 1'b0;
+          if ((mode_select == ModeRotateCell) && draw_target_cell_valid && single_action) begin
+            if (rotate_frame_holdoff != 0) begin
+              rotate_frame_holdoff <= rotate_frame_holdoff - 1'b1;
+            end else begin
+              rotate_frame_holdoff <= (RotateFramesPerStep <= 1) ? 0 : RotateFramesPerStep - 1;
+            end
+          end else begin
+            rotate_frame_holdoff <= 0;
+          end
+
           case (mode_select)
             ModeDrawWires: begin
               if (draw_cmd_valid) begin
@@ -267,8 +283,17 @@ module InteractionController #(
               end
             end
 
-            ModeRotateCell: begin
+            ModeClearCell: begin
               if (draw_target_cell_valid && single_action) begin
+                cmd0_valid <= 1'b1;
+                cmd0_write <= 1'b1;
+                cmd0_addr <= draw_cmd_addr;
+                cmd0_wdata <= {DataWidth{1'b0}};
+              end
+            end
+
+            ModeRotateCell: begin
+              if ((rotate_frame_holdoff == 0) && draw_target_cell_valid && single_action) begin
                 cmd0_valid <= 1'b1;
                 cmd0_write <= 1'b0;
                 cmd0_addr <= draw_cmd_addr;

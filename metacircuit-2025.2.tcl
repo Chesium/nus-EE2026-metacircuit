@@ -81,6 +81,7 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/src/design/individual_basic_tasks/BasicTaskR.v"]"\
  "[file normalize "$origin_dir/src/design/individual_basic_tasks/BasicTaskS.v"]"\
  "[file normalize "$origin_dir/src/design/Keyboard/Keyboard.v"]"\
+ "[file normalize "$origin_dir/src/design/Keyboard/KeyboardVGA.v"]"\
  "[file normalize "$origin_dir/src/design/driver/Oled_Display.v"]"\
  "[file normalize "$origin_dir/src/design/individual_basic_tasks/SevenSeg.v"]"\
  "[file normalize "$origin_dir/src/design/individual_basic_tasks/Top_Student.v"]"\
@@ -245,6 +246,7 @@ set files [list \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/BasicTaskR.v"] \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/BasicTaskS.v"] \
  [file normalize "${origin_dir}/src/design/Keyboard/Keyboard.v"] \
+ [file normalize "${origin_dir}/src/design/Keyboard/KeyboardVGA.v"] \
  [file normalize "${origin_dir}/src/design/driver/Oled_Display.v"] \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/SevenSeg.v"] \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/Top_Student.v"] \
@@ -260,6 +262,7 @@ set files [list \
  [file normalize "${origin_dir}/src/design/driver/Mouse_Control.vhd"] \
  [file normalize "${origin_dir}/src/design/driver/Ps2Interface.vhd"] \
  [file normalize "${origin_dir}/src/design/rendering/CircuitCanvas_top.v"] \
+ [file normalize "${origin_dir}/src/design/rendering/KeyboardVGA_top.v"] \
 ]
 add_files -norecurse -fileset $obj $files
 

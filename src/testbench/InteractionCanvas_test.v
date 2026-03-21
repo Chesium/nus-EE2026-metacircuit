@@ -4,7 +4,10 @@ module InteractionCanvas_test ();
 
   localparam integer CanvasWordCount = 256;
   localparam [15:0] HorizontalWire = 16'b0000000_00_000000_1;
-  localparam [15:0] VerticalWire = 16'b0000000_01_000000_1;
+  localparam [15:0] JunctionCell  = 16'b0000000_00_000011_1;
+  localparam [15:0] VoltLeftCell  = 16'b0000000_00_000111_1;
+  localparam [15:0] VoltRightCell = 16'b0000000_00_001000_1;
+  localparam [15:0] RotatedVoltLeft = 16'b0000000_01_000111_1;
 
   reg clk_t_100m = 1'b0;
   always #5 clk_t_100m = ~clk_t_100m;
@@ -152,6 +155,7 @@ module InteractionCanvas_test ();
     expect_word(dut.canvas_ram_b_inst.mem[17], 16'd0,
                 "interaction DUT buffer B cell 17 should start cleared");
 
+    i_sw[2:0] = 3'd0;
     sel_before = dut.active_buf_sel_bg;
     drive_mouse(12'd10, 12'd10, 1'b1, 1'b0, 1'b0);
     wait_for_bg_frame_flip();
@@ -181,28 +185,84 @@ module InteractionCanvas_test ();
                   "horizontal wire should become visible after the next flip");
     end
 
-    drive_mouse(12'd50, 12'd40, 1'b0, 1'b0, 1'b1);
+    i_sw[2:0] = 3'd1;
+    drive_mouse(12'd50, 12'd40, 1'b1, 1'b0, 1'b0);
     wait_for_bg_frame_flip();
     wait_for_next_bg_frame_prep_done();
     drive_mouse(12'd50, 12'd40, 1'b0, 1'b0, 1'b0);
     if (dut.active_buf_sel_bg == 1'b0) begin
-      expect_word(dut.canvas_ram_b_inst.mem[17], VerticalWire,
-                  "right click should update the next inactive buffer with a vertical wire");
+      expect_word(dut.canvas_ram_b_inst.mem[17], JunctionCell,
+                  "junction mode should update the next inactive buffer with a junction");
     end else begin
-      expect_word(dut.canvas_ram_a_inst.mem[17], VerticalWire,
-                  "right click should update the next inactive buffer with a vertical wire");
+      expect_word(dut.canvas_ram_a_inst.mem[17], JunctionCell,
+                  "junction mode should update the next inactive buffer with a junction");
     end
 
     wait_for_bg_frame_flip();
     wait_for_next_bg_frame_prep_done();
     if (dut.active_buf_sel_bg == 1'b0) begin
-      expect_word(dut.canvas_ram_a_inst.mem[17], VerticalWire,
-                  "vertical wire should become visible after the next flip");
+      expect_word(dut.canvas_ram_a_inst.mem[17], JunctionCell,
+                  "junction should become visible after the next flip");
     end else begin
-      expect_word(dut.canvas_ram_b_inst.mem[17], VerticalWire,
-                  "vertical wire should become visible after the next flip");
+      expect_word(dut.canvas_ram_b_inst.mem[17], JunctionCell,
+                  "junction should become visible after the next flip");
     end
 
+    i_sw[2:0] = 3'd5;
+    drive_mouse(12'd20, 12'd20, 1'b1, 1'b0, 1'b0);
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    drive_mouse(12'd20, 12'd20, 1'b0, 1'b0, 1'b0);
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], VoltLeftCell,
+                  "voltage mode should stage VL in the inactive buffer");
+      expect_word(dut.canvas_ram_b_inst.mem[1], VoltRightCell,
+                  "voltage mode should stage VR in the adjacent inactive cell");
+    end else begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], VoltLeftCell,
+                  "voltage mode should stage VL in the inactive buffer");
+      expect_word(dut.canvas_ram_a_inst.mem[1], VoltRightCell,
+                  "voltage mode should stage VR in the adjacent inactive cell");
+    end
+
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], VoltLeftCell,
+                  "voltage mode should become visible after the next flip");
+      expect_word(dut.canvas_ram_a_inst.mem[1], VoltRightCell,
+                  "voltage mode should preserve the adjacent right half after the next flip");
+    end else begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], VoltLeftCell,
+                  "voltage mode should become visible after the next flip");
+      expect_word(dut.canvas_ram_b_inst.mem[1], VoltRightCell,
+                  "voltage mode should preserve the adjacent right half after the next flip");
+    end
+
+    i_sw[2:0] = 3'd7;
+    drive_mouse(12'd10, 12'd10, 1'b1, 1'b0, 1'b0);
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    drive_mouse(12'd10, 12'd10, 1'b0, 1'b0, 1'b0);
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], RotatedVoltLeft,
+                  "rotate mode should stage a rotated version of the current cell");
+    end else begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], RotatedVoltLeft,
+                  "rotate mode should stage a rotated version of the current cell");
+    end
+
+    wait_for_bg_frame_flip();
+    wait_for_next_bg_frame_prep_done();
+    if (dut.active_buf_sel_bg == 1'b0) begin
+      expect_word(dut.canvas_ram_a_inst.mem[0], RotatedVoltLeft,
+                  "rotate mode should become visible after the next flip");
+    end else begin
+      expect_word(dut.canvas_ram_b_inst.mem[0], RotatedVoltLeft,
+                  "rotate mode should become visible after the next flip");
+    end
+
+    i_sw[2:0] = 3'd4;
     drive_mouse(12'd500, 12'd20, 1'b1, 1'b0, 1'b0);
     wait_for_bg_frame_flip();
     wait_for_next_bg_frame_prep_done();

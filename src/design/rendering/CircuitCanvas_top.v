@@ -87,7 +87,7 @@ module CircuitCanvas_top #(
     end
   endfunction
 
-  assign LED = 16'b1111_1111_1111_1111;
+  wire interaction_frame_drop_flag;
   assign SEG = 8'b0000_0000;
   assign AN  = 4'b0000;
   assign JC  = 8'b0000_0000;
@@ -187,6 +187,7 @@ module CircuitCanvas_top #(
   reg buffers_init_done = 1'b0;
   reg frame_prep_done = 1'b0;
   reg bg_overrun_flag = 1'b0;
+  assign LED = {6'd0, interaction_frame_drop_flag, bg_overrun_flag, 5'd0, SW[2:0]};
   reg signed [12:0] frame_grid_pos_x_pix = 0;
   reg signed [12:0] frame_grid_pos_y_pix = 0;
   reg signed [12:0] frame_grid_pos_x_bg_sync0 = 0;
@@ -248,6 +249,8 @@ module CircuitCanvas_top #(
   wire interaction_frame_done;
   wire interaction_frame_tick;
   wire interaction_bg_cmd_ready;
+  wire interaction_bg_rsp_valid;
+  wire [CanvasWordWidth-1:0] interaction_bg_rsp_rdata;
   wire demo_cmd_valid;
   wire demo_cmd_write;
   wire [CanvasAddrWidth-1:0] demo_cmd_addr;
@@ -372,7 +375,7 @@ module CircuitCanvas_top #(
       .clk(CLK100MHZ),
       .reset(BTNC),
       .frame_start_pulse(interaction_frame_tick),
-      .mode_select(2'd0),
+      .mode_select(SW[2:0]),
       .mouse_x(mouse_xpos),
       .mouse_y(mouse_ypos),
       .mouse_left(mouse_left),
@@ -381,11 +384,14 @@ module CircuitCanvas_top #(
       .grid_pos_x(frame_grid_pos_x_bg_sync1),
       .grid_pos_y(frame_grid_pos_y_bg_sync1),
       .bg_cmd_ready(interaction_bg_cmd_ready),
+      .bg_rsp_valid(interaction_bg_rsp_valid),
+      .bg_rsp_rdata(interaction_bg_rsp_rdata),
       .bg_cmd_valid(interaction_bg_cmd_valid),
       .bg_cmd_write(interaction_bg_cmd_write),
       .bg_cmd_addr(interaction_bg_cmd_addr),
       .bg_cmd_wdata(interaction_bg_cmd_wdata),
-      .frame_done(interaction_frame_done)
+      .frame_done(interaction_frame_done),
+      .frame_drop_flag(interaction_frame_drop_flag)
   );
 
   reg [3:0] bg_state = BgStateInitClearA;
@@ -409,6 +415,8 @@ module CircuitCanvas_top #(
   assign serving_demo_cmd = demo_cmd_valid;
   assign serving_interaction_cmd = !demo_cmd_valid && interaction_bg_cmd_valid;
   assign interaction_bg_cmd_ready = EnableInteraction && bg_cmd_ready && serving_interaction_cmd;
+  assign interaction_bg_rsp_valid = EnableInteraction && bg_rsp_valid;
+  assign interaction_bg_rsp_rdata = bg_rsp_rdata;
   assign bg_cmd_valid = serving_demo_cmd || (EnableInteraction && interaction_bg_cmd_valid);
   assign bg_cmd_write = serving_demo_cmd ? demo_cmd_write : interaction_bg_cmd_write;
   assign bg_cmd_addr = serving_demo_cmd ? demo_cmd_addr : interaction_bg_cmd_addr;
@@ -608,26 +616,8 @@ module CircuitCanvas_top #(
       if (mouse_display_enable) begin
         rgb <= mouse_rgb;
       end else begin
-        if (SW[0]) begin
-          if (x_pos < 640 / 3) begin
-            rgb <= Blue;
-          end else if (x_pos < (640 * 2) / 3) begin
-            rgb <= YellowishOrange;
-          end else begin
-            rgb <= Red;
-          end
-        end else if (SW[1]) begin
-          if (y_pos < 480 / 3) begin
-            rgb <= Black;
-          end else if (y_pos < (480 * 2) / 3) begin
-            rgb <= Red;
-          end else begin
-            rgb <= YellowishOrange;
-          end
-        end else begin
-          if (buffers_init_done && circuit_canvas_rendered) rgb <= circuit_canvas_rgb;
-          else rgb <= Pink;
-        end
+        if (buffers_init_done && circuit_canvas_rendered) rgb <= circuit_canvas_rgb;
+        else rgb <= Pink;
       end
     end
   end

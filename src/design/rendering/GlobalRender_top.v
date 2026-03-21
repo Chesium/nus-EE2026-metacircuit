@@ -22,15 +22,23 @@ module GlobalRender_top (
 );
 
     localparam [11:0] BLACK            = 12'h000;
-    localparam [11:0] BACKGROUND       = 12'hFCE;
+    localparam [11:0] BACKGROUND       = 12'hECC;
     localparam integer SCREEN_H        = 480;
     localparam integer SCREEN_W        = 640;
-    localparam integer KEYBOARD_SCALE  = 3;
+    localparam integer TOP_BAR_H       = 64;
+    localparam integer LEFT_BAR_W      = 64;
+    localparam integer RIGHT_BAR_W     = 156;
+    localparam integer BOTTOM_BAR_H    = 128;
+    localparam integer CANVAS_X0       = LEFT_BAR_W;
+    localparam integer CANVAS_Y0       = TOP_BAR_H;
+    localparam integer CANVAS_W        = SCREEN_W - LEFT_BAR_W - RIGHT_BAR_W;
+    localparam integer CANVAS_H        = SCREEN_H - TOP_BAR_H - BOTTOM_BAR_H;
+    localparam integer KEYBOARD_SCALE  = 2;
     localparam integer KEYBOARD_W      = 5 * (12 * KEYBOARD_SCALE);
     localparam integer KEYBOARD_H      = 4 * (12 * KEYBOARD_SCALE);
-    localparam integer KEYBOARD_MARGIN = 8;
+    localparam integer KEYBOARD_MARGIN = 10;
     localparam integer KEYBOARD_PANEL_PAD = 8;
-    localparam integer KEYBOARD_X      = KEYBOARD_MARGIN;
+    localparam integer KEYBOARD_X      = SCREEN_W - RIGHT_BAR_W + ((RIGHT_BAR_W - KEYBOARD_W) / 2);
     localparam integer KEYBOARD_Y      = SCREEN_H - KEYBOARD_H - KEYBOARD_MARGIN;
     localparam integer KEYBOARD_REGION_X0 = KEYBOARD_X - KEYBOARD_PANEL_PAD;
     localparam integer KEYBOARD_REGION_Y0 = KEYBOARD_Y - KEYBOARD_PANEL_PAD;
@@ -39,8 +47,8 @@ module GlobalRender_top (
     localparam integer RESET_BUTTON_W = 72;
     localparam integer RESET_BUTTON_H = 36;
     localparam integer RESET_BUTTON_MARGIN = 12;
-    localparam integer RESET_BUTTON_X = SCREEN_W - RESET_BUTTON_W - RESET_BUTTON_MARGIN;
-    localparam integer RESET_BUTTON_Y = RESET_BUTTON_MARGIN;
+    localparam integer RESET_BUTTON_X = SCREEN_W - RIGHT_BAR_W + 42;
+    localparam integer RESET_BUTTON_Y = 14;
 
     wire clk_pixel;
     wire clk_nav;
@@ -62,6 +70,20 @@ module GlobalRender_top (
 
     wire [11:0] circuit_canvas_rgb;
     wire        circuit_canvas_rendered;
+    reg  [11:0] ui_rgb;
+
+    reg top_bar_active;
+    reg left_bar_active;
+    reg right_bar_active;
+    reg bottom_bar_active;
+    reg canvas_label_active;
+    reg title_active;
+    reg wave_active;
+    reg frame_active;
+    reg icon_active;
+    reg grid_line_active;
+    integer dx;
+    integer dy;
 
     wire [11:0] mouse_xpos;
     wire [11:0] mouse_ypos;
@@ -109,6 +131,211 @@ module GlobalRender_top (
         (y_pos <  (RESET_BUTTON_Y + RESET_BUTTON_H));
 
     assign mouse_rgb = {mouse_r, mouse_g, mouse_b};
+
+    function [11:0] rgb888_to_444;
+        input [23:0] c;
+        begin
+            rgb888_to_444 = {c[23:20], c[15:12], c[7:4]};
+        end
+    endfunction
+
+    function [4:0] glyph5x7_row;
+        input [7:0] c;
+        input [2:0] r;
+        begin
+            case (c)
+                "0": case (r)
+                    0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10011;
+                    3: glyph5x7_row = 5'b10101; 4: glyph5x7_row = 5'b11001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "1": case (r)
+                    0: glyph5x7_row = 5'b00100; 1: glyph5x7_row = 5'b01100; 2: glyph5x7_row = 5'b00100;
+                    3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b00100;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "2": case (r)
+                    0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b00001;
+                    3: glyph5x7_row = 5'b00010; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b01000;
+                    default: glyph5x7_row = 5'b11111; endcase
+                "3": case (r)
+                    0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b00001; 2: glyph5x7_row = 5'b00001;
+                    3: glyph5x7_row = 5'b01110; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b00001;
+                    default: glyph5x7_row = 5'b11110; endcase
+                "4": case (r)
+                    0: glyph5x7_row = 5'b00010; 1: glyph5x7_row = 5'b00110; 2: glyph5x7_row = 5'b01010;
+                    3: glyph5x7_row = 5'b10010; 4: glyph5x7_row = 5'b11111; 5: glyph5x7_row = 5'b00010;
+                    default: glyph5x7_row = 5'b00010; endcase
+                "5": case (r)
+                    0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b11110;
+                    3: glyph5x7_row = 5'b00001; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "6": case (r)
+                    0: glyph5x7_row = 5'b00110; 1: glyph5x7_row = 5'b01000; 2: glyph5x7_row = 5'b10000;
+                    3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "7": case (r)
+                    0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b00001; 2: glyph5x7_row = 5'b00010;
+                    3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b01000; 5: glyph5x7_row = 5'b01000;
+                    default: glyph5x7_row = 5'b01000; endcase
+                "8": case (r)
+                    0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b01110; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "9": case (r)
+                    0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b01111; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b00010;
+                    default: glyph5x7_row = 5'b01100; endcase
+                "@": case (r)
+                    0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10111;
+                    3: glyph5x7_row = 5'b10101; 4: glyph5x7_row = 5'b10111; 5: glyph5x7_row = 5'b10000;
+                    default: glyph5x7_row = 5'b01111; endcase
+                "A": case (r)
+                    0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b11111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b10001; endcase
+                "C": case (r)
+                    0: glyph5x7_row = 5'b01111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b10000;
+                    3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000;
+                    default: glyph5x7_row = 5'b01111; endcase
+                "D": case (r)
+                    0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b11110; endcase
+                "E": case (r)
+                    0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b11110;
+                    3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000;
+                    default: glyph5x7_row = 5'b11111; endcase
+                "G": case (r)
+                    0: glyph5x7_row = 5'b01111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b10000;
+                    3: glyph5x7_row = 5'b10111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b01111; endcase
+                "H": case (r)
+                    0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b11111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b10001; endcase
+                "P": case (r)
+                    0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000;
+                    default: glyph5x7_row = 5'b10000; endcase
+                "R": case (r)
+                    0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10100; 5: glyph5x7_row = 5'b10010;
+                    default: glyph5x7_row = 5'b10001; endcase
+                "T": case (r)
+                    0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b00100; 2: glyph5x7_row = 5'b00100;
+                    3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b00100;
+                    default: glyph5x7_row = 5'b00100; endcase
+                "V": case (r)
+                    0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b01010;
+                    default: glyph5x7_row = 5'b00100; endcase
+                "W": case (r)
+                    0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b10101; 4: glyph5x7_row = 5'b10101; 5: glyph5x7_row = 5'b10101;
+                    default: glyph5x7_row = 5'b01010; endcase
+                "a": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b00001;
+                    3: glyph5x7_row = 5'b01111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10011;
+                    default: glyph5x7_row = 5'b01101; endcase
+                "b": case (r)
+                    0: glyph5x7_row = 5'b10000; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b11110;
+                    3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b11110; endcase
+                "c": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "d": case (r)
+                    0: glyph5x7_row = 5'b00001; 1: glyph5x7_row = 5'b00001; 2: glyph5x7_row = 5'b01111;
+                    3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b01111; endcase
+                "e": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b11111; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000;
+                    default: glyph5x7_row = 5'b01111; endcase
+                "f": case (r)
+                    0: glyph5x7_row = 5'b00110; 1: glyph5x7_row = 5'b01000; 2: glyph5x7_row = 5'b11100;
+                    3: glyph5x7_row = 5'b01000; 4: glyph5x7_row = 5'b01000; 5: glyph5x7_row = 5'b01000;
+                    default: glyph5x7_row = 5'b01000; endcase
+                "g": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01111; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b01111; 5: glyph5x7_row = 5'b00001;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "i": case (r)
+                    0: glyph5x7_row = 5'b00100; 1: glyph5x7_row = 5'b00000; 2: glyph5x7_row = 5'b01100;
+                    3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b00100;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "l": case (r)
+                    0: glyph5x7_row = 5'b01100; 1: glyph5x7_row = 5'b00100; 2: glyph5x7_row = 5'b00100;
+                    3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b00100;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "m": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11010; 2: glyph5x7_row = 5'b10101;
+                    3: glyph5x7_row = 5'b10101; 4: glyph5x7_row = 5'b10101; 5: glyph5x7_row = 5'b10101;
+                    default: glyph5x7_row = 5'b10101; endcase
+                "n": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11110; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b10001; endcase
+                "o": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001;
+                    default: glyph5x7_row = 5'b01110; endcase
+                "p": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11110; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000;
+                    default: glyph5x7_row = 5'b10000; endcase
+                "r": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10110; 2: glyph5x7_row = 5'b11001;
+                    3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000;
+                    default: glyph5x7_row = 5'b10000; endcase
+                "s": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01111; 2: glyph5x7_row = 5'b10000;
+                    3: glyph5x7_row = 5'b01110; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b00001;
+                    default: glyph5x7_row = 5'b11110; endcase
+                "t": case (r)
+                    0: glyph5x7_row = 5'b01000; 1: glyph5x7_row = 5'b01000; 2: glyph5x7_row = 5'b11100;
+                    3: glyph5x7_row = 5'b01000; 4: glyph5x7_row = 5'b01000; 5: glyph5x7_row = 5'b01001;
+                    default: glyph5x7_row = 5'b00110; endcase
+                "u": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10011;
+                    default: glyph5x7_row = 5'b01101; endcase
+                "v": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b01010; 5: glyph5x7_row = 5'b01010;
+                    default: glyph5x7_row = 5'b00100; endcase
+                "y": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001;
+                    3: glyph5x7_row = 5'b01111; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b00010;
+                    default: glyph5x7_row = 5'b11100; endcase
+                "z": case (r)
+                    0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11111; 2: glyph5x7_row = 5'b00010;
+                    3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b01000; 5: glyph5x7_row = 5'b10000;
+                    default: glyph5x7_row = 5'b11111; endcase
+                default: glyph5x7_row = 5'b00000;
+            endcase
+        end
+    endfunction
+
+    function glyph_hit;
+        input [7:0] c;
+        input integer scale;
+        input integer local_x;
+        input integer local_y;
+        reg [2:0] row_idx;
+        reg [2:0] col_idx;
+        reg [4:0] row_bits;
+        begin
+            glyph_hit = 1'b0;
+            if ((local_x >= 0) && (local_y >= 0) &&
+                (local_x < (5 * scale)) && (local_y < (7 * scale))) begin
+                row_idx = local_y / scale;
+                col_idx = local_x / scale;
+                row_bits = glyph5x7_row(c, row_idx);
+                glyph_hit = row_bits[4 - col_idx];
+            end
+        end
+    endfunction
 
     assign JC = 8'h00;
     assign SEG = 8'hFF;
@@ -188,7 +415,12 @@ module GlobalRender_top (
         .d_out(circuit_canvas_ram_r_data)
     );
 
-    CircuitCanvas circuit_canvas_inst (
+    CircuitCanvas #(
+        .CanvasPosX(CANVAS_X0),
+        .CanvasPosY(CANVAS_Y0),
+        .CanvasWidth(CANVAS_W),
+        .CanvasHeight(CANVAS_H)
+    ) circuit_canvas_inst (
         .clk_pixel(clk_pixel),
         .x_pos(x_pos),
         .y_pos(y_pos),
@@ -339,6 +571,164 @@ module GlobalRender_top (
         end
     end
 
+    always @(*) begin
+        ui_rgb = BACKGROUND;
+        top_bar_active = (y_pos < TOP_BAR_H);
+        left_bar_active = (x_pos < LEFT_BAR_W) && (y_pos >= TOP_BAR_H) && (y_pos < (SCREEN_H - BOTTOM_BAR_H));
+        right_bar_active = (x_pos >= (SCREEN_W - RIGHT_BAR_W)) && (y_pos >= TOP_BAR_H);
+        bottom_bar_active = (y_pos >= (SCREEN_H - BOTTOM_BAR_H)) && (x_pos < (SCREEN_W - RIGHT_BAR_W));
+        canvas_label_active = 1'b0;
+        title_active = 1'b0;
+        wave_active = 1'b0;
+        frame_active = 1'b0;
+        icon_active = 1'b0;
+        grid_line_active = ((x_pos[4:0] == 5'd0) || (y_pos[4:0] == 5'd0));
+
+        if (top_bar_active) begin
+            ui_rgb = rgb888_to_444(24'hE2B2A8);
+            if (grid_line_active) ui_rgb = rgb888_to_444(24'hEFD2CC);
+
+            if ((x_pos >= 32 && x_pos < 164 && y_pos >= 22 && y_pos < 48) ||
+                (x_pos >= 196 && x_pos < 324 && y_pos >= 22 && y_pos < 48) ||
+                (x_pos >= 356 && x_pos < 486 && y_pos >= 22 && y_pos < 48) ||
+                (x_pos >= 518 && x_pos < 608 && y_pos >= 22 && y_pos < 48)) begin
+                ui_rgb = rgb888_to_444(24'hEED7D1);
+            end
+        end else if (left_bar_active) begin
+            ui_rgb = rgb888_to_444(24'hF3D9B8);
+            if (grid_line_active) ui_rgb = rgb888_to_444(24'hD9E8F2);
+            dx = x_pos - 32;
+            dy = y_pos - 96;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32;
+            dy = y_pos - 144;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32;
+            dy = y_pos - 192;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32;
+            dy = y_pos - 240;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32;
+            dy = y_pos - 288;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            if (icon_active) ui_rgb = 12'hFFF;
+        end else if (right_bar_active) begin
+            ui_rgb = rgb888_to_444(24'hD0D0D0);
+            if (grid_line_active) ui_rgb = rgb888_to_444(24'hDBDBDB);
+            if (((x_pos >= 504 && x_pos < 618) && ((y_pos >= 84 && y_pos < 196) || (y_pos >= 218 && y_pos < 326) || (y_pos >= 356 && y_pos < 466)))) begin
+                if ((x_pos < 506) || (x_pos >= 616) || (y_pos == 84) || (y_pos == 195) ||
+                    (y_pos == 218) || (y_pos == 325) || (y_pos == 356) || (y_pos == 465)) begin
+                    frame_active = 1'b1;
+                end
+            end
+            if (frame_active) ui_rgb = 12'hFFF;
+        end else if (bottom_bar_active) begin
+            if (x_pos < 164) ui_rgb = rgb888_to_444(24'hB8CDE2);
+            else if (x_pos < 324) ui_rgb = rgb888_to_444(24'hCBC2E0);
+            else ui_rgb = rgb888_to_444(24'hE2C8D5);
+            if (grid_line_active) ui_rgb = rgb888_to_444(24'hD7D7D7);
+
+            if ((y_pos >= 394) && (y_pos < 460)) begin
+                if ((x_pos >= 4 && x_pos < 160) && (((x_pos - 4) < 60 && y_pos > (444 - ((x_pos - 4) >> 1))) ||
+                    ((x_pos - 4) >= 60 && (x_pos - 4) < 100 && y_pos > (412 + ((x_pos - 64) >> 1))) ||
+                    ((x_pos - 4) >= 100 && y_pos > 432 && y_pos < 438))) wave_active = 1'b1;
+                if ((x_pos >= 166 && x_pos < 322) &&
+                    ((y_pos > (430 - (((x_pos - 166) & 6'd31) >> 1)) && y_pos < (434 - (((x_pos - 166) & 6'd31) >> 1))) ||
+                     (y_pos > (438 + (((x_pos - 166) & 6'd47) >> 2)) && y_pos < (442 + (((x_pos - 166) & 6'd47) >> 2))))) wave_active = 1'b1;
+                if ((x_pos >= 326 && x_pos < 482) &&
+                    (((x_pos - 326) < 24 && y_pos > (396 + (x_pos - 326) * 2)) ||
+                     ((x_pos - 326) >= 24 && (x_pos - 326) < 68 && y_pos < (458 - ((x_pos - 350) * 2))) ||
+                     ((x_pos - 326) >= 68 && y_pos > 420 && y_pos < 424))) wave_active = 1'b1;
+            end
+            if (wave_active) ui_rgb = 12'hFFF;
+        end
+
+        if ((x_pos >= CANVAS_X0) && (x_pos < (CANVAS_X0 + CANVAS_W)) &&
+            (y_pos >= CANVAS_Y0) && (y_pos < (CANVAS_Y0 + CANVAS_H))) begin
+            canvas_label_active = 1'b0;
+        end
+
+        if (glyph_hit("P", 4, x_pos - 4, y_pos - 4) ||
+            glyph_hit("r", 4, x_pos - 28, y_pos - 4) ||
+            glyph_hit("o", 4, x_pos - 52, y_pos - 4) ||
+            glyph_hit("p", 4, x_pos - 76, y_pos - 4) ||
+            glyph_hit("e", 4, x_pos - 100, y_pos - 4) ||
+            glyph_hit("r", 4, x_pos - 124, y_pos - 4) ||
+            glyph_hit("t", 4, x_pos - 148, y_pos - 4) ||
+            glyph_hit("y", 4, x_pos - 172, y_pos - 4) ||
+            glyph_hit("E", 4, x_pos - 212, y_pos - 4) ||
+            glyph_hit("d", 4, x_pos - 236, y_pos - 4) ||
+            glyph_hit("i", 4, x_pos - 260, y_pos - 4) ||
+            glyph_hit("t", 4, x_pos - 276, y_pos - 4) ||
+            glyph_hit("o", 4, x_pos - 300, y_pos - 4) ||
+            glyph_hit("r", 4, x_pos - 324, y_pos - 4)) title_active = 1'b1;
+
+        if (glyph_hit("R", 4, x_pos - 40, y_pos - 28) ||
+            glyph_hit("1", 4, x_pos - 64, y_pos - 28) ||
+            glyph_hit("2", 4, x_pos - 208, y_pos - 28) ||
+            glyph_hit("3", 4, x_pos - 232, y_pos - 28) ||
+            glyph_hit("0", 4, x_pos - 256, y_pos - 28) ||
+            glyph_hit("H", 4, x_pos - 360, y_pos - 28) ||
+            glyph_hit("o", 4, x_pos - 384, y_pos - 28) ||
+            glyph_hit("r", 4, x_pos - 408, y_pos - 28) ||
+            glyph_hit("i", 4, x_pos - 428, y_pos - 28) ||
+            glyph_hit("z", 4, x_pos - 444, y_pos - 28) ||
+            glyph_hit("o", 4, x_pos - 468, y_pos - 28) ||
+            glyph_hit("n", 4, x_pos - 492, y_pos - 28) ||
+            glyph_hit("t", 4, x_pos - 516, y_pos - 28) ||
+            glyph_hit("a", 4, x_pos - 536, y_pos - 28) ||
+            glyph_hit("l", 4, x_pos - 560, y_pos - 28)) title_active = 1'b1;
+
+        if (glyph_hit("D", 4, x_pos - 492, y_pos - 198) ||
+            glyph_hit("e", 4, x_pos - 516, y_pos - 198) ||
+            glyph_hit("b", 4, x_pos - 540, y_pos - 198) ||
+            glyph_hit("u", 4, x_pos - 564, y_pos - 198) ||
+            glyph_hit("g", 4, x_pos - 588, y_pos - 198) ||
+            glyph_hit("D", 4, x_pos - 492, y_pos - 328) ||
+            glyph_hit("i", 4, x_pos - 516, y_pos - 328) ||
+            glyph_hit("s", 4, x_pos - 532, y_pos - 328) ||
+            glyph_hit("p", 4, x_pos - 556, y_pos - 328) ||
+            glyph_hit("l", 4, x_pos - 580, y_pos - 328) ||
+            glyph_hit("a", 4, x_pos - 596, y_pos - 328) ||
+            glyph_hit("y", 4, x_pos - 620, y_pos - 328)) title_active = 1'b1;
+
+        if (glyph_hit("W", 4, x_pos - 172, y_pos - 360) ||
+            glyph_hit("a", 4, x_pos - 200, y_pos - 360) ||
+            glyph_hit("v", 4, x_pos - 224, y_pos - 360) ||
+            glyph_hit("e", 4, x_pos - 248, y_pos - 360) ||
+            glyph_hit("f", 4, x_pos - 272, y_pos - 360) ||
+            glyph_hit("o", 4, x_pos - 292, y_pos - 360) ||
+            glyph_hit("r", 4, x_pos - 316, y_pos - 360) ||
+            glyph_hit("m", 4, x_pos - 336, y_pos - 360) ||
+            glyph_hit("P", 4, x_pos - 392, y_pos - 360) ||
+            glyph_hit("l", 4, x_pos - 420, y_pos - 360) ||
+            glyph_hit("o", 4, x_pos - 436, y_pos - 360) ||
+            glyph_hit("t", 4, x_pos - 460, y_pos - 360)) title_active = 1'b1;
+
+        if (glyph_hit("T", 4, x_pos - 40, y_pos - 238) ||
+            glyph_hit("o", 4, x_pos - 64, y_pos - 238) ||
+            glyph_hit("o", 4, x_pos - 88, y_pos - 238) ||
+            glyph_hit("l", 4, x_pos - 112, y_pos - 238) ||
+            glyph_hit("b", 4, x_pos - 40, y_pos - 266) ||
+            glyph_hit("a", 4, x_pos - 64, y_pos - 266) ||
+            glyph_hit("r", 4, x_pos - 88, y_pos - 266)) title_active = 1'b1;
+
+        if (glyph_hit("V", 5, x_pos - 240, y_pos - 446) ||
+            glyph_hit("G", 5, x_pos - 270, y_pos - 446) ||
+            glyph_hit("A", 5, x_pos - 300, y_pos - 446) ||
+            glyph_hit("6", 5, x_pos - 352, y_pos - 446) ||
+            glyph_hit("4", 5, x_pos - 382, y_pos - 446) ||
+            glyph_hit("0", 5, x_pos - 412, y_pos - 446) ||
+            glyph_hit("@", 5, x_pos - 492, y_pos - 446) ||
+            glyph_hit("6", 5, x_pos - 544, y_pos - 446) ||
+            glyph_hit("0", 5, x_pos - 574, y_pos - 446)) title_active = 1'b1;
+
+        if ((x_pos >= 448) && (x_pos < 482) && (y_pos >= 320) && (y_pos < 332)) title_active = 1'b1;
+
+        if (title_active) ui_rgb = 12'hFFF;
+    end
+
     always @(posedge clk_pixel) begin
         if (!video_on) begin
             rgb <= BLACK;
@@ -351,7 +741,7 @@ module GlobalRender_top (
         end else if (circuit_canvas_rendered) begin
             rgb <= circuit_canvas_rgb;
         end else begin
-            rgb <= BACKGROUND;
+            rgb <= ui_rgb;
         end
     end
 

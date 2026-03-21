@@ -186,6 +186,7 @@ set obj [get_filesets sources_1]
 set files [list \
  [file normalize "${origin_dir}/src/design/rendering/CircuitCanvas.v"] \
  [file normalize "${origin_dir}/src/design/common/ClockDivider.v"] \
+ [file normalize "${origin_dir}/src/design/rendering/ButtonVGA.v"] \
  [file normalize "${origin_dir}/src/design/common/SimpleRam.v"] \
  [file normalize "${origin_dir}/src/design/driver/VGAControl.v"] \
  [file normalize "${origin_dir}/src/design/rendering/MouseDisplay.vhd"] \
@@ -201,7 +202,7 @@ set files [list \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/SevenSeg.v"] \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/Top_Student.v"] \
  [file normalize "${origin_dir}/src/design/Keyboard/Keyboard.v"] \
- [file normalize "${origin_dir}/src/design/Keyboard/KeyboardVGA.v"] \
+ [file normalize "${origin_dir}/src/design/rendering/KeyboardVGA.v"] \
  [file normalize "${origin_dir}/src/design/floating_point/fpo_fma.v"] \
  [file normalize "${origin_dir}/src/design/floating_point/fpo_div.v"] \
  [file normalize "${origin_dir}/src/design/floating_point/fpo_tofixed.v"] \

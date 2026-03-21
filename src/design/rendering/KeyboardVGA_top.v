@@ -30,10 +30,6 @@ module KeyboardVGA_top (
     wire [4:0]  keyboard_key_id;
     wire        keyboard_key_valid;
     wire [7:0]  keyboard_key_ascii;
-    wire [23:0] keyboard_key_rgb;
-    wire        keyboard_is_digit;
-    wire        keyboard_is_unit;
-    wire        keyboard_is_action;
 
     reg [7:0] last_ascii = 8'h00;
 
@@ -43,8 +39,9 @@ module KeyboardVGA_top (
     localparam integer SCREEN_H = 480;
     localparam integer KEYBOARD_KEY_H = 12 * KEYBOARD_SCALE;
     localparam integer KEYBOARD_H = 4 * KEYBOARD_KEY_H;
-    localparam integer KEYBOARD_X = 0;
-    localparam integer KEYBOARD_Y = SCREEN_H - KEYBOARD_H;
+    localparam integer KEYBOARD_MARGIN = 8;
+    localparam integer KEYBOARD_X = KEYBOARD_MARGIN;
+    localparam integer KEYBOARD_Y = SCREEN_H - KEYBOARD_H - KEYBOARD_MARGIN;
 
     assign JC = 8'h00;
     assign SEG = 8'hFF;
@@ -92,16 +89,15 @@ module KeyboardVGA_top (
         .btnL(BTNL),
         .btnR(BTNR),
         .btnC(BTNC),
+        .mouse_x(12'd0),
+        .mouse_y(12'd0),
+        .mouse_left(1'b0),
         .x(x_pos),
         .y(y_pos),
         .pixel_rgb(keyboard_rgb),
         .key_id(keyboard_key_id),
         .key_valid(keyboard_key_valid),
-        .key_ascii(keyboard_key_ascii),
-        .key_rgb(keyboard_key_rgb),
-        .key_is_digit(keyboard_is_digit),
-        .key_is_unit(keyboard_is_unit),
-        .key_is_action(keyboard_is_action)
+        .key_ascii(keyboard_key_ascii)
     );
 
     always @(posedge clk_nav) begin

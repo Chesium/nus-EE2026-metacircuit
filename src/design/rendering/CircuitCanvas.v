@@ -4,7 +4,7 @@ module CircuitCanvas #(
     parameter integer CanvasWidth = 400,
     parameter integer CanvasHeight = 300,
     parameter integer CellSize = 32,
-    parameter integer GridWidth = 16,
+    parameter integer GridWidth =16,
     parameter integer GridHeight = 16,
     parameter integer CellCount = GridWidth * GridHeight,
     parameter integer AddrWidth = $clog2(CellCount),
@@ -932,7 +932,7 @@ module CircuitCanvas #(
               click_start_y <= {1'b0, mouse_y_pos};
               grid_start_x  <= grid_pos_x;
               grid_start_y  <= grid_pos_y;
-          end else begin
+          end else if (is_dragging) begin
               //update the grid position and ensure the boundary condition
               grid_pos_x <= (next_grid_x > 0) ? 13'sd0 : 
                             (next_grid_x < min_grid_x) ? min_grid_x : next_grid_x[12:0];

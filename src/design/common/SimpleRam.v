@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module SimpleRam #(
     parameter integer WordWidth = 32,
     parameter integer WordCount = 16,

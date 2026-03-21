@@ -82,11 +82,23 @@ module CircuitCanvas #(
           ? (y_pos_rel_canvas == CanvasHeight - 1 ? 0 : y_pos_rel_canvas + 1)
           : y_pos_rel_canvas;
 
+  wire [11:0] x_pos_rel_canvas_prefetch;
+  wire [11:0] y_pos_rel_canvas_prefetch;
+  assign x_pos_rel_canvas_prefetch = x_pos_rel_canvas == CanvasWidth - 1 ? 1 :
+                                     x_pos_rel_canvas == CanvasWidth - 2 ? 0 :
+                                     x_pos_rel_canvas + 2;
+  assign y_pos_rel_canvas_prefetch = x_pos_rel_canvas >= CanvasWidth - 2
+          ? (y_pos_rel_canvas == CanvasHeight - 1 ? 0 : y_pos_rel_canvas + 1)
+          : y_pos_rel_canvas;
+
   wire [12:0] absolute_grid_x = {1'b0, x_pos_rel_canvas} - grid_pos_x;
   wire [12:0] absolute_grid_y = {1'b0, y_pos_rel_canvas} - grid_pos_y;
   
   wire [12:0] absolute_grid_x_next = {1'b0, x_pos_rel_canvas_next} - grid_pos_x;
   wire [12:0] absolute_grid_y_next = {1'b0, y_pos_rel_canvas_next} - grid_pos_y;
+
+  wire [12:0] absolute_grid_x_prefetch = {1'b0, x_pos_rel_canvas_prefetch} - grid_pos_x;
+  wire [12:0] absolute_grid_y_prefetch = {1'b0, y_pos_rel_canvas_prefetch} - grid_pos_y;
   
   wire [12:0] absolute_mouse_grid_x = {1'b0, mouse_x_pos_rel_canvas} - grid_pos_x;
   wire [12:0] absolute_mouse_grid_y = {1'b0, mouse_y_pos_rel_canvas} - grid_pos_y;
@@ -117,13 +129,20 @@ module CircuitCanvas #(
                   (required_j_2 == GridHeight - 1 ? 0 : required_j_2 + 1)
                   :required_j_2;
 
-  reg [DataWidth-1:0] latched_data;
-  reg [11:0] latched_data_i = 12'b1111_1111_1111;
-  reg [11:0] latched_data_j = 12'b1111_1111_1111;
-  reg [11:0] incoming_data_i = 12'b1111_1111_1111;
-  reg [11:0] incoming_data_j = 12'b1111_1111_1111;
+  wire [11:0] prefetched_i;
+  wire [11:0] prefetched_j;
+  assign prefetched_i = absolute_grid_x_prefetch / CellSize;
+  assign prefetched_j = absolute_grid_y_prefetch / CellSize;
 
-  assign data_addr = incoming_data_i + incoming_data_j * GridWidth;
+  reg [DataWidth-1:0] cached_data;
+  reg [11:0] cached_data_i = 12'b1111_1111_1111;
+  reg [11:0] cached_data_j = 12'b1111_1111_1111;
+  reg [11:0] requested_data_i = 12'd0;
+  reg [11:0] requested_data_j = 12'd0;
+  reg [11:0] returned_data_i = 12'b1111_1111_1111;
+  reg [11:0] returned_data_j = 12'b1111_1111_1111;
+
+  assign data_addr = requested_data_i + requested_data_j * GridWidth;
 
 
   // reg init = 1;
@@ -891,36 +910,23 @@ module CircuitCanvas #(
   reg [1:0] status = 2'b00;
 
   always @(posedge clk_pixel) begin
-    if (required_i_2 != latched_data_i || required_j_2 != latched_data_j) begin
-      if (required_i_2 != incoming_data_i || required_j_2 != incoming_data_j) begin
-        // [required cell index match either latched or incoming data indices]
-        incoming_data_i <= required_i_2;
-        incoming_data_j <= required_j_2;
-        // to be decoded : empty data
-        cell_data <= EmptyCellData;
-        status <= 2'b01;
+    returned_data_i <= requested_data_i;
+    returned_data_j <= requested_data_j;
+    requested_data_i <= prefetched_i;
+    requested_data_j <= prefetched_j;
 
-      end else begin
-        // [required cell index match incoming data index]
-        // set addr to next index
-        incoming_data_i <= next_i;
-        incoming_data_j <= next_j;
-        // update latched data
-        latched_data <= incoming_data;
-        latched_data_i <= incoming_data_i;
-        latched_data_j <= incoming_data_j;
-        // to be decoded : incoming data
-        cell_data <= incoming_data;
-        status <= 2'b10;
-      end
-    end else begin
-      // [required cell index match latched data index]
-      // set addr to next index
-      incoming_data_i <= next_i;
-      incoming_data_j <= next_j;
-      // to be decoded : latched data
-      cell_data <= latched_data;
+    if (returned_data_i == required_i && returned_data_j == required_j) begin
+      cached_data <= incoming_data;
+      cached_data_i <= returned_data_i;
+      cached_data_j <= returned_data_j;
+      cell_data <= incoming_data;
+      status <= 2'b10;
+    end else if (cached_data_i == required_i && cached_data_j == required_j) begin
+      cell_data <= cached_data;
       status <= 2'b11;
+    end else begin
+      cell_data <= EmptyCellData;
+      status <= 2'b01;
     end
   end
 

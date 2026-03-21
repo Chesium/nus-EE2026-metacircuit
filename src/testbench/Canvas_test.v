@@ -136,11 +136,11 @@ module Canvas_test ();
     input integer addr;
     begin
       case (addr)
-        17: demo_expected_word = 16'b0000000_10_000001_1;
-        18: demo_expected_word = 16'b0000000_00_000101_1;
-        19: demo_expected_word = 16'b0000000_00_000110_1;
-        33: demo_expected_word = 16'b0000000_11_001000_1;
-        49: demo_expected_word = 16'b0000000_11_000111_1;
+        0: demo_expected_word = 16'b0000000_00_000000_1;
+        1: demo_expected_word = 16'b0000000_00_000101_1;
+        2: demo_expected_word = 16'b0000000_00_000110_1;
+        16: demo_expected_word = 16'b0000000_11_001000_1;
+        32: demo_expected_word = 16'b0000000_11_000111_1;
         82: demo_expected_word = 16'b0000000_00_000010_1;
         84: demo_expected_word = 16'b0000000_01_000010_1;
         86: demo_expected_word = 16'b0000000_10_000010_1;
@@ -271,7 +271,7 @@ module Canvas_test ();
     demo_btnc = 1'b0;
     wait (dut_demo.buffers_init_done == 1'b1);
 
-    $display("Checking deferred visibility and last-write-wins...");
+    $display("Checking deferred visibility and copy-through...");
     wait (dut_demo.demo_loaded == 1'b1 && dut_demo.frame_prep_done == 1'b1);
     demo_sel_before = dut_demo.active_buf_sel_bg;
     if (demo_sel_before == 1'b0) begin
@@ -289,8 +289,8 @@ module Canvas_test ();
                     "inactive demo buffer should contain copied+updated data");
       end
     end
-    expect_word(demo_expected_word(17), 16'b0000000_10_000001_1,
-                "demo pattern helper should reflect the last write for addr 17");
+    expect_word(demo_expected_word(0), 16'b0000000_00_000000_1,
+                "demo pattern helper should reflect the current addr 0 write");
 
     wait_for_bg_frame_flip_demo();
     wait_for_next_bg_frame_prep_done_demo();
@@ -308,10 +308,10 @@ module Canvas_test ();
                     "demo pattern should become visible only after the next flip");
       end
     end
-    expect_word(dut_demo.canvas_ram_a_inst.mem[17], 16'b0000000_10_000001_1,
-                "addr 17 should contain the last demo write in buffer A");
-    expect_word(dut_demo.canvas_ram_b_inst.mem[17], 16'b0000000_10_000001_1,
-                "addr 17 should contain the last demo write in buffer B after copy-through");
+    expect_word(dut_demo.canvas_ram_a_inst.mem[0], 16'b0000000_00_000000_1,
+                "addr 0 should contain the demo write in buffer A");
+    expect_word(dut_demo.canvas_ram_b_inst.mem[0], 16'b0000000_00_000000_1,
+                "addr 0 should contain the demo write in buffer B after copy-through");
 
     overrun_btnc = 1'b0;
     wait (dut_overrun.buffers_init_done == 1'b1);

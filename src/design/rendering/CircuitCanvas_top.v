@@ -41,22 +41,21 @@ module CircuitCanvas_top #(
   localparam integer BgStateUpdateReadWaitB = 10;
   localparam integer BgStateUpdateReadResp = 11;
 
-  localparam integer DemoCommandCount = 10;
+  localparam integer DemoCommandCount = 9;
 
   function [CanvasAddrWidth-1:0] DemoAddr;
     input [3:0] cmd_idx;
     begin
       case (cmd_idx)
-        4'd0: DemoAddr = 8'd17;
-        4'd1: DemoAddr = 8'd18;
-        4'd2: DemoAddr = 8'd19;
-        4'd3: DemoAddr = 8'd33;
-        4'd4: DemoAddr = 8'd49;
+        4'd0: DemoAddr = 8'd0;
+        4'd1: DemoAddr = 8'd1;
+        4'd2: DemoAddr = 8'd2;
+        4'd3: DemoAddr = 8'd16;
+        4'd4: DemoAddr = 8'd32;
         4'd5: DemoAddr = 8'd82;
         4'd6: DemoAddr = 8'd84;
         4'd7: DemoAddr = 8'd86;
         4'd8: DemoAddr = 8'd88;
-        4'd9: DemoAddr = 8'd17;
         default: DemoAddr = 8'd0;
       endcase
     end
@@ -75,7 +74,6 @@ module CircuitCanvas_top #(
         4'd6: DemoData = 16'b0000000_01_000010_1;
         4'd7: DemoData = 16'b0000000_10_000010_1;
         4'd8: DemoData = 16'b0000000_11_000010_1;
-        4'd9: DemoData = 16'b0000000_10_000001_1;
         default: DemoData = 16'd0;
       endcase
     end

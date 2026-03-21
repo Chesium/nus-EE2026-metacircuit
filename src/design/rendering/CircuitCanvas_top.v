@@ -220,6 +220,21 @@ module CircuitCanvas_top (
       circuit_canvas_ram_w_data <= 16'b0000000_11_000010_1;
     end
   end
+wire text_rendered;
+wire [11:0] text_rgb = 12'b0110_1100_1111; // 文本输出的颜色
+
+TextBox #(
+    .TEXT_CONTENT("METACIRCUIT v0.0"), .TEXT_LEN (16)
+) u_textbox (
+    .clk_pixel (clk_pixel),
+    .hcount (x_pos),
+    .vcount (y_pos), 
+    .start_x (12'd192),
+    .start_y (12'd5),
+    .scale (4'd2),
+    .text_enable (text_rendered),
+    .text_color (text_rgb)
+);
 
   /* -BEGIN- VGA Color Signal Generation -BEGIN- */
   // Determines pixel color based on video_on status and selected pattern (switches)
@@ -227,7 +242,10 @@ module CircuitCanvas_top (
     if (!video_on) begin  // RESET, or Outside active display area, always black
       rgb <= Black;
     end else begin
-      if (mouse_display_enable) begin
+      if (text_rendered) begin
+        rgb <= text_rgb;
+      end
+      else if (mouse_display_enable) begin
         rgb <= mouse_rgb;
       end else begin
         if (SW[0]) begin  // Pattern 1: Horizontal color bands

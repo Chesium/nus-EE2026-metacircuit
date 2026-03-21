@@ -78,8 +78,6 @@ module DynamicTextDisplay #(
     reg [TOTAL_BITS-FRAC_BITS-1:0] i_part;
     reg [FRAC_BITS-1:0] f_part;
     reg [15:0] f_scaled;
-    reg [15:0] f_scaled_temp;
-    reg [3:0] digit_temp;
 
     always @(posedge clk_pixel) begin
         // 初始化
@@ -137,18 +135,12 @@ module DynamicTextDisplay #(
         f_scaled = (f_part * 100 + (1 << (FRAC_BITS-1))) >> FRAC_BITS;
         if (f_scaled >= 100) f_scaled = 16'd99;
 
-        // 十位
-        f_scaled_temp = f_scaled;
-        digit_temp = 4'd0;
-        while (f_scaled_temp >= 10) begin
-            f_scaled_temp = f_scaled_temp - 16'd10;
-            digit_temp = digit_temp + 4'd1;
-        end
-        buffer[len] = digit_temp + 8'd48;
+        // 十位和个位 (直接用除法/取模，综合器会优化为减法树)
+        buffer[len] = (f_scaled / 10) + 8'd48;
         len = len + 5'd1;
 
         // 个位
-        buffer[len] = f_scaled_temp + 8'd48;
+        buffer[len] = (f_scaled % 10) + 8'd48;
         len = len + 5'd1;
 
         // 6. 保存结果

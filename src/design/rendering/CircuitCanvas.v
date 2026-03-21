@@ -4,7 +4,7 @@ module CircuitCanvas #(
     parameter integer CanvasWidth = 400,
     parameter integer CanvasHeight = 300,
     parameter integer CellSize = 32,
-    parameter integer GridWidth = 16,
+    parameter integer GridWidth =16,
     parameter integer GridHeight = 16,
     parameter integer CellCount = GridWidth * GridHeight,
     parameter integer AddrWidth = $clog2(CellCount),
@@ -136,11 +136,12 @@ module CircuitCanvas #(
   /*
     Data Width = 16
     F E D C B A 9 8 7 6 5 4 3 2 1 0
-    M M M M M M M R R T T T T T T E
-    |             |   |           Enable: 1bit
-    |             |   Type: 6bit (64)
-    |             Rotation: 2bit (4)
-    Mode: 7bit (128)
+    S C C C C C C R R T T T T T T E
+    | |           |   |           Enable: 1bit
+    | |           |   Sprite ID: 6bit (64)
+    | |           Rotation: 2bit (4)
+    | Component Index: 6bit (64)
+    Selected: 1bit
   */
 
   localparam integer EmptyCellData = 16'b0000000_00_000000_0;
@@ -932,7 +933,7 @@ module CircuitCanvas #(
               click_start_y <= {1'b0, mouse_y_pos};
               grid_start_x  <= grid_pos_x;
               grid_start_y  <= grid_pos_y;
-          end else begin
+          end else if (is_dragging) begin
               //update the grid position and ensure the boundary condition
               grid_pos_x <= (next_grid_x > 0) ? 13'sd0 : 
                             (next_grid_x < min_grid_x) ? min_grid_x : next_grid_x[12:0];

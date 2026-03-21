@@ -201,6 +201,7 @@ set files [list \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/SevenSeg.v"] \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/Top_Student.v"] \
  [file normalize "${origin_dir}/src/design/Keyboard/Keyboard.v"] \
+ [file normalize "${origin_dir}/src/design/Keyboard/KeyboardVGA.v"] \
  [file normalize "${origin_dir}/src/design/floating_point/fpo_fma.v"] \
  [file normalize "${origin_dir}/src/design/floating_point/fpo_div.v"] \
  [file normalize "${origin_dir}/src/design/floating_point/fpo_tofixed.v"] \
@@ -255,6 +256,13 @@ set_property -name "registered_with_manager" -value "1" -objects $file_obj
 set obj [get_filesets sources_1]
 set_property -name "top" -value "CircuitCanvas_top" -objects $obj
 set_property -name "top_auto_set" -value "0" -objects $obj
+
+# Add Keyboard VGA top source
+set obj [get_filesets sources_1]
+set files [list \
+ [file normalize "${origin_dir}/src/design/rendering/KeyboardVGA_top.v"] \
+]
+add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]

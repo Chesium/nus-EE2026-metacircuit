@@ -39,8 +39,9 @@ module KeyboardVGA_top (
     localparam integer SCREEN_H = 480;
     localparam integer KEYBOARD_KEY_H = 12 * KEYBOARD_SCALE;
     localparam integer KEYBOARD_H = 4 * KEYBOARD_KEY_H;
-    localparam integer KEYBOARD_X = 0;
-    localparam integer KEYBOARD_Y = SCREEN_H - KEYBOARD_H;
+    localparam integer KEYBOARD_MARGIN = 8;
+    localparam integer KEYBOARD_X = KEYBOARD_MARGIN;
+    localparam integer KEYBOARD_Y = SCREEN_H - KEYBOARD_H - KEYBOARD_MARGIN;
 
     assign JC = 8'h00;
     assign SEG = 8'hFF;
@@ -88,6 +89,9 @@ module KeyboardVGA_top (
         .btnL(BTNL),
         .btnR(BTNR),
         .btnC(BTNC),
+        .mouse_x(12'd0),
+        .mouse_y(12'd0),
+        .mouse_left(1'b0),
         .x(x_pos),
         .y(y_pos),
         .pixel_rgb(keyboard_rgb),

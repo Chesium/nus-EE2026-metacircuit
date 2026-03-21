@@ -23,13 +23,24 @@ module GlobalRender_top (
 
     localparam [11:0] BLACK            = 12'h000;
     localparam [11:0] BACKGROUND       = 12'hFCE;
-    localparam integer SCREEN_W        = 640;
     localparam integer SCREEN_H        = 480;
+    localparam integer SCREEN_W        = 640;
     localparam integer KEYBOARD_SCALE  = 3;
     localparam integer KEYBOARD_W      = 5 * (12 * KEYBOARD_SCALE);
     localparam integer KEYBOARD_H      = 4 * (12 * KEYBOARD_SCALE);
-    localparam integer KEYBOARD_X      = 0;
-    localparam integer KEYBOARD_Y      = SCREEN_H - KEYBOARD_H;
+    localparam integer KEYBOARD_MARGIN = 8;
+    localparam integer KEYBOARD_PANEL_PAD = 8;
+    localparam integer KEYBOARD_X      = KEYBOARD_MARGIN;
+    localparam integer KEYBOARD_Y      = SCREEN_H - KEYBOARD_H - KEYBOARD_MARGIN;
+    localparam integer KEYBOARD_REGION_X0 = KEYBOARD_X - KEYBOARD_PANEL_PAD;
+    localparam integer KEYBOARD_REGION_Y0 = KEYBOARD_Y - KEYBOARD_PANEL_PAD;
+    localparam integer KEYBOARD_REGION_X1 = KEYBOARD_X + KEYBOARD_W + KEYBOARD_PANEL_PAD;
+    localparam integer KEYBOARD_REGION_Y1 = KEYBOARD_Y + KEYBOARD_H + KEYBOARD_PANEL_PAD;
+    localparam integer RESET_BUTTON_W = 72;
+    localparam integer RESET_BUTTON_H = 36;
+    localparam integer RESET_BUTTON_MARGIN = 12;
+    localparam integer RESET_BUTTON_X = SCREEN_W - RESET_BUTTON_W - RESET_BUTTON_MARGIN;
+    localparam integer RESET_BUTTON_Y = RESET_BUTTON_MARGIN;
 
     wire clk_pixel;
     wire clk_nav;
@@ -43,6 +54,11 @@ module GlobalRender_top (
     wire        keyboard_key_valid;
     wire [7:0]  keyboard_key_ascii;
     reg  [7:0]  last_ascii = 8'h00;
+    wire [11:0] reset_button_rgb;
+    wire        reset_button_inside;
+    wire        reset_button_hover;
+    wire        reset_button_pressed;
+    wire        reset_region_active;
 
     wire [11:0] circuit_canvas_rgb;
     wire        circuit_canvas_rendered;
@@ -70,13 +86,27 @@ module GlobalRender_top (
     reg  [15:0] circuit_canvas_ram_w_data = 16'd0;
     wire [15:0] circuit_canvas_ram_r_data;
     reg  [31:0] init_cycles = 32'd0;
+    reg         reset_button_click_d = 1'b0;
+    reg         clear_canvas_active = 1'b0;
+    reg  [7:0]  clear_canvas_addr = 8'd0;
 
     wire keyboard_region_active;
     assign keyboard_region_active =
-        (x_pos >= KEYBOARD_X) &&
-        (x_pos <  (KEYBOARD_X + KEYBOARD_W)) &&
-        (y_pos >= KEYBOARD_Y) &&
-        (y_pos <  (KEYBOARD_Y + KEYBOARD_H));
+        (x_pos >= KEYBOARD_REGION_X0) &&
+        (x_pos <  KEYBOARD_REGION_X1) &&
+        (y_pos >= KEYBOARD_REGION_Y0) &&
+        (y_pos <  KEYBOARD_REGION_Y1);
+    assign reset_button_hover =
+        (mouse_xpos >= RESET_BUTTON_X) &&
+        (mouse_xpos <  (RESET_BUTTON_X + RESET_BUTTON_W)) &&
+        (mouse_ypos >= RESET_BUTTON_Y) &&
+        (mouse_ypos <  (RESET_BUTTON_Y + RESET_BUTTON_H));
+    assign reset_button_pressed = reset_button_hover && mouse_left;
+    assign reset_region_active =
+        (x_pos >= RESET_BUTTON_X) &&
+        (x_pos <  (RESET_BUTTON_X + RESET_BUTTON_W)) &&
+        (y_pos >= RESET_BUTTON_Y) &&
+        (y_pos <  (RESET_BUTTON_Y + RESET_BUTTON_H));
 
     assign mouse_rgb = {mouse_r, mouse_g, mouse_b};
 
@@ -183,12 +213,48 @@ module GlobalRender_top (
         .btnL(BTNL),
         .btnR(BTNR),
         .btnC(BTNC),
+        .mouse_x(mouse_xpos),
+        .mouse_y(mouse_ypos),
+        .mouse_left(mouse_left),
         .x(x_pos),
         .y(y_pos),
         .pixel_rgb(keyboard_rgb),
         .key_id(keyboard_key_id),
         .key_valid(keyboard_key_valid),
         .key_ascii(keyboard_key_ascii)
+    );
+
+    ButtonVGA #(
+        .X0(RESET_BUTTON_X),
+        .Y0(RESET_BUTTON_Y),
+        .W(RESET_BUTTON_W),
+        .H(RESET_BUTTON_H),
+        .BORDER(3),
+        .EDGE_THICK(2),
+        .MARKER_OFFSET(6),
+        .MARKER_W(3),
+        .MARKER_H(3),
+        .FONT5_SCALE(3),
+        .FONT3_SCALE(2),
+        .LABEL0("R"),
+        .LABEL1("S"),
+        .LABEL2("T"),
+        .TEXT_COLS(3),
+        .SMALL_TEXT(1'b0),
+        .FACE_RGB(24'hF2C8C5),
+        .BORDER_RGB(24'hA35C57),
+        .SELECTED_BORDER_RGB(24'h7A2F2A),
+        .SELECTED_MARKER_RGB(24'hFFF1E8),
+        .PRESSED_BORDER_RGB(24'h5B1B18),
+        .TEXT_RGB(24'h4A1F1C)
+    ) reset_button_inst (
+        .enabled(1'b1),
+        .selected(reset_button_hover),
+        .pressed(reset_button_pressed),
+        .x(x_pos),
+        .y(y_pos),
+        .pixel_rgb(reset_button_rgb),
+        .inside_button(reset_button_inside)
     );
 
     always @(posedge clk_nav) begin
@@ -202,67 +268,71 @@ module GlobalRender_top (
         mouse_set_max_x <= 1'b0;
         mouse_set_max_y <= 1'b0;
         circuit_canvas_ram_w_en <= 1'b0;
+        reset_button_click_d <= reset_button_pressed;
 
         if (init_cycles < 32'd1000) begin
             init_cycles <= init_cycles + 1'b1;
         end
 
-        if (init_cycles == 32'd1) begin
-            mouse_set_max_x <= 1'b1;
-            mouse_set_value <= 12'd639;
-        end
-        if (init_cycles == 32'd2) begin
-            mouse_set_max_y <= 1'b1;
-            mouse_set_value <= 12'd479;
+        if (reset_button_pressed && !reset_button_click_d) begin
+            clear_canvas_active <= 1'b1;
+            clear_canvas_addr <= 8'd0;
+            init_cycles <= 32'd1000;
         end
 
-        if (init_cycles < 32'd256) begin
+        if (clear_canvas_active) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= clear_canvas_addr;
+            circuit_canvas_ram_w_data <= 16'd0;
+
+            if (clear_canvas_addr == 8'd255) begin
+                clear_canvas_active <= 1'b0;
+            end else begin
+                clear_canvas_addr <= clear_canvas_addr + 1'b1;
+            end
+        end else if (init_cycles == 32'd1) begin
+            mouse_set_max_x <= 1'b1;
+            mouse_set_value <= 12'd639;
+        end else if (init_cycles == 32'd2) begin
+            mouse_set_max_y <= 1'b1;
+            mouse_set_value <= 12'd479;
+        end else if (init_cycles < 32'd256) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= init_cycles[7:0];
             circuit_canvas_ram_w_data <= 16'd0;
-        end
-
-        if (init_cycles == 32'd256) begin
+        end else if (init_cycles == 32'd256) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 8'd17;
             circuit_canvas_ram_w_data <= 16'b0000000_10_000001_1;
-        end
-        if (init_cycles == 32'd257) begin
+        end else if (init_cycles == 32'd257) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 8'd18;
             circuit_canvas_ram_w_data <= 16'b0000000_00_000101_1;
-        end
-        if (init_cycles == 32'd258) begin
+        end else if (init_cycles == 32'd258) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 8'd19;
             circuit_canvas_ram_w_data <= 16'b0000000_00_000110_1;
-        end
-        if (init_cycles == 32'd259) begin
+        end else if (init_cycles == 32'd259) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 8'd33;
             circuit_canvas_ram_w_data <= 16'b0000000_11_001000_1;
-        end
-        if (init_cycles == 32'd260) begin
+        end else if (init_cycles == 32'd260) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 8'd49;
             circuit_canvas_ram_w_data <= 16'b0000000_11_000111_1;
-        end
-        if (init_cycles == 32'd261) begin
+        end else if (init_cycles == 32'd261) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 8'd82;
             circuit_canvas_ram_w_data <= 16'b0000000_00_000010_1;
-        end
-        if (init_cycles == 32'd262) begin
+        end else if (init_cycles == 32'd262) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 8'd84;
             circuit_canvas_ram_w_data <= 16'b0000000_01_000010_1;
-        end
-        if (init_cycles == 32'd263) begin
+        end else if (init_cycles == 32'd263) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 8'd86;
             circuit_canvas_ram_w_data <= 16'b0000000_10_000010_1;
-        end
-        if (init_cycles == 32'd264) begin
+        end else if (init_cycles == 32'd264) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 8'd88;
             circuit_canvas_ram_w_data <= 16'b0000000_11_000010_1;
@@ -274,6 +344,8 @@ module GlobalRender_top (
             rgb <= BLACK;
         end else if (mouse_display_enable) begin
             rgb <= mouse_rgb;
+        end else if (reset_region_active) begin
+            rgb <= reset_button_rgb;
         end else if (keyboard_region_active) begin
             rgb <= keyboard_rgb;
         end else if (circuit_canvas_rendered) begin

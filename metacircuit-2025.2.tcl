@@ -81,7 +81,7 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/src/design/individual_basic_tasks/BasicTaskR.v"]"\
  "[file normalize "$origin_dir/src/design/individual_basic_tasks/BasicTaskS.v"]"\
  "[file normalize "$origin_dir/src/design/Keyboard/Keyboard.v"]"\
- "[file normalize "$origin_dir/src/design/Keyboard/KeyboardVGA.v"]"\
+"[file normalize "$origin_dir/src/design/rendering/KeyboardVGA.v"]"\
  "[file normalize "$origin_dir/src/design/driver/Oled_Display.v"]"\
  "[file normalize "$origin_dir/src/design/individual_basic_tasks/SevenSeg.v"]"\
  "[file normalize "$origin_dir/src/design/individual_basic_tasks/Top_Student.v"]"\
@@ -90,7 +90,8 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/src/ip_new/floating_point_fma/floating_point_fma.xci"]"\
  "[file normalize "$origin_dir/src/ip_new/floating_point_div/floating_point_div.xci"]"\
  "[file normalize "$origin_dir/src/design/rendering/CircuitCanvas.v"]"\
- "[file normalize "$origin_dir/src/design/common/ClockDivider.v"]"\
+"[file normalize "$origin_dir/src/design/common/ClockDivider.v"]"\
+"[file normalize "$origin_dir/src/design/rendering/ButtonVGA.v"]"\
  "[file normalize "$origin_dir/src/design/common/SimpleRam.v"]"\
  "[file normalize "$origin_dir/src/design/driver/VGAControl.v"]"\
  "[file normalize "$origin_dir/src/design/rendering/MouseDisplay.vhd"]"\
@@ -246,7 +247,7 @@ set files [list \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/BasicTaskR.v"] \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/BasicTaskS.v"] \
  [file normalize "${origin_dir}/src/design/Keyboard/Keyboard.v"] \
- [file normalize "${origin_dir}/src/design/Keyboard/KeyboardVGA.v"] \
+ [file normalize "${origin_dir}/src/design/rendering/KeyboardVGA.v"] \
  [file normalize "${origin_dir}/src/design/driver/Oled_Display.v"] \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/SevenSeg.v"] \
  [file normalize "${origin_dir}/src/design/individual_basic_tasks/Top_Student.v"] \
@@ -256,6 +257,7 @@ set files [list \
  [file normalize "${origin_dir}/src/ip_new/floating_point_div/floating_point_div.xci"] \
  [file normalize "${origin_dir}/src/design/rendering/CircuitCanvas.v"] \
  [file normalize "${origin_dir}/src/design/common/ClockDivider.v"] \
+ [file normalize "${origin_dir}/src/design/rendering/ButtonVGA.v"] \
  [file normalize "${origin_dir}/src/design/common/SimpleRam.v"] \
  [file normalize "${origin_dir}/src/design/driver/VGAControl.v"] \
  [file normalize "${origin_dir}/src/design/rendering/MouseDisplay.vhd"] \

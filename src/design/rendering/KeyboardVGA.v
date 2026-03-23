@@ -5,9 +5,12 @@ module KeyboardVGA #(
     parameter integer KEY_COUNT = 20,
     parameter integer COLS = 5,
     parameter integer ROWS = 4,
-    parameter integer FONT_SCALE = 4,
-    parameter integer KEYBOARD_X0 = 0,
-    parameter integer KEYBOARD_Y0 = 0
+    parameter integer FONT_SCALE = 2,
+    parameter integer KEYBOARD_X0 = 484,
+    parameter integer KEYBOARD_Y0 = 352,
+    // 【修改點】：將按鍵長寬獨立為參數，以完美填滿不規則空間
+    parameter integer KEY_W = 31,
+    parameter integer KEY_H = 32
 ) (
     input  wire        clk_nav,
     input  wire        btnU,
@@ -30,18 +33,21 @@ module KeyboardVGA #(
     output reg         key_is_action
 );
 
+    // =========================================================
     // Grid and panel geometry.
+    // 移除了內部寫死的尺寸，改用傳入的 KEY_W 與 KEY_H
+    // =========================================================
     localparam integer TOTAL_KEYS = COLS * ROWS;
-    localparam integer KEY_W = 12 * FONT_SCALE;
-    localparam integer KEY_H = 12 * FONT_SCALE;
     localparam integer KEYBOARD_W = COLS * KEY_W;
     localparam integer KEYBOARD_H = ROWS * KEY_H;
-    localparam integer PANEL_PAD = 8;
-    localparam integer PANEL_BORDER = 2;
-    localparam integer PANEL_X0 = (KEYBOARD_X0 >= PANEL_PAD) ? (KEYBOARD_X0 - PANEL_PAD) : 0;
-    localparam integer PANEL_Y0 = (KEYBOARD_Y0 >= PANEL_PAD) ? (KEYBOARD_Y0 - PANEL_PAD) : 0;
-    localparam integer PANEL_X1 = KEYBOARD_X0 + KEYBOARD_W + PANEL_PAD;
-    localparam integer PANEL_Y1 = KEYBOARD_Y0 + KEYBOARD_H + PANEL_PAD;
+    
+    // 移除不必要的 Padding，讓邊界完美貼合螢幕
+    localparam integer PANEL_PAD = 0;
+    localparam integer PANEL_BORDER = 0;
+    localparam integer PANEL_X0 = KEYBOARD_X0;
+    localparam integer PANEL_Y0 = KEYBOARD_Y0;
+    localparam integer PANEL_X1 = KEYBOARD_X0 + KEYBOARD_W;
+    localparam integer PANEL_Y1 = KEYBOARD_Y0 + KEYBOARD_H;
 
     // Shared button styling.
     localparam integer BORDER = 3;
@@ -242,7 +248,6 @@ module KeyboardVGA #(
         end
     endfunction
 
-    // Instantiate a reusable button renderer for each keyboard slot.
     genvar i;
     generate
         for (i = 0; i < TOTAL_KEYS; i = i + 1) begin : button_gen
@@ -281,43 +286,28 @@ module KeyboardVGA #(
         end
     endgenerate
 
-    // Handle keyboard navigation and selection.
     always @(posedge clk_nav) begin
-        btnU_d <= btnU;
-        btnD_d <= btnD;
-        btnL_d <= btnL;
-        btnR_d <= btnR;
-        btnC_d <= btnC;
-        mouse_left_d <= mouse_left;
-        mouse_x_d <= mouse_x;
-        mouse_y_d <= mouse_y;
-
+        btnU_d <= btnU; btnD_d <= btnD; btnL_d <= btnL; btnR_d <= btnR; btnC_d <= btnC;
+        mouse_left_d <= mouse_left; mouse_x_d <= mouse_x; mouse_y_d <= mouse_y;
         key_valid <= 1'b0;
 
-        if (mouse_moved) begin
-            use_mouse_selection <= 1'b1;
-        end
+        if (mouse_moved) use_mouse_selection <= 1'b1;
 
         if (btnU & ~btnU_d) begin
             use_mouse_selection <= 1'b0;
-            if (sel_row == 0) sel_row <= ROWS - 1;
-            else sel_row <= sel_row - 1'b1;
+            if (sel_row == 0) sel_row <= ROWS - 1; else sel_row <= sel_row - 1'b1;
         end else if (btnD & ~btnD_d) begin
             use_mouse_selection <= 1'b0;
-            if (sel_row == ROWS - 1) sel_row <= 0;
-            else sel_row <= sel_row + 1'b1;
+            if (sel_row == ROWS - 1) sel_row <= 0; else sel_row <= sel_row + 1'b1;
         end else if (btnL & ~btnL_d) begin
             use_mouse_selection <= 1'b0;
-            if (sel_col == 0) sel_col <= COLS - 1;
-            else sel_col <= sel_col - 1'b1;
+            if (sel_col == 0) sel_col <= COLS - 1; else sel_col <= sel_col - 1'b1;
         end else if (btnR & ~btnR_d) begin
             use_mouse_selection <= 1'b0;
-            if (sel_col == COLS - 1) sel_col <= 0;
-            else sel_col <= sel_col + 1'b1;
+            if (sel_col == COLS - 1) sel_col <= 0; else sel_col <= sel_col + 1'b1;
         end else if (mouse_left & ~mouse_left_d & hover_valid) begin
             use_mouse_selection <= 1'b1;
-            sel_row <= hovered_key_id / COLS;
-            sel_col <= hovered_key_id % COLS;
+            sel_row <= hovered_key_id / COLS; sel_col <= hovered_key_id % COLS;
             key_valid <= 1'b1;
         end else if (btnC & ~btnC_d) begin
             use_mouse_selection <= 1'b0;
@@ -325,16 +315,8 @@ module KeyboardVGA #(
         end
     end
 
-    // Mouse hover has priority for the live selected key, while keyboard
-    // navigation state remains available as the fallback selection.
-    // Decode the selected slot into its semantic meaning.
     always @(*) begin
-        mouse_inside_keyboard =
-            (mouse_x >= KEYBOARD_X0) &&
-            (mouse_x < (KEYBOARD_X0 + KEYBOARD_W)) &&
-            (mouse_y >= KEYBOARD_Y0) &&
-            (mouse_y < (KEYBOARD_Y0 + KEYBOARD_H));
-
+        mouse_inside_keyboard = (mouse_x >= KEYBOARD_X0) && (mouse_x < (KEYBOARD_X0 + KEYBOARD_W)) && (mouse_y >= KEYBOARD_Y0) && (mouse_y < (KEYBOARD_Y0 + KEYBOARD_H));
         mouse_rel_x = mouse_x - KEYBOARD_X0;
         mouse_rel_y = mouse_y - KEYBOARD_Y0;
         mouse_col = mouse_rel_x / KEY_W;
@@ -343,39 +325,21 @@ module KeyboardVGA #(
 
         mouse_moved = (mouse_x != mouse_x_d) || (mouse_y != mouse_y_d);
         hover_valid = mouse_inside_keyboard && (hovered_key_id < KEY_COUNT);
-        active_key_id = (use_mouse_selection && hover_valid) ? hovered_key_id
-                                                             : ((sel_row * COLS) + sel_col);
+        active_key_id = (use_mouse_selection && hover_valid) ? hovered_key_id : ((sel_row * COLS) + sel_col);
         active_pressed = btnC || (mouse_left && use_mouse_selection && hover_valid);
 
-        key_id = active_key_id;
-        key_ascii = key_ascii_for_id(active_key_id);
-        key_rgb = key_color_for_id(active_key_id);
-        key_is_digit = key_is_digit_for_id(active_key_id);
-        key_is_unit = key_is_unit_for_id(active_key_id);
-        key_is_action = key_is_action_for_id(active_key_id);
+        key_id = active_key_id; key_ascii = key_ascii_for_id(active_key_id); key_rgb = key_color_for_id(active_key_id);
+        key_is_digit = key_is_digit_for_id(active_key_id); key_is_unit = key_is_unit_for_id(active_key_id); key_is_action = key_is_action_for_id(active_key_id);
     end
 
-    // Render the keyboard panel first, then let the active button override it.
     always @(*) begin
         pixel_rgb = rgb888_to_444(RGB_BG);
-        inside_keyboard =
-            (x >= KEYBOARD_X0) &&
-            (x < (KEYBOARD_X0 + KEYBOARD_W)) &&
-            (y >= KEYBOARD_Y0) &&
-            (y < (KEYBOARD_Y0 + KEYBOARD_H));
-
-        panel_area_active =
-            (x >= PANEL_X0) &&
-            (x < PANEL_X1) &&
-            (y >= PANEL_Y0) &&
-            (y < PANEL_Y1);
+        inside_keyboard = (x >= KEYBOARD_X0) && (x < (KEYBOARD_X0 + KEYBOARD_W)) && (y >= KEYBOARD_Y0) && (y < (KEYBOARD_Y0 + KEYBOARD_H));
+        panel_area_active = (x >= PANEL_X0) && (x < PANEL_X1) && (y >= PANEL_Y0) && (y < PANEL_Y1);
 
         if (!inside_keyboard) begin
             if (panel_area_active) begin
-                if ((x < (PANEL_X0 + PANEL_BORDER)) ||
-                    (x >= (PANEL_X1 - PANEL_BORDER)) ||
-                    (y < (PANEL_Y0 + PANEL_BORDER)) ||
-                    (y >= (PANEL_Y1 - PANEL_BORDER))) begin
+                if ((x < (PANEL_X0 + PANEL_BORDER)) || (x >= (PANEL_X1 - PANEL_BORDER)) || (y < (PANEL_Y0 + PANEL_BORDER)) || (y >= (PANEL_Y1 - PANEL_BORDER))) begin
                     pixel_rgb = rgb888_to_444(RGB_PANEL_BORDER);
                 end else begin
                     pixel_rgb = rgb888_to_444(RGB_PANEL);

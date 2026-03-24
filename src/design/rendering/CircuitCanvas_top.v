@@ -168,6 +168,7 @@ module CircuitCanvas_top #(
       .pixel_clk               (clk_pixel),
       .xpos                    (mouse_xpos),
       .ypos                    (mouse_ypos),
+      .mouse_left              (mouse_left),
       .hcount                  (x_pos),
       .vcount                  (y_pos),
       .enable_mouse_display_out(mouse_display_enable),

@@ -698,9 +698,9 @@ module FontROM (
             // 77: m (ASCII 109)
             7'd77: case(row)
                     0: pixel_data = 8'b00000000; 1: pixel_data = 8'b00000000;
-                    2: pixel_data = 8'b01101110; 3: pixel_data = 8'b01110111;
-                    4: pixel_data = 8'b01101101; 5: pixel_data = 8'b01100110;
-                    6: pixel_data = 8'b01100110; 7: pixel_data = 8'b00000000;
+                    2: pixel_data = 8'b01010100; 3: pixel_data = 8'b00101010;
+                    4: pixel_data = 8'b01101010; 5: pixel_data = 8'b01101010;
+                    6: pixel_data = 8'b01000010; 7: pixel_data = 8'b00000000;
                     default: pixel_data = 8'b00000000;
                   endcase
 
@@ -752,7 +752,7 @@ module FontROM (
             // 83: s (ASCII 115)
             7'd83: case(row)
                     0: pixel_data = 8'b00000000; 1: pixel_data = 8'b00000000;
-                    2: pixel_data = 8'b00111100; 3: pixel_data = 8'b01100110;
+                    2: pixel_data = 8'b00111100; 3: pixel_data = 8'b01100010;
                     4: pixel_data = 8'b00111100; 5: pixel_data = 8'b00000110;
                     6: pixel_data = 8'b01100110; 7: pixel_data = 8'b00111100;
                     default: pixel_data = 8'b00000000;

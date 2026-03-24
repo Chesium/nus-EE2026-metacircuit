@@ -56,7 +56,8 @@ module KeyboardVGA #(
     localparam integer MARKER_W = 3;
     localparam integer MARKER_H = 3;
     localparam integer FONT5_SCALE = FONT_SCALE;
-    localparam integer FONT3_SCALE = FONT_SCALE - 1;
+    localparam integer FONT3_SCALE = FONT_SCALE;
+    localparam integer DEL_W = (3 * KEY_W) / 2;
 
     // Color palette.
     localparam [23:0]
@@ -98,6 +99,7 @@ module KeyboardVGA #(
     reg [2:0] mouse_row;
     reg [4:0] hovered_key_id;
     reg [4:0] active_key_id;
+    reg active_key_valid;
     reg active_pressed;
     integer k;
 
@@ -242,8 +244,28 @@ module KeyboardVGA #(
         input integer idx;
         begin
             case (idx)
-                17: small_text_for_id = 1'b1;
+                17: small_text_for_id = 1'b0;
                 default: small_text_for_id = 1'b0;
+            endcase
+        end
+    endfunction
+
+    function integer button_x0_for_id;
+        input integer idx;
+        begin
+            case (idx)
+                17: button_x0_for_id = KEYBOARD_X0 + (2 * KEY_W);
+                default: button_x0_for_id = KEYBOARD_X0 + ((idx % COLS) * KEY_W);
+            endcase
+        end
+    endfunction
+
+    function integer button_w_for_id;
+        input integer idx;
+        begin
+            case (idx)
+                17: button_w_for_id = DEL_W;
+                default: button_w_for_id = KEY_W;
             endcase
         end
     endfunction
@@ -252,9 +274,9 @@ module KeyboardVGA #(
     generate
         for (i = 0; i < TOTAL_KEYS; i = i + 1) begin : button_gen
             ButtonVGA #(
-                .X0(KEYBOARD_X0 + ((i % COLS) * KEY_W)),
+                .X0(button_x0_for_id(i)),
                 .Y0(KEYBOARD_Y0 + ((i / COLS) * KEY_H)),
-                .W(KEY_W),
+                .W(button_w_for_id(i)),
                 .H(KEY_H),
                 .BORDER(BORDER),
                 .EDGE_THICK(EDGE_THICK),
@@ -276,8 +298,8 @@ module KeyboardVGA #(
                 .TEXT_RGB(RGB_TEXT)
             ) button_inst (
                 .enabled(i < KEY_COUNT),
-                .selected(active_key_id == i[4:0]),
-                .pressed((active_key_id == i[4:0]) && active_pressed),
+                .selected(active_key_valid && (active_key_id == i[4:0])),
+                .pressed(active_key_valid && (active_key_id == i[4:0]) && active_pressed),
                 .x(x),
                 .y(y),
                 .pixel_rgb(button_rgb_bus[(i * 12) +: 12]),
@@ -323,13 +345,33 @@ module KeyboardVGA #(
         mouse_row = mouse_rel_y / KEY_H;
         hovered_key_id = (mouse_row * COLS) + mouse_col;
 
+        if ((mouse_row == 3) &&
+            (mouse_rel_x >= (2 * KEY_W)) &&
+            (mouse_rel_x < ((2 * KEY_W) + DEL_W))) begin
+            hovered_key_id = 17;
+        end
+
         mouse_moved = (mouse_x != mouse_x_d) || (mouse_y != mouse_y_d);
         hover_valid = mouse_inside_keyboard && (hovered_key_id < KEY_COUNT);
-        active_key_id = (use_mouse_selection && hover_valid) ? hovered_key_id : ((sel_row * COLS) + sel_col);
-        active_pressed = btnC || (mouse_left && use_mouse_selection && hover_valid);
+        active_key_valid = use_mouse_selection ? hover_valid : 1'b1;
+        active_key_id = use_mouse_selection ? hovered_key_id : ((sel_row * COLS) + sel_col);
+        active_pressed = (btnC && !use_mouse_selection) || (mouse_left && use_mouse_selection && hover_valid);
 
-        key_id = active_key_id; key_ascii = key_ascii_for_id(active_key_id); key_rgb = key_color_for_id(active_key_id);
-        key_is_digit = key_is_digit_for_id(active_key_id); key_is_unit = key_is_unit_for_id(active_key_id); key_is_action = key_is_action_for_id(active_key_id);
+        if (active_key_valid) begin
+            key_id = active_key_id;
+            key_ascii = key_ascii_for_id(active_key_id);
+            key_rgb = key_color_for_id(active_key_id);
+            key_is_digit = key_is_digit_for_id(active_key_id);
+            key_is_unit = key_is_unit_for_id(active_key_id);
+            key_is_action = key_is_action_for_id(active_key_id);
+        end else begin
+            key_id = 5'd0;
+            key_ascii = 8'h00;
+            key_rgb = 24'h000000;
+            key_is_digit = 1'b0;
+            key_is_unit = 1'b0;
+            key_is_action = 1'b0;
+        end
     end
 
     always @(*) begin

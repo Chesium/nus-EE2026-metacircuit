@@ -389,7 +389,7 @@ module GlobalRender_top (
         .display_grid(1'b1), .mouse_left_click(mouse_left)
     );
 
-    // Component Property Panel signals
+    // Component Property Panel signals 以下为属性面板例化
     wire        prop_panel_rendered;
     wire [11:0] prop_panel_rgb;
     reg  [11:0] selected_cell_i = 12'd0;
@@ -480,6 +480,7 @@ module GlobalRender_top (
         .panel_rendered(prop_panel_rendered),
         .panel_rgb(prop_panel_rgb)
     );
+    //属性面板例化结束
 
     // =========================================================
     // 【重點實例化：傳入更新的 KEY_W 和 KEY_H】

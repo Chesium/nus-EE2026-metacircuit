@@ -389,6 +389,99 @@ module GlobalRender_top (
         .display_grid(1'b1), .mouse_left_click(mouse_left)
     );
 
+    // Component Property Panel signals 以下为属性面板例化
+    wire        prop_panel_rendered;
+    wire [11:0] prop_panel_rgb;
+    reg  [11:0] selected_cell_i = 12'd0;
+    reg  [11:0] selected_cell_j = 12'd0;
+    reg  [15:0] selected_cell_data = 16'd0;
+    reg         has_selection = 1'b0;
+    reg         mouse_left_d = 1'b0;
+    wire        mouse_left_rising;
+    
+    // 鼠标悬停检测
+    wire [11:0] mouse_cell_i;
+    wire [11:0] mouse_cell_j;
+    wire        mouse_hover_component;
+    
+    // 示例元件数据 (从 init_cycles 中复制)
+    // 地址 17-19: 电阻，地址 33: 电压源右，地址 49: 电压源左，地址 82-88: Tee
+    reg  [15:0] component_data [0:255];
+    reg  [7:0]  hovered_addr;
+
+    // =========================================================
+    // Component Property Panel - 元件属性显示 (简化版)
+    // =========================================================
+    // 鼠标悬停位置计算 (Canvas 区域：X0=64, Y0=64)
+    assign mouse_cell_i = (mouse_xpos >= CANVAS_X0) ? ((mouse_xpos - CANVAS_X0) / 32) : 12'd0;
+    assign mouse_cell_j = (mouse_ypos >= CANVAS_Y0) ? ((mouse_ypos - CANVAS_Y0) / 32) : 12'd0;
+    
+    // 鼠标点击边沿检测
+    assign mouse_left_rising = mouse_left && !mouse_left_d;
+
+    // 同步鼠标点击 - 记录选中的单元格
+    always @(posedge clk_pixel) begin
+        mouse_left_d <= mouse_left;
+        if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
+            selected_cell_i <= mouse_cell_i;
+            selected_cell_j <= mouse_cell_j;
+            has_selection <= 1'b1;
+        end
+    end
+
+    // 示例元件数据初始化 (与 init_cycles 中的数据相同)
+    integer init_idx;
+    always @(posedge clk_pixel) begin
+        // 初始化所有单元为 0
+        for (init_idx = 0; init_idx < 256; init_idx = init_idx + 1) begin
+            component_data[init_idx] <= 16'd0;
+        end
+        // 加载示例元件
+        component_data[17] <= 16'b0000000_10_000001_1;  // rotation=2, type=1
+        component_data[18] <= 16'b0000000_00_000101_1;  // rotation=0, type=5 (Resistor Left)
+        component_data[19] <= 16'b0000000_00_000110_1;  // rotation=0, type=6 (Resistor Right)
+        component_data[33] <= 16'b0000000_11_001000_1;  // rotation=3, type=8 (Voltage Right)
+        component_data[49] <= 16'b0000000_11_000111_1;  // rotation=3, type=7 (Voltage Left)
+        component_data[82] <= 16'b0000000_00_000010_1;  // rotation=0, type=2 (Tee)
+        component_data[84] <= 16'b0000000_01_000010_1;  // rotation=1, type=2 (Tee)
+        component_data[86] <= 16'b0000000_10_000010_1;  // rotation=2, type=2 (Tee)
+        component_data[88] <= 16'b0000000_11_000010_1;  // rotation=3, type=2 (Tee)
+    end
+    
+    // 计算悬停的单元格地址
+    always @(*) begin
+        hovered_addr = mouse_cell_i + mouse_cell_j * 16;
+    end
+    
+    // 从本地存储读取选中单元格的数据
+    always @(posedge clk_pixel) begin
+        if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
+            selected_cell_data <= component_data[hovered_addr];
+        end
+    end
+
+    // 例化属性面板
+    ComponentPropertyPanel #(
+        .PANEL_X(0),
+        .PANEL_Y(0),
+        .PANEL_W(640),
+        .PANEL_H(64)
+    ) u_prop_panel (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .video_on(video_on),
+        .mouse_cell_i(mouse_cell_i),
+        .mouse_cell_j(mouse_cell_j),
+        .selected_cell_data(selected_cell_data),
+        .has_selection(has_selection),
+        .selected_cell_i(selected_cell_i),
+        .selected_cell_j(selected_cell_j),
+        .panel_rendered(prop_panel_rendered),
+        .panel_rgb(prop_panel_rgb)
+    );
+    //属性面板例化结束
+
     // =========================================================
     // 【重點實例化：傳入更新的 KEY_W 和 KEY_H】
     // 確保這裡的尺寸與 Top 的遮罩區域完全相同
@@ -609,6 +702,8 @@ module GlobalRender_top (
             rgb <= circuit_canvas_rgb;
         end else if (dynamic_wave_active) begin
             rgb <= wave_out_rgb;
+        end else if (prop_panel_rendered && video_on) begin
+            rgb <= prop_panel_rgb;
         end else begin
             rgb <= ui_rgb;
         end

@@ -29,9 +29,9 @@ module VGAControl (
   /* -BEGIN- Combinational Assignments for VGA Sync and Video_on -BEGIN- */
 
   // Generates hsync pulse when h_count_reg is within HR range
-  assign hsync     = (h_count_reg >= (HD + HF) && h_count_reg <= (HD + HF + HR));
+  assign hsync     = ~((h_count_reg >= (HD + HF)) && (h_count_reg < (HD + HF + HR)));
   // Generates vsync pulse when v_count_reg is within VR range
-  assign vsync     = (v_count_reg >= (VD + VF) && v_count_reg <= (VD + VF + VR));
+  assign vsync     = ~((v_count_reg >= (VD + VF)) && (v_count_reg < (VD + VF + VR)));
   // video_on is high when h_count_reg and v_count_reg are within active display area
   assign video_on  = (h_count_reg < HD) && (v_count_reg < VD);
 

@@ -42,13 +42,15 @@ module GlobalRender_top (
     localparam integer KEYBOARD_SCALE  = 2;
     localparam integer KEY_W           = 31;
     localparam integer KEY_H           = 32;
-    localparam integer KEYBOARD_W      = 5 * KEY_W; 
+    localparam integer KEYBOARD_W      = 5 * KEY_W;
     localparam integer KEYBOARD_H      = 4 * KEY_H; 
     localparam integer KEYBOARD_MARGIN = 0;
     localparam integer KEYBOARD_PANEL_PAD = 0;
 
-    localparam integer KEYBOARD_X      = SCREEN_W - RIGHT_BAR_W + 1; // 485，讓它緊貼右側邊緣
-    localparam integer KEYBOARD_Y      = SCREEN_H - BOTTOM_BAR_H;    // 352
+    localparam integer KEYBOARD_X      = SCREEN_W - RIGHT_BAR_W + 1;
+    // 485，讓它緊貼右側邊緣
+    localparam integer KEYBOARD_Y      = SCREEN_H - BOTTOM_BAR_H;
+    // 352
     
     localparam integer KEYBOARD_REGION_X0 = KEYBOARD_X;
     localparam integer KEYBOARD_REGION_Y0 = KEYBOARD_Y;
@@ -71,8 +73,10 @@ module GlobalRender_top (
     wire        keyboard_key_valid;
     wire [7:0]  keyboard_key_ascii;
     reg  [7:0]  last_ascii = 8'h00;
+
     wire [11:0] reset_button_rgb;
     wire        reset_button_inside, reset_button_hover, reset_button_pressed, reset_region_active;
+
     wire        keyboard_region_active;
 
     wire [11:0] circuit_canvas_rgb;
@@ -98,14 +102,20 @@ module GlobalRender_top (
     wire [7:0]  circuit_canvas_ram_r_addr;
     reg  [15:0] circuit_canvas_ram_w_data = 16'd0;
     wire [15:0] circuit_canvas_ram_r_data;
+
     reg  [31:0] init_cycles = 32'd0;
     reg         reset_button_click_d = 1'b0;
+
     reg         clear_canvas_active = 1'b0;
     reg  [7:0]  clear_canvas_addr = 8'd0;
+
     assign keyboard_region_active = (x_pos >= KEYBOARD_REGION_X0) && (x_pos < KEYBOARD_REGION_X1) && (y_pos >= KEYBOARD_REGION_Y0) && (y_pos < KEYBOARD_REGION_Y1);
+
     assign reset_button_hover = (mouse_xpos >= RESET_BUTTON_X) && (mouse_xpos < (RESET_BUTTON_X + RESET_BUTTON_W)) && (mouse_ypos >= RESET_BUTTON_Y) && (mouse_ypos < (RESET_BUTTON_Y + RESET_BUTTON_H));
+
     assign reset_button_pressed = reset_button_hover && mouse_left;
     assign reset_region_active = (x_pos >= RESET_BUTTON_X) && (x_pos < (RESET_BUTTON_X + RESET_BUTTON_W)) && (y_pos >= RESET_BUTTON_Y) && (y_pos < (RESET_BUTTON_Y + RESET_BUTTON_H));
+
     assign mouse_rgb = {mouse_r, mouse_g, mouse_b};
 
     function [11:0] rgb888_to_444;
@@ -137,11 +147,13 @@ module GlobalRender_top (
                 "E": case (r) 0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b11110; 3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b11111; endcase
                 "G": case (r) 0: glyph5x7_row = 5'b01111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b10000; 3: glyph5x7_row = 5'b10111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01111; endcase
                 "H": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b11111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b10001; endcase
+                "M": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b11011; 2: glyph5x7_row = 5'b10101; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b10001; endcase
                 "P": case (r) 0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b10000; endcase
                 "R": case (r) 0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10100; 5: glyph5x7_row = 5'b10010; default: glyph5x7_row = 5'b10001; endcase
                 "T": case (r) 0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b00100; 2: glyph5x7_row = 5'b00100; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b00100; default: glyph5x7_row = 5'b00100; endcase
                 "V": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b01010; default: glyph5x7_row = 5'b00100; endcase
                 "W": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10101; 4: glyph5x7_row = 5'b10101; 5: glyph5x7_row = 5'b10101; default: glyph5x7_row = 5'b01010; endcase
+                "X": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b01010; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b01010; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b10001; endcase
                 "a": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b00001; 3: glyph5x7_row = 5'b01111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10011; default: glyph5x7_row = 5'b01101; endcase
                 "b": case (r) 0: glyph5x7_row = 5'b10000; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b11110; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b11110; endcase
                 "c": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01110; endcase
@@ -162,6 +174,7 @@ module GlobalRender_top (
                 "v": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b01010; 5: glyph5x7_row = 5'b01010; default: glyph5x7_row = 5'b00100; endcase
                 "y": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b01111; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b00010; default: glyph5x7_row = 5'b11100; endcase
                 "z": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11111; 2: glyph5x7_row = 5'b00010; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b01000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b11111; endcase
+                "=": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11111; 2: glyph5x7_row = 5'b00000; 3: glyph5x7_row = 5'b11111; 4: glyph5x7_row = 5'b00000; 5: glyph5x7_row = 5'b00000; default: glyph5x7_row = 5'b00000; endcase
                 default: glyph5x7_row = 5'b00000;
             endcase
         end
@@ -346,21 +359,18 @@ module GlobalRender_top (
     assign LED[4:0] = keyboard_key_id;
     assign LED[7:5] = 3'b000;
     assign LED[15:8] = last_ascii;
-
     ClockDivider #( .FREQ(25_000_000) ) clkdiv_pixel_inst ( .CLK100MHZ(CLK100MHZ), .clk_out(clk_pixel) );
     ClockDivider #( .FREQ(20) ) clkdiv_nav_inst ( .CLK100MHZ(CLK100MHZ), .clk_out(clk_nav) );
-
     VGAControl vga_ctrl_inst (
         .clk_pixel(clk_pixel), .reset(SW[15]), .rgb(rgb),
         .hsync(HSYNC), .vsync(VSYNC), .video_on(video_on),
         .h_count_reg(x_pos), .v_count_reg(y_pos),
         .vgaRed(VGARED), .vgaGreen(VGAGREEN), .vgaBlue(VGABLUE)
     );
-
     // 同步與重置訊號
     reg vsync_d;
     always @(posedge clk_pixel) vsync_d <= VSYNC;
-    wire vsync_edge = (~VSYNC & vsync_d); 
+    wire vsync_edge = (~VSYNC & vsync_d);
     wire wave_rst_n = ~BTNC;
 
     MouseCtl mouse_ctrl_inst (
@@ -369,26 +379,22 @@ module GlobalRender_top (
         .new_event(mouse_new_event), .value(mouse_set_value), .setx(1'b0), .sety(1'b0),
         .setmax_x(mouse_set_max_x), .setmax_y(mouse_set_max_y), .ps2_clk(PS2CLK), .ps2_data(PS2DATA)
     );
-
     MouseDisplay mouse_disp_inst (
         .pixel_clk(clk_pixel), .xpos(mouse_xpos), .ypos(mouse_ypos),
         .mouse_left(mouse_left),
         .hcount(x_pos), .vcount(y_pos), .enable_mouse_display_out(mouse_display_enable),
         .red_out(mouse_r), .green_out(mouse_g), .blue_out(mouse_b)
     );
-
     SimpleRam #( .WordWidth(16), .WordCount(256) ) circuit_canvas_ram_inst (
         .clk(CLK100MHZ), .w_en(circuit_canvas_ram_w_en), .w_addr(circuit_canvas_ram_w_addr),
         .r_addr(circuit_canvas_ram_r_addr), .d_in(circuit_canvas_ram_w_data), .d_out(circuit_canvas_ram_r_data)
     );
-
     CircuitCanvas #( .CanvasPosX(CANVAS_X0), .CanvasPosY(CANVAS_Y0), .CanvasWidth(CANVAS_W), .CanvasHeight(CANVAS_H) ) circuit_canvas_inst (
         .clk_pixel(clk_pixel), .x_pos(x_pos), .y_pos(y_pos), .rgb(circuit_canvas_rgb),
         .rendered(circuit_canvas_rendered), .mouse_x_pos(mouse_xpos), .mouse_y_pos(mouse_ypos),
         .data_addr(circuit_canvas_ram_r_addr), .incoming_data(circuit_canvas_ram_r_data),
         .display_grid(1'b1), .mouse_left_click(mouse_left)
     );
-
     // Component Property Panel signals 以下为属性面板例化
     wire        prop_panel_rendered;
     wire [11:0] prop_panel_rgb;
@@ -413,12 +419,13 @@ module GlobalRender_top (
     // Component Property Panel - 元件属性显示 (简化版)
     // =========================================================
     // 鼠标悬停位置计算 (Canvas 区域：X0=64, Y0=64)
-    assign mouse_cell_i = (mouse_xpos >= CANVAS_X0) ? ((mouse_xpos - CANVAS_X0) / 32) : 12'd0;
-    assign mouse_cell_j = (mouse_ypos >= CANVAS_Y0) ? ((mouse_ypos - CANVAS_Y0) / 32) : 12'd0;
+    assign mouse_cell_i = (mouse_xpos >= CANVAS_X0) ?
+    ((mouse_xpos - CANVAS_X0) / 32) : 12'd0;
+    assign mouse_cell_j = (mouse_ypos >= CANVAS_Y0) ?
+    ((mouse_ypos - CANVAS_Y0) / 32) : 12'd0;
     
     // 鼠标点击边沿检测
     assign mouse_left_rising = mouse_left && !mouse_left_d;
-
     // 同步鼠标点击 - 记录选中的单元格
     always @(posedge clk_pixel) begin
         mouse_left_d <= mouse_left;
@@ -437,15 +444,24 @@ module GlobalRender_top (
             component_data[init_idx] <= 16'd0;
         end
         // 加载示例元件
-        component_data[17] <= 16'b0000000_10_000001_1;  // rotation=2, type=1
-        component_data[18] <= 16'b0000000_00_000101_1;  // rotation=0, type=5 (Resistor Left)
-        component_data[19] <= 16'b0000000_00_000110_1;  // rotation=0, type=6 (Resistor Right)
-        component_data[33] <= 16'b0000000_11_001000_1;  // rotation=3, type=8 (Voltage Right)
-        component_data[49] <= 16'b0000000_11_000111_1;  // rotation=3, type=7 (Voltage Left)
-        component_data[82] <= 16'b0000000_00_000010_1;  // rotation=0, type=2 (Tee)
-        component_data[84] <= 16'b0000000_01_000010_1;  // rotation=1, type=2 (Tee)
-        component_data[86] <= 16'b0000000_10_000010_1;  // rotation=2, type=2 (Tee)
-        component_data[88] <= 16'b0000000_11_000010_1;  // rotation=3, type=2 (Tee)
+        component_data[17] <= 16'b0000000_10_000001_1;
+        // rotation=2, type=1
+        component_data[18] <= 16'b0000000_00_000101_1;
+        // rotation=0, type=5 (Resistor Left)
+        component_data[19] <= 16'b0000000_00_000110_1;
+        // rotation=0, type=6 (Resistor Right)
+        component_data[33] <= 16'b0000000_11_001000_1;
+        // rotation=3, type=8 (Voltage Right)
+        component_data[49] <= 16'b0000000_11_000111_1;
+        // rotation=3, type=7 (Voltage Left)
+        component_data[82] <= 16'b0000000_00_000010_1;
+        // rotation=0, type=2 (Tee)
+        component_data[84] <= 16'b0000000_01_000010_1;
+        // rotation=1, type=2 (Tee)
+        component_data[86] <= 16'b0000000_10_000010_1;
+        // rotation=2, type=2 (Tee)
+        component_data[88] <= 16'b0000000_11_000010_1;
+        // rotation=3, type=2 (Tee)
     end
     
     // 计算悬停的单元格地址
@@ -472,6 +488,7 @@ module GlobalRender_top (
         .vcount(y_pos),
         .video_on(video_on),
         .mouse_cell_i(mouse_cell_i),
+        
         .mouse_cell_j(mouse_cell_j),
         .selected_cell_data(selected_cell_data),
         .has_selection(has_selection),
@@ -494,12 +511,12 @@ module GlobalRender_top (
         .KEY_W(KEY_W),
         .KEY_H(KEY_H)
     ) keyboard_vga_inst (
-        .clk_nav(clk_nav), .btnU(BTNU), .btnD(BTND), .btnL(BTNL), .btnR(BTNR), .btnC(BTNC),
+        .clk_nav(clk_nav), .btnU(BTNU), .btnD(BTND), .btnL(BTNL), .btnR(BTNR), 
+        .btnC(BTNC),
         .mouse_x(mouse_xpos), .mouse_y(mouse_ypos), .mouse_left(mouse_left),
         .x(x_pos), .y(y_pos), .pixel_rgb(keyboard_rgb), .key_id(keyboard_key_id),
         .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii)
     );
-
     ButtonVGA #(
         .X0(RESET_BUTTON_X), .Y0(RESET_BUTTON_Y), .W(RESET_BUTTON_W), .H(RESET_BUTTON_H),
         .BORDER(3), .EDGE_THICK(2), .MARKER_OFFSET(7), .MARKER_W(3), .MARKER_H(3),
@@ -511,7 +528,6 @@ module GlobalRender_top (
         .enabled(1'b1), .selected(reset_button_hover), .pressed(reset_button_pressed),
         .x(x_pos), .y(y_pos), .pixel_rgb(reset_button_rgb), .inside_button(reset_button_inside)
     );
-
     // =========================================================
     // 電壓波形 (X: 0 ~ 241, Y: 352 ~ 479)
     // =========================================================
@@ -519,18 +535,18 @@ module GlobalRender_top (
     wire [7:0] v_wr_addr, v_wr_data;
     wire [7:0] v_rd_addr, v_rd_data;
     wire       is_v_wave, is_v_axis, is_v_text;
+    wire [7:0] v_max_val; // 【新增】接收電壓峰值
 
     DummyDataGenerate v_gen (
         .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
-        .wr_en(v_wr_en), .wr_addr(v_wr_addr), .wr_data(v_wr_data)
+        .wr_en(v_wr_en), .wr_addr(v_wr_addr), .wr_data(v_wr_data),
+        .max_out(v_max_val)   // 【新增接線】
     );
-
     PingPongBuffer #( .ADDR_WIDTH(8), .DATA_WIDTH(8) ) v_buffer (
         .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
         .wr_en(v_wr_en), .wr_addr(v_wr_addr), .wr_data(v_wr_data),
         .rd_en(1'b1),    .rd_addr(v_rd_addr), .rd_data(v_rd_data)
     );
-
     wire [11:0] v_local_y_12bit = y_pos - 12'd352;
     
     WaveformPlot #( .IS_VOLTAGE(1) ) v_plot (
@@ -540,7 +556,6 @@ module GlobalRender_top (
         .rd_addr(v_rd_addr), .rd_data(v_rd_data),
         .is_wave_pixel(is_v_wave), .is_axis_pixel(is_v_axis), .is_text_pixel(is_v_text)
     );
-
     // =========================================================
     // 電流波形 (X: 242 ~ 483, Y: 352 ~ 479)
     // =========================================================
@@ -548,21 +563,20 @@ module GlobalRender_top (
     wire [7:0] i_wr_addr, i_wr_data;
     wire [7:0] i_rd_addr, i_rd_data;
     wire       is_i_wave, is_i_axis, is_i_text;
+    wire [7:0] i_max_val; // 【新增】接收電流峰值
 
     DummyDataGenerate i_gen (
         .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
-        .wr_en(i_wr_en), .wr_addr(i_wr_addr), .wr_data(i_wr_data)
+        .wr_en(i_wr_en), .wr_addr(i_wr_addr), .wr_data(i_wr_data),
+        .max_out(i_max_val)   // 【新增接線】
     );
-
     PingPongBuffer #( .ADDR_WIDTH(8), .DATA_WIDTH(8) ) i_buffer (
         .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
         .wr_en(i_wr_en), .wr_addr(i_wr_addr), .wr_data(i_wr_data),
         .rd_en(1'b1),    .rd_addr(i_rd_addr), .rd_data(i_rd_data)
     );
-
     wire [11:0] i_local_x_12bit = x_pos - 12'd242;
     wire [11:0] i_local_y_12bit = y_pos - 12'd352;
-
     WaveformPlot #( .IS_VOLTAGE(0) ) i_plot (
         .clk(clk_pixel), .rst_n(wave_rst_n),
         .local_x( (x_pos >= 242 && x_pos < 484) ? (i_local_x_12bit[7:0] + 8'd1) : 8'd0 ),
@@ -572,35 +586,74 @@ module GlobalRender_top (
     );
 
     // =========================================================
-    // 波形影像混合邏輯
+    // 【新增】8-bit Binary 轉 BCD 轉換器 (用於 OSD 顯示峰值)
+    // =========================================================
+    wire [3:0] v_max_h = v_max_val / 100;
+    wire [3:0] v_max_t = (v_max_val % 100) / 10;
+    wire [3:0] v_max_u = v_max_val % 10;
+
+    wire [3:0] i_max_h = i_max_val / 100;
+    wire [3:0] i_max_t = (i_max_val % 100) / 10;
+    wire [3:0] i_max_u = i_max_val % 10;
+
+    // 【新增】動態字元引擎
+    wire v_dyn_text =
+        glyph_hit("M", 2, x_pos - 146, y_pos - 360) ||
+        glyph_hit("A", 2, x_pos - 158, y_pos - 360) ||
+        glyph_hit("X", 2, x_pos - 170, y_pos - 360) ||
+        glyph_hit("=", 2, x_pos - 182, y_pos - 360) ||
+        glyph_hit("0" + v_max_h, 2, x_pos - 194, y_pos - 360) ||
+        glyph_hit("0" + v_max_t, 2, x_pos - 206, y_pos - 360) ||
+        glyph_hit("0" + v_max_u, 2, x_pos - 218, y_pos - 360);
+
+    wire i_dyn_text =
+        glyph_hit("M", 2, x_pos - 388, y_pos - 360) ||
+        glyph_hit("A", 2, x_pos - 400, y_pos - 360) ||
+        glyph_hit("X", 2, x_pos - 412, y_pos - 360) ||
+        glyph_hit("=", 2, x_pos - 424, y_pos - 360) ||
+        glyph_hit("0" + i_max_h, 2, x_pos - 436, y_pos - 360) ||
+        glyph_hit("0" + i_max_t, 2, x_pos - 448, y_pos - 360) ||
+        glyph_hit("0" + i_max_u, 2, x_pos - 460, y_pos - 360);
+
+    // =========================================================
+    // 波形影像混合邏輯 (修復波形溢出邊框的問題)
     // =========================================================
     wire in_v_region = (x_pos >= 0 && x_pos < 242) && (y_pos >= 352 && y_pos < 480);
     wire in_i_region = (x_pos >= 242 && x_pos < 484) && (y_pos >= 352 && y_pos < 480);
     wire dynamic_wave_active = in_v_region || in_i_region;
 
+    // 加入 4 像素的安全遮罩，防止波形蓋過儀表板的外框
+    wire v_wave_display = is_v_wave && (x_pos >= 4 && x_pos < 238) && (y_pos >= 356 && y_pos < 476);
+    wire i_wave_display = is_i_wave && (x_pos >= 246 && x_pos < 480) && (y_pos >= 356 && y_pos < 476);
+    
+    // 終極混合：加入 v_dyn_text 與 i_dyn_text 的判斷，並顯示青色 (12'h0FF)
     wire [11:0] wave_out_rgb;
     assign wave_out_rgb =
-        in_v_region ? (is_v_text ? 12'hFFF : is_v_wave ? 12'h0F0 : is_v_axis ? 12'h444 : 12'h111) :
-        in_i_region ? (is_i_text ? 12'hFFF : is_i_wave ? 12'hFF0 : is_i_axis ? 12'h444 : 12'h111) :
+        in_v_region ?
+        (v_dyn_text ? 12'h0FF : is_v_text ? 12'hFFF : v_wave_display ? 12'h0F0 : is_v_axis ? 12'h444 : 12'h111) :
+        in_i_region ?
+        (i_dyn_text ? 12'h0FF : is_i_text ? 12'hFFF : i_wave_display ? 12'hFF0 : is_i_axis ? 12'h444 : 12'h111) :
         12'h000;
-
+        
     always @(posedge clk_nav) begin
         if (keyboard_key_valid) last_ascii <= keyboard_key_ascii;
     end
 
     // RAM 初始化與滑鼠重置
     always @(posedge CLK100MHZ) begin
-        mouse_set_value <= 12'h000; mouse_set_max_x <= 1'b0; mouse_set_max_y <= 1'b0;
+        mouse_set_value <= 12'h000;
+        mouse_set_max_x <= 1'b0; mouse_set_max_y <= 1'b0;
         circuit_canvas_ram_w_en <= 1'b0; reset_button_click_d <= reset_button_pressed;
-
         if (init_cycles < 32'd1000) init_cycles <= init_cycles + 1'b1;
 
         if (reset_button_pressed && !reset_button_click_d) begin
-            clear_canvas_active <= 1'b1; clear_canvas_addr <= 8'd0; init_cycles <= 32'd1000;
+            clear_canvas_active <= 1'b1;
+            clear_canvas_addr <= 8'd0; init_cycles <= 32'd1000;
         end
 
         if (clear_canvas_active) begin
-            circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= clear_canvas_addr; circuit_canvas_ram_w_data <= 16'd0;
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= clear_canvas_addr; circuit_canvas_ram_w_data <= 16'd0;
             if (clear_canvas_addr == 8'd255) clear_canvas_active <= 1'b0;
             else clear_canvas_addr <= clear_canvas_addr + 1'b1;
         end else if (init_cycles == 32'd1) begin mouse_set_max_x <= 1'b1; mouse_set_value <= 12'd639;
@@ -624,28 +677,35 @@ module GlobalRender_top (
         left_bar_active = (x_pos < LEFT_BAR_W) && (y_pos >= TOP_BAR_H) && (y_pos < (SCREEN_H - BOTTOM_BAR_H));
         right_bar_active = (x_pos >= (SCREEN_W - RIGHT_BAR_W)) && (y_pos >= TOP_BAR_H);
         
-        canvas_label_active = 1'b0; title_active = 1'b0; frame_active = 1'b0; icon_active = 1'b0; toolbar_bitmap_active = 1'b0;
+        canvas_label_active = 1'b0; title_active = 1'b0; frame_active = 1'b0;
+        icon_active = 1'b0; toolbar_bitmap_active = 1'b0;
         toolbar_row_bits = 24'b0;
         grid_line_active = ((x_pos[4:0] == 5'd0) || (y_pos[4:0] == 5'd0));
-
+        
         if (top_bar_active) begin
             ui_rgb = rgb888_to_444(24'hE2B2A8);
             if (grid_line_active) ui_rgb = rgb888_to_444(24'hEFD2CC);
             if ((x_pos >= 32 && x_pos < 164 && y_pos >= 22 && y_pos < 48) || (x_pos >= 196 && x_pos < 324 && y_pos >= 22 && y_pos < 48) ||
                 (x_pos >= 356 && x_pos < 486 && y_pos >= 22 && y_pos < 48) || (x_pos >= 518 && x_pos < 608 && y_pos >= 22 && y_pos < 48)) begin
+                
                 ui_rgb = rgb888_to_444(24'hEED7D1);
             end
         end else if (left_bar_active) begin
             ui_rgb = rgb888_to_444(24'hF3D9B8);
             if (grid_line_active) ui_rgb = rgb888_to_444(24'hD9E8F2);
-            dx = x_pos - 32; dy = y_pos - 84; if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 128; if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 172; if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 216; if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 260; if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 304; if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32; dy = y_pos - 84;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32; dy = y_pos - 128;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32; dy = y_pos - 172;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32; dy = y_pos - 216;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32; dy = y_pos - 260;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
+            dx = x_pos - 32; dy = y_pos - 304;
+            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
             if (icon_active) ui_rgb = 12'hFFF;
-
             if ((x_pos >= 20) && (x_pos < 44) && (y_pos >= 72) && (y_pos < 96)) begin
                 toolbar_row_bits = toolbar_bitmap_row(0, y_pos - 72);
                 if (toolbar_row_bits[23 - (x_pos - 20)]) toolbar_bitmap_active = 1'b1;
@@ -672,15 +732,19 @@ module GlobalRender_top (
             if (grid_line_active) ui_rgb = rgb888_to_444(24'hDBDBDB);
             if (((x_pos >= 504 && x_pos < 618) && ((y_pos >= 84 && y_pos < 196) || (y_pos >= 218 && y_pos < 326) || (y_pos >= 356 && y_pos < 466)))) begin
                 if ((x_pos < 506) || (x_pos >= 616) || (y_pos == 84) || (y_pos == 195) || (y_pos == 218) || (y_pos == 325) || (y_pos == 356) || (y_pos == 465)) begin
+               
                     frame_active = 1'b1;
                 end
             end
             if (frame_active) ui_rgb = 12'hFFF;
         end
 
-        if (glyph_hit("P", 4, x_pos - 4, y_pos - 4) || glyph_hit("r", 4, x_pos - 28, y_pos - 4) || glyph_hit("o", 4, x_pos - 52, y_pos - 4) || glyph_hit("p", 4, x_pos - 76, y_pos - 4) || glyph_hit("e", 4, x_pos - 100, y_pos - 4) || glyph_hit("r", 4, x_pos - 124, y_pos - 4) || glyph_hit("t", 4, x_pos - 148, y_pos - 4) || glyph_hit("y", 4, x_pos - 172, y_pos - 4) || glyph_hit("E", 4, x_pos - 212, y_pos - 4) || glyph_hit("d", 4, x_pos - 236, y_pos - 4) || glyph_hit("i", 4, x_pos - 260, y_pos - 4) || glyph_hit("t", 4, x_pos - 276, y_pos - 4) || glyph_hit("o", 4, x_pos - 300, y_pos - 4) || glyph_hit("r", 4, x_pos - 324, y_pos - 4)) title_active = 1'b1;
-        if (glyph_hit("R", 4, x_pos - 40, y_pos - 28) || glyph_hit("1", 4, x_pos - 64, y_pos - 28) || glyph_hit("2", 4, x_pos - 208, y_pos - 28) || glyph_hit("3", 4, x_pos - 232, y_pos - 28) || glyph_hit("0", 4, x_pos - 256, y_pos - 28) || glyph_hit("H", 4, x_pos - 360, y_pos - 28) || glyph_hit("o", 4, x_pos - 384, y_pos - 28) || glyph_hit("r", 4, x_pos - 408, y_pos - 28) || glyph_hit("i", 4, x_pos - 428, y_pos - 28) || glyph_hit("z", 4, x_pos - 444, y_pos - 28) || glyph_hit("o", 4, x_pos - 468, y_pos - 28) || glyph_hit("n", 4, x_pos - 492, y_pos - 28) || glyph_hit("t", 4, x_pos - 516, y_pos - 28) || glyph_hit("a", 4, x_pos - 536, y_pos - 28) || glyph_hit("l", 4, x_pos - 560, y_pos - 28)) title_active = 1'b1;
-        if (glyph_hit("D", 4, x_pos - 492, y_pos - 198) || glyph_hit("e", 4, x_pos - 516, y_pos - 198) || glyph_hit("b", 4, x_pos - 540, y_pos - 198) || glyph_hit("u", 4, x_pos - 564, y_pos - 198) || glyph_hit("g", 4, x_pos - 588, y_pos - 198) || glyph_hit("D", 4, x_pos - 492, y_pos - 328) || glyph_hit("i", 4, x_pos - 516, y_pos - 328) || glyph_hit("s", 4, x_pos - 532, y_pos - 328) || glyph_hit("p", 4, x_pos - 556, y_pos - 328) || glyph_hit("l", 4, x_pos - 580, y_pos - 328) || glyph_hit("a", 4, x_pos - 596, y_pos - 328) || glyph_hit("y", 4, x_pos - 620, y_pos - 328)) title_active = 1'b1;
+        if (glyph_hit("P", 4, x_pos - 4, y_pos - 4) || glyph_hit("r", 4, x_pos - 28, y_pos - 4) || glyph_hit("o", 4, x_pos - 52, y_pos - 4) || glyph_hit("p", 4, x_pos - 76, y_pos - 4) || glyph_hit("e", 4, x_pos - 100, y_pos - 4) || glyph_hit("r", 4, x_pos - 124, y_pos - 4) || glyph_hit("t", 4, x_pos - 148, y_pos - 4) || glyph_hit("y", 4, x_pos - 172, y_pos - 4) || glyph_hit("E", 4, x_pos - 212, y_pos - 4) || glyph_hit("d", 4, x_pos - 236, y_pos - 4) || glyph_hit("i", 
+        4, x_pos - 260, y_pos - 4) || glyph_hit("t", 4, x_pos - 276, y_pos - 4) || glyph_hit("o", 4, x_pos - 300, y_pos - 4) || glyph_hit("r", 4, x_pos - 324, y_pos - 4)) title_active = 1'b1;
+        if (glyph_hit("R", 4, x_pos - 40, y_pos - 28) || glyph_hit("1", 4, x_pos - 64, y_pos - 28) || glyph_hit("2", 4, x_pos - 208, y_pos - 28) || glyph_hit("3", 4, x_pos - 232, y_pos - 28) || glyph_hit("0", 4, x_pos - 256, y_pos - 28) || glyph_hit("H", 4, x_pos - 360, y_pos - 28) || glyph_hit("o", 4, x_pos - 384, y_pos - 28) || glyph_hit("r", 4, x_pos - 408, y_pos - 28) || glyph_hit("i", 4, x_pos - 428, y_pos - 28) || glyph_hit("z", 4, x_pos - 444, y_pos - 28) || glyph_hit("o", 4, x_pos - 468, y_pos - 28) || 
+        glyph_hit("n", 4, x_pos - 492, y_pos - 28) || glyph_hit("t", 4, x_pos - 516, y_pos - 28) || glyph_hit("a", 4, x_pos - 536, y_pos - 28) || glyph_hit("l", 4, x_pos - 560, y_pos - 28)) title_active = 1'b1;
+        if (glyph_hit("D", 4, x_pos - 492, y_pos - 198) || glyph_hit("e", 4, x_pos - 516, y_pos - 198) || glyph_hit("b", 4, x_pos - 540, y_pos - 198) || glyph_hit("u", 4, x_pos - 564, y_pos - 198) || glyph_hit("g", 4, x_pos - 588, y_pos - 198) || glyph_hit("D", 4, x_pos - 492, y_pos - 328) || glyph_hit("i", 4, x_pos - 516, y_pos - 328) || glyph_hit("s", 4, x_pos - 532, y_pos - 328) || glyph_hit("p", 4, x_pos - 556, y_pos - 328) || glyph_hit("l", 4, x_pos - 580, y_pos - 328) || glyph_hit("a", 4, x_pos - 596, y_pos - 328) || 
+        glyph_hit("y", 4, x_pos - 620, y_pos - 328)) title_active = 1'b1;
         if (glyph_hit("T", 4, x_pos - 40, y_pos - 238) || glyph_hit("o", 4, x_pos - 64, y_pos - 238) || glyph_hit("o", 4, x_pos - 88, y_pos - 238) || glyph_hit("l", 4, x_pos - 112, y_pos - 238) || glyph_hit("b", 4, x_pos - 40, y_pos - 266) || glyph_hit("a", 4, x_pos - 64, y_pos - 266) || glyph_hit("r", 4, x_pos - 88, y_pos - 266)) title_active = 1'b1;
         if (glyph_hit("V", 5, x_pos - 240, y_pos - 446) || glyph_hit("G", 5, x_pos - 270, y_pos - 446) || glyph_hit("A", 5, x_pos - 300, y_pos - 446) || glyph_hit("6", 5, x_pos - 352, y_pos - 446) || glyph_hit("4", 5, x_pos - 382, y_pos - 446) || glyph_hit("0", 5, x_pos - 412, y_pos - 446) || glyph_hit("@", 5, x_pos - 492, y_pos - 446) || glyph_hit("6", 5, x_pos - 544, y_pos - 446) || glyph_hit("0", 5, x_pos - 574, y_pos - 446)) title_active = 1'b1;
         if ((x_pos >= 448) && (x_pos < 482) && (y_pos >= 320) && (y_pos < 332)) title_active = 1'b1;
@@ -696,7 +760,6 @@ module GlobalRender_top (
         end else if (reset_region_active) begin
             rgb <= reset_button_rgb;
         end else if (keyboard_region_active) begin
-            // 這裡！Top 模組現在精準允許 155x128 的鍵盤畫面通過了
             rgb <= keyboard_rgb;
         end else if (circuit_canvas_rendered) begin
             rgb <= circuit_canvas_rgb;

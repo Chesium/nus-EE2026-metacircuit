@@ -57,7 +57,9 @@ module KeyboardVGA #(
     localparam integer MARKER_H = 3;
     localparam integer FONT5_SCALE = FONT_SCALE;
     localparam integer FONT3_SCALE = FONT_SCALE;
-    localparam integer DEL_W = (3 * KEY_W) / 2;
+    localparam integer ACTION_GAP = 2;
+    localparam integer DEL_W = ((3 * KEY_W) / 2) - (ACTION_GAP / 2);
+    localparam integer RST_W = (3 * KEY_W) - DEL_W - ACTION_GAP;
 
     // Color palette.
     localparam [23:0]
@@ -72,6 +74,7 @@ module KeyboardVGA #(
         RGB_UNIT            = 24'hBEE8B7,
         RGB_DOT             = 24'hF9E79F,
         RGB_DEL             = 24'hFFB7B2,
+        RGB_RST             = 24'hA9D8D0,
         RGB_NONE            = 24'hE7DDD2,
         RGB_TEXT            = 24'h5B534D;
 
@@ -135,6 +138,7 @@ module KeyboardVGA #(
                 15: key_ascii_for_id = ".";
                 16: key_ascii_for_id = "0";
                 17: key_ascii_for_id = 8'h08;
+                18: key_ascii_for_id = 8'h7F;
                 default: key_ascii_for_id = 8'h00;
             endcase
         end
@@ -148,6 +152,7 @@ module KeyboardVGA #(
                 3, 4, 8, 9, 13, 14: key_color_for_id = RGB_UNIT;
                 15: key_color_for_id = RGB_DOT;
                 17: key_color_for_id = RGB_DEL;
+                18: key_color_for_id = RGB_RST;
                 default: key_color_for_id = RGB_NONE;
             endcase
         end
@@ -177,7 +182,7 @@ module KeyboardVGA #(
         input integer idx;
         begin
             case (idx)
-                15, 17: key_is_action_for_id = 1'b1;
+                15, 17, 18: key_is_action_for_id = 1'b1;
                 default: key_is_action_for_id = 1'b0;
             endcase
         end
@@ -205,6 +210,7 @@ module KeyboardVGA #(
                 15: label0_for_id = ".";
                 16: label0_for_id = "0";
                 17: label0_for_id = "D";
+                18: label0_for_id = "R";
                 default: label0_for_id = 8'h00;
             endcase
         end
@@ -215,6 +221,7 @@ module KeyboardVGA #(
         begin
             case (idx)
                 17: label1_for_id = "E";
+                18: label1_for_id = "S";
                 default: label1_for_id = 8'h00;
             endcase
         end
@@ -225,6 +232,7 @@ module KeyboardVGA #(
         begin
             case (idx)
                 17: label2_for_id = "L";
+                18: label2_for_id = "T";
                 default: label2_for_id = 8'h00;
             endcase
         end
@@ -234,7 +242,7 @@ module KeyboardVGA #(
         input integer idx;
         begin
             case (idx)
-                17: text_cols_for_id = 3;
+                17, 18: text_cols_for_id = 3;
                 default: text_cols_for_id = 1;
             endcase
         end
@@ -244,9 +252,27 @@ module KeyboardVGA #(
         input integer idx;
         begin
             case (idx)
-                17: small_text_for_id = 1'b0;
+                17, 18: small_text_for_id = 1'b0;
                 default: small_text_for_id = 1'b0;
             endcase
+        end
+    endfunction
+
+    function [4:0] key_id_for_grid;
+        input integer row_idx;
+        input integer col_idx;
+        begin
+            if (row_idx == 3) begin
+                case (col_idx)
+                    0: key_id_for_grid = 15;
+                    1: key_id_for_grid = 16;
+                    2: key_id_for_grid = 17;
+                    3, 4: key_id_for_grid = 18;
+                    default: key_id_for_grid = 5'd0;
+                endcase
+            end else begin
+                key_id_for_grid = (row_idx * COLS) + col_idx;
+            end
         end
     endfunction
 
@@ -255,6 +281,7 @@ module KeyboardVGA #(
         begin
             case (idx)
                 17: button_x0_for_id = KEYBOARD_X0 + (2 * KEY_W);
+                18: button_x0_for_id = KEYBOARD_X0 + (2 * KEY_W) + DEL_W + ACTION_GAP;
                 default: button_x0_for_id = KEYBOARD_X0 + ((idx % COLS) * KEY_W);
             endcase
         end
@@ -265,6 +292,7 @@ module KeyboardVGA #(
         begin
             case (idx)
                 17: button_w_for_id = DEL_W;
+                18: button_w_for_id = RST_W;
                 default: button_w_for_id = KEY_W;
             endcase
         end
@@ -318,18 +346,36 @@ module KeyboardVGA #(
         if (btnU & ~btnU_d) begin
             use_mouse_selection <= 1'b0;
             if (sel_row == 0) sel_row <= ROWS - 1; else sel_row <= sel_row - 1'b1;
+            if (((sel_row == 0) ? (ROWS - 1) : (sel_row - 1'b1)) == 3 && sel_col == 4) sel_col <= 3;
         end else if (btnD & ~btnD_d) begin
             use_mouse_selection <= 1'b0;
             if (sel_row == ROWS - 1) sel_row <= 0; else sel_row <= sel_row + 1'b1;
+            if (((sel_row == ROWS - 1) ? 0 : (sel_row + 1'b1)) == 3 && sel_col == 4) sel_col <= 3;
         end else if (btnL & ~btnL_d) begin
             use_mouse_selection <= 1'b0;
-            if (sel_col == 0) sel_col <= COLS - 1; else sel_col <= sel_col - 1'b1;
+            if (sel_row == 3) begin
+                if (sel_col == 0) sel_col <= 3;
+                else sel_col <= sel_col - 1'b1;
+            end else begin
+                if (sel_col == 0) sel_col <= COLS - 1; else sel_col <= sel_col - 1'b1;
+            end
         end else if (btnR & ~btnR_d) begin
             use_mouse_selection <= 1'b0;
-            if (sel_col == COLS - 1) sel_col <= 0; else sel_col <= sel_col + 1'b1;
+            if (sel_row == 3) begin
+                if (sel_col >= 3) sel_col <= 0;
+                else sel_col <= sel_col + 1'b1;
+            end else begin
+                if (sel_col == COLS - 1) sel_col <= 0; else sel_col <= sel_col + 1'b1;
+            end
         end else if (mouse_left & ~mouse_left_d & hover_valid) begin
             use_mouse_selection <= 1'b1;
-            sel_row <= hovered_key_id / COLS; sel_col <= hovered_key_id % COLS;
+            if (hovered_key_id == 18) begin
+                sel_row <= 3;
+                sel_col <= 3;
+            end else begin
+                sel_row <= hovered_key_id / COLS;
+                sel_col <= hovered_key_id % COLS;
+            end
             key_valid <= 1'b1;
         end else if (btnC & ~btnC_d) begin
             use_mouse_selection <= 1'b0;
@@ -349,12 +395,16 @@ module KeyboardVGA #(
             (mouse_rel_x >= (2 * KEY_W)) &&
             (mouse_rel_x < ((2 * KEY_W) + DEL_W))) begin
             hovered_key_id = 17;
+        end else if ((mouse_row == 3) &&
+                     (mouse_rel_x >= ((2 * KEY_W) + DEL_W + ACTION_GAP)) &&
+                     (mouse_rel_x < (5 * KEY_W))) begin
+            hovered_key_id = 18;
         end
 
         mouse_moved = (mouse_x != mouse_x_d) || (mouse_y != mouse_y_d);
         hover_valid = mouse_inside_keyboard && (hovered_key_id < KEY_COUNT);
         active_key_valid = use_mouse_selection ? hover_valid : 1'b1;
-        active_key_id = use_mouse_selection ? hovered_key_id : ((sel_row * COLS) + sel_col);
+        active_key_id = use_mouse_selection ? hovered_key_id : key_id_for_grid(sel_row, sel_col);
         active_pressed = (btnC && !use_mouse_selection) || (mouse_left && use_mouse_selection && hover_valid);
 
         if (active_key_valid) begin

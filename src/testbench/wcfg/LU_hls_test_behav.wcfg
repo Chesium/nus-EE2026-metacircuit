@@ -11,18 +11,34 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="1363600000fs"></ZoomStartTime>
-      <ZoomEndTime time="1526600001fs"></ZoomEndTime>
-      <Cursor1Time time="1448000000fs"></Cursor1Time>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="159800001fs"></ZoomEndTime>
+      <Cursor1Time time="5800000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="175"></NameColumnWidth>
-      <ValueColumnWidth column_width="126"></ValueColumnWidth>
+      <ValueColumnWidth column_width="142"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="46" />
+   <WVObjectSize size="54" />
    <wvobject fp_name="/LU_hls_test/lu_core_inst/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/rst_n" type="logic">
+      <obj_property name="ElementShortName">rst_n</obj_property>
+      <obj_property name="ObjectShortName">rst_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/start" type="logic">
+      <obj_property name="ElementShortName">start</obj_property>
+      <obj_property name="ObjectShortName">start</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/busy" type="logic">
+      <obj_property name="ElementShortName">busy</obj_property>
+      <obj_property name="ObjectShortName">busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/done" type="logic">
+      <obj_property name="ElementShortName">done</obj_property>
+      <obj_property name="ObjectShortName">done</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/par_n" type="array">
       <obj_property name="ElementShortName">par_n[31:0]</obj_property>
@@ -35,12 +51,10 @@
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fetch_A_i" type="array">
       <obj_property name="ElementShortName">fetch_A_i[7:0]</obj_property>
       <obj_property name="ObjectShortName">fetch_A_i[7:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fetch_A_j" type="array">
       <obj_property name="ElementShortName">fetch_A_j[7:0]</obj_property>
       <obj_property name="ObjectShortName">fetch_A_j[7:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fetch_A_done" type="logic">
       <obj_property name="ElementShortName">fetch_A_done</obj_property>
@@ -49,10 +63,6 @@
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fetch_A_result" type="array">
       <obj_property name="ElementShortName">fetch_A_result[31:0]</obj_property>
       <obj_property name="ObjectShortName">fetch_A_result[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fetch_LU_start" type="logic">
       <obj_property name="ElementShortName">fetch_LU_start</obj_property>
@@ -61,12 +71,10 @@
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fetch_LU_i" type="array">
       <obj_property name="ElementShortName">fetch_LU_i[7:0]</obj_property>
       <obj_property name="ObjectShortName">fetch_LU_i[7:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fetch_LU_j" type="array">
       <obj_property name="ElementShortName">fetch_LU_j[7:0]</obj_property>
       <obj_property name="ObjectShortName">fetch_LU_j[7:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fetch_LU_done" type="logic">
       <obj_property name="ElementShortName">fetch_LU_done</obj_property>
@@ -75,10 +83,6 @@
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fetch_LU_result" type="array">
       <obj_property name="ElementShortName">fetch_LU_result[31:0]</obj_property>
       <obj_property name="ObjectShortName">fetch_LU_result[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fma_start" type="logic">
       <obj_property name="ElementShortName">fma_start</obj_property>
@@ -87,26 +91,14 @@
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fma_a" type="array">
       <obj_property name="ElementShortName">fma_a[31:0]</obj_property>
       <obj_property name="ObjectShortName">fma_a[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fma_b" type="array">
       <obj_property name="ElementShortName">fma_b[31:0]</obj_property>
       <obj_property name="ObjectShortName">fma_b[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fma_c" type="array">
       <obj_property name="ElementShortName">fma_c[31:0]</obj_property>
       <obj_property name="ObjectShortName">fma_c[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/fma_done" type="logic">
       <obj_property name="ElementShortName">fma_done</obj_property>
@@ -123,20 +115,14 @@
    <wvobject fp_name="/LU_hls_test/lu_core_inst/store_LU_i" type="array">
       <obj_property name="ElementShortName">store_LU_i[7:0]</obj_property>
       <obj_property name="ObjectShortName">store_LU_i[7:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/store_LU_j" type="array">
       <obj_property name="ElementShortName">store_LU_j[7:0]</obj_property>
       <obj_property name="ObjectShortName">store_LU_j[7:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/store_LU_v" type="array">
       <obj_property name="ElementShortName">store_LU_v[31:0]</obj_property>
       <obj_property name="ObjectShortName">store_LU_v[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/store_LU_done" type="logic">
       <obj_property name="ElementShortName">store_LU_done</obj_property>
@@ -149,18 +135,10 @@
    <wvobject fp_name="/LU_hls_test/lu_core_inst/div_a" type="array">
       <obj_property name="ElementShortName">div_a[31:0]</obj_property>
       <obj_property name="ObjectShortName">div_a[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/div_b" type="array">
       <obj_property name="ElementShortName">div_b[31:0]</obj_property>
       <obj_property name="ObjectShortName">div_b[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/div_done" type="logic">
       <obj_property name="ElementShortName">div_done</obj_property>
@@ -181,26 +159,14 @@
    <wvobject fp_name="/LU_hls_test/lu_core_inst/f32_1" type="array">
       <obj_property name="ElementShortName">f32_1[31:0]</obj_property>
       <obj_property name="ObjectShortName">f32_1[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/f32_2" type="array">
       <obj_property name="ElementShortName">f32_2[31:0]</obj_property>
       <obj_property name="ObjectShortName">f32_2[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/f32_3" type="array">
       <obj_property name="ElementShortName">f32_3[31:0]</obj_property>
       <obj_property name="ObjectShortName">f32_3[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/LU_hls_test/lu_core_inst/u8_i" type="array">
       <obj_property name="ElementShortName">u8_i[7:0]</obj_property>
@@ -230,28 +196,44 @@
       <obj_property name="ElementShortName">__for_idx_2[7:0]</obj_property>
       <obj_property name="ObjectShortName">__for_idx_2[7:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/LU_hls_test/matrixstore_lu_inst/ram/clk" type="logic">
-      <obj_property name="ElementShortName">clk</obj_property>
-      <obj_property name="ObjectShortName">clk</obj_property>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next_f32_1" type="array">
+      <obj_property name="ElementShortName">next_f32_1[31:0]</obj_property>
+      <obj_property name="ObjectShortName">next_f32_1[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/LU_hls_test/matrixstore_lu_inst/ram/w_en" type="logic">
-      <obj_property name="ElementShortName">w_en</obj_property>
-      <obj_property name="ObjectShortName">w_en</obj_property>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next_f32_2" type="array">
+      <obj_property name="ElementShortName">next_f32_2[31:0]</obj_property>
+      <obj_property name="ObjectShortName">next_f32_2[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/LU_hls_test/matrixstore_lu_inst/ram/w_addr" type="array">
-      <obj_property name="ElementShortName">w_addr[3:0]</obj_property>
-      <obj_property name="ObjectShortName">w_addr[3:0]</obj_property>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next_f32_3" type="array">
+      <obj_property name="ElementShortName">next_f32_3[31:0]</obj_property>
+      <obj_property name="ObjectShortName">next_f32_3[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/LU_hls_test/matrixstore_lu_inst/ram/r_addr" type="array">
-      <obj_property name="ElementShortName">r_addr[3:0]</obj_property>
-      <obj_property name="ObjectShortName">r_addr[3:0]</obj_property>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next_u8_i" type="array">
+      <obj_property name="ElementShortName">next_u8_i[7:0]</obj_property>
+      <obj_property name="ObjectShortName">next_u8_i[7:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/LU_hls_test/matrixstore_lu_inst/ram/d_in" type="array">
-      <obj_property name="ElementShortName">d_in[31:0]</obj_property>
-      <obj_property name="ObjectShortName">d_in[31:0]</obj_property>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next_u8_j" type="array">
+      <obj_property name="ElementShortName">next_u8_j[7:0]</obj_property>
+      <obj_property name="ObjectShortName">next_u8_j[7:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/LU_hls_test/matrixstore_lu_inst/ram/d_out" type="array">
-      <obj_property name="ElementShortName">d_out[31:0]</obj_property>
-      <obj_property name="ObjectShortName">d_out[31:0]</obj_property>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next_u8_k" type="array">
+      <obj_property name="ElementShortName">next_u8_k[7:0]</obj_property>
+      <obj_property name="ObjectShortName">next_u8_k[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next_u8_m" type="array">
+      <obj_property name="ElementShortName">next_u8_m[7:0]</obj_property>
+      <obj_property name="ObjectShortName">next_u8_m[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next___for_idx_0" type="array">
+      <obj_property name="ElementShortName">next___for_idx_0[7:0]</obj_property>
+      <obj_property name="ObjectShortName">next___for_idx_0[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next___for_idx_1" type="array">
+      <obj_property name="ElementShortName">next___for_idx_1[7:0]</obj_property>
+      <obj_property name="ObjectShortName">next___for_idx_1[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/LU_hls_test/lu_core_inst/next___for_idx_2" type="array">
+      <obj_property name="ElementShortName">next___for_idx_2[7:0]</obj_property>
+      <obj_property name="ObjectShortName">next___for_idx_2[7:0]</obj_property>
    </wvobject>
 </wave_config>

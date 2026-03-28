@@ -19,3 +19,8 @@ metacircuit/*
 /src/ip_new/**
 !/src/ip_new/**/
 !/src/ip_new/**/*.xci
+
+top
+xsim.dir
+*.pb
+*.wdb

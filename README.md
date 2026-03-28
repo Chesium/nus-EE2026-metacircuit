@@ -21,3 +21,18 @@ A Circuit Simulator built inside an Basys 3 FPGA Board.
     - set `verilog.formatting.verilogHDL.formatter` to `verible-verilog-format`
     - enable `verilog.languageServer.veribleVerilogLs.enabled`
       - set `verilog.languageServer.veribleVerilogLs.arguments` to `--rules_config_search`
+
+## State-Transition Logic for interaction
+
+- in `[DrawingIdle]`
+
+## Per Frame Processes
+
+- `InteractionDecoder` decode the mouse activity from last frame cycle (postion, keys pressed) using a FSM into bite-sized `UserCommand`s (store in one RAM).
+- `UserCommandProcessor` fetches the `UserCommand`s and execute them one by one, editting the `CellVisStore` RAM and `ComponentStore` RAM.
+- `NetlistGenerator` traverses the `CellVisStore` (also refer to `ComponentStore` RAM) and label all the wire cells.
+- `StampingProcessor` goes through the `ComponentStore` RAM (netlist) one by one and modify the target matrix & vector RAM.
+- `Solver` takes the target matrix & vector and get the results stored in one RAM.
+- `PostProcessing` takes the result and set the relevant display RAMs.
+
+- all of the processes will be implemented in a Python DSL first

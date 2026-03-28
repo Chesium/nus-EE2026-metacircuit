@@ -33,7 +33,6 @@ module GlobalRender_top (
     localparam integer CANVAS_Y0       = TOP_BAR_H;
     localparam integer CANVAS_W        = SCREEN_W - LEFT_BAR_W - RIGHT_BAR_W;
     localparam integer CANVAS_H        = SCREEN_H - TOP_BAR_H - BOTTOM_BAR_H;
-    
     // =========================================================
     // 【決定生死的遮罩精算】
     // 在 Top 模組裡精準宣告 155 x 128 的物理空間，防止被切斷！
@@ -73,9 +72,12 @@ module GlobalRender_top (
     wire [11:0] circuit_canvas_rgb;
     wire        circuit_canvas_rendered;
     reg  [11:0] ui_rgb;
-    reg  [23:0] toolbar_row_bits;
+    wire [11:0] toolbar_rgb;
+    wire        toolbar_rendered;
+    wire [2:0]  selected_toolbar_idx;
+    reg         mouse_left_d_sys = 1'b0;
 
-    reg top_bar_active, left_bar_active, right_bar_active, canvas_label_active, title_active, frame_active, icon_active, grid_line_active, toolbar_bitmap_active;
+    reg top_bar_active, left_bar_active, right_bar_active, canvas_label_active, title_active, frame_active, icon_active, grid_line_active;
     integer dx, dy;
 
     wire [11:0] mouse_xpos, mouse_ypos;
@@ -87,7 +89,6 @@ module GlobalRender_top (
     wire        mouse_display_enable;
     wire [3:0]  mouse_r, mouse_g, mouse_b;
     wire [11:0] mouse_rgb;
-
     reg         circuit_canvas_ram_w_en = 1'b0;
     reg  [7:0]  circuit_canvas_ram_w_addr = 8'd0;
     wire [7:0]  circuit_canvas_ram_r_addr;
@@ -98,6 +99,9 @@ module GlobalRender_top (
 
     reg         clear_canvas_active = 1'b0;
     reg  [7:0]  clear_canvas_addr = 8'd0;
+    reg         pending_second_tool_write = 1'b0;
+    reg  [7:0]  pending_second_tool_addr = 8'd0;
+    reg  [15:0] pending_second_tool_data = 16'd0;
 
     assign keyboard_region_active = (x_pos >= KEYBOARD_REGION_X0) && (x_pos < KEYBOARD_REGION_X1) && (y_pos >= KEYBOARD_REGION_Y0) && (y_pos < KEYBOARD_REGION_Y1);
 
@@ -107,6 +111,54 @@ module GlobalRender_top (
         input [23:0] c;
         begin
             rgb888_to_444 = {c[23:20], c[15:12], c[7:4]};
+        end
+    endfunction
+
+    function [15:0] make_cell_data;
+        input [1:0] rotation;
+        input [5:0] sprite_type;
+        begin
+            make_cell_data = {7'b0000000, rotation, sprite_type, 1'b1};
+        end
+    endfunction
+
+    function [15:0] toolbar_first_cell_data;
+        input [2:0] tool_idx;
+        begin
+            case (tool_idx)
+                3'd1: toolbar_first_cell_data = make_cell_data(2'b00, 6'd0);   // wire
+                3'd2: toolbar_first_cell_data = make_cell_data(2'b00, 6'd1);   // elbow
+                3'd3: toolbar_first_cell_data = make_cell_data(2'b00, 6'd5);   // resistor left
+                3'd4: toolbar_first_cell_data = make_cell_data(2'b00, 6'd13);  // capacitor left
+                3'd5: toolbar_first_cell_data = make_cell_data(2'b00, 6'd7);   // voltage left
+                3'd6: toolbar_first_cell_data = make_cell_data(2'b00, 6'd9);   // current left
+                3'd7: toolbar_first_cell_data = make_cell_data(2'b00, 6'd11);  // diode left
+                default: toolbar_first_cell_data = 16'd0;
+            endcase
+        end
+    endfunction
+
+    function [15:0] toolbar_second_cell_data;
+        input [2:0] tool_idx;
+        begin
+            case (tool_idx)
+                3'd3: toolbar_second_cell_data = make_cell_data(2'b00, 6'd6);   // resistor right
+                3'd4: toolbar_second_cell_data = make_cell_data(2'b00, 6'd14);  // capacitor right
+                3'd5: toolbar_second_cell_data = make_cell_data(2'b00, 6'd8);   // voltage right
+                3'd6: toolbar_second_cell_data = make_cell_data(2'b00, 6'd10);  // current right
+                3'd7: toolbar_second_cell_data = make_cell_data(2'b00, 6'd12);  // diode right
+                default: toolbar_second_cell_data = 16'd0;
+            endcase
+        end
+    endfunction
+
+    function toolbar_tool_uses_two_cells;
+        input [2:0] tool_idx;
+        begin
+            case (tool_idx)
+                3'd3, 3'd4, 3'd5, 3'd6, 3'd7: toolbar_tool_uses_two_cells = 1'b1;
+                default: toolbar_tool_uses_two_cells = 1'b0;
+            endcase
         end
     endfunction
 
@@ -185,159 +237,6 @@ module GlobalRender_top (
         end
     endfunction
 
-    function integer toolbar_center_y;
-        input integer idx;
-        begin
-            case (idx)
-                0: toolbar_center_y = 84;
-                1: toolbar_center_y = 128;
-                2: toolbar_center_y = 172;
-                3: toolbar_center_y = 216;
-                4: toolbar_center_y = 260;
-                default: toolbar_center_y = 304;
-            endcase
-        end
-    endfunction
-
-    function [23:0] toolbar_bitmap_row;
-        input integer icon_idx;
-        input integer row_idx;
-        begin
-            toolbar_bitmap_row = 24'b0;
-            case (icon_idx)
-                0: begin
-                    case (row_idx)
-                        0: toolbar_bitmap_row = 24'b001100000000000000000000;
-                        1: toolbar_bitmap_row = 24'b111110000000000000000000;
-                        2: toolbar_bitmap_row = 24'b110011000000000010000000;
-                        3: toolbar_bitmap_row = 24'b110011001101111111100000;
-                        4: toolbar_bitmap_row = 24'b010001111111111101100000;
-                        5: toolbar_bitmap_row = 24'b011001110011001100110000;
-                        6: toolbar_bitmap_row = 24'b001100110011001100010000;
-                        7: toolbar_bitmap_row = 24'b001100110001100110011000;
-                        8: toolbar_bitmap_row = 24'b000110011001100110001100;
-                        9: toolbar_bitmap_row = 24'b000110001000110010001100;
-                        10: toolbar_bitmap_row = 24'b000011001100000000000110;
-                        11: toolbar_bitmap_row = 24'b000001000100000000000110;
-                        12: toolbar_bitmap_row = 24'b000001100000000000000011;
-                        13: toolbar_bitmap_row = 24'b001111100000000000000011;
-                        14: toolbar_bitmap_row = 24'b011111110000000000000011;
-                        15: toolbar_bitmap_row = 24'b110000111000000000000011;
-                        16: toolbar_bitmap_row = 24'b011000010000000000000011;
-                        17: toolbar_bitmap_row = 24'b001110000000000000000110;
-                        18: toolbar_bitmap_row = 24'b000111000000000000001110;
-                        19: toolbar_bitmap_row = 24'b000001100000000000011100;
-                        20: toolbar_bitmap_row = 24'b000000111000000001110000;
-                        21: toolbar_bitmap_row = 24'b000000011100000111100000;
-                        22: toolbar_bitmap_row = 24'b000000000111111110000000;
-                        default: toolbar_bitmap_row = 24'b000000000001111000000000;
-                    endcase
-                end
-                1: begin
-                    case (row_idx)
-                        11: toolbar_bitmap_row = 24'b000111111111111111111000;
-                        12: toolbar_bitmap_row = 24'b000111111111111111111000;
-                        13: toolbar_bitmap_row = 24'b000111111111111111111000;
-                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
-                    endcase
-                end
-                2: begin
-                    case (row_idx)
-                        6: toolbar_bitmap_row = 24'b000000111000111001110000;
-                        7: toolbar_bitmap_row = 24'b000000111000111001110000;
-                        8: toolbar_bitmap_row = 24'b000001101000101001111000;
-                        9: toolbar_bitmap_row = 24'b000001101101101101011000;
-                        10: toolbar_bitmap_row = 24'b000001101101101111011000;
-                        11: toolbar_bitmap_row = 24'b000011001101101111001100;
-                        12: toolbar_bitmap_row = 24'b001111000101000111001110;
-                        13: toolbar_bitmap_row = 24'b001111000111000111001110;
-                        14: toolbar_bitmap_row = 24'b000000000111000111000000;
-                        15: toolbar_bitmap_row = 24'b000000000111000110000000;
-                        16: toolbar_bitmap_row = 24'b000000000010000110000000;
-                        17: toolbar_bitmap_row = 24'b000000000111000111000000;
-                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
-                    endcase
-                end
-                3: begin
-                    case (row_idx)
-                        1: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        2: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        3: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        4: toolbar_bitmap_row = 24'b000000000011110000000000;
-                        5: toolbar_bitmap_row = 24'b000000000111100000000000;
-                        6: toolbar_bitmap_row = 24'b000000001110000000000000;
-                        7: toolbar_bitmap_row = 24'b000000001100000000000000;
-                        8: toolbar_bitmap_row = 24'b000000001111100000000000;
-                        9: toolbar_bitmap_row = 24'b000000000111100000000000;
-                        10: toolbar_bitmap_row = 24'b000000001111100000000000;
-                        11: toolbar_bitmap_row = 24'b000000001100000000000000;
-                        12: toolbar_bitmap_row = 24'b000000001111100000000000;
-                        13: toolbar_bitmap_row = 24'b000000000111100000000000;
-                        14: toolbar_bitmap_row = 24'b000000001111100000000000;
-                        15: toolbar_bitmap_row = 24'b000000001100000000000000;
-                        16: toolbar_bitmap_row = 24'b000000001111100000000000;
-                        17: toolbar_bitmap_row = 24'b000000000111100000000000;
-                        18: toolbar_bitmap_row = 24'b000000001111100000000000;
-                        19: toolbar_bitmap_row = 24'b000000001100000000000000;
-                        20: toolbar_bitmap_row = 24'b000000001110110000000000;
-                        21: toolbar_bitmap_row = 24'b000000000111110000000000;
-                        22: toolbar_bitmap_row = 24'b000000000011110000000000;
-                        default: toolbar_bitmap_row = 24'b000000000000110000000000;
-                    endcase
-                end
-                4: begin
-                    case (row_idx)
-                        2: toolbar_bitmap_row = 24'b000000000111111000000000;
-                        3: toolbar_bitmap_row = 24'b000000011111111110000000;
-                        4: toolbar_bitmap_row = 24'b000000111000000111000000;
-                        5: toolbar_bitmap_row = 24'b000001100000000001100000;
-                        6: toolbar_bitmap_row = 24'b000011000000110000110000;
-                        7: toolbar_bitmap_row = 24'b000110000000110000011000;
-                        8: toolbar_bitmap_row = 24'b000110000000110000011000;
-                        9: toolbar_bitmap_row = 24'b001100000111111100001100;
-                        10: toolbar_bitmap_row = 24'b001100000111111100001100;
-                        11: toolbar_bitmap_row = 24'b001100000000110000001100;
-                        12: toolbar_bitmap_row = 24'b001100000000110000001100;
-                        13: toolbar_bitmap_row = 24'b001100000000000000001100;
-                        14: toolbar_bitmap_row = 24'b001100000000000000001100;
-                        15: toolbar_bitmap_row = 24'b000110000000000000011000;
-                        16: toolbar_bitmap_row = 24'b000110001111111110011000;
-                        17: toolbar_bitmap_row = 24'b000011001111111110110000;
-                        18: toolbar_bitmap_row = 24'b000001100000000001100000;
-                        19: toolbar_bitmap_row = 24'b000000111000000111000000;
-                        20: toolbar_bitmap_row = 24'b000000011111111110000000;
-                        21: toolbar_bitmap_row = 24'b000000000111111000000000;
-                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
-                    endcase
-                end
-                default: begin
-                    case (row_idx)
-                        2: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        3: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        4: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        5: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        6: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        7: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        8: toolbar_bitmap_row = 24'b000000000000110000000000;
-                        9: toolbar_bitmap_row = 24'b000001111111111111100000;
-                        10: toolbar_bitmap_row = 24'b000001111111111111100000;
-                        11: toolbar_bitmap_row = 24'b000000110000000011000000;
-                        12: toolbar_bitmap_row = 24'b000000111000000111000000;
-                        13: toolbar_bitmap_row = 24'b000000011100000110000000;
-                        14: toolbar_bitmap_row = 24'b000000001100001110000000;
-                        15: toolbar_bitmap_row = 24'b000000000110011100000000;
-                        16: toolbar_bitmap_row = 24'b000000000111011000000000;
-                        17: toolbar_bitmap_row = 24'b000000000011111000000000;
-                        18: toolbar_bitmap_row = 24'b000000000001110000000000;
-                        19: toolbar_bitmap_row = 24'b000000000001110000000000;
-                        20: toolbar_bitmap_row = 24'b000000000000100000000000;
-                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
-                    endcase
-                end
-            endcase
-        end
-    endfunction
-
     assign JC = 8'h00;
     assign SEG = 8'hFF;
     assign AN = 4'hF;
@@ -378,7 +277,7 @@ module GlobalRender_top (
         .clk_pixel(clk_pixel), .x_pos(x_pos), .y_pos(y_pos), .rgb(circuit_canvas_rgb),
         .rendered(circuit_canvas_rendered), .mouse_x_pos(mouse_xpos), .mouse_y_pos(mouse_ypos),
         .data_addr(circuit_canvas_ram_r_addr), .incoming_data(circuit_canvas_ram_r_data),
-        .display_grid(1'b1), .mouse_left_click(mouse_left)
+        .display_grid(1'b1), .mouse_left_click(mouse_left && (selected_toolbar_idx == 3'd0))
     );
     // Component Property Panel signals 以下为属性面板例化
     wire        prop_panel_rendered;
@@ -394,6 +293,11 @@ module GlobalRender_top (
     wire [11:0] mouse_cell_i;
     wire [11:0] mouse_cell_j;
     wire        mouse_hover_component;
+    wire        canvas_mouse_in_bounds;
+    wire        toolbar_place_two_cells;
+    wire [15:0] toolbar_place_data0;
+    wire [15:0] toolbar_place_data1;
+    wire        mouse_left_rising_sys;
     
     // 示例元件数据 (从 init_cycles 中复制)
     // 地址 17-19: 电阻，地址 33: 电压源右，地址 49: 电压源左，地址 82-88: Tee
@@ -410,7 +314,14 @@ module GlobalRender_top (
     ((mouse_ypos - CANVAS_Y0) / 32) : 12'd0;
     
     // 鼠标点击边沿检测
+    assign canvas_mouse_in_bounds = (mouse_xpos >= CANVAS_X0) && (mouse_xpos < (CANVAS_X0 + CANVAS_W)) &&
+                                    (mouse_ypos >= CANVAS_Y0) && (mouse_ypos < (CANVAS_Y0 + CANVAS_H)) &&
+                                    (mouse_cell_i < 16) && (mouse_cell_j < 16);
+    assign toolbar_place_two_cells = toolbar_tool_uses_two_cells(selected_toolbar_idx);
+    assign toolbar_place_data0 = toolbar_first_cell_data(selected_toolbar_idx);
+    assign toolbar_place_data1 = toolbar_second_cell_data(selected_toolbar_idx);
     assign mouse_left_rising = mouse_left && !mouse_left_d;
+    assign mouse_left_rising_sys = mouse_left && !mouse_left_d_sys;
     // 同步鼠标点击 - 记录选中的单元格
     always @(posedge clk_pixel) begin
         mouse_left_d <= mouse_left;
@@ -501,6 +412,18 @@ module GlobalRender_top (
         .mouse_x(mouse_xpos), .mouse_y(mouse_ypos), .mouse_left(mouse_left),
         .x(x_pos), .y(y_pos), .pixel_rgb(keyboard_rgb), .key_id(keyboard_key_id),
         .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii)
+    );
+
+    ToolbarVGA toolbar_vga_inst (
+        .clk_pixel(clk_pixel),
+        .mouse_x(mouse_xpos),
+        .mouse_y(mouse_ypos),
+        .mouse_left(mouse_left),
+        .x(x_pos),
+        .y(y_pos),
+        .pixel_rgb(toolbar_rgb),
+        .rendered(toolbar_rendered),
+        .selected_tool_idx(selected_toolbar_idx)
     );
     // =========================================================
     // 電壓波形 (X: 0 ~ 241, Y: 352 ~ 479)
@@ -618,11 +541,13 @@ module GlobalRender_top (
         mouse_set_value <= 12'h000;
         mouse_set_max_x <= 1'b0; mouse_set_max_y <= 1'b0;
         circuit_canvas_ram_w_en <= 1'b0;
+        mouse_left_d_sys <= mouse_left;
         if (init_cycles < 32'd1000) init_cycles <= init_cycles + 1'b1;
 
         if (keyboard_key_valid && (keyboard_key_id == 5'd18)) begin
             clear_canvas_active <= 1'b1;
             clear_canvas_addr <= 8'd0; init_cycles <= 32'd1000;
+            pending_second_tool_write <= 1'b0;
         end
 
         if (clear_canvas_active) begin
@@ -642,6 +567,21 @@ module GlobalRender_top (
         end else if (init_cycles == 32'd262) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd84; circuit_canvas_ram_w_data <= 16'b0000000_01_000010_1;
         end else if (init_cycles == 32'd263) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd86; circuit_canvas_ram_w_data <= 16'b0000000_10_000010_1;
         end else if (init_cycles == 32'd264) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd88; circuit_canvas_ram_w_data <= 16'b0000000_11_000010_1;
+        end else if (pending_second_tool_write) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= pending_second_tool_addr;
+            circuit_canvas_ram_w_data <= pending_second_tool_data;
+            pending_second_tool_write <= 1'b0;
+        end else if (mouse_left_rising_sys && canvas_mouse_in_bounds && (selected_toolbar_idx != 3'd0) &&
+                     (!toolbar_place_two_cells || (mouse_cell_i < 12'd15))) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= hovered_addr;
+            circuit_canvas_ram_w_data <= toolbar_place_data0;
+            if (toolbar_place_two_cells) begin
+                pending_second_tool_write <= 1'b1;
+                pending_second_tool_addr <= hovered_addr + 8'd1;
+                pending_second_tool_data <= toolbar_place_data1;
+            end
         end
     end
 
@@ -652,8 +592,7 @@ module GlobalRender_top (
         right_bar_active = (x_pos >= (SCREEN_W - RIGHT_BAR_W)) && (y_pos >= TOP_BAR_H);
         
         canvas_label_active = 1'b0; title_active = 1'b0; frame_active = 1'b0;
-        icon_active = 1'b0; toolbar_bitmap_active = 1'b0;
-        toolbar_row_bits = 24'b0;
+        icon_active = 1'b0;
         grid_line_active = ((x_pos[4:0] == 5'd0) || (y_pos[4:0] == 5'd0));
         
         if (top_bar_active) begin
@@ -667,40 +606,7 @@ module GlobalRender_top (
         end else if (left_bar_active) begin
             ui_rgb = rgb888_to_444(24'hF3D9B8);
             if (grid_line_active) ui_rgb = rgb888_to_444(24'hD9E8F2);
-            dx = x_pos - 32; dy = y_pos - 84;
-            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 128;
-            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 172;
-            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 216;
-            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 260;
-            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            dx = x_pos - 32; dy = y_pos - 304;
-            if ((dx*dx + dy*dy) < 420) icon_active = 1'b1;
-            if (icon_active) ui_rgb = 12'hFFF;
-            if ((x_pos >= 20) && (x_pos < 44) && (y_pos >= 72) && (y_pos < 96)) begin
-                toolbar_row_bits = toolbar_bitmap_row(0, y_pos - 72);
-                if (toolbar_row_bits[23 - (x_pos - 20)]) toolbar_bitmap_active = 1'b1;
-            end else if ((x_pos >= 20) && (x_pos < 44) && (y_pos >= 116) && (y_pos < 140)) begin
-                toolbar_row_bits = toolbar_bitmap_row(1, y_pos - 116);
-                if (toolbar_row_bits[23 - (x_pos - 20)]) toolbar_bitmap_active = 1'b1;
-            end else if ((x_pos >= 20) && (x_pos < 44) && (y_pos >= 160) && (y_pos < 184)) begin
-                toolbar_row_bits = toolbar_bitmap_row(2, y_pos - 160);
-                if (toolbar_row_bits[23 - (x_pos - 20)]) toolbar_bitmap_active = 1'b1;
-            end else if ((x_pos >= 20) && (x_pos < 44) && (y_pos >= 204) && (y_pos < 228)) begin
-                toolbar_row_bits = toolbar_bitmap_row(3, y_pos - 204);
-                if (toolbar_row_bits[23 - (x_pos - 20)]) toolbar_bitmap_active = 1'b1;
-            end else if ((x_pos >= 20) && (x_pos < 44) && (y_pos >= 248) && (y_pos < 272)) begin
-                toolbar_row_bits = toolbar_bitmap_row(4, y_pos - 248);
-                if (toolbar_row_bits[23 - (x_pos - 20)]) toolbar_bitmap_active = 1'b1;
-            end else if ((x_pos >= 20) && (x_pos < 44) && (y_pos >= 292) && (y_pos < 316)) begin
-                toolbar_row_bits = toolbar_bitmap_row(5, y_pos - 292);
-                if (toolbar_row_bits[23 - (x_pos - 20)]) toolbar_bitmap_active = 1'b1;
-            end
-
-            if (toolbar_bitmap_active) ui_rgb = 12'h000;
+            if (toolbar_rendered) ui_rgb = toolbar_rgb;
         end else if (right_bar_active) begin
             ui_rgb = rgb888_to_444(24'hD0D0D0);
             if (grid_line_active) ui_rgb = rgb888_to_444(24'hDBDBDB);
@@ -719,7 +625,7 @@ module GlobalRender_top (
         glyph_hit("n", 4, x_pos - 492, y_pos - 28) || glyph_hit("t", 4, x_pos - 516, y_pos - 28) || glyph_hit("a", 4, x_pos - 536, y_pos - 28) || glyph_hit("l", 4, x_pos - 560, y_pos - 28)) title_active = 1'b1;
         if (glyph_hit("D", 4, x_pos - 492, y_pos - 198) || glyph_hit("e", 4, x_pos - 516, y_pos - 198) || glyph_hit("b", 4, x_pos - 540, y_pos - 198) || glyph_hit("u", 4, x_pos - 564, y_pos - 198) || glyph_hit("g", 4, x_pos - 588, y_pos - 198) || glyph_hit("D", 4, x_pos - 492, y_pos - 328) || glyph_hit("i", 4, x_pos - 516, y_pos - 328) || glyph_hit("s", 4, x_pos - 532, y_pos - 328) || glyph_hit("p", 4, x_pos - 556, y_pos - 328) || glyph_hit("l", 4, x_pos - 580, y_pos - 328) || glyph_hit("a", 4, x_pos - 596, y_pos - 328) || 
         glyph_hit("y", 4, x_pos - 620, y_pos - 328)) title_active = 1'b1;
-        if (glyph_hit("T", 4, x_pos - 40, y_pos - 238) || glyph_hit("o", 4, x_pos - 64, y_pos - 238) || glyph_hit("o", 4, x_pos - 88, y_pos - 238) || glyph_hit("l", 4, x_pos - 112, y_pos - 238) || glyph_hit("b", 4, x_pos - 40, y_pos - 266) || glyph_hit("a", 4, x_pos - 64, y_pos - 266) || glyph_hit("r", 4, x_pos - 88, y_pos - 266)) title_active = 1'b1;
+        if (1'b0) title_active = 1'b1;
         if (glyph_hit("V", 5, x_pos - 240, y_pos - 446) || glyph_hit("G", 5, x_pos - 270, y_pos - 446) || glyph_hit("A", 5, x_pos - 300, y_pos - 446) || glyph_hit("6", 5, x_pos - 352, y_pos - 446) || glyph_hit("4", 5, x_pos - 382, y_pos - 446) || glyph_hit("0", 5, x_pos - 412, y_pos - 446) || glyph_hit("@", 5, x_pos - 492, y_pos - 446) || glyph_hit("6", 5, x_pos - 544, y_pos - 446) || glyph_hit("0", 5, x_pos - 574, y_pos - 446)) title_active = 1'b1;
         if ((x_pos >= 448) && (x_pos < 482) && (y_pos >= 320) && (y_pos < 332)) title_active = 1'b1;
         

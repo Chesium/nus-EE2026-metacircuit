@@ -58,12 +58,6 @@ module GlobalRender_top (
     localparam integer KEYBOARD_REGION_Y1 = KEYBOARD_Y + KEYBOARD_H;
     // =========================================================
 
-    localparam integer DEL_BUTTON_W   = (3 * KEY_W) / 2;
-    localparam integer RESET_BUTTON_W = (3 * KEY_W) - DEL_BUTTON_W;
-    localparam integer RESET_BUTTON_H = KEY_H;
-    localparam integer RESET_BUTTON_X = KEYBOARD_X + (2 * KEY_W) + DEL_BUTTON_W;
-    localparam integer RESET_BUTTON_Y = KEYBOARD_Y + (3 * KEY_H);
-
     wire clk_pixel, clk_nav, video_on;
     wire [11:0] x_pos, y_pos;
     reg  [11:0] rgb;
@@ -73,9 +67,6 @@ module GlobalRender_top (
     wire        keyboard_key_valid;
     wire [7:0]  keyboard_key_ascii;
     reg  [7:0]  last_ascii = 8'h00;
-
-    wire [11:0] reset_button_rgb;
-    wire        reset_button_inside, reset_button_hover, reset_button_pressed, reset_region_active;
 
     wire        keyboard_region_active;
 
@@ -104,17 +95,11 @@ module GlobalRender_top (
     wire [15:0] circuit_canvas_ram_r_data;
 
     reg  [31:0] init_cycles = 32'd0;
-    reg         reset_button_click_d = 1'b0;
 
     reg         clear_canvas_active = 1'b0;
     reg  [7:0]  clear_canvas_addr = 8'd0;
 
     assign keyboard_region_active = (x_pos >= KEYBOARD_REGION_X0) && (x_pos < KEYBOARD_REGION_X1) && (y_pos >= KEYBOARD_REGION_Y0) && (y_pos < KEYBOARD_REGION_Y1);
-
-    assign reset_button_hover = (mouse_xpos >= RESET_BUTTON_X) && (mouse_xpos < (RESET_BUTTON_X + RESET_BUTTON_W)) && (mouse_ypos >= RESET_BUTTON_Y) && (mouse_ypos < (RESET_BUTTON_Y + RESET_BUTTON_H));
-
-    assign reset_button_pressed = reset_button_hover && mouse_left;
-    assign reset_region_active = (x_pos >= RESET_BUTTON_X) && (x_pos < (RESET_BUTTON_X + RESET_BUTTON_W)) && (y_pos >= RESET_BUTTON_Y) && (y_pos < (RESET_BUTTON_Y + RESET_BUTTON_H));
 
     assign mouse_rgb = {mouse_r, mouse_g, mouse_b};
 
@@ -504,7 +489,7 @@ module GlobalRender_top (
     // 確保這裡的尺寸與 Top 的遮罩區域完全相同
     // =========================================================
     KeyboardVGA #( 
-        .KEY_COUNT(18),
+        .KEY_COUNT(19),
         .FONT_SCALE(KEYBOARD_SCALE), 
         .KEYBOARD_X0(KEYBOARD_X), 
         .KEYBOARD_Y0(KEYBOARD_Y),
@@ -516,17 +501,6 @@ module GlobalRender_top (
         .mouse_x(mouse_xpos), .mouse_y(mouse_ypos), .mouse_left(mouse_left),
         .x(x_pos), .y(y_pos), .pixel_rgb(keyboard_rgb), .key_id(keyboard_key_id),
         .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii)
-    );
-    ButtonVGA #(
-        .X0(RESET_BUTTON_X), .Y0(RESET_BUTTON_Y), .W(RESET_BUTTON_W), .H(RESET_BUTTON_H),
-        .BORDER(3), .EDGE_THICK(2), .MARKER_OFFSET(7), .MARKER_W(3), .MARKER_H(3),
-        .FONT5_SCALE(KEYBOARD_SCALE), .FONT3_SCALE(KEYBOARD_SCALE), .LABEL0("R"), .LABEL1("S"), .LABEL2("T"),
-        .TEXT_COLS(3), .SMALL_TEXT(1'b0), .FACE_RGB(24'hA9D8D0), .BORDER_RGB(24'hCBBFB0),
-        .SELECTED_BORDER_RGB(24'hFFD84D), .SELECTED_MARKER_RGB(24'hFFF7D2),
-        .PRESSED_BORDER_RGB(24'hD9A900), .TEXT_RGB(24'h123C39)
-    ) reset_button_inst (
-        .enabled(1'b1), .selected(reset_button_hover), .pressed(reset_button_pressed),
-        .x(x_pos), .y(y_pos), .pixel_rgb(reset_button_rgb), .inside_button(reset_button_inside)
     );
     // =========================================================
     // 電壓波形 (X: 0 ~ 241, Y: 352 ~ 479)
@@ -636,17 +610,17 @@ module GlobalRender_top (
         12'h000;
         
     always @(posedge clk_nav) begin
-        if (keyboard_key_valid) last_ascii <= keyboard_key_ascii;
+        if (keyboard_key_valid && (keyboard_key_id != 5'd18)) last_ascii <= keyboard_key_ascii;
     end
 
     // RAM 初始化與滑鼠重置
     always @(posedge CLK100MHZ) begin
         mouse_set_value <= 12'h000;
         mouse_set_max_x <= 1'b0; mouse_set_max_y <= 1'b0;
-        circuit_canvas_ram_w_en <= 1'b0; reset_button_click_d <= reset_button_pressed;
+        circuit_canvas_ram_w_en <= 1'b0;
         if (init_cycles < 32'd1000) init_cycles <= init_cycles + 1'b1;
 
-        if (reset_button_pressed && !reset_button_click_d) begin
+        if (keyboard_key_valid && (keyboard_key_id == 5'd18)) begin
             clear_canvas_active <= 1'b1;
             clear_canvas_addr <= 8'd0; init_cycles <= 32'd1000;
         end
@@ -757,8 +731,6 @@ module GlobalRender_top (
             rgb <= BLACK;
         end else if (mouse_display_enable) begin
             rgb <= mouse_rgb;
-        end else if (reset_region_active) begin
-            rgb <= reset_button_rgb;
         end else if (keyboard_region_active) begin
             rgb <= keyboard_rgb;
         end else if (circuit_canvas_rendered) begin

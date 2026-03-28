@@ -45,7 +45,7 @@ module Keyboard #(
         POS_R3C0 = 5'd15, // .
         POS_R3C1 = 5'd16, // 0
         POS_R3C2 = 5'd17, // DEL
-        POS_R3C3 = 5'd18, // empty
+        POS_R3C3 = 5'd18, // RST
         POS_R3C4 = 5'd19; // empty
 
     // Color palette (RGB888)
@@ -54,7 +54,7 @@ module Keyboard #(
         RGB_UNIT  = 24'h2ECC71, // Green
         RGB_DOT   = 24'hF1C40F, // Yellow
         RGB_DEL   = 24'hE74C3C, // Red
-        RGB_OK    = 24'h9B59B6, // Purple
+        RGB_RST   = 24'h4DB6AC, // Teal
         RGB_NONE  = 24'h666666; // Gray
 
     // 5x4 grid geometry for 96x64
@@ -157,6 +157,7 @@ module Keyboard #(
                 POS_R3C0: begin key_ascii = "."; key_rgb = RGB_DOT;   key_is_action= 1'b1; end
                 POS_R3C1: begin key_ascii = "0"; key_rgb = RGB_DIGIT; key_is_digit = 1'b1; end
                 POS_R3C2: begin key_ascii = 8'h08; key_rgb = RGB_DEL; key_is_action= 1'b1; end // backspace
+                POS_R3C3: begin key_ascii = 8'h7F; key_rgb = RGB_RST; key_is_action= 1'b1; end // reset
                 default:begin key_ascii = 8'h00; key_rgb = RGB_NONE; end
             endcase
         end
@@ -194,6 +195,9 @@ module Keyboard #(
                 "D": glyph5x7 = 35'b11110_10001_10001_10001_10001_10001_11110;
                 "E": glyph5x7 = 35'b11111_10000_10000_11110_10000_10000_11111;
                 "L": glyph5x7 = 35'b10000_10000_10000_10000_10000_10000_11111;
+                "R": glyph5x7 = 35'b11110_10001_10001_11110_10100_10010_10001;
+                "S": glyph5x7 = 35'b01111_10000_10000_01110_00001_00001_11110;
+                "T": glyph5x7 = 35'b11111_00100_00100_00100_00100_00100_00100;
                 "O": glyph5x7 = 35'b01110_10001_10001_10001_10001_10001_01110;
                 "K": glyph5x7 = 35'b10001_10010_10100_11000_10100_10010_10001;
                 ".": glyph5x7 = 35'b00000_00000_00000_00000_00000_01100_01100;
@@ -228,6 +232,9 @@ module Keyboard #(
                 "D": glyph3x5 = 15'b110_101_101_101_110;
                 "E": glyph3x5 = 15'b111_100_111_100_111;
                 "L": glyph3x5 = 15'b100_100_100_100_111;
+                "R": glyph3x5 = 15'b110_101_110_101_101;
+                "S": glyph3x5 = 15'b111_100_111_001_111;
+                "T": glyph3x5 = 15'b111_010_010_010_010;
                 default: glyph3x5 = 15'b000_000_000_000_000;
             endcase
         end
@@ -254,7 +261,7 @@ module Keyboard #(
     // Row0: 1 2 3 M k
     // Row1: 4 5 6 m u
     // Row2: 7 8 9 n p
-    // Row3: . 0 DEL empty empty
+    // Row3: . 0 DEL RST empty
     reg [23:0] cell_color;
     reg        is_border;
     reg        is_selected;
@@ -292,6 +299,7 @@ module Keyboard #(
             POS_R0C3, POS_R0C4, POS_R1C3, POS_R1C4, POS_R2C3, POS_R2C4: cell_color = RGB_UNIT;
             POS_R3C0: cell_color = RGB_DOT;
             POS_R3C2: cell_color = RGB_DEL;
+            POS_R3C3: cell_color = RGB_RST;
             default: cell_color = RGB_NONE;
         endcase
 
@@ -320,8 +328,9 @@ module Keyboard #(
             POS_R2C4: begin t0 = "p"; text_cols = 3'd1; end
             POS_R3C0: begin t0 = "."; text_cols = 3'd1; end
             POS_R3C1: begin t0 = "0"; text_cols = 3'd1; end
-            // Use compact 3x5 "DEL"
+            // Use compact 3x5 action labels
             POS_R3C2: begin t0 = "D"; t1 = "E"; t2 = "L"; text_cols = 3'd3; text_h = 3'd5; small_text = 1'b1; end
+            POS_R3C3: begin t0 = "R"; t1 = "S"; t2 = "T"; text_cols = 3'd3; text_h = 3'd5; small_text = 1'b1; end
             default: begin t0 = 8'h00; text_cols = 3'd0; end
         endcase
 

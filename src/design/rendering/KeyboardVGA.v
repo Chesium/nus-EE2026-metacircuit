@@ -57,7 +57,7 @@ module KeyboardVGA #(
     localparam integer MARKER_H = 3;
     localparam integer FONT5_SCALE = FONT_SCALE;
     localparam integer FONT3_SCALE = FONT_SCALE;
-    localparam integer ACTION_GAP = 2;
+    localparam integer ACTION_GAP = 0;
     localparam integer DEL_W = ((3 * KEY_W) / 2) - (ACTION_GAP / 2);
     localparam integer RST_W = (3 * KEY_W) - DEL_W - ACTION_GAP;
 

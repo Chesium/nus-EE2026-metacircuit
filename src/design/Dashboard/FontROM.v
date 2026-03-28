@@ -698,7 +698,7 @@ module FontROM (
             // 77: m (ASCII 109)
             7'd77: case(row)
                     0: pixel_data = 8'b00000000; 1: pixel_data = 8'b00000000;
-                    2: pixel_data = 8'b01010100; 3: pixel_data = 8'b00101010;
+                    2: pixel_data = 8'b01010100; 3: pixel_data = 8'b01101010;
                     4: pixel_data = 8'b01101010; 5: pixel_data = 8'b01101010;
                     6: pixel_data = 8'b01000010; 7: pixel_data = 8'b00000000;
                     default: pixel_data = 8'b00000000;

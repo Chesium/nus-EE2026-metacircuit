@@ -688,10 +688,10 @@ module FontROM (
 
             // 76: l (ASCII 108)
             7'd76: case(row)
-                    0: pixel_data = 8'b00111100; 1: pixel_data = 8'b00011000;
+                    0: pixel_data = 8'b00111000; 1: pixel_data = 8'b00011000;
                     2: pixel_data = 8'b00011000; 3: pixel_data = 8'b00011000;
                     4: pixel_data = 8'b00011000; 5: pixel_data = 8'b00011000;
-                    6: pixel_data = 8'b00111100; 7: pixel_data = 8'b00000000;
+                    6: pixel_data = 8'b00011000; 7: pixel_data = 8'b00000000;
                     default: pixel_data = 8'b00000000;
                   endcase
 

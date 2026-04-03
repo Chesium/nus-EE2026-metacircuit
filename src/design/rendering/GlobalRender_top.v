@@ -124,12 +124,12 @@ module GlobalRender_top (
         begin
             case (tool_idx)
                 3'd1: toolbar_first_cell_data = make_cell_data(2'b00, 6'd0); // wire
-                3'd2: toolbar_first_cell_data = make_cell_data(2'b00, 6'd1); // elbow
-                3'd3: toolbar_first_cell_data = make_cell_data(2'b00, 6'd5); // resistor left
+                3'd2: toolbar_first_cell_data = make_cell_data(2'b00, 6'd5); // resistor left
+                3'd3: toolbar_first_cell_data = make_cell_data(2'b00, 6'd11); // inductor left
                 3'd4: toolbar_first_cell_data = make_cell_data(2'b00, 6'd13); // capacitor left
                 3'd5: toolbar_first_cell_data = make_cell_data(2'b00, 6'd7); // voltage left
                 3'd6: toolbar_first_cell_data = make_cell_data(2'b00, 6'd9); // current left
-                3'd7: toolbar_first_cell_data = make_cell_data(2'b00, 6'd11); // diode left
+                3'd7: toolbar_first_cell_data = make_cell_data(2'b00, 6'd15); // ground
                 default: toolbar_first_cell_data = 16'd0;
             endcase
         end
@@ -139,11 +139,11 @@ module GlobalRender_top (
         input [2:0] tool_idx;
         begin
             case (tool_idx)
-                3'd3: toolbar_second_cell_data = make_cell_data(2'b00, 6'd6); // resistor right
+                3'd2: toolbar_second_cell_data = make_cell_data(2'b00, 6'd6); // resistor right
+                3'd3: toolbar_second_cell_data = make_cell_data(2'b00, 6'd12); // inductor right
                 3'd4: toolbar_second_cell_data = make_cell_data(2'b00, 6'd14); // capacitor right
                 3'd5: toolbar_second_cell_data = make_cell_data(2'b00, 6'd8); // voltage right
                 3'd6: toolbar_second_cell_data = make_cell_data(2'b00, 6'd10); // current right
-                3'd7: toolbar_second_cell_data = make_cell_data(2'b00, 6'd12); // diode right
                 default: toolbar_second_cell_data = 16'd0;
             endcase
         end
@@ -153,7 +153,7 @@ module GlobalRender_top (
         input [2:0] tool_idx;
         begin
             case (tool_idx)
-                3'd3, 3'd4, 3'd5, 3'd6, 3'd7: toolbar_tool_uses_two_cells = 1'b1;
+                3'd2, 3'd3, 3'd4, 3'd5, 3'd6: toolbar_tool_uses_two_cells = 1'b1;
                 default: toolbar_tool_uses_two_cells = 1'b0;
             endcase
         end

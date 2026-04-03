@@ -36,6 +36,7 @@ module CircuitCanvas_top #(
   localparam integer CanvasCellSize = 32;
   localparam integer CanvasGridWidth = 16;
   localparam integer CanvasGridHeight = 16;
+  localparam [3:0] DefaultModeSelect = 4'd0;
 
   localparam integer BgStateInitClearA = 0;
   localparam integer BgStateInitClearB = 1;
@@ -189,7 +190,7 @@ module CircuitCanvas_top #(
   reg buffers_init_done = 1'b0;
   reg frame_prep_done = 1'b0;
   reg bg_overrun_flag = 1'b0;
-  assign LED = {5'd0, interaction_frame_drop_flag, bg_overrun_flag, 5'd0, SW[3:0]};
+  assign LED = {5'd0, interaction_frame_drop_flag, bg_overrun_flag, 9'd0};
   reg signed [12:0] frame_grid_pos_x_pix = 0;
   reg signed [12:0] frame_grid_pos_y_pix = 0;
   reg signed [12:0] frame_grid_pos_x_bg_sync0 = 0;
@@ -440,7 +441,7 @@ DynamicTextDisplay #(
       .clk(CLK100MHZ),
       .reset(BTNC),
       .frame_start_pulse(interaction_frame_tick),
-      .mode_select(SW[3:0]),
+      .mode_select(DefaultModeSelect),
       .mouse_x(mouse_xpos),
       .mouse_y(mouse_ypos),
       .mouse_left(mouse_left),

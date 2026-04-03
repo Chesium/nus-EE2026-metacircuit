@@ -1,15 +1,16 @@
 `timescale 1ns / 1ps
 /*
- * MatrixDisplay - 矩阵数据显示模块 (8x8 固定尺寸，紧凑字库版)
- * 显示两个 8x8 矩阵：A 矩阵和 LU 矩阵
- * 使用 5x7 紧凑数字字符库，每单元格显示 3 个字符 (符号/十位 + 个位 + 小数)
+ * MatrixDisplay - 全屏矩阵数据显示模块
+ * 显示两个 8x8 矩阵：A 矩阵和 LU 矩阵 (并排)
+ * 使用 CompactDigitROM 紧凑字库 (5x7)
+ * 支持 Q8.8 定点数格式，显示范围 -128~127，保留两位小数
  */
 
 module MatrixDisplay #(
-    parameter integer PANEL_X = 484,
-    parameter integer PANEL_Y = 64,
-    parameter integer PANEL_W = 156,
-    parameter integer PANEL_H = 300
+    parameter integer PANEL_X = 0,
+    parameter integer PANEL_Y = 0,
+    parameter integer PANEL_W = 640,
+    parameter integer PANEL_H = 480
 )(
     input wire clk_pixel,
     input wire [11:0] hcount,
@@ -27,136 +28,115 @@ module MatrixDisplay #(
     localparam [11:0] COLOR_BORDER = 12'h666;
     localparam [11:0] COLOR_TEXT = 12'h000;
 
-    // 尺寸参数 - 使用紧凑字库 (5x7)
+    // 尺寸参数
     localparam integer MATRIX_SIZE = 8;
     localparam integer BORDER_WIDTH = 2;
     localparam integer TITLE_HEIGHT = 16;
-    localparam integer CELL_HEIGHT = 14;   // 7 像素字模×2 倍缩放
-    localparam integer CELL_WIDTH = 17;    // 3 字符×5 像素 +2 间距
-    localparam integer BRACKET_WIDTH = 8;
+    localparam integer CHARS_PER_CELL = 7;  // 符号+十位+个位+小数点+十分位+百分位
+
+    // 单元格尺寸：全屏模式下每个单元格较大
+    localparam integer CELL_WIDTH = 44;   // 7 字符 × 6 像素 + 2 间距
+    localparam integer CELL_HEIGHT = 42;  // 7 行字模 × 6 倍缩放
+    localparam integer BRACKET_WIDTH = 10;
 
     // 矩阵内容尺寸
-    localparam integer MATRIX_CONTENT_W = MATRIX_SIZE * CELL_WIDTH;   // 136 像素
-    localparam integer MATRIX_CONTENT_H = MATRIX_SIZE * CELL_HEIGHT;  // 112 像素
+    localparam integer MATRIX_CONTENT_W = MATRIX_SIZE * CELL_WIDTH;   // 352 像素
+    localparam integer MATRIX_CONTENT_H = MATRIX_SIZE * CELL_HEIGHT;  // 336 像素
 
     // 矩阵总尺寸 (含方括号)
-    localparam integer MATRIX_TOTAL_W = MATRIX_CONTENT_W + BRACKET_WIDTH * 2;  // 152 像素
-    localparam integer MATRIX_TOTAL_H = MATRIX_CONTENT_H;  // 112 像素
+    localparam integer MATRIX_TOTAL_W = MATRIX_CONTENT_W + BRACKET_WIDTH * 2;  // 372 像素
+    localparam integer MATRIX_TOTAL_H = MATRIX_CONTENT_H;  // 336 像素
 
-    // 单个矩阵区域高度
-    localparam integer MATRIX_REGION_H = TITLE_HEIGHT + BORDER_WIDTH * 2 + MATRIX_TOTAL_H;  // 16+4+112=132
+    // 计算布局：两个矩阵并排，居中显示
+    localparam integer MATRIX_GAP = 16;  // 两个矩阵之间的间距
+    localparam integer TOTAL_W = MATRIX_TOTAL_W * 2 + MATRIX_GAP;
+    localparam integer START_X = (PANEL_W - TOTAL_W) / 2;
+    localparam integer START_Y = (PANEL_H - MATRIX_TOTAL_H) / 2 + TITLE_HEIGHT/2;
 
-    // 矩阵起始位置 (居中：156-152=4, 左右各 2 像素)
-    localparam integer MATRIX_START_X = PANEL_X + BORDER_WIDTH + 2;  // 488
-    localparam integer MATRIX_START_Y = PANEL_Y + BORDER_WIDTH + 4;  // 70
-    localparam integer MATRIX_END_X = MATRIX_START_X + MATRIX_TOTAL_W;  // 640
-    localparam integer MATRIX_END_Y = MATRIX_START_Y + MATRIX_TOTAL_H;  // 182
+    // A 和 LU 矩阵的起始位置
+    localparam integer A_LEFT = START_X;
+    localparam integer A_TOP = START_Y;
+    localparam integer LU_LEFT = START_X + MATRIX_TOTAL_W + MATRIX_GAP;
+    localparam integer LU_TOP = START_Y;
 
-    // A/LU 矩阵边界
-    localparam integer A_REGION_END_Y = MATRIX_START_Y + MATRIX_REGION_H;  // 70+132=202
-    localparam integer LU_MATRIX_START_Y = A_REGION_END_Y;  // 202
+    // A 矩阵内容顶部
+    wire [11:0] a_content_top = A_TOP + TITLE_HEIGHT + BORDER_WIDTH;
+    wire [11:0] lu_content_top = LU_TOP + TITLE_HEIGHT + BORDER_WIDTH;
 
-    // 从扁平化总线提取矩阵元素
-    function [15:0] get_matrix_elem;
-        input [1023:0] data_bus;
-        input [5:0] index;
-        begin
-            get_matrix_elem = data_bus[(63 - index) * 16 +: 16];
-        end
-    endfunction
+    // 判断是否在 A 或 LU 矩阵区域
+    wire in_a = (vcount >= a_content_top &&
+                 vcount < a_content_top + MATRIX_CONTENT_H &&
+                 hcount >= A_LEFT && hcount < A_LEFT + MATRIX_TOTAL_W);
 
-    // 渲染信号
-    wire in_panel, is_outer_border, is_divider;
-    wire pixel_lit, title_pixel_lit;
+    wire in_lu = (vcount >= lu_content_top &&
+                  vcount < lu_content_top + MATRIX_CONTENT_H &&
+                  hcount >= LU_LEFT && hcount < LU_LEFT + MATRIX_TOTAL_W);
 
-    // A 矩阵内容区域 (严格限制在 8 行内)
-    wire in_a_matrix = (vcount >= MATRIX_START_Y + TITLE_HEIGHT + BORDER_WIDTH &&
-                        vcount < MATRIX_START_Y + TITLE_HEIGHT + BORDER_WIDTH + MATRIX_CONTENT_H &&
-                        hcount >= MATRIX_START_X && hcount < MATRIX_END_X);
-
-    // LU 矩阵内容区域
-    wire in_lu_matrix = (vcount >= LU_MATRIX_START_Y + TITLE_HEIGHT + BORDER_WIDTH &&
-                         vcount < LU_MATRIX_START_Y + TITLE_HEIGHT + BORDER_WIDTH + MATRIX_CONTENT_H &&
-                         hcount >= MATRIX_START_X && hcount < MATRIX_END_X);
-
-    wire in_matrix = in_a_matrix || in_lu_matrix;
+    wire in_matrix = in_a || in_lu;
 
     // 相对坐标
-    wire [11:0] a_top = MATRIX_START_Y + TITLE_HEIGHT + BORDER_WIDTH;
-    wire [11:0] lu_top = LU_MATRIX_START_Y + TITLE_HEIGHT + BORDER_WIDTH;
-    wire [11:0] matrix_top = in_a_matrix ? a_top : lu_top;
-    wire [11:0] rel_y = vcount - matrix_top;  // 0~111 (MATRIX_CONTENT_H-1)
-    wire [11:0] rel_x = hcount - MATRIX_START_X;  // 0~151 (MATRIX_TOTAL_W-1)
+    wire [11:0] matrix_top = in_a ? a_content_top : lu_content_top;
+    wire [11:0] matrix_left = in_a ? A_LEFT : LU_LEFT;
+    wire [11:0] rel_y = vcount - matrix_top;  // 0~335
+    wire [11:0] rel_x = hcount - matrix_left;  // 0~371
 
     // 方括号区域
     wire in_left_bracket = (rel_x < BRACKET_WIDTH);
     wire in_right_bracket = (rel_x >= BRACKET_WIDTH + MATRIX_CONTENT_W);
     wire in_cell_area = (rel_x >= BRACKET_WIDTH && rel_x < BRACKET_WIDTH + MATRIX_CONTENT_W);
 
-    // 单元格行列索引 (0-7)
+    // 单元格行列索引
     wire [5:0] cell_row = rel_y / CELL_HEIGHT;
     wire [5:0] cell_col = (rel_x - BRACKET_WIDTH) / CELL_WIDTH;
 
-    // 行列有效性 (严格限制 8x8)
     wire cell_row_ok = (cell_row < MATRIX_SIZE);
     wire cell_col_ok = (cell_col < MATRIX_SIZE);
     wire cell_ok = cell_row_ok && cell_col_ok;
 
-    // 单元格索引
     wire [5:0] cell_idx = cell_row * MATRIX_SIZE + cell_col;
 
     // 单元格内坐标
     wire [11:0] in_cell_x = (rel_x - BRACKET_WIDTH) % CELL_WIDTH;
     wire [11:0] in_cell_y = rel_y % CELL_HEIGHT;
 
-    // 字符位置 (0-2): 符号/十位，个位，小数位
-    wire [1:0] char_idx = in_cell_x / 6;  // 每字符 6 像素 (5+1)
-    wire char_idx_ok = (char_idx < 3);
-
-    // 字模内坐标 (5x7 字模，2 倍垂直缩放)
-    wire [2:0] font_col = in_cell_x % 6;
-    wire [3:0] font_row = in_cell_y / 2;  // 2 倍垂直缩放
-    wire font_row_ok = (font_row < 7);
-
     // 获取元素值
     wire [15:0] elem_a = get_matrix_elem(matrix_a_data, cell_idx);
     wire [15:0] elem_lu = get_matrix_elem(matrix_lu_data, cell_idx);
-    wire [15:0] elem = in_a_matrix ? elem_a : elem_lu;
+    wire [15:0] elem = in_a ? elem_a : elem_lu;
 
-    // Q8.8 转数字索引
-    wire [7:0] int_part = elem[15] ? -elem[15:8] : elem[15:8];
-    wire [3:0] tens_digit = int_part / 10;
-    wire [3:0] ones_digit = int_part % 10;
+    // 字符位置 (0-6): 符号/十位，个位，小数点，十分位，百分位
+    wire [2:0] char_idx = in_cell_x / 6;  // 每字符 6 像素 (5+1)
+    wire char_idx_ok = (char_idx < CHARS_PER_CELL);
 
-    // 根据 char_idx 选择显示的数字
-    // char_idx=0: 符号位或十位，char_idx=1: 个位，char_idx=2: 小数位
+    // 字模内坐标 (5x7 字模，6 倍垂直缩放)
+    wire [2:0] font_col = in_cell_x % 6;
+    wire [3:0] font_row = in_cell_y / (CELL_HEIGHT / 7);
+    wire font_row_ok = (font_row < 7);
+
+    // Q8.8 转数字
     wire is_minus = elem[15];
-    wire has_tens = (int_part >= 10);
+    wire [7:0] int_part = is_minus ? -elem[15:8] : elem[15:8];
+    wire [7:0] tens = int_part / 10;
+    wire [3:0] ones = int_part % 10;
     
-    // char_idx=0 时：负数显示负号，有十位显示十位，否则显示空格
-    wire show_minus_at_0 = (char_idx == 2'd0) && is_minus;
-    wire show_tens_at_0 = (char_idx == 2'd0) && !is_minus && has_tens;
-    wire show_blank_at_0 = (char_idx == 2'd0) && !is_minus && !has_tens;
-    
-    // char_idx=1 时：显示个位
-    wire show_ones_at_1 = (char_idx == 2'd1);
-    
-    // char_idx=2 时：显示小数点
-    wire show_decimal_at_2 = (char_idx == 2'd2);
+    // 小数部分 (Q8.8 的低 8 位)
+    wire [7:0] frac_part = elem[7:0];
+    wire [7:0] frac_x100 = (frac_part * 100) >> 8;  // 乘以 100/256
+    wire [3:0] tenths = frac_x100 / 10;
+    wire [3:0] hundredths = frac_x100 % 10;
 
-    // 根据位置选择要显示的数字值
-    reg [3:0] digit_value;
+    // 根据字符位置选择数字
+    reg [3:0] digit_addr;
     always @(*) begin
         case (char_idx)
-            2'd0: digit_value = is_minus ? 4'd10 :  // 负号
-                  has_tens ? tens_digit : 4'd12;    // 十位或空格
-            2'd1: digit_value = ones_digit;          // 个位
-            2'd2: digit_value = 4'd11;               // 小数点
-            default: digit_value = 4'd12;
+            3'd0: digit_addr = is_minus ? 4'd10 : ((int_part >= 10) ? tens : 4'd12);
+            3'd1: digit_addr = ones;
+            3'd2: digit_addr = 4'd11;  // 小数点
+            3'd3: digit_addr = tenths;
+            3'd4: digit_addr = hundredths;
+            default: digit_addr = 4'd12;  // 空格
         endcase
     end
-
-    wire [3:0] digit_addr = digit_value;
 
     wire cell_valid = in_matrix && cell_ok && char_idx_ok && font_row_ok && in_cell_area;
 
@@ -170,32 +150,27 @@ module MatrixDisplay #(
 
     wire digit_lit = cell_valid && digit_pixels[4 - font_col];
 
-    // 方括号渲染 (左括号和右括号)
-    // 左方括号：在 rel_x = 3,4 处绘制垂直线
-    wire bracket_left = in_left_bracket && ((rel_x == 3) || (rel_x == 4));
-
-    // 右方括号：在右侧区域 rel_x 对应位置绘制
+    // 方括号渲染 (简单的垂直线)
+    wire bracket_left = in_left_bracket && ((rel_x == 4) || (rel_x == 5));
     wire [11:0] right_rel_x = rel_x - (BRACKET_WIDTH + MATRIX_CONTENT_W);
-    wire bracket_right = in_right_bracket && ((right_rel_x == 3) || (right_rel_x == 4));
+    wire bracket_right = in_right_bracket && ((right_rel_x == 4) || (right_rel_x == 5));
 
-    assign pixel_lit = digit_lit || bracket_left || bracket_right;
+    wire pixel_lit = digit_lit || bracket_left || bracket_right;
 
-    // 标题渲染
-    wire title_y_a = MATRIX_START_Y;
-    wire title_y_lu = LU_MATRIX_START_Y;
-
+    // 标题
+    wire title_y_a = A_TOP;
+    wire title_y_lu = LU_TOP;
     wire in_title_a = (vcount >= title_y_a && vcount < title_y_a + TITLE_HEIGHT &&
-                       hcount >= MATRIX_START_X && hcount < MATRIX_END_X);
+                       hcount >= A_LEFT && hcount < A_LEFT + MATRIX_TOTAL_W);
     wire in_title_lu = (vcount >= title_y_lu && vcount < title_y_lu + TITLE_HEIGHT &&
-                        hcount >= MATRIX_START_X && hcount < MATRIX_END_X);
+                        hcount >= LU_LEFT && hcount < LU_LEFT + MATRIX_TOTAL_W);
 
-    wire [11:0] title_x = hcount - MATRIX_START_X;
-    wire [4:0] title_char_idx = title_x / 16;
-    wire title_valid = (in_title_a || in_title_lu) && (title_char_idx < 4);
+    wire [11:0] title_x = in_a ? (hcount - A_LEFT) : (hcount - LU_LEFT);
+    wire title_valid = (in_title_a || in_title_lu) && (title_x / 16 < 4);
 
     reg [7:0] title_char;
     always @(*) begin
-        case (title_char_idx)
+        case (title_x / 16)
             5'd0: title_char = 8'h5B;  // '['
             5'd1: title_char = in_title_a ? 8'h41 : 8'h4C;  // 'A' 或 'L'
             5'd2: title_char = in_title_a ? 8'h5D : 8'h55;  // ']' 或 'U'
@@ -214,18 +189,28 @@ module MatrixDisplay #(
         .pixel_data(title_pixels)
     );
 
-    assign title_pixel_lit = title_valid && title_pixels[7 - title_font_col];
+    wire title_pixel_lit = title_valid && title_pixels[7 - title_font_col];
 
-    // 面板边界
-    assign in_panel = (hcount >= PANEL_X) && (hcount < PANEL_X + PANEL_W) &&
-                      (vcount >= PANEL_Y) && (vcount < PANEL_Y + PANEL_H);
+    // 面板和边框
+    wire in_panel = (hcount >= START_X - BORDER_WIDTH) && (hcount < START_X + TOTAL_W + BORDER_WIDTH) &&
+                    (vcount >= START_Y - BORDER_WIDTH - TITLE_HEIGHT) && (vcount < START_Y + MATRIX_TOTAL_H + BORDER_WIDTH);
 
-    assign is_outer_border = in_panel && (
-        (hcount == PANEL_X) || (hcount == PANEL_X + PANEL_W - 1) ||
-        (vcount == PANEL_Y) || (vcount == PANEL_Y + PANEL_H - 1)
+    wire is_outer_border = in_panel && (
+        (hcount == START_X - BORDER_WIDTH) || (hcount == START_X + TOTAL_W + BORDER_WIDTH - 1) ||
+        (vcount == START_Y - BORDER_WIDTH - TITLE_HEIGHT) || (vcount == START_Y + MATRIX_TOTAL_H + BORDER_WIDTH - 1)
     );
 
-    assign is_divider = (vcount >= A_REGION_END_Y) && (vcount < LU_MATRIX_START_Y);
+    wire is_divider = (hcount >= A_LEFT + MATRIX_TOTAL_W) && (hcount < LU_LEFT) &&
+                      (vcount >= START_Y - BORDER_WIDTH - TITLE_HEIGHT) && (vcount < START_Y + MATRIX_TOTAL_H + BORDER_WIDTH);
+
+    // 从扁平化总线提取矩阵元素
+    function [15:0] get_matrix_elem;
+        input [1023:0] data_bus;
+        input [5:0] index;
+        begin
+            get_matrix_elem = data_bus[(63 - index) * 16 +: 16];
+        end
+    endfunction
 
     // 渲染输出
     always @(posedge clk_pixel) begin

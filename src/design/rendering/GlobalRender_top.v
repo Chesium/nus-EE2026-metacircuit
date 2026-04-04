@@ -406,12 +406,212 @@ module GlobalRender_top (
         .panel_rgb(prop_panel_rgb)
     );
     //属性面板例化结束
-    
+
     // =========================================================
-    // 矩陣顯示已移除，該區域替換為純白色塊
+    // 矩阵显示模块 (上下布局，居中显示)
     // =========================================================
-    wire matrix_white_rendered = (x_pos >= 504 && x_pos < 618) && 
-                                 ((y_pos >= 84 && y_pos < 196) || (y_pos >= 218 && y_pos < 326));
+    wire        matrix_rendered;
+    wire [11:0] matrix_rgb;
+    reg  [1023:0] matrix_a_data;    // 8x8 Q8.8 定点数矩阵
+    reg  [1023:0] matrix_lu_data;   // 8x8 Q8.8 定点数矩阵
+
+    // 开关控制：SW[0]=0 显示电路，SW[0]=1 显示矩阵
+    wire show_matrix = SW[0];
+
+    // 初始化示例矩阵数据 (8x8 矩阵，Q8.8 定点数)
+    // 数据排列：[0][0] 在 [1023:1008], [0][1] 在 [1007:992], ..., [7][7] 在 [15:0]
+    // index = row * 8 + col, 位范围 = (63 - index) * 16 +: 16
+    always @(posedge clk_pixel) begin
+        // A 矩阵 - 三对角测试矩阵 (带小数和负数)
+        // [-128.00,   2.25,   0,     0,     0,     0,     0,     0   ]
+        // [  2.25,  -20.75,  3.50,  0,     0,     0,     0,     0   ]
+        // [  0,      3.50,  30.10,  4.80,  0,     0,     0,     0   ]
+        // [  0,      0,      4.80, 40.25,  5.90,  0,     0,     0   ]
+        // [  0,      0,      0,     5.90,-50.60,  6.70,  0,     0   ]
+        // [  0,      0,      0,     0,     6.70, 60.80,  7.40,  0   ]
+        // [  0,      0,      0,     0,     0,     7.40,-70.90,  8.10]
+        // [  0,      0,      0,     0,     0,     0,     8.10, 99.99]
+        matrix_a_data <= 1024'd0;
+        // Q8.8 格式：负数使用符号位 (bit 15)
+        // -128.00 = 0x8000 (1000 0000 0000 0000)
+        // -20.75  = 0xEC40 (1110 1100 0100 0000)
+        // -50.60  = 0xCD67 (1100 1101 0110 0111)
+        // -70.90  = 0xB91A (1011 1001 0001 1010)
+        // 99.99   = 0x63FD (0110 0011 1111 1101)
+        
+        // 第 0 行 (index 0-7)
+        matrix_a_data[1023:1008] <= 16'h8000;  // A[0][0] = -128.00
+        matrix_a_data[1007:992]  <= 16'h0240;  // A[0][1] = 2.25
+        matrix_a_data[991:976]   <= 16'h0000;  // A[0][2] = 0.00
+        matrix_a_data[975:960]   <= 16'h0000;  // A[0][3] = 0.00
+        matrix_a_data[959:944]   <= 16'h0000;  // A[0][4] = 0.00
+        matrix_a_data[943:928]   <= 16'h0000;  // A[0][5] = 0.00
+        matrix_a_data[927:912]   <= 16'h0000;  // A[0][6] = 0.00
+        matrix_a_data[911:896]   <= 16'h0000;  // A[0][7] = 0.00
+        // 第 1 行 (index 8-15)
+        matrix_a_data[895:880]   <= 16'h0240;  // A[1][0] = 2.25
+        matrix_a_data[879:864]   <= 16'hEC40;  // A[1][1] = -20.75
+        matrix_a_data[863:848]   <= 16'h0380;  // A[1][2] = 3.50
+        matrix_a_data[847:832]   <= 16'h0000;  // A[1][3] = 0.00
+        matrix_a_data[831:816]   <= 16'h0000;  // A[1][4] = 0.00
+        matrix_a_data[815:800]   <= 16'h0000;  // A[1][5] = 0.00
+        matrix_a_data[799:784]   <= 16'h0000;  // A[1][6] = 0.00
+        matrix_a_data[783:768]   <= 16'h0000;  // A[1][7] = 0.00
+        // 第 2 行 (index 16-23)
+        matrix_a_data[767:752]   <= 16'h0000;  // A[2][0] = 0.00
+        matrix_a_data[751:736]   <= 16'h0380;  // A[2][1] = 3.50
+        matrix_a_data[735:720]   <= 16'h1E1A;  // A[2][2] = 30.10
+        matrix_a_data[719:704]   <= 16'h04CC;  // A[2][3] = 4.80
+        matrix_a_data[703:688]   <= 16'h0000;  // A[2][4] = 0.00
+        matrix_a_data[687:672]   <= 16'h0000;  // A[2][5] = 0.00
+        matrix_a_data[671:656]   <= 16'h0000;  // A[2][6] = 0.00
+        matrix_a_data[655:640]   <= 16'h0000;  // A[2][7] = 0.00
+        // 第 3 行 (index 24-31)
+        matrix_a_data[639:624]   <= 16'h0000;  // A[3][0] = 0.00
+        matrix_a_data[623:608]   <= 16'h0000;  // A[3][1] = 0.00
+        matrix_a_data[607:592]   <= 16'h04CC;  // A[3][2] = 4.80
+        matrix_a_data[591:576]   <= 16'h2840;  // A[3][3] = 40.25
+        matrix_a_data[575:560]   <= 16'h05E6;  // A[3][4] = 5.90
+        matrix_a_data[559:544]   <= 16'h0000;  // A[3][5] = 0.00
+        matrix_a_data[543:528]   <= 16'h0000;  // A[3][6] = 0.00
+        matrix_a_data[527:512]   <= 16'h0000;  // A[3][7] = 0.00
+        // 第 4 行 (index 32-39)
+        matrix_a_data[511:496]   <= 16'h0000;  // A[4][0] = 0.00
+        matrix_a_data[495:480]   <= 16'h0000;  // A[4][1] = 0.00
+        matrix_a_data[479:464]   <= 16'h0000;  // A[4][2] = 0.00
+        matrix_a_data[463:448]   <= 16'h05E6;  // A[4][3] = 5.90
+        matrix_a_data[447:432]   <= 16'hCD67;  // A[4][4] = -50.60
+        matrix_a_data[431:416]   <= 16'h06B3;  // A[4][5] = 6.70
+        matrix_a_data[415:400]   <= 16'h0000;  // A[4][6] = 0.00
+        matrix_a_data[399:384]   <= 16'h0000;  // A[4][7] = 0.00
+        // 第 5 行 (index 40-47)
+        matrix_a_data[383:368]   <= 16'h0000;  // A[5][0] = 0.00
+        matrix_a_data[367:352]   <= 16'h0000;  // A[5][1] = 0.00
+        matrix_a_data[351:336]   <= 16'h0000;  // A[5][2] = 0.00
+        matrix_a_data[335:320]   <= 16'h0000;  // A[5][3] = 0.00
+        matrix_a_data[319:304]   <= 16'h06B3;  // A[5][4] = 6.70
+        matrix_a_data[303:288]   <= 16'h3CCD;  // A[5][5] = 60.80
+        matrix_a_data[287:272]   <= 16'h0766;  // A[5][6] = 7.40
+        matrix_a_data[271:256]   <= 16'h0000;  // A[5][7] = 0.00
+        // 第 6 行 (index 48-55)
+        matrix_a_data[255:240]   <= 16'h0000;  // A[6][0] = 0.00
+        matrix_a_data[239:224]   <= 16'h0000;  // A[6][1] = 0.00
+        matrix_a_data[223:208]   <= 16'h0000;  // A[6][2] = 0.00
+        matrix_a_data[207:192]   <= 16'h0000;  // A[6][3] = 0.00
+        matrix_a_data[191:176]   <= 16'h0000;  // A[6][4] = 0.00
+        matrix_a_data[175:160]   <= 16'h0766;  // A[6][5] = 7.40
+        matrix_a_data[159:144]   <= 16'hB91A;  // A[6][6] = -70.90
+        matrix_a_data[143:128]   <= 16'h081A;  // A[6][7] = 8.10
+        // 第 7 行 (index 56-63)
+        matrix_a_data[127:112]   <= 16'h0000;  // A[7][0] = 0.00
+        matrix_a_data[111:96]    <= 16'h0000;  // A[7][1] = 0.00
+        matrix_a_data[95:80]     <= 16'h0000;  // A[7][2] = 0.00
+        matrix_a_data[79:64]     <= 16'h0000;  // A[7][3] = 0.00
+        matrix_a_data[63:48]     <= 16'h0000;  // A[7][4] = 0.00
+        matrix_a_data[47:32]     <= 16'h0000;  // A[7][5] = 0.00
+        matrix_a_data[31:16]     <= 16'h081A;  // A[7][6] = 8.10
+        matrix_a_data[15:0]      <= 16'h63FD;  // A[7][7] = 99.99
+
+        // LU 矩阵 - LU 分解示例 (带小数，含负数测试)
+        // [  1.00,  0.50,  0.25,  0.10,  0.05,  0.02,  0.01,  0.00]
+        // [  2.00,  1.50,  0.75,  0.30,  0.15,  0.08,  0.04,  0.02]
+        // [  3.00,  2.50,  2.00,  1.00,  0.50,  0.25,  0.12,  0.06]
+        // [  4.00,  3.50,  3.00,  2.50,  1.25,  0.60,  0.30,  0.15]
+        // [  5.00,  4.50,  4.00,  3.50,  3.00,  1.50,  0.75,  0.35]
+        // [  6.00,  5.50,  5.00,  4.50,  4.00,  3.50,  1.75,  0.85]
+        // [  7.00,  6.50,  6.00,  5.50,  5.00,  4.50,  4.00,  2.00]
+        // [  8.00,  7.50,  7.00,  6.50,  6.00,  5.50,  5.00,  4.50]
+        matrix_lu_data <= 1024'd0;
+        // 第 0 行
+        matrix_lu_data[1023:1008] <= 16'h0100;  // 1.00
+        matrix_lu_data[1007:992]  <= 16'h0080;  // 0.50
+        matrix_lu_data[991:976]   <= 16'h0040;  // 0.25
+        matrix_lu_data[975:960]   <= 16'h001A;  // 0.10
+        matrix_lu_data[959:944]   <= 16'h000C;  // 0.05
+        matrix_lu_data[943:928]   <= 16'h0005;  // 0.02
+        matrix_lu_data[927:912]   <= 16'h0002;  // 0.01
+        matrix_lu_data[911:896]   <= 16'h0000;  // 0.00
+        // 第 1 行
+        matrix_lu_data[895:880]   <= 16'h0200;  // 2.00
+        matrix_lu_data[879:864]   <= 16'h0180;  // 1.50
+        matrix_lu_data[863:848]   <= 16'h00C0;  // 0.75
+        matrix_lu_data[847:832]   <= 16'h004C;  // 0.30
+        matrix_lu_data[831:816]   <= 16'h0026;  // 0.15
+        matrix_lu_data[815:800]   <= 16'h0014;  // 0.08
+        matrix_lu_data[799:784]   <= 16'h000A;  // 0.04
+        matrix_lu_data[783:768]   <= 16'h0005;  // 0.02
+        // 第 2 行
+        matrix_lu_data[767:752]   <= 16'h0300;  // 3.00
+        matrix_lu_data[751:736]   <= 16'h0280;  // 2.50
+        matrix_lu_data[735:720]   <= 16'h0200;  // 2.00
+        matrix_lu_data[719:704]   <= 16'h0100;  // 1.00
+        matrix_lu_data[703:688]   <= 16'h0080;  // 0.50
+        matrix_lu_data[687:672]   <= 16'h0040;  // 0.25
+        matrix_lu_data[671:656]   <= 16'h001F;  // 0.12
+        matrix_lu_data[655:640]   <= 16'h000F;  // 0.06
+        // 第 3 行
+        matrix_lu_data[639:624]   <= 16'h0400;  // 4.00
+        matrix_lu_data[623:608]   <= 16'h0380;  // 3.50
+        matrix_lu_data[607:592]   <= 16'h0300;  // 3.00
+        matrix_lu_data[591:576]   <= 16'h0280;  // 2.50
+        matrix_lu_data[575:560]   <= 16'h0140;  // 1.25
+        matrix_lu_data[559:544]   <= 16'h0099;  // 0.60
+        matrix_lu_data[543:528]   <= 16'h004C;  // 0.30
+        matrix_lu_data[527:512]   <= 16'h0026;  // 0.15
+        // 第 4 行
+        matrix_lu_data[511:496]   <= 16'h0500;  // 5.00
+        matrix_lu_data[495:480]   <= 16'h0480;  // 4.50
+        matrix_lu_data[479:464]   <= 16'h0400;  // 4.00
+        matrix_lu_data[463:448]   <= 16'h0380;  // 3.50
+        matrix_lu_data[447:432]   <= 16'h0300;  // 3.00
+        matrix_lu_data[431:416]   <= 16'h0180;  // 1.50
+        matrix_lu_data[415:400]   <= 16'h00C0;  // 0.75
+        matrix_lu_data[399:384]   <= 16'h0059;  // 0.35
+        // 第 5 行
+        matrix_lu_data[383:368]   <= 16'h0600;  // 6.00
+        matrix_lu_data[367:352]   <= 16'h0580;  // 5.50
+        matrix_lu_data[351:336]   <= 16'h0500;  // 5.00
+        matrix_lu_data[335:320]   <= 16'h0480;  // 4.50
+        matrix_lu_data[319:304]   <= 16'h0400;  // 4.00
+        matrix_lu_data[303:288]   <= 16'h0380;  // 3.50
+        matrix_lu_data[287:272]   <= 16'h01C0;  // 1.75
+        matrix_lu_data[271:256]   <= 16'h00D9;  // 0.85
+        // 第 6 行
+        matrix_lu_data[255:240]   <= 16'h0700;  // 7.00
+        matrix_lu_data[239:224]   <= 16'h0680;  // 6.50
+        matrix_lu_data[223:208]   <= 16'h0600;  // 6.00
+        matrix_lu_data[207:192]   <= 16'h0580;  // 5.50
+        matrix_lu_data[191:176]   <= 16'h0500;  // 5.00
+        matrix_lu_data[175:160]   <= 16'h0480;  // 4.50
+        matrix_lu_data[159:144]   <= 16'h0400;  // 4.00
+        matrix_lu_data[143:128]   <= 16'h0200;  // 2.00
+        // 第 7 行
+        matrix_lu_data[127:112]   <= 16'h0800;  // 8.00
+        matrix_lu_data[111:96]    <= 16'h0780;  // 7.50
+        matrix_lu_data[95:80]     <= 16'h0700;  // 7.00
+        matrix_lu_data[79:64]     <= 16'h0680;  // 6.50
+        matrix_lu_data[63:48]     <= 16'h0600;  // 6.00
+        matrix_lu_data[47:32]     <= 16'h0580;  // 5.50
+        matrix_lu_data[31:16]     <= 16'h0500;  // 5.00
+        matrix_lu_data[15:0]      <= 16'h0480;  // 4.50
+    end
+
+    // 全屏矩阵显示 (上下布局)
+    MatrixDisplay #(
+        .PANEL_X(0),
+        .PANEL_Y(0),
+        .PANEL_W(SCREEN_W),
+        .PANEL_H(SCREEN_H)
+    ) u_matrix_display (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .video_on(video_on),
+        .matrix_a_data(matrix_a_data),
+        .matrix_lu_data(matrix_lu_data),
+        .matrix_rendered(matrix_rendered),
+        .matrix_rgb(matrix_rgb)
+    );
 
     // =========================================================
     // 【重點實例化：傳入更新的 KEY_W 和 KEY_H】
@@ -659,14 +859,12 @@ module GlobalRender_top (
         end else if (keyboard_region_active) begin
             rgb <= keyboard_rgb;
         end else if (circuit_canvas_rendered) begin
-            // 电路显示 (开关关闭时)
+            // 电路显示
             rgb <= circuit_canvas_rgb;
         end else if (dynamic_wave_active) begin
             rgb <= wave_out_rgb;
         end else if (prop_panel_rendered && video_on) begin
             rgb <= prop_panel_rgb;
-        end else if (matrix_white_rendered && video_on) begin
-            rgb <= 12'hFFF;
         end else begin
             rgb <= ui_rgb;
         end

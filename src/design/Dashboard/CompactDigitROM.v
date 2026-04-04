@@ -6,7 +6,7 @@
  */
 
 module CompactDigitROM (
-    input wire [3:0] digit_addr,  // 0-9=数字，10=负号，11=小数点，12=空格，13=十位1
+    input wire [3:0] digit_addr,  // 0-9=数字，10=负号，11=小数点，12=空格
     input wire [2:0] row,         // 0-6 (7 行)
     output reg [4:0] pixel_data   // 5 位行模式
 );

@@ -52,9 +52,9 @@
 #    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/store/CellVisStore.v"
 #    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/rendering/CircuitCanvas_top.v"
 #    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/common/ClockDividerMs.v"
-#    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/Yellow Square Testing/CurrentFlow_top.v"
-#    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/Yellow Square Testing/CurrentPatternGenerator.v"
-#    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/Yellow Square Testing/CurrentPhaseController.v"
+#    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/current_visualization/CurrentFlow_top.v"
+#    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/current_visualization/CurrentPatternGenerator.v"
+#    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/current_visualization/CurrentPhaseController.v"
 #    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/Dashboard/DynamicTextDisplay.v"
 #    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/interaction/InteractionController.v"
 #    "D:/Vivado/Project/nus-EE2026-metacircuit/src/design/interaction/InteractionFrameCapture.v"
@@ -215,9 +215,9 @@ set files [list \
  [file normalize "${origin_dir}/src/design/store/CellVisStore.v"] \
  [file normalize "${origin_dir}/src/design/rendering/CircuitCanvas_top.v"] \
  [file normalize "${origin_dir}/src/design/common/ClockDividerMs.v"] \
- [file normalize "${origin_dir}/src/design/Yellow Square Testing/CurrentFlow_top.v"] \
- [file normalize "${origin_dir}/src/design/Yellow Square Testing/CurrentPatternGenerator.v"] \
- [file normalize "${origin_dir}/src/design/Yellow Square Testing/CurrentPhaseController.v"] \
+ [file normalize "${origin_dir}/src/design/current_visualization/CurrentFlow_top.v"] \
+ [file normalize "${origin_dir}/src/design/current_visualization/CurrentPatternGenerator.v"] \
+ [file normalize "${origin_dir}/src/design/current_visualization/CurrentPhaseController.v"] \
  [file normalize "${origin_dir}/src/design/Dashboard/DynamicTextDisplay.v"] \
  [file normalize "${origin_dir}/src/design/interaction/InteractionController.v"] \
  [file normalize "${origin_dir}/src/design/interaction/InteractionFrameCapture.v"] \

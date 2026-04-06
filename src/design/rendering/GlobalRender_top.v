@@ -29,9 +29,14 @@ module GlobalRender_top (
     localparam integer LEFT_BAR_W      = 64;
     localparam integer RIGHT_BAR_W     = 156;
     localparam integer BOTTOM_BAR_H    = 128;
+    localparam integer CANVAS_CELL_SIZE = 32;
+    localparam integer CANVAS_GRID_W   = 18;
+    localparam integer CANVAS_GRID_H   = 16;
+    localparam integer CANVAS_CELL_COUNT = CANVAS_GRID_W * CANVAS_GRID_H;
+    localparam integer CANVAS_ADDR_W   = $clog2(CANVAS_CELL_COUNT);
     localparam integer CANVAS_X0       = LEFT_BAR_W;
     localparam integer CANVAS_Y0       = TOP_BAR_H;
-    localparam integer CANVAS_W        = SCREEN_W - LEFT_BAR_W - RIGHT_BAR_W;
+    localparam integer CANVAS_W        = CANVAS_GRID_W * CANVAS_CELL_SIZE;
     localparam integer CANVAS_H        = SCREEN_H - TOP_BAR_H - BOTTOM_BAR_H;
 
     // =========================================================
@@ -91,14 +96,14 @@ module GlobalRender_top (
     wire [3:0]  mouse_r, mouse_g, mouse_b;
     wire [11:0] mouse_rgb;
     reg         circuit_canvas_ram_w_en = 1'b0;
-    reg  [7:0]  circuit_canvas_ram_w_addr = 8'd0;
-    wire [7:0]  circuit_canvas_ram_r_addr;
+    reg  [CANVAS_ADDR_W-1:0]  circuit_canvas_ram_w_addr = {CANVAS_ADDR_W{1'b0}};
+    wire [CANVAS_ADDR_W-1:0]  circuit_canvas_ram_r_addr;
     reg  [15:0] circuit_canvas_ram_w_data = 16'd0;
     wire [15:0] circuit_canvas_ram_r_data;
     reg  [31:0] init_cycles = 32'd0;
 
     reg         clear_canvas_active = 1'b0;
-    reg  [7:0]  clear_canvas_addr = 8'd0;
+    reg  [CANVAS_ADDR_W-1:0]  clear_canvas_addr = {CANVAS_ADDR_W{1'b0}};
     assign keyboard_region_active = (x_pos >= KEYBOARD_REGION_X0) && (x_pos < KEYBOARD_REGION_X1) && (y_pos >= KEYBOARD_REGION_Y0) && (y_pos < KEYBOARD_REGION_Y1);
     assign mouse_rgb = {mouse_r, mouse_g, mouse_b};
 
@@ -302,7 +307,7 @@ module GlobalRender_top (
         .red_out(mouse_r), .green_out(mouse_g), .blue_out(mouse_b)
     );
 
-    SimpleRam #( .WordWidth(16), .WordCount(256) ) circuit_canvas_ram_inst (
+    SimpleRam #( .WordWidth(16), .WordCount(CANVAS_CELL_COUNT) ) circuit_canvas_ram_inst (
         .clk(CLK100MHZ), .w_en(circuit_canvas_ram_w_en), .w_addr(circuit_canvas_ram_w_addr),
         .r_addr(circuit_canvas_ram_r_addr), .d_in(circuit_canvas_ram_w_data), .d_out(circuit_canvas_ram_r_data)
     );
@@ -331,7 +336,7 @@ module GlobalRender_top (
     wire [3:0]  interaction_mode_select;
     wire        interaction_bg_cmd_valid;
     wire        interaction_bg_cmd_write;
-    wire [7:0]  interaction_bg_cmd_addr;
+    wire [CANVAS_ADDR_W-1:0]  interaction_bg_cmd_addr;
     wire [15:0] interaction_bg_cmd_wdata;
     wire        interaction_bg_cmd_ready;
     reg         interaction_bg_rsp_valid = 1'b0;
@@ -342,7 +347,11 @@ module GlobalRender_top (
     assign interaction_mode_select = toolbar_mode_select(selected_toolbar_idx, selected_wire_variant);
     assign interaction_frame_tick = interaction_frame_sync1 ^ interaction_frame_sync2;
 
-    CircuitCanvas #( .CanvasPosX(CANVAS_X0), .CanvasPosY(CANVAS_Y0), .CanvasWidth(CANVAS_W), .CanvasHeight(CANVAS_H) ) circuit_canvas_inst (
+    CircuitCanvas #(
+        .CanvasPosX(CANVAS_X0), .CanvasPosY(CANVAS_Y0),
+        .CanvasWidth(CANVAS_W), .CanvasHeight(CANVAS_H),
+        .CellSize(CANVAS_CELL_SIZE), .GridWidth(CANVAS_GRID_W), .GridHeight(CANVAS_GRID_H)
+    ) circuit_canvas_inst (
         .clk_pixel(clk_pixel), .x_pos(x_pos), .y_pos(y_pos), .rgb(circuit_canvas_rgb),
         .rendered(circuit_canvas_rendered), .mouse_x_pos(mouse_xpos), .mouse_y_pos(mouse_ypos),
         .data_addr(circuit_canvas_ram_r_addr), .incoming_data(circuit_canvas_ram_r_data),
@@ -362,8 +371,15 @@ module GlobalRender_top (
     wire        mouse_left_rising;
     
     // 鼠标悬停检测
+    wire signed [13:0] mouse_x_rel_canvas_signed;
+    wire signed [13:0] mouse_y_rel_canvas_signed;
+    wire signed [13:0] mouse_grid_x_signed;
+    wire signed [13:0] mouse_grid_y_signed;
+    wire        mouse_grid_x_valid;
+    wire        mouse_grid_y_valid;
     wire [11:0] mouse_cell_i;
     wire [11:0] mouse_cell_j;
+    wire        mouse_cell_valid;
     wire        mouse_hover_component;
     wire        canvas_mouse_in_bounds;
     wire        toolbar_place_two_cells;
@@ -375,25 +391,31 @@ module GlobalRender_top (
     wire        mouse_left_rising_sys;
     
     // 示例元件数据 (从 init_cycles 中复制)
-    reg  [15:0] component_data [0:255];
-    reg  [15:0] canvas_shadow_data [0:255];
-    reg  [7:0]  hovered_addr;
+    reg  [15:0] component_data [0:CANVAS_CELL_COUNT-1];
+    reg  [15:0] canvas_shadow_data [0:CANVAS_CELL_COUNT-1];
+    reg  [CANVAS_ADDR_W-1:0]  hovered_addr;
     wire [15:0] hovered_cell_data;
 
     // =========================================================
     // Component Property Panel - 元件属性显示 (简化版)
     // =========================================================
     // 鼠标悬停位置计算 (Canvas 区域：X0=64, Y0=64)
-    assign mouse_cell_i = (mouse_xpos >= CANVAS_X0) ?
-    ((mouse_xpos - CANVAS_X0) / 32) : 12'd0;
-    assign mouse_cell_j = (mouse_ypos >= CANVAS_Y0) ?
-    ((mouse_ypos - CANVAS_Y0) / 32) : 12'd0;
+    assign mouse_x_rel_canvas_signed = $signed({1'b0, mouse_xpos}) - CANVAS_X0;
+    assign mouse_y_rel_canvas_signed = $signed({1'b0, mouse_ypos}) - CANVAS_Y0;
+    assign mouse_grid_x_signed = mouse_x_rel_canvas_signed - $signed(circuit_canvas_grid_pos_x);
+    assign mouse_grid_y_signed = mouse_y_rel_canvas_signed - $signed(circuit_canvas_grid_pos_y);
+    assign mouse_grid_x_valid = mouse_grid_x_signed >= 0;
+    assign mouse_grid_y_valid = mouse_grid_y_signed >= 0;
+    assign mouse_cell_i = mouse_grid_x_signed[11:0] / CANVAS_CELL_SIZE;
+    assign mouse_cell_j = mouse_grid_y_signed[11:0] / CANVAS_CELL_SIZE;
+    assign mouse_cell_valid = mouse_grid_x_valid && mouse_grid_y_valid &&
+                              (mouse_cell_i < CANVAS_GRID_W) && (mouse_cell_j < CANVAS_GRID_H);
     
     // 鼠标点击边沿检测
     assign canvas_mouse_in_bounds = (mouse_xpos >= CANVAS_X0) && (mouse_xpos < (CANVAS_X0 + CANVAS_W)) &&
                                     (mouse_ypos >= CANVAS_Y0) && (mouse_ypos < (CANVAS_Y0 + CANVAS_H)) &&
                                
-     (mouse_cell_i < 16) && (mouse_cell_j < 16);
+     mouse_cell_valid;
     assign toolbar_place_two_cells = toolbar_tool_uses_two_cells(selected_toolbar_idx);
     assign toolbar_place_data0 = toolbar_first_cell_data(selected_toolbar_idx);
     assign toolbar_place_data1 = toolbar_second_cell_data(selected_toolbar_idx);
@@ -406,7 +428,7 @@ module GlobalRender_top (
     // 同步鼠标点击 - 记录选中的单元格
     always @(posedge clk_pixel) begin
         mouse_left_d <= mouse_left;
-        if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
+        if (mouse_left_rising && mouse_cell_valid) begin
             selected_cell_i <= mouse_cell_i;
             selected_cell_j <= mouse_cell_j;
             has_selection <= 1'b1;
@@ -417,7 +439,7 @@ module GlobalRender_top (
     integer init_idx;
     always @(posedge clk_pixel) begin
         // 初始化所有单元为 0
-        for (init_idx = 0; init_idx < 256; init_idx = init_idx + 1) begin
+        for (init_idx = 0; init_idx < CANVAS_CELL_COUNT; init_idx = init_idx + 1) begin
             component_data[init_idx] <= 16'd0;
         end
         // 加载示例元件 (更新為新電路：所有轉角+90度，Tee L/R翻轉)
@@ -441,15 +463,15 @@ module GlobalRender_top (
     
     // 计算悬停的单元格地址
     always @(*) begin
-        hovered_addr = mouse_cell_i + mouse_cell_j * 16;
+        hovered_addr = mouse_cell_i + mouse_cell_j * CANVAS_GRID_W;
     end
     
     // 从本地存储读取选中单元格的数据
     always @(posedge clk_pixel) begin
-        if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
+        if (mouse_left_rising && mouse_cell_valid) begin
             selected_cell_data <= canvas_shadow_data[hovered_addr];
         end else if (has_selection) begin
-            selected_cell_data <= canvas_shadow_data[selected_cell_i + selected_cell_j * 16];
+            selected_cell_data <= canvas_shadow_data[selected_cell_i + selected_cell_j * CANVAS_GRID_W];
         end
     end
 
@@ -498,11 +520,11 @@ module GlobalRender_top (
         .CanvasPosY(CANVAS_Y0),
         .CanvasWidth(CANVAS_W),
         .CanvasHeight(CANVAS_H),
-        .CellSize(32),
-        .GridWidth(16),
-        .GridHeight(16),
+        .CellSize(CANVAS_CELL_SIZE),
+        .GridWidth(CANVAS_GRID_W),
+        .GridHeight(CANVAS_GRID_H),
         .RotateFramesPerStep(8),
-        .AddrWidth(8),
+        .AddrWidth(CANVAS_ADDR_W),
         .DataWidth(16)
     ) interaction_controller_inst (
         .clk(CLK100MHZ),
@@ -876,34 +898,34 @@ module GlobalRender_top (
 
         if (keyboard_key_valid && (keyboard_key_id == 5'd18)) begin
             clear_canvas_active <= 1'b1;
-            clear_canvas_addr <= 8'd0; init_cycles <= 32'd1000;
+            clear_canvas_addr <= {CANVAS_ADDR_W{1'b0}}; init_cycles <= 32'd1000;
         end
 
         if (clear_canvas_active) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= clear_canvas_addr; circuit_canvas_ram_w_data <= 16'd0;
             canvas_shadow_data[clear_canvas_addr] <= 16'd0;
-            if (clear_canvas_addr == 8'd255) clear_canvas_active <= 1'b0;
+            if (clear_canvas_addr == CANVAS_CELL_COUNT - 1) clear_canvas_active <= 1'b0;
             else clear_canvas_addr <= clear_canvas_addr + 1'b1;
         end else if (init_cycles == 32'd1) begin mouse_set_max_x <= 1'b1; mouse_set_value <= 12'd639;
         end else if (init_cycles == 32'd2) begin mouse_set_max_y <= 1'b1; mouse_set_value <= 12'd479;
-        end else if (init_cycles < 32'd256) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= init_cycles[7:0]; circuit_canvas_ram_w_data <= 16'd0; canvas_shadow_data[init_cycles[7:0]] <= 16'd0;
-        end else if (init_cycles == 32'd256) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd34; circuit_canvas_ram_w_data <= 16'h0083; canvas_shadow_data[8'd34] <= 16'h0083; // (2,2) UL
-        end else if (init_cycles == 32'd257) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd35; circuit_canvas_ram_w_data <= 16'h000F; canvas_shadow_data[8'd35] <= 16'h000F; // (3,2) V-Source L
-        end else if (init_cycles == 32'd258) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd36; circuit_canvas_ram_w_data <= 16'h0011; canvas_shadow_data[8'd36] <= 16'h0011; // (4,2) V-Source R
-        end else if (init_cycles == 32'd259) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd37; circuit_canvas_ram_w_data <= 16'h0103; canvas_shadow_data[8'd37] <= 16'h0103; // (5,2) UR
-        end else if (init_cycles == 32'd260) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd50; circuit_canvas_ram_w_data <= 16'h0281; canvas_shadow_data[8'd50] <= 16'h0281; // (2,3) Wire L
-        end else if (init_cycles == 32'd261) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd53; circuit_canvas_ram_w_data <= 16'h0081; canvas_shadow_data[8'd53] <= 16'h0081; // (5,3) Wire R
-        end else if (init_cycles == 32'd262) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd66; circuit_canvas_ram_w_data <= 16'h0285; canvas_shadow_data[8'd66] <= 16'h0285; // (2,4) Tee L
-        end else if (init_cycles == 32'd263) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd67; circuit_canvas_ram_w_data <= 16'h020B; canvas_shadow_data[8'd67] <= 16'h020B; // (3,4) Resistor L
-        end else if (init_cycles == 32'd264) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd68; circuit_canvas_ram_w_data <= 16'h020D; canvas_shadow_data[8'd68] <= 16'h020D; // (4,4) Resistor R
-        end else if (init_cycles == 32'd265) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd69; circuit_canvas_ram_w_data <= 16'h0185; canvas_shadow_data[8'd69] <= 16'h0185; // (5,4) Tee R
-        end else if (init_cycles == 32'd266) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd82; circuit_canvas_ram_w_data <= 16'h0281; canvas_shadow_data[8'd82] <= 16'h0281; // (2,5) Wire L2
-        end else if (init_cycles == 32'd267) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd85; circuit_canvas_ram_w_data <= 16'h0081; canvas_shadow_data[8'd85] <= 16'h0081; // (5,5) Wire R2
-        end else if (init_cycles == 32'd268) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd98; circuit_canvas_ram_w_data <= 16'h0003; canvas_shadow_data[8'd98] <= 16'h0003; // (2,6) LL
-        end else if (init_cycles == 32'd269) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd99; circuit_canvas_ram_w_data <= 16'h021B; canvas_shadow_data[8'd99] <= 16'h021B; // (3,6) Capacitor L
-        end else if (init_cycles == 32'd270) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd100; circuit_canvas_ram_w_data <= 16'h021D; canvas_shadow_data[8'd100] <= 16'h021D; // (4,6) Capacitor R
-        end else if (init_cycles == 32'd271) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd101; circuit_canvas_ram_w_data <= 16'h0183; canvas_shadow_data[8'd101] <= 16'h0183; // (5,6) LR
+        end else if (init_cycles < CANVAS_CELL_COUNT) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= init_cycles[CANVAS_ADDR_W-1:0]; circuit_canvas_ram_w_data <= 16'd0; canvas_shadow_data[init_cycles[CANVAS_ADDR_W-1:0]] <= 16'd0;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 0) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd38;  circuit_canvas_ram_w_data <= 16'h0083; canvas_shadow_data[9'd38]  <= 16'h0083; // (2,2) UL
+        end else if (init_cycles == CANVAS_CELL_COUNT + 1) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd39;  circuit_canvas_ram_w_data <= 16'h000F; canvas_shadow_data[9'd39]  <= 16'h000F; // (3,2) V-Source L
+        end else if (init_cycles == CANVAS_CELL_COUNT + 2) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd40;  circuit_canvas_ram_w_data <= 16'h0011; canvas_shadow_data[9'd40]  <= 16'h0011; // (4,2) V-Source R
+        end else if (init_cycles == CANVAS_CELL_COUNT + 3) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd41;  circuit_canvas_ram_w_data <= 16'h0103; canvas_shadow_data[9'd41]  <= 16'h0103; // (5,2) UR
+        end else if (init_cycles == CANVAS_CELL_COUNT + 4) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd56;  circuit_canvas_ram_w_data <= 16'h0281; canvas_shadow_data[9'd56]  <= 16'h0281; // (2,3) Wire L
+        end else if (init_cycles == CANVAS_CELL_COUNT + 5) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd59;  circuit_canvas_ram_w_data <= 16'h0081; canvas_shadow_data[9'd59]  <= 16'h0081; // (5,3) Wire R
+        end else if (init_cycles == CANVAS_CELL_COUNT + 6) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd74;  circuit_canvas_ram_w_data <= 16'h0285; canvas_shadow_data[9'd74]  <= 16'h0285; // (2,4) Tee L
+        end else if (init_cycles == CANVAS_CELL_COUNT + 7) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd75;  circuit_canvas_ram_w_data <= 16'h020B; canvas_shadow_data[9'd75]  <= 16'h020B; // (3,4) Resistor L
+        end else if (init_cycles == CANVAS_CELL_COUNT + 8) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd76;  circuit_canvas_ram_w_data <= 16'h020D; canvas_shadow_data[9'd76]  <= 16'h020D; // (4,4) Resistor R
+        end else if (init_cycles == CANVAS_CELL_COUNT + 9) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd77;  circuit_canvas_ram_w_data <= 16'h0185; canvas_shadow_data[9'd77]  <= 16'h0185; // (5,4) Tee R
+        end else if (init_cycles == CANVAS_CELL_COUNT +10) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd92;  circuit_canvas_ram_w_data <= 16'h0281; canvas_shadow_data[9'd92]  <= 16'h0281; // (2,5) Wire L2
+        end else if (init_cycles == CANVAS_CELL_COUNT +11) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd95;  circuit_canvas_ram_w_data <= 16'h0081; canvas_shadow_data[9'd95]  <= 16'h0081; // (5,5) Wire R2
+        end else if (init_cycles == CANVAS_CELL_COUNT +12) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd110; circuit_canvas_ram_w_data <= 16'h0003; canvas_shadow_data[9'd110] <= 16'h0003; // (2,6) LL
+        end else if (init_cycles == CANVAS_CELL_COUNT +13) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd111; circuit_canvas_ram_w_data <= 16'h021B; canvas_shadow_data[9'd111] <= 16'h021B; // (3,6) Capacitor L
+        end else if (init_cycles == CANVAS_CELL_COUNT +14) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd112; circuit_canvas_ram_w_data <= 16'h021D; canvas_shadow_data[9'd112] <= 16'h021D; // (4,6) Capacitor R
+        end else if (init_cycles == CANVAS_CELL_COUNT +15) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd113; circuit_canvas_ram_w_data <= 16'h0183; canvas_shadow_data[9'd113] <= 16'h0183; // (5,6) LR
         end else if (interaction_bg_cmd_valid && interaction_bg_cmd_ready) begin
             if (interaction_bg_cmd_write) begin
                 circuit_canvas_ram_w_en <= 1'b1;

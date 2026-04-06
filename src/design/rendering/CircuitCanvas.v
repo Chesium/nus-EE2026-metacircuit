@@ -39,9 +39,11 @@ module CircuitCanvas #(
     output wire signed [12:0] grid_pos_y_out
 );
   /*Parameter for panning*/
-  localparam signed [12:0] min_grid_x = CanvasWidth - (GridWidth * CellSize);
+  localparam signed [12:0] min_grid_x =
+      (CanvasWidth > (GridWidth * CellSize)) ? 13'sd0 : (CanvasWidth - (GridWidth * CellSize));
   //minimum x offset the panning can reach (negative number)
-  localparam signed [12:0] min_grid_y = CanvasHeight - (GridHeight * CellSize);
+  localparam signed [12:0] min_grid_y =
+      (CanvasHeight > (GridHeight * CellSize)) ? 13'sd0 : (CanvasHeight - (GridHeight * CellSize));
   //minimum y offset the panning can reach (negative number)
 
   reg is_dragging = 0;
@@ -62,11 +64,9 @@ module CircuitCanvas #(
   wire signed [13:0] next_grid_y = grid_start_y + delta_y;
 
   assign rendered =  x_pos >= CanvasPosX 
-                  && x_pos <= CanvasPosX + CanvasWidth
-                  && x_pos <= CanvasPosX + CellSize * GridWidth
+                  && x_pos < CanvasPosX + CanvasWidth
                   && y_pos >= CanvasPosY
-                  && y_pos <= CanvasPosY + CanvasHeight
-                  && y_pos <= CanvasPosY + CellSize * GridHeight;
+                  && y_pos < CanvasPosY + CanvasHeight;
   /*the boundary condition for panning for the mouse*/
   wire mouse_in_canvas;
   assign mouse_in_canvas = (mouse_x_pos >= CanvasPosX) && 
@@ -109,6 +109,8 @@ module CircuitCanvas #(
   wire [11:0] required_j;
   assign required_i = absolute_grid_x / CellSize;
   assign required_j = absolute_grid_y/ CellSize;
+  wire required_cell_in_bounds;
+  assign required_cell_in_bounds = (required_i < GridWidth) && (required_j < GridHeight);
 
   wire [11:0] mouse_cell_i;
   wire [11:0] mouse_cell_j;
@@ -116,7 +118,11 @@ module CircuitCanvas #(
   assign mouse_cell_j = absolute_mouse_grid_y / CellSize;
 
   wire hovering;
-  assign hovering = required_i == mouse_cell_i && required_j == mouse_cell_j;
+  assign hovering = required_cell_in_bounds &&
+                    (mouse_cell_i < GridWidth) &&
+                    (mouse_cell_j < GridHeight) &&
+                    (required_i == mouse_cell_i) &&
+                    (required_j == mouse_cell_j);
 
   wire [11:0] required_i_2;
   wire [11:0] required_j_2;
@@ -140,7 +146,10 @@ module CircuitCanvas #(
   reg [11:0] requested_data_j = 12'd0;
   reg [11:0] returned_data_i = 12'b1111_1111_1111;
   reg [11:0] returned_data_j = 12'b1111_1111_1111;
-  assign data_addr = requested_data_i + requested_data_j * GridWidth;
+  wire requested_cell_in_bounds;
+  assign requested_cell_in_bounds = (requested_data_i < GridWidth) && (requested_data_j < GridHeight);
+  assign data_addr = requested_cell_in_bounds ? (requested_data_i + requested_data_j * GridWidth)
+                                              : {AddrWidth{1'b0}};
 
   // reg init = 1;
   // [INIT]: nothing, need cur        =>            provide nothing,     set addr = cur, state =>
@@ -930,7 +939,7 @@ module CircuitCanvas #(
   // --- 純量絕對座標與無縫遮罩渲染邏輯 (Ultimate Flawless Flow) ---
   // =========================================================================
   wire sprite_pixel;
-  assign sprite_pixel = cell_enable ?
+  assign sprite_pixel = (required_cell_in_bounds && cell_enable) ?
       DecodeTop(
       cell_type, cell_rotation, cell_offset_x, cell_offset_y
   ) : 1'b0;
@@ -1016,7 +1025,10 @@ module CircuitCanvas #(
     requested_data_i <= prefetched_i;
     requested_data_j <= prefetched_j;
 
-    if (returned_data_i == required_i && returned_data_j == required_j) begin
+    if (!required_cell_in_bounds) begin
+      cell_data <= EmptyCellData;
+      status <= 2'b00;
+    end else if (returned_data_i == required_i && returned_data_j == required_j) begin
       cached_data <= incoming_data;
       cached_data_i <= returned_data_i;
       cached_data_j <= returned_data_j;

@@ -38,6 +38,8 @@ module CircuitCanvas #(
     output wire signed [12:0] grid_pos_x_out,
     output wire signed [12:0] grid_pos_y_out
 );
+  localparam integer CellSizeShift = $clog2(CellSize);
+  localparam integer CellSizeIsPow2 = (CellSize > 0) && ((CellSize & (CellSize - 1)) == 0);
   /*Parameter for panning*/
   localparam signed [12:0] min_grid_x =
       (CanvasWidth > (GridWidth * CellSize)) ? 13'sd0 : (CanvasWidth - (GridWidth * CellSize));
@@ -107,15 +109,19 @@ module CircuitCanvas #(
 
   wire [11:0] required_i;
   wire [11:0] required_j;
-  assign required_i = absolute_grid_x / CellSize;
-  assign required_j = absolute_grid_y/ CellSize;
+  assign required_i = CellSizeIsPow2 ? (absolute_grid_x >> CellSizeShift)
+                                     : (absolute_grid_x / CellSize);
+  assign required_j = CellSizeIsPow2 ? (absolute_grid_y >> CellSizeShift)
+                                     : (absolute_grid_y / CellSize);
   wire required_cell_in_bounds;
   assign required_cell_in_bounds = (required_i < GridWidth) && (required_j < GridHeight);
 
   wire [11:0] mouse_cell_i;
   wire [11:0] mouse_cell_j;
-  assign mouse_cell_i = absolute_mouse_grid_x / CellSize;
-  assign mouse_cell_j = absolute_mouse_grid_y / CellSize;
+  assign mouse_cell_i = CellSizeIsPow2 ? (absolute_mouse_grid_x >> CellSizeShift)
+                                       : (absolute_mouse_grid_x / CellSize);
+  assign mouse_cell_j = CellSizeIsPow2 ? (absolute_mouse_grid_y >> CellSizeShift)
+                                       : (absolute_mouse_grid_y / CellSize);
 
   wire hovering;
   assign hovering = required_cell_in_bounds &&
@@ -126,8 +132,10 @@ module CircuitCanvas #(
 
   wire [11:0] required_i_2;
   wire [11:0] required_j_2;
-  assign required_i_2 = absolute_grid_x_next / CellSize;
-  assign required_j_2 = absolute_grid_y_next / CellSize;
+  assign required_i_2 = CellSizeIsPow2 ? (absolute_grid_x_next >> CellSizeShift)
+                                       : (absolute_grid_x_next / CellSize);
+  assign required_j_2 = CellSizeIsPow2 ? (absolute_grid_y_next >> CellSizeShift)
+                                       : (absolute_grid_y_next / CellSize);
 
   wire [11:0] next_i;
   wire [11:0] next_j;
@@ -137,8 +145,10 @@ module CircuitCanvas #(
                   :required_j_2;
   wire [11:0] prefetched_i;
   wire [11:0] prefetched_j;
-  assign prefetched_i = absolute_grid_x_prefetch / CellSize;
-  assign prefetched_j = absolute_grid_y_prefetch / CellSize;
+  assign prefetched_i = CellSizeIsPow2 ? (absolute_grid_x_prefetch >> CellSizeShift)
+                                       : (absolute_grid_x_prefetch / CellSize);
+  assign prefetched_j = CellSizeIsPow2 ? (absolute_grid_y_prefetch >> CellSizeShift)
+                                       : (absolute_grid_y_prefetch / CellSize);
   reg [DataWidth-1:0] cached_data;
   reg [11:0] cached_data_i = 12'b1111_1111_1111;
   reg [11:0] cached_data_j = 12'b1111_1111_1111;

@@ -154,11 +154,10 @@ module CircuitCanvas #(
     Data Width = 16
     F E D C B A 9 8 7 6 5 4 3 2 1 0
     S C C C C C C R R T T T T T T E
-    |
-    |           |   |           Enable: 1bit
+    | |           |   |           |
+    | |           |   |           Enable: 1bit
     | |           |   Sprite ID: 6bit (64)
-    | |
-    Rotation: 2bit (4)
+    | |           Rotation: 2bit (4)
     | Component Index: 6bit (64)
     Selected: 1bit
   */

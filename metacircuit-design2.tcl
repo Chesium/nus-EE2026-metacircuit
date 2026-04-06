@@ -51,6 +51,8 @@ set src_files [list \
   [file normalize "${origin_dir}/src/design2/common/CellStorePkg.sv"] \
   [file normalize "${origin_dir}/src/design2/common/ComponentStorePkg.sv"] \
   [file normalize "${origin_dir}/src/design2/common/MetaCommandPkg.sv"] \
+  [file normalize "${origin_dir}/src/design2/ui/common/UiThemePkg.sv"] \
+  [file normalize "${origin_dir}/src/design2/ui/common/UiTextPkg.sv"] \
   [file normalize "${origin_dir}/src/design2/common/ClockDivider.v"] \
   [file normalize "${origin_dir}/src/design2/store/CellStoreBufferRam.sv"] \
   [file normalize "${origin_dir}/src/design2/store/ComponentStoreRam.sv"] \
@@ -61,6 +63,12 @@ set src_files [list \
   [file normalize "${origin_dir}/src/design2/rendering/MouseDisplay.vhd"] \
   [file normalize "${origin_dir}/src/design2/ui/ToolbarController.sv"] \
   [file normalize "${origin_dir}/src/design2/ui/ComponentPropertyPanel.sv"] \
+  [file normalize "${origin_dir}/src/design2/ui/text/FontROM.v"] \
+  [file normalize "${origin_dir}/src/design2/ui/text/UiTextLineRenderer.sv"] \
+  [file normalize "${origin_dir}/src/design2/ui/text/TextDisplay.sv"] \
+  [file normalize "${origin_dir}/src/design2/ui/text/TextBox.sv"] \
+  [file normalize "${origin_dir}/src/design2/ui/text/DynamicTextBox.sv"] \
+  [file normalize "${origin_dir}/src/design2/ui/text/DynamicTextDisplay.sv"] \
   [file normalize "${origin_dir}/src/design2/interaction/InteractionFrameCapture.v"] \
   [file normalize "${origin_dir}/src/design2/interaction/CommandArbiter.sv"] \
   [file normalize "${origin_dir}/src/design2/interaction/CommandExecutor.sv"] \
@@ -94,6 +102,8 @@ set sim_obj [get_filesets sim_1]
 set sim_files [list \
   [file normalize "${origin_dir}/src/testbench/Design2_CommandExecutor_test.sv"] \
   [file normalize "${origin_dir}/src/testbench/Design2_ComponentProjector_test.sv"] \
+  [file normalize "${origin_dir}/src/testbench/Design2_TextRender_test.sv"] \
+  [file normalize "${origin_dir}/src/testbench/Design2_TextPrimitiveSmoke_test.sv"] \
 ]
 add_files -norecurse -fileset $sim_obj $sim_files
 update_compile_order -fileset sim_1

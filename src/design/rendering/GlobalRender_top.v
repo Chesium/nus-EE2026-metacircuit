@@ -286,12 +286,16 @@ module GlobalRender_top (
         end
     end
 
+    wire signed [12:0] canvas_grid_pos_x;
+    wire signed [12:0] canvas_grid_pos_y;
+    
     CircuitCanvas #( .CanvasPosX(CANVAS_X0), .CanvasPosY(CANVAS_Y0), .CanvasWidth(CANVAS_W), .CanvasHeight(CANVAS_H) ) circuit_canvas_inst (
         .clk_pixel(clk_pixel), .x_pos(x_pos), .y_pos(y_pos), .rgb(circuit_canvas_rgb),
         .rendered(circuit_canvas_rendered), .mouse_x_pos(mouse_xpos), .mouse_y_pos(mouse_ypos),
         .data_addr(circuit_canvas_ram_r_addr), .incoming_data(circuit_canvas_ram_r_data),
         .display_grid(1'b1), .mouse_left_click(mouse_left && (selected_toolbar_idx == 3'd0)),
-        .anim_phase(global_anim_phase)
+        .anim_phase(global_anim_phase),
+        .grid_pos_x_out(canvas_grid_pos_x), .grid_pos_y_out(canvas_grid_pos_y)
     );
     // Component Property Panel signals 以下为属性面板例化
     wire        prop_panel_rendered;
@@ -309,7 +313,7 @@ module GlobalRender_top (
     wire [7:0]  comp_store_w_addr;
     wire        comp_store_w_en;
     wire        comp_data_valid;
-    
+
     // KeyboardVGA 连接信号
     wire        keyboard_key_valid_prop;
     wire [7:0]  keyboard_key_ascii_prop;
@@ -334,11 +338,14 @@ module GlobalRender_top (
     // =========================================================
     // Component Property Panel - 元件属性显示 (简化版)
     // =========================================================
-    // 鼠标悬停位置计算 (Canvas 区域：X0=64, Y0=64)
-    assign mouse_cell_i = (mouse_xpos >= CANVAS_X0) ?
-    ((mouse_xpos - CANVAS_X0) / 32) : 12'd0;
-    assign mouse_cell_j = (mouse_ypos >= CANVAS_Y0) ?
-    ((mouse_ypos - CANVAS_Y0) / 32) : 12'd0;
+    // 鼠标悬停位置计算（考虑画布拖动偏移）
+    // absolute_grid = (mouse_pos - CANVAS_X0) - grid_pos
+    // cell = absolute_grid / CellSize
+    wire signed [12:0] mouse_abs_grid_x = {1'b0, (mouse_xpos >= CANVAS_X0) ? (mouse_xpos - CANVAS_X0) : 12'd0} - canvas_grid_pos_x;
+    wire signed [12:0] mouse_abs_grid_y = {1'b0, (mouse_ypos >= CANVAS_Y0) ? (mouse_ypos - CANVAS_Y0) : 12'd0} - canvas_grid_pos_y;
+    
+    assign mouse_cell_i = (mouse_xpos >= CANVAS_X0 && mouse_abs_grid_x >= 0) ? (mouse_abs_grid_x / 32) : 12'd0;
+    assign mouse_cell_j = (mouse_ypos >= CANVAS_Y0 && mouse_abs_grid_y >= 0) ? (mouse_abs_grid_y / 32) : 12'd0;
     
     // 鼠标点击边沿检测
     assign canvas_mouse_in_bounds = (mouse_xpos >= CANVAS_X0) && (mouse_xpos < (CANVAS_X0 + CANVAS_W)) &&
@@ -350,9 +357,19 @@ module GlobalRender_top (
     assign toolbar_place_data1 = toolbar_second_cell_data(selected_toolbar_idx);
     assign mouse_left_rising = mouse_left && !mouse_left_d;
     assign mouse_left_rising_sys = mouse_left && !mouse_left_d_sys;
-    // 同步鼠标点击 - 记录选中的单元格
+    
+    // 鼠标点击边沿检测
     always @(posedge clk_pixel) begin
         mouse_left_d <= mouse_left;
+    end
+
+    // 系统时钟域的鼠标同步（用于其他模块）
+    always @(posedge CLK100MHZ) begin
+        mouse_left_d_sys <= mouse_left;
+    end
+
+    // 选中单元格时设置选择标志
+    always @(posedge clk_pixel) begin
         if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
             selected_cell_i <= mouse_cell_i;
             selected_cell_j <= mouse_cell_j;
@@ -385,21 +402,12 @@ module GlobalRender_top (
         component_data[100]<= 16'h021D; // Cap R    (flow_bit=1)
         component_data[101]<= 16'h0183; // LR  (rot=3)
     end
-    
+
     // 计算悬停的单元格地址
     always @(*) begin
         hovered_addr = mouse_cell_i + mouse_cell_j * 16;
     end
 
-    // 选中单元格时设置选择标志
-    always @(posedge clk_pixel) begin
-        if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
-            selected_cell_i <= mouse_cell_i;
-            selected_cell_j <= mouse_cell_j;
-            has_selection <= 1'b1;
-        end
-    end
-    
     // ComponentStore 初始化模块
     wire comp_init_w_en;
     wire [7:0] comp_init_addr;
@@ -439,8 +447,7 @@ module GlobalRender_top (
         .PANEL_X(0),
         .PANEL_Y(0),
         .PANEL_W(640),
-        .PANEL_H(64),
-        .COMP_STORE_ADDR_WIDTH(8)
+        .PANEL_H(64)
     ) u_prop_panel (
         .clk_pixel(clk_pixel),
         .hcount(x_pos),
@@ -820,7 +827,7 @@ module GlobalRender_top (
         mouse_set_value <= 12'h000;
         mouse_set_max_x <= 1'b0; mouse_set_max_y <= 1'b0;
         circuit_canvas_ram_w_en <= 1'b0;
-        mouse_left_d_sys <= mouse_left;
+        // mouse_left_d_sys <= mouse_left;  // 已移至上面的专用 always 块
         if (init_cycles < 32'd1000) init_cycles <= init_cycles + 1'b1;
 
         if (keyboard_key_valid && (keyboard_key_id == 5'd18)) begin

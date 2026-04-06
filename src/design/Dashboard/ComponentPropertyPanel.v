@@ -63,15 +63,15 @@ module ComponentPropertyPanel #(
     input wire [11:0] selected_cell_i,      // 选中单元格行坐标
     input wire [11:0] selected_cell_j,      // 选中单元格列坐标
 
-    // ComponentStore RAM 读取接口
-    output reg [COMP_STORE_ADDR_WIDTH-1:0] comp_r_addr,   // 读地址
+    // ComponentStore RAM 读取接口（40 位）
+    output reg [7:0] comp_r_addr,           // 读地址
     input wire [39:0] comp_r_data,          // 读数据 (40 位)
     input wire comp_data_valid,             // 数据有效标志
 
     // ComponentStore RAM 写入接口
     output reg comp_w_en,                   // 写使能
-    output reg [COMP_STORE_ADDR_WIDTH-1:0] comp_w_addr,   // 写地址
-    output reg [39:0] comp_w_data,          // 写数据
+    output reg [7:0] comp_w_addr,           // 写地址
+    output reg [39:0] comp_w_data,          // 写数据 (40 位)
 
     // KeyboardVGA 接口
     input wire [7:0] key_ascii,             // 键盘 ASCII 输入
@@ -113,16 +113,16 @@ module ComponentPropertyPanel #(
     // ========================================================================
     // ComponentStore 数据解析 (40 位)
     // ========================================================================
-    // 40位格式：{type[3:0], position[7:0], rotation[1:0], value[12:0], node1[3:0], node2[3:0]}
-    // 注意：comp_r_data 为 40 位，需要正确对齐
-    
+    // 40位格式：{type[3:0], position[7:0], rotation[1:0], value[12:0], node1[3:0], node2[3:0], enable[1:0]}
+    // enable[1:0] = 2'b01 表示有效元件，2'b00 表示空单元格
     wire [3:0]  comp_type = comp_r_data[39:36];     // 元件类型
     wire [7:0]  comp_position = comp_r_data[35:28]; // 位置
     wire [1:0]  comp_rotation = comp_r_data[27:26]; // 旋转
     wire [12:0] comp_value = comp_r_data[25:13];    // 数值 (10位数值 + 3位单位)
     wire [3:0]  comp_node1 = comp_r_data[12:9];     // 节点1
     wire [3:0]  comp_node2 = comp_r_data[8:5];      // 节点2
-    
+    wire [1:0]  comp_enable = comp_r_data[1:0];     // 使能标志
+
     wire [3:0]  comp_xpos = comp_position[3:0];     // X 位置
     wire [3:0]  comp_ypos = comp_position[7:4];     // Y 位置
     wire [9:0]  comp_value_mag = comp_value[12:3];  // 数值大小 (10位)
@@ -131,6 +131,7 @@ module ComponentPropertyPanel #(
     // 地址生成：根据选中的单元格坐标
     always @(*) begin
         comp_r_addr = selected_cell_i[3:0] + (selected_cell_j[3:0] << 4);
+        comp_w_addr = comp_r_addr;  // 写地址与读地址相同
     end
 
     // 元件类型判断
@@ -148,8 +149,8 @@ module ComponentPropertyPanel #(
 
         if (!has_selection || !comp_data_valid) begin
             is_empty = 1'b1;
-        end else if (comp_r_data == 40'hFFFF_FFFF_F) begin
-            // 全F标记视为空单元格（CompStoreInit 初始化标记）
+        end else if (comp_enable != 2'b01) begin
+            // enable 标志不为 01 视为空单元格
             is_empty = 1'b1;
         end else begin
             case (comp_type)
@@ -166,21 +167,22 @@ module ComponentPropertyPanel #(
     end
 
     // ========================================================================
-    // 参数编辑状态机
+    // 参数编辑状态机 + 键盘输入处理（合并为单一 always 块，避免多驱动冲突）
     // ========================================================================
     reg editing_mode;           // 编辑模式标志
     reg [9:0] edit_value_reg;   // 编辑中的数值 (10位)
     reg [2:0] edit_unit_reg;    // 编辑中的单位 (3位)
     reg [3:0] edit_digit_count; // 已输入数字位数
-    
+
     // 检测区域
     wire in_value_area = (hcount >= VALUE_X) && (hcount < VALUE_X + VALUE_W) &&
                          (vcount >= VALUE_Y) && (vcount < VALUE_Y + 14);
 
-    // 检测参数区域点击（进入编辑模式）
+    // 合并鼠标和键盘处理为单一 always 块
     always @(posedge clk_pixel) begin
         comp_w_en <= 1'b0;  // 默认复位写使能
-        
+
+        // 1. 鼠标点击处理
         if (mouse_click && has_selection && !is_empty) begin
             if (in_value_area) begin
                 // 点击参数区域，进入编辑模式
@@ -192,16 +194,15 @@ module ComponentPropertyPanel #(
                 // 编辑模式下点击非参数区域，确认并保存
                 comp_w_en <= 1'b1;
                 comp_w_addr <= comp_r_addr;
+                // 40位完整格式：type + position + rotation + value + node1 + node2 + 保留 + enable
                 comp_w_data <= {comp_type, comp_position, comp_rotation,
-                               {edit_value_reg, edit_unit_reg}, comp_node1, comp_node2};
+                               {edit_value_reg, edit_unit_reg}, comp_node1, comp_node2, 3'b000, 2'b01};
                 editing_mode <= 1'b0;
             end
         end
-    end
-    
-    // KeyboardVGA 输入处理
-    always @(posedge clk_pixel) begin
-        if (editing_mode && key_valid) begin
+        
+        // 2. 键盘输入处理
+        else if (editing_mode && key_valid) begin
             if (key_is_digit && edit_digit_count < 4'd4) begin
                 // 数字输入 (0-9)
                 edit_value_reg <= edit_value_reg * 10 + (key_ascii - 8'd48);
@@ -215,7 +216,7 @@ module ComponentPropertyPanel #(
                     8'h75: edit_unit_reg <= 3'd1;  // 'u' - micro (10^-6)
                     8'h6E: edit_unit_reg <= 3'd2;  // 'n' - nano (10^-9)
                     8'h70: edit_unit_reg <= 3'd6;  // 'p' - pico (10^-12)
-                    default: ;  // 忽略其他键
+                    default: ;
                 endcase
             end else if (key_ascii == 8'h08 || key_ascii == 8'h7F) begin
                 // 删除键 (Backspace/Delete) - 退格功能
@@ -224,8 +225,6 @@ module ComponentPropertyPanel #(
                     edit_digit_count <= edit_digit_count - 1'b1;
                 end
             end
-            // 注意：已移除 Enter 和 Escape 键处理
-            // 确认操作改为点击非数据输入区域
         end
     end
 
@@ -249,11 +248,15 @@ module ComponentPropertyPanel #(
         end
     endfunction
     
-    // 坐标数字分解
-    wire [3:0] xpos_tens = comp_xpos / 10;
-    wire [3:0] xpos_ones = comp_xpos % 10;
-    wire [3:0] ypos_tens = comp_ypos / 10;
-    wire [3:0] ypos_ones = comp_ypos % 10;
+    // 坐标数字分解 - 使用实际点击的单元格坐标（而非 RAM 中的 position 字段）
+    // RAM position 字段可能为空（空白单元格），但 selected_cell_i/j 始终记录点击位置
+    wire [3:0] display_xpos = selected_cell_i[3:0];
+    wire [3:0] display_ypos = selected_cell_j[3:0];
+    
+    wire [3:0] xpos_tens = display_xpos / 10;
+    wire [3:0] xpos_ones = display_xpos % 10;
+    wire [3:0] ypos_tens = display_ypos / 10;
+    wire [3:0] ypos_ones = display_ypos % 10;
 
     // 数值分解 (显示用)
     wire [9:0] display_value = editing_mode ? edit_value_reg : comp_value_mag;

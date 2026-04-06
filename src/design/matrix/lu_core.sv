@@ -192,26 +192,26 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         state <= S_IDLE;
 
-        f32_1 <= '0;
+        f32_1 <=0;
 
-        f32_2 <= '0;
+        f32_2 <=0;
 
-        f32_3 <= '0;
+        f32_3 <=0;
 
-        u8_i <= '0;
+        u8_i <=0;
 
-        u8_j <= '0;
+        u8_j <=0;
 
-        u8_k <= '0;
+        u8_k <=0;
 
-        u8_m <= '0;
+        u8_m <=0;
 
 
-        __for_idx_0 <= '0;
+        __for_idx_0 <=0;
 
-        __for_idx_1 <= '0;
+        __for_idx_1 <=0;
 
-        __for_idx_2 <= '0;
+        __for_idx_2 <=0;
 
 
     end else begin
@@ -270,39 +270,39 @@ always_comb begin
 
 
 
-    fetch_A_start = '0;
+    fetch_A_start =0;
 
-    fetch_A_i = '0;
+    fetch_A_i =0;
 
-    fetch_A_j = '0;
+    fetch_A_j =0;
 
-    fetch_LU_start = '0;
+    fetch_LU_start =0;
 
-    fetch_LU_i = '0;
+    fetch_LU_i =0;
 
-    fetch_LU_j = '0;
+    fetch_LU_j =0;
 
-    fma_start = '0;
+    fma_start =0;
 
-    fma_a = '0;
+    fma_a =0;
 
-    fma_b = '0;
+    fma_b =0;
 
-    fma_c = '0;
+    fma_c =0;
 
-    store_LU_start = '0;
+    store_LU_start =0;
 
-    store_LU_i = '0;
+    store_LU_i =0;
 
-    store_LU_j = '0;
+    store_LU_j =0;
 
-    store_LU_v = '0;
+    store_LU_v =0;
 
-    div_start = '0;
+    div_start =0;
 
-    div_a = '0;
+    div_a =0;
 
-    div_b = '0;
+    div_b =0;
 
 
     case (state)

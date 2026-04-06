@@ -298,11 +298,25 @@ module GlobalRender_top (
     wire [11:0] prop_panel_rgb;
     reg  [11:0] selected_cell_i = 12'd0;
     reg  [11:0] selected_cell_j = 12'd0;
-    reg  [15:0] selected_cell_data = 16'd0;
     reg         has_selection = 1'b0;
     reg         mouse_left_d = 1'b0;
     wire        mouse_left_rising;
+
+    // ComponentStore RAM signals (40位宽, 256个条目)
+    wire [39:0] comp_store_r_data;
+    wire [7:0]  comp_store_r_addr;
+    wire [39:0] comp_store_w_data;
+    wire [7:0]  comp_store_w_addr;
+    wire        comp_store_w_en;
+    wire        comp_data_valid;
     
+    // KeyboardVGA 连接信号
+    wire        keyboard_key_valid_prop;
+    wire [7:0]  keyboard_key_ascii_prop;
+    wire        keyboard_key_is_digit_prop;
+    wire        keyboard_key_is_unit_prop;
+    wire        keyboard_key_is_action_prop;
+
     // 鼠标悬停检测
     wire [11:0] mouse_cell_i;
     wire [11:0] mouse_cell_j;
@@ -376,32 +390,79 @@ module GlobalRender_top (
     always @(*) begin
         hovered_addr = mouse_cell_i + mouse_cell_j * 16;
     end
-    
-    // 从本地存储读取选中单元格的数据
+
+    // 选中单元格时设置选择标志
     always @(posedge clk_pixel) begin
         if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
-            selected_cell_data <= component_data[hovered_addr];
+            selected_cell_i <= mouse_cell_i;
+            selected_cell_j <= mouse_cell_j;
+            has_selection <= 1'b1;
         end
     end
+    
+    // ComponentStore 初始化模块
+    wire comp_init_w_en;
+    wire [7:0] comp_init_addr;
+    wire [39:0] comp_init_data;
+    wire comp_init_done;
+    
+    // ComponentStore RAM 实例 (40位宽, 256个条目)
+    SimpleRam #(
+        .WordWidth(40),
+        .WordCount(256)
+    ) comp_store_inst (
+        .clk(clk_pixel),
+        .w_en(comp_store_w_en | comp_init_w_en),
+        .w_addr(comp_store_w_en ? comp_store_w_addr : comp_init_addr),
+        .r_addr(comp_store_r_addr),
+        .d_in(comp_store_w_en ? comp_store_w_data : comp_init_data),
+        .d_out(comp_store_r_data)
+    );
+
+    CompStoreInit #(
+        .ADDR_WIDTH(8),
+        .DATA_WIDTH(40)
+    ) comp_store_init_inst (
+        .clk(clk_pixel),
+        .sw_init(SW[14]),  // SW[14] 上升沿触发初始化
+        .init_done(comp_init_done),
+        .init_addr(comp_init_addr),
+        .init_data(comp_init_data),
+        .init_w_en(comp_init_w_en)
+    );
+
+    // 数据有效标志 (简单实现：总是有效)
+    assign comp_data_valid = 1'b1;
 
     // 例化属性面板
     ComponentPropertyPanel #(
         .PANEL_X(0),
         .PANEL_Y(0),
         .PANEL_W(640),
-        .PANEL_H(64)
+        .PANEL_H(64),
+        .COMP_STORE_ADDR_WIDTH(8)
     ) u_prop_panel (
         .clk_pixel(clk_pixel),
         .hcount(x_pos),
         .vcount(y_pos),
         .video_on(video_on),
         .mouse_cell_i(mouse_cell_i),
-        
         .mouse_cell_j(mouse_cell_j),
-        .selected_cell_data(selected_cell_data),
+        .mouse_click(mouse_left_rising),
         .has_selection(has_selection),
         .selected_cell_i(selected_cell_i),
         .selected_cell_j(selected_cell_j),
+        .comp_r_addr(comp_store_r_addr),
+        .comp_r_data(comp_store_r_data),
+        .comp_data_valid(comp_data_valid),
+        .comp_w_en(comp_store_w_en),
+        .comp_w_addr(comp_store_w_addr),
+        .comp_w_data(comp_store_w_data),
+        .key_ascii(keyboard_key_ascii_prop),
+        .key_valid(keyboard_key_valid_prop),
+        .key_is_digit(keyboard_key_is_digit_prop),
+        .key_is_unit(keyboard_key_is_unit_prop),
+        .key_is_action(keyboard_key_is_action_prop),
         .panel_rendered(prop_panel_rendered),
         .panel_rgb(prop_panel_rgb)
     );
@@ -617,20 +678,27 @@ module GlobalRender_top (
     // 【重點實例化：傳入更新的 KEY_W 和 KEY_H】
     // 確保這裡的尺寸與 Top 的遮罩區域完全相同
     // =========================================================
-    KeyboardVGA #( 
+    KeyboardVGA #(
         .KEY_COUNT(19),
-        .FONT_SCALE(KEYBOARD_SCALE), 
-        .KEYBOARD_X0(KEYBOARD_X), 
+        .FONT_SCALE(KEYBOARD_SCALE),
+        .KEYBOARD_X0(KEYBOARD_X),
         .KEYBOARD_Y0(KEYBOARD_Y),
         .KEY_W(KEY_W),
         .KEY_H(KEY_H)
     ) keyboard_vga_inst (
-        .clk_nav(clk_nav), .btnU(BTNU), .btnD(BTND), .btnL(BTNL), .btnR(BTNR), 
+        .clk_nav(clk_nav), .btnU(BTNU), .btnD(BTND), .btnL(BTNL), .btnR(BTNR),
         .btnC(BTNC),
         .mouse_x(mouse_xpos), .mouse_y(mouse_ypos), .mouse_left(mouse_left),
         .x(x_pos), .y(y_pos), .pixel_rgb(keyboard_rgb), .key_id(keyboard_key_id),
-        .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii)
+        .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii),
+        .key_is_digit(keyboard_key_is_digit_prop),
+        .key_is_unit(keyboard_key_is_unit_prop),
+        .key_is_action(keyboard_key_is_action_prop)
     );
+    
+    // 属性面板专用的KeyboardVGA信号连接（复用主键盘输入）
+    assign keyboard_key_valid_prop = keyboard_key_valid;
+    assign keyboard_key_ascii_prop = keyboard_key_ascii;
     ToolbarVGA toolbar_vga_inst (
         .clk_pixel(clk_pixel),
         .mouse_x(mouse_xpos),

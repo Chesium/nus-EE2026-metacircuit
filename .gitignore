@@ -1,5 +1,7 @@
 vivado_project/*
 metacircuit/*
+metacircuit2/*
+metacircuit_implcheck/*
 
 **/.Xil/
 **/.cache/
@@ -20,7 +22,6 @@ metacircuit/*
 !/src/ip_new/**/
 !/src/ip_new/**/*.xci
 
-top
 xsim.dir
 *.pb
 *.wdb

@@ -14,9 +14,14 @@ module CircuitCanvas #(
     input  wire        clk_pixel,
     input  wire [11:0] x_pos,
     input  wire [11:0] y_pos,
+    
+    // ==========================================
+    // 新增：接收來自動畫生成器的方向遮罩
+    input wire[4:0] anim_phase,
+    // ==========================================
+
     output wire [11:0] rgb,
     output wire        rendered,
-
 
     input wire [11:0] mouse_x_pos,
     input wire [11:0] mouse_y_pos,
@@ -33,10 +38,11 @@ module CircuitCanvas #(
     output wire signed [12:0] grid_pos_x_out,
     output wire signed [12:0] grid_pos_y_out
 );
-
   /*Parameter for panning*/
-  localparam signed [12:0] min_grid_x = CanvasWidth - (GridWidth * CellSize);   //minimum x offset the panning can reach (negative number)
-  localparam signed [12:0] min_grid_y = CanvasHeight - (GridHeight * CellSize); //minimum y offset the panning can reach (negative number)
+  localparam signed [12:0] min_grid_x = CanvasWidth - (GridWidth * CellSize);
+  //minimum x offset the panning can reach (negative number)
+  localparam signed [12:0] min_grid_y = CanvasHeight - (GridHeight * CellSize);
+  //minimum y offset the panning can reach (negative number)
 
   reg is_dragging = 0;
   reg signed [12:0] click_start_x = 0;
@@ -46,7 +52,6 @@ module CircuitCanvas #(
   /*Real grid offset (Panning)*/
   reg signed [12:0] grid_pos_x = 0; 
   reg signed [12:0] grid_pos_y = 0;
-
   assign grid_pos_x_out = grid_pos_x;
   assign grid_pos_y_out = grid_pos_y;
 
@@ -62,7 +67,6 @@ module CircuitCanvas #(
                   && y_pos >= CanvasPosY
                   && y_pos <= CanvasPosY + CanvasHeight
                   && y_pos <= CanvasPosY + CellSize * GridHeight;
-
   /*the boundary condition for panning for the mouse*/
   wire mouse_in_canvas;
   assign mouse_in_canvas = (mouse_x_pos >= CanvasPosX) && 
@@ -74,19 +78,16 @@ module CircuitCanvas #(
   wire [11:0] y_pos_rel_canvas;
   assign x_pos_rel_canvas = x_pos - CanvasPosX;
   assign y_pos_rel_canvas = y_pos - CanvasPosY;
-
   wire [11:0] mouse_x_pos_rel_canvas;
   wire [11:0] mouse_y_pos_rel_canvas;
   assign mouse_x_pos_rel_canvas = mouse_x_pos - CanvasPosX;
   assign mouse_y_pos_rel_canvas = mouse_y_pos - CanvasPosY;
-
   wire [11:0] x_pos_rel_canvas_next;
   wire [11:0] y_pos_rel_canvas_next;
   assign x_pos_rel_canvas_next = x_pos_rel_canvas == CanvasWidth - 1 ? 0 : x_pos_rel_canvas + 1;
   assign y_pos_rel_canvas_next = x_pos_rel_canvas == CanvasWidth - 1 
           ? (y_pos_rel_canvas == CanvasHeight - 1 ? 0 : y_pos_rel_canvas + 1)
           : y_pos_rel_canvas;
-
   wire [11:0] x_pos_rel_canvas_prefetch;
   wire [11:0] y_pos_rel_canvas_prefetch;
   assign x_pos_rel_canvas_prefetch = x_pos_rel_canvas == CanvasWidth - 1 ? 1 :
@@ -95,16 +96,12 @@ module CircuitCanvas #(
   assign y_pos_rel_canvas_prefetch = x_pos_rel_canvas >= CanvasWidth - 2
           ? (y_pos_rel_canvas == CanvasHeight - 1 ? 0 : y_pos_rel_canvas + 1)
           : y_pos_rel_canvas;
-
   wire [12:0] absolute_grid_x = {1'b0, x_pos_rel_canvas} - grid_pos_x;
   wire [12:0] absolute_grid_y = {1'b0, y_pos_rel_canvas} - grid_pos_y;
-  
   wire [12:0] absolute_grid_x_next = {1'b0, x_pos_rel_canvas_next} - grid_pos_x;
   wire [12:0] absolute_grid_y_next = {1'b0, y_pos_rel_canvas_next} - grid_pos_y;
-
   wire [12:0] absolute_grid_x_prefetch = {1'b0, x_pos_rel_canvas_prefetch} - grid_pos_x;
   wire [12:0] absolute_grid_y_prefetch = {1'b0, y_pos_rel_canvas_prefetch} - grid_pos_y;
-  
   wire [12:0] absolute_mouse_grid_x = {1'b0, mouse_x_pos_rel_canvas} - grid_pos_x;
   wire [12:0] absolute_mouse_grid_y = {1'b0, mouse_y_pos_rel_canvas} - grid_pos_y;
 
@@ -119,7 +116,6 @@ module CircuitCanvas #(
   assign mouse_cell_j = absolute_mouse_grid_y / CellSize;
 
   wire hovering;
-
   assign hovering = required_i == mouse_cell_i && required_j == mouse_cell_j;
 
   wire [11:0] required_i_2;
@@ -133,12 +129,10 @@ module CircuitCanvas #(
   assign next_j = required_i_2 == GridWidth - 1 ?
                   (required_j_2 == GridHeight - 1 ? 0 : required_j_2 + 1)
                   :required_j_2;
-
   wire [11:0] prefetched_i;
   wire [11:0] prefetched_j;
   assign prefetched_i = absolute_grid_x_prefetch / CellSize;
   assign prefetched_j = absolute_grid_y_prefetch / CellSize;
-
   reg [DataWidth-1:0] cached_data;
   reg [11:0] cached_data_i = 12'b1111_1111_1111;
   reg [11:0] cached_data_j = 12'b1111_1111_1111;
@@ -146,14 +140,13 @@ module CircuitCanvas #(
   reg [11:0] requested_data_j = 12'd0;
   reg [11:0] returned_data_i = 12'b1111_1111_1111;
   reg [11:0] returned_data_j = 12'b1111_1111_1111;
-
   assign data_addr = requested_data_i + requested_data_j * GridWidth;
-
 
   // reg init = 1;
   // [INIT]: nothing, need cur        =>            provide nothing,     set addr = cur, state =>
   // depended on input (i, j) = incoming data's (i, j) [EDGE]: just got cur, need cur   => latch cur, provide RAM_out,     set addr = next
-  // depended on input (i, j) = latched  data's (i, j)[STABLE] just got next, need cur  =>            provide latched cur, set addr = next
+  // depended on input (i, j) = latched  data's (i, j)[STABLE] just got next, need cur  =>            
+  // provide latched cur, set addr = next
 
   // 1: just got next, need next => == "just got cur, need cur"
 
@@ -161,9 +154,11 @@ module CircuitCanvas #(
     Data Width = 16
     F E D C B A 9 8 7 6 5 4 3 2 1 0
     S C C C C C C R R T T T T T T E
-    | |           |   |           Enable: 1bit
+    |
+    |           |   |           Enable: 1bit
     | |           |   Sprite ID: 6bit (64)
-    | |           Rotation: 2bit (4)
+    | |
+    Rotation: 2bit (4)
     | Component Index: 6bit (64)
     Selected: 1bit
   */
@@ -180,8 +175,6 @@ module CircuitCanvas #(
   assign cell_rotation = cell_data[8:7];
   assign cell_type = cell_data[6:1];
   assign cell_enable = cell_data[0];
-
-
   wire [12:0] cell_origin_x_signed = {1'b0, CanvasPosX} + grid_pos_x + {1'b0, required_i * CellSize[11:0]};
   wire [12:0] cell_origin_y_signed = {1'b0, CanvasPosY} + grid_pos_y + {1'b0, required_j * CellSize[11:0]};
   wire [11:0] cell_origin_x;
@@ -817,6 +810,48 @@ module CircuitCanvas #(
     end
   endfunction
 
+  // --- 32x32 Image Data ---
+  function [31:0] Ground;
+    input [4:0] yy;
+    begin
+      case (yy)
+        5'd0:  Ground = 32'b00000000000000000000000000000000;
+        5'd1:  Ground = 32'b00000000000000000000000000000000;
+        5'd2:  Ground = 32'b00000000000000000000000000000000;
+        5'd3:  Ground = 32'b00000000000000000000000000000000;
+        5'd4:  Ground = 32'b00000000000000000000000000000000;
+        5'd5:  Ground = 32'b00000000000001111110000000000000;
+        5'd6:  Ground = 32'b00000000000001111110000000000000;
+        5'd7:  Ground = 32'b00000000000001111110000000000000;
+        5'd8:  Ground = 32'b00000000000001111110000000000000;
+        5'd9:  Ground = 32'b00000000000001111110000000000000;
+        5'd10: Ground = 32'b00000000000001111110000000000000;
+        5'd11: Ground = 32'b00000000000001111110000000000000;
+        5'd12: Ground = 32'b00000000000001111110000000000000;
+        5'd13: Ground = 32'b00000000000001111110000000000000;
+        5'd14: Ground = 32'b00000000000001111110000000000000;
+        5'd15: Ground = 32'b00000111111111111111111111100000;
+        5'd16: Ground = 32'b00000001111000000000011110000000;
+        5'd17: Ground = 32'b00000000011110000001111000000000;
+        5'd18: Ground = 32'b00000000000111100111100000000000;
+        5'd19: Ground = 32'b00000000000001111110000000000000;
+        5'd20: Ground = 32'b00000000000000011000000000000000;
+        5'd21: Ground = 32'b00000000000000000000000000000000;
+        5'd22: Ground = 32'b00000000000000000000000000000000;
+        5'd23: Ground = 32'b00000000000000000000000000000000;
+        5'd24: Ground = 32'b00000000000000000000000000000000;
+        5'd25: Ground = 32'b00000000000000000000000000000000;
+        5'd26: Ground = 32'b00000000000000000000000000000000;
+        5'd27: Ground = 32'b00000000000000000000000000000000;
+        5'd28: Ground = 32'b00000000000000000000000000000000;
+        5'd29: Ground = 32'b00000000000000000000000000000000;
+        5'd30: Ground = 32'b00000000000000000000000000000000;
+        5'd31: Ground = 32'b00000000000000000000000000000000;
+        default: Ground = 32'd0;
+      endcase
+    end
+  endfunction
+
   function [4:0] GetXX;
     input [4:0] dx;
     input [4:0] dy;
@@ -825,7 +860,7 @@ module CircuitCanvas #(
       case (ro)
         2'b00:   GetXX = 31 - dx;
         2'b01:   GetXX = 31 - dy;
-        2'b10:   GetXX = 31 - dx;
+        2'b10:   GetXX = dx;
         2'b11:   GetXX = dy;
         default: GetXX = dx;
       endcase
@@ -875,6 +910,7 @@ module CircuitCanvas #(
         5'd12: GetRow = LR(yy);
         5'd13: GetRow = CL(yy);
         5'd14: GetRow = CR(yy);
+        5'd15: GetRow = Ground(yy);
         default: GetRow = 32'b00000000000000000000000000000000;
       endcase
     end
@@ -890,27 +926,87 @@ module CircuitCanvas #(
     end
   endfunction
 
+// =========================================================================
+  // --- 純量絕對座標與無縫遮罩渲染邏輯 (Ultimate Flawless Flow) ---
+  // =========================================================================
   wire sprite_pixel;
-  assign sprite_pixel = cell_enable ? DecodeTop(
+  assign sprite_pixel = cell_enable ?
+      DecodeTop(
       cell_type, cell_rotation, cell_offset_x, cell_offset_y
   ) : 1'b0;
 
-  localparam integer ColorPos = 12'hFFF;  // #FFF
-  localparam integer ColorNeg = 12'h222;  // #222
-  localparam integer ColorNegHovering = 12'h280;  // #280
+  localparam integer ColorPos = 12'hFFF;  
+  localparam integer ColorYellow = 12'hFF0; 
+  localparam integer ColorNeg = 12'h222;  
+  localparam integer ColorNegHovering = 12'h280; 
 
+  // 1. 產生四大絕對方向的無縫遮罩 (利用 Canvas 絕對座標，保證絕不在 Cell 內部發生縮放與折返)
+  // 利用 5-bit 自然溢位的特性，完美產生 0~31 循環的 5-pixel 掃描波
+  wire [4:0] phase = anim_phase;
+  wire [4:0] mod_R = absolute_grid_x[4:0] - phase;
+  wire [4:0] mod_L = absolute_grid_x[4:0] + phase;
+  wire [4:0] mod_D = absolute_grid_y[4:0] - phase;
+  wire [4:0] mod_U = absolute_grid_y[4:0] + phase;
+
+  wire mask_R = mod_R < 5;
+  wire mask_L = mod_L < 5;
+  wire mask_D = mod_D < 5;
+  wire mask_U = mod_U < 5;
+
+  // 2. 提取 Top module 設定的流向位元
+  wire flow_bit = cell_data[9]; // 0: 順時針前半 (Right/Down), 1: 順時針後半 (Left/Up)
+
+  // 3. 轉角對角線切割邏輯 (完美在 90 度交界處切換光束)
+  wire dx_gt_dy = (cell_offset_x > cell_offset_y);
+  wire dx_plus_dy_lt_31 = (cell_offset_x + cell_offset_y < 31);
+
+  // 4. 動態指派當前像素該吃哪一個遮罩
+  reg active_mask;
+  always @(*) begin
+      if (cell_type == 6'd1) begin
+          // Elbow Corners (根據旋轉角度決定切割與過彎方向)
+          case (cell_rotation)
+              2'd1: active_mask = dx_gt_dy ? mask_R : mask_U;         // UL Corner: Up -> Right
+              2'd2: active_mask = dx_plus_dy_lt_31 ? mask_R : mask_D; // UR Corner: Right -> Down
+              2'd3: active_mask = dx_gt_dy ? mask_D : mask_L;         // LR Corner: Down -> Left
+              2'd0: active_mask = dx_plus_dy_lt_31 ? mask_U : mask_L; // LL Corner: Left -> Up
+          endcase
+      end else begin
+          // Straight Components (Wire, V-Source, Resistor)
+          if (cell_rotation == 2'd0 || cell_rotation == 2'd2) begin
+              active_mask = flow_bit ? mask_L : mask_R; // Horizontal
+          end else begin
+              active_mask = flow_bit ? mask_U : mask_D; // Vertical
+          end
+      end
+  end
+
+  // 5. 元件幾何判定 (決定黃色方塊該遵循 Sprite 還是強制走中心線)
+  wire is_wire_type = (cell_type <= 6'd4);
+  wire is_horz_center = (cell_offset_y >= 13 && cell_offset_y <= 18);
+  wire is_vert_center = (cell_offset_x >= 13 && cell_offset_x <= 18);
+  wire is_center_line = (cell_rotation == 2'd0 || cell_rotation == 2'd2) ? is_horz_center : is_vert_center;
+
+  // 6. 黃色像素最終嚴格判定
+  wire is_yellow = cell_enable && active_mask && (is_wire_type ? sprite_pixel : is_center_line);
+
+  // 網格與背景處理
   wire [11:0] currentColorNeg;
   assign currentColorNeg = hovering ? ColorNegHovering : ColorNeg;
 
-  localparam integer GridMarginWidth = 2;  // multiples of 2
-  localparam integer GridColor = 12'h666;  // #666
+  localparam integer GridMarginWidth = 2;
+  localparam integer GridColor = 12'h666;  
   wire at_grid_edge;
-  assign at_grid_edge =  cell_offset_x < GridMarginWidth / 2
-                      || cell_offset_y < GridMarginWidth / 2
-                      || cell_offset_x >= CellSize - GridMarginWidth / 2
-                      || cell_offset_y >= CellSize - GridMarginWidth / 2;
+  assign at_grid_edge =  cell_offset_x < GridMarginWidth / 2 ||
+                         cell_offset_y < GridMarginWidth / 2 ||
+                         cell_offset_x >= CellSize - GridMarginWidth / 2 ||
+                         cell_offset_y >= CellSize - GridMarginWidth / 2;
 
-  assign rgb = sprite_pixel ? ColorPos : (at_grid_edge ? GridColor : currentColorNeg);
+  // 最終顏色輸出 (層級優先度: 黃色電流 > 元件本體 > 網格 > 背景)
+  assign rgb = is_yellow    ? ColorYellow : 
+               sprite_pixel ? ColorPos : 
+               (at_grid_edge ? GridColor : currentColorNeg);
+  // =========================================================================
 
   reg [1:0] status = 2'b00;
 
@@ -946,11 +1042,14 @@ module CircuitCanvas #(
               grid_start_y  <= grid_pos_y;
           end else if (is_dragging) begin
               //update the grid position and ensure the boundary condition
-              grid_pos_x <= (next_grid_x > 0) ? 13'sd0 : 
-                            (next_grid_x < min_grid_x) ? min_grid_x : next_grid_x[12:0];
+              grid_pos_x <= (next_grid_x > 0) ?
+                            13'sd0 : 
+                            (next_grid_x < min_grid_x) ?
+                            min_grid_x : next_grid_x[12:0];
                             
               grid_pos_y <= (next_grid_y > 0) ? 13'sd0 : 
-                            (next_grid_y < min_grid_y) ? min_grid_y : next_grid_y[12:0];
+                            (next_grid_y < min_grid_y) ?
+                            min_grid_y : next_grid_y[12:0];
           end
       end else begin
           is_dragging <= 0;
@@ -958,4 +1057,3 @@ module CircuitCanvas #(
   end
 
 endmodule
-

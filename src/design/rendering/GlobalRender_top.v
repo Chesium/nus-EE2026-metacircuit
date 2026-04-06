@@ -33,6 +33,7 @@ module GlobalRender_top (
     localparam integer CANVAS_Y0       = TOP_BAR_H;
     localparam integer CANVAS_W        = SCREEN_W - LEFT_BAR_W - RIGHT_BAR_W;
     localparam integer CANVAS_H        = SCREEN_H - TOP_BAR_H - BOTTOM_BAR_H;
+
     // =========================================================
     // 【決定生死的遮罩精算】
     // 在 Top 模組裡精準宣告 155 x 128 的物理空間，防止被切斷！
@@ -76,7 +77,6 @@ module GlobalRender_top (
     wire        toolbar_rendered;
     wire [2:0]  selected_toolbar_idx;
     reg         mouse_left_d_sys = 1'b0;
-
     reg top_bar_active, left_bar_active, right_bar_active, canvas_label_active, title_active, frame_active, icon_active, grid_line_active;
     integer dx, dy;
 
@@ -94,7 +94,6 @@ module GlobalRender_top (
     wire [7:0]  circuit_canvas_ram_r_addr;
     reg  [15:0] circuit_canvas_ram_w_data = 16'd0;
     wire [15:0] circuit_canvas_ram_r_data;
-
     reg  [31:0] init_cycles = 32'd0;
 
     reg         clear_canvas_active = 1'b0;
@@ -102,9 +101,7 @@ module GlobalRender_top (
     reg         pending_second_tool_write = 1'b0;
     reg  [7:0]  pending_second_tool_addr = 8'd0;
     reg  [15:0] pending_second_tool_data = 16'd0;
-
     assign keyboard_region_active = (x_pos >= KEYBOARD_REGION_X0) && (x_pos < KEYBOARD_REGION_X1) && (y_pos >= KEYBOARD_REGION_Y0) && (y_pos < KEYBOARD_REGION_Y1);
-
     assign mouse_rgb = {mouse_r, mouse_g, mouse_b};
 
     function [11:0] rgb888_to_444;
@@ -126,13 +123,13 @@ module GlobalRender_top (
         input [2:0] tool_idx;
         begin
             case (tool_idx)
-                3'd1: toolbar_first_cell_data = make_cell_data(2'b00, 6'd0);   // wire
-                3'd2: toolbar_first_cell_data = make_cell_data(2'b00, 6'd1);   // elbow
-                3'd3: toolbar_first_cell_data = make_cell_data(2'b00, 6'd5);   // resistor left
-                3'd4: toolbar_first_cell_data = make_cell_data(2'b00, 6'd13);  // capacitor left
-                3'd5: toolbar_first_cell_data = make_cell_data(2'b00, 6'd7);   // voltage left
-                3'd6: toolbar_first_cell_data = make_cell_data(2'b00, 6'd9);   // current left
-                3'd7: toolbar_first_cell_data = make_cell_data(2'b00, 6'd11);  // diode left
+                3'd1: toolbar_first_cell_data = make_cell_data(2'b00, 6'd0); // wire
+                3'd2: toolbar_first_cell_data = make_cell_data(2'b00, 6'd5); // resistor left
+                3'd3: toolbar_first_cell_data = make_cell_data(2'b00, 6'd11); // inductor left
+                3'd4: toolbar_first_cell_data = make_cell_data(2'b00, 6'd13); // capacitor left
+                3'd5: toolbar_first_cell_data = make_cell_data(2'b00, 6'd7); // voltage left
+                3'd6: toolbar_first_cell_data = make_cell_data(2'b00, 6'd9); // current left
+                3'd7: toolbar_first_cell_data = make_cell_data(2'b00, 6'd15); // ground
                 default: toolbar_first_cell_data = 16'd0;
             endcase
         end
@@ -142,11 +139,11 @@ module GlobalRender_top (
         input [2:0] tool_idx;
         begin
             case (tool_idx)
-                3'd3: toolbar_second_cell_data = make_cell_data(2'b00, 6'd6);   // resistor right
-                3'd4: toolbar_second_cell_data = make_cell_data(2'b00, 6'd14);  // capacitor right
-                3'd5: toolbar_second_cell_data = make_cell_data(2'b00, 6'd8);   // voltage right
-                3'd6: toolbar_second_cell_data = make_cell_data(2'b00, 6'd10);  // current right
-                3'd7: toolbar_second_cell_data = make_cell_data(2'b00, 6'd12);  // diode right
+                3'd2: toolbar_second_cell_data = make_cell_data(2'b00, 6'd6); // resistor right
+                3'd3: toolbar_second_cell_data = make_cell_data(2'b00, 6'd12); // inductor right
+                3'd4: toolbar_second_cell_data = make_cell_data(2'b00, 6'd14); // capacitor right
+                3'd5: toolbar_second_cell_data = make_cell_data(2'b00, 6'd8); // voltage right
+                3'd6: toolbar_second_cell_data = make_cell_data(2'b00, 6'd10); // current right
                 default: toolbar_second_cell_data = 16'd0;
             endcase
         end
@@ -156,7 +153,7 @@ module GlobalRender_top (
         input [2:0] tool_idx;
         begin
             case (tool_idx)
-                3'd3, 3'd4, 3'd5, 3'd6, 3'd7: toolbar_tool_uses_two_cells = 1'b1;
+                3'd2, 3'd3, 3'd4, 3'd5, 3'd6: toolbar_tool_uses_two_cells = 1'b1;
                 default: toolbar_tool_uses_two_cells = 1'b0;
             endcase
         end
@@ -269,26 +266,57 @@ module GlobalRender_top (
         .hcount(x_pos), .vcount(y_pos), .enable_mouse_display_out(mouse_display_enable),
         .red_out(mouse_r), .green_out(mouse_g), .blue_out(mouse_b)
     );
+
     SimpleRam #( .WordWidth(16), .WordCount(256) ) circuit_canvas_ram_inst (
         .clk(CLK100MHZ), .w_en(circuit_canvas_ram_w_en), .w_addr(circuit_canvas_ram_w_addr),
         .r_addr(circuit_canvas_ram_r_addr), .d_in(circuit_canvas_ram_w_data), .d_out(circuit_canvas_ram_r_data)
     );
+
+    // =========================================================
+    // 動態電流動畫產生器 (內建 1D 相位)
+    // =========================================================
+    reg [21:0] anim_tick = 0;
+    reg [4:0]  global_anim_phase = 0;
+    always @(posedge clk_pixel) begin
+        if (anim_tick >= 22'd1000000) begin
+            anim_tick <= 0;
+            global_anim_phase <= global_anim_phase + 1;
+        end else begin
+            anim_tick <= anim_tick + 1;
+        end
+    end
+
     CircuitCanvas #( .CanvasPosX(CANVAS_X0), .CanvasPosY(CANVAS_Y0), .CanvasWidth(CANVAS_W), .CanvasHeight(CANVAS_H) ) circuit_canvas_inst (
         .clk_pixel(clk_pixel), .x_pos(x_pos), .y_pos(y_pos), .rgb(circuit_canvas_rgb),
         .rendered(circuit_canvas_rendered), .mouse_x_pos(mouse_xpos), .mouse_y_pos(mouse_ypos),
         .data_addr(circuit_canvas_ram_r_addr), .incoming_data(circuit_canvas_ram_r_data),
-        .display_grid(1'b1), .mouse_left_click(mouse_left && (selected_toolbar_idx == 3'd0))
+        .display_grid(1'b1), .mouse_left_click(mouse_left && (selected_toolbar_idx == 3'd0)),
+        .anim_phase(global_anim_phase)
     );
     // Component Property Panel signals 以下为属性面板例化
     wire        prop_panel_rendered;
     wire [11:0] prop_panel_rgb;
     reg  [11:0] selected_cell_i = 12'd0;
     reg  [11:0] selected_cell_j = 12'd0;
-    reg  [15:0] selected_cell_data = 16'd0;
     reg         has_selection = 1'b0;
     reg         mouse_left_d = 1'b0;
     wire        mouse_left_rising;
+
+    // ComponentStore RAM signals (40位宽, 256个条目)
+    wire [39:0] comp_store_r_data;
+    wire [7:0]  comp_store_r_addr;
+    wire [39:0] comp_store_w_data;
+    wire [7:0]  comp_store_w_addr;
+    wire        comp_store_w_en;
+    wire        comp_data_valid;
     
+    // KeyboardVGA 连接信号
+    wire        keyboard_key_valid_prop;
+    wire [7:0]  keyboard_key_ascii_prop;
+    wire        keyboard_key_is_digit_prop;
+    wire        keyboard_key_is_unit_prop;
+    wire        keyboard_key_is_action_prop;
+
     // 鼠标悬停检测
     wire [11:0] mouse_cell_i;
     wire [11:0] mouse_cell_j;
@@ -300,7 +328,6 @@ module GlobalRender_top (
     wire        mouse_left_rising_sys;
     
     // 示例元件数据 (从 init_cycles 中复制)
-    // 地址 17-19: 电阻，地址 33: 电压源右，地址 49: 电压源左，地址 82-88: Tee
     reg  [15:0] component_data [0:255];
     reg  [7:0]  hovered_addr;
 
@@ -316,7 +343,8 @@ module GlobalRender_top (
     // 鼠标点击边沿检测
     assign canvas_mouse_in_bounds = (mouse_xpos >= CANVAS_X0) && (mouse_xpos < (CANVAS_X0 + CANVAS_W)) &&
                                     (mouse_ypos >= CANVAS_Y0) && (mouse_ypos < (CANVAS_Y0 + CANVAS_H)) &&
-                                    (mouse_cell_i < 16) && (mouse_cell_j < 16);
+                               
+     (mouse_cell_i < 16) && (mouse_cell_j < 16);
     assign toolbar_place_two_cells = toolbar_tool_uses_two_cells(selected_toolbar_idx);
     assign toolbar_place_data0 = toolbar_first_cell_data(selected_toolbar_idx);
     assign toolbar_place_data1 = toolbar_second_cell_data(selected_toolbar_idx);
@@ -339,81 +367,338 @@ module GlobalRender_top (
         for (init_idx = 0; init_idx < 256; init_idx = init_idx + 1) begin
             component_data[init_idx] <= 16'd0;
         end
-        // 加载示例元件
-        component_data[17] <= 16'b0000000_10_000001_1;
-        // rotation=2, type=1
-        component_data[18] <= 16'b0000000_00_000101_1;
-        // rotation=0, type=5 (Resistor Left)
-        component_data[19] <= 16'b0000000_00_000110_1;
-        // rotation=0, type=6 (Resistor Right)
-        component_data[33] <= 16'b0000000_11_001000_1;
-        // rotation=3, type=8 (Voltage Right)
-        component_data[49] <= 16'b0000000_11_000111_1;
-        // rotation=3, type=7 (Voltage Left)
-        component_data[82] <= 16'b0000000_00_000010_1;
-        // rotation=0, type=2 (Tee)
-        component_data[84] <= 16'b0000000_01_000010_1;
-        // rotation=1, type=2 (Tee)
-        component_data[86] <= 16'b0000000_10_000010_1;
-        // rotation=2, type=2 (Tee)
-        component_data[88] <= 16'b0000000_11_000010_1;
-        // rotation=3, type=2 (Tee)
+        // 加载示例元件 (更新為新電路：所有轉角+90度，Tee L/R翻轉)
+        component_data[34] <= 16'h0083; // UL  (rot=1)
+        component_data[35] <= 16'h000F; // V-Source L (flow_bit=0)
+        component_data[36] <= 16'h0011; // V-Source R (flow_bit=0)
+        component_data[37] <= 16'h0103; // UR  (rot=2)
+        component_data[50] <= 16'h0281; // Wire L   (flow_bit=1)
+        component_data[53] <= 16'h0081; // Wire R   (flow_bit=0)
+        component_data[66] <= 16'h0285; // Tee L    (rot=1, flow_bit=1)
+        component_data[67] <= 16'h020B; // Res L    (flow_bit=1)
+        component_data[68] <= 16'h020D; // Res R    (flow_bit=1)
+        component_data[69] <= 16'h0185; // Tee R    (rot=3, flow_bit=0)
+        component_data[82] <= 16'h0281; // Wire L2  (flow_bit=1)
+        component_data[85] <= 16'h0081; // Wire R2  (flow_bit=0)
+        component_data[98] <= 16'h0003; // LL  (rot=0)
+        component_data[99] <= 16'h021B; // Cap L    (flow_bit=1)
+        component_data[100]<= 16'h021D; // Cap R    (flow_bit=1)
+        component_data[101]<= 16'h0183; // LR  (rot=3)
     end
     
     // 计算悬停的单元格地址
     always @(*) begin
         hovered_addr = mouse_cell_i + mouse_cell_j * 16;
     end
-    
-    // 从本地存储读取选中单元格的数据
+
+    // 选中单元格时设置选择标志
     always @(posedge clk_pixel) begin
         if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
-            selected_cell_data <= component_data[hovered_addr];
+            selected_cell_i <= mouse_cell_i;
+            selected_cell_j <= mouse_cell_j;
+            has_selection <= 1'b1;
         end
     end
+    
+    // ComponentStore 初始化模块
+    wire comp_init_w_en;
+    wire [7:0] comp_init_addr;
+    wire [39:0] comp_init_data;
+    wire comp_init_done;
+    
+    // ComponentStore RAM 实例 (40位宽, 256个条目)
+    SimpleRam #(
+        .WordWidth(40),
+        .WordCount(256)
+    ) comp_store_inst (
+        .clk(clk_pixel),
+        .w_en(comp_store_w_en | comp_init_w_en),
+        .w_addr(comp_store_w_en ? comp_store_w_addr : comp_init_addr),
+        .r_addr(comp_store_r_addr),
+        .d_in(comp_store_w_en ? comp_store_w_data : comp_init_data),
+        .d_out(comp_store_r_data)
+    );
+
+    CompStoreInit #(
+        .ADDR_WIDTH(8),
+        .DATA_WIDTH(40)
+    ) comp_store_init_inst (
+        .clk(clk_pixel),
+        .sw_init(SW[14]),  // SW[14] 上升沿触发初始化
+        .init_done(comp_init_done),
+        .init_addr(comp_init_addr),
+        .init_data(comp_init_data),
+        .init_w_en(comp_init_w_en)
+    );
+
+    // 数据有效标志 (简单实现：总是有效)
+    assign comp_data_valid = 1'b1;
 
     // 例化属性面板
     ComponentPropertyPanel #(
         .PANEL_X(0),
         .PANEL_Y(0),
         .PANEL_W(640),
-        .PANEL_H(64)
+        .PANEL_H(64),
+        .COMP_STORE_ADDR_WIDTH(8)
     ) u_prop_panel (
         .clk_pixel(clk_pixel),
         .hcount(x_pos),
         .vcount(y_pos),
         .video_on(video_on),
         .mouse_cell_i(mouse_cell_i),
-        
         .mouse_cell_j(mouse_cell_j),
-        .selected_cell_data(selected_cell_data),
+        .mouse_click(mouse_left_rising),
         .has_selection(has_selection),
         .selected_cell_i(selected_cell_i),
         .selected_cell_j(selected_cell_j),
+        .comp_r_addr(comp_store_r_addr),
+        .comp_r_data(comp_store_r_data),
+        .comp_data_valid(comp_data_valid),
+        .comp_w_en(comp_store_w_en),
+        .comp_w_addr(comp_store_w_addr),
+        .comp_w_data(comp_store_w_data),
+        .key_ascii(keyboard_key_ascii_prop),
+        .key_valid(keyboard_key_valid_prop),
+        .key_is_digit(keyboard_key_is_digit_prop),
+        .key_is_unit(keyboard_key_is_unit_prop),
+        .key_is_action(keyboard_key_is_action_prop),
         .panel_rendered(prop_panel_rendered),
         .panel_rgb(prop_panel_rgb)
     );
     //属性面板例化结束
 
     // =========================================================
+    // 矩阵显示模块 (上下布局，居中显示)
+    // =========================================================
+    wire        matrix_rendered;
+    wire [11:0] matrix_rgb;
+    reg  [1023:0] matrix_a_data;    // 8x8 Q8.8 定点数矩阵
+    reg  [1023:0] matrix_lu_data;   // 8x8 Q8.8 定点数矩阵
+
+    // 开关控制：SW[0]=0 显示电路，SW[0]=1 显示矩阵
+    wire show_matrix = SW[0];
+
+    // 初始化示例矩阵数据 (8x8 矩阵，Q8.8 定点数)
+    // 数据排列：[0][0] 在 [1023:1008], [0][1] 在 [1007:992], ..., [7][7] 在 [15:0]
+    // index = row * 8 + col, 位范围 = (63 - index) * 16 +: 16
+    always @(posedge clk_pixel) begin
+        // A 矩阵 - 三对角测试矩阵 (带小数和负数)
+        // [-128.00,   2.25,   0,     0,     0,     0,     0,     0   ]
+        // [  2.25,  -20.75,  3.50,  0,     0,     0,     0,     0   ]
+        // [  0,      3.50,  30.10,  4.80,  0,     0,     0,     0   ]
+        // [  0,      0,      4.80, 40.25,  5.90,  0,     0,     0   ]
+        // [  0,      0,      0,     5.90,-50.60,  6.70,  0,     0   ]
+        // [  0,      0,      0,     0,     6.70, 60.80,  7.40,  0   ]
+        // [  0,      0,      0,     0,     0,     7.40,-70.90,  8.10]
+        // [  0,      0,      0,     0,     0,     0,     8.10, 99.99]
+        matrix_a_data <= 1024'd0;
+        // Q8.8 格式：负数使用符号位 (bit 15)
+        // -128.00 = 0x8000 (1000 0000 0000 0000)
+        // -20.75  = 0xEC40 (1110 1100 0100 0000)
+        // -50.60  = 0xCD67 (1100 1101 0110 0111)
+        // -70.90  = 0xB91A (1011 1001 0001 1010)
+        // 99.99   = 0x63FD (0110 0011 1111 1101)
+        
+        // 第 0 行 (index 0-7)
+        matrix_a_data[1023:1008] <= 16'h8000;  // A[0][0] = -128.00
+        matrix_a_data[1007:992]  <= 16'h0240;  // A[0][1] = 2.25
+        matrix_a_data[991:976]   <= 16'h0000;  // A[0][2] = 0.00
+        matrix_a_data[975:960]   <= 16'h0000;  // A[0][3] = 0.00
+        matrix_a_data[959:944]   <= 16'h0000;  // A[0][4] = 0.00
+        matrix_a_data[943:928]   <= 16'h0000;  // A[0][5] = 0.00
+        matrix_a_data[927:912]   <= 16'h0000;  // A[0][6] = 0.00
+        matrix_a_data[911:896]   <= 16'h0000;  // A[0][7] = 0.00
+        // 第 1 行 (index 8-15)
+        matrix_a_data[895:880]   <= 16'h0240;  // A[1][0] = 2.25
+        matrix_a_data[879:864]   <= 16'hEC40;  // A[1][1] = -20.75
+        matrix_a_data[863:848]   <= 16'h0380;  // A[1][2] = 3.50
+        matrix_a_data[847:832]   <= 16'h0000;  // A[1][3] = 0.00
+        matrix_a_data[831:816]   <= 16'h0000;  // A[1][4] = 0.00
+        matrix_a_data[815:800]   <= 16'h0000;  // A[1][5] = 0.00
+        matrix_a_data[799:784]   <= 16'h0000;  // A[1][6] = 0.00
+        matrix_a_data[783:768]   <= 16'h0000;  // A[1][7] = 0.00
+        // 第 2 行 (index 16-23)
+        matrix_a_data[767:752]   <= 16'h0000;  // A[2][0] = 0.00
+        matrix_a_data[751:736]   <= 16'h0380;  // A[2][1] = 3.50
+        matrix_a_data[735:720]   <= 16'h1E1A;  // A[2][2] = 30.10
+        matrix_a_data[719:704]   <= 16'h04CC;  // A[2][3] = 4.80
+        matrix_a_data[703:688]   <= 16'h0000;  // A[2][4] = 0.00
+        matrix_a_data[687:672]   <= 16'h0000;  // A[2][5] = 0.00
+        matrix_a_data[671:656]   <= 16'h0000;  // A[2][6] = 0.00
+        matrix_a_data[655:640]   <= 16'h0000;  // A[2][7] = 0.00
+        // 第 3 行 (index 24-31)
+        matrix_a_data[639:624]   <= 16'h0000;  // A[3][0] = 0.00
+        matrix_a_data[623:608]   <= 16'h0000;  // A[3][1] = 0.00
+        matrix_a_data[607:592]   <= 16'h04CC;  // A[3][2] = 4.80
+        matrix_a_data[591:576]   <= 16'h2840;  // A[3][3] = 40.25
+        matrix_a_data[575:560]   <= 16'h05E6;  // A[3][4] = 5.90
+        matrix_a_data[559:544]   <= 16'h0000;  // A[3][5] = 0.00
+        matrix_a_data[543:528]   <= 16'h0000;  // A[3][6] = 0.00
+        matrix_a_data[527:512]   <= 16'h0000;  // A[3][7] = 0.00
+        // 第 4 行 (index 32-39)
+        matrix_a_data[511:496]   <= 16'h0000;  // A[4][0] = 0.00
+        matrix_a_data[495:480]   <= 16'h0000;  // A[4][1] = 0.00
+        matrix_a_data[479:464]   <= 16'h0000;  // A[4][2] = 0.00
+        matrix_a_data[463:448]   <= 16'h05E6;  // A[4][3] = 5.90
+        matrix_a_data[447:432]   <= 16'hCD67;  // A[4][4] = -50.60
+        matrix_a_data[431:416]   <= 16'h06B3;  // A[4][5] = 6.70
+        matrix_a_data[415:400]   <= 16'h0000;  // A[4][6] = 0.00
+        matrix_a_data[399:384]   <= 16'h0000;  // A[4][7] = 0.00
+        // 第 5 行 (index 40-47)
+        matrix_a_data[383:368]   <= 16'h0000;  // A[5][0] = 0.00
+        matrix_a_data[367:352]   <= 16'h0000;  // A[5][1] = 0.00
+        matrix_a_data[351:336]   <= 16'h0000;  // A[5][2] = 0.00
+        matrix_a_data[335:320]   <= 16'h0000;  // A[5][3] = 0.00
+        matrix_a_data[319:304]   <= 16'h06B3;  // A[5][4] = 6.70
+        matrix_a_data[303:288]   <= 16'h3CCD;  // A[5][5] = 60.80
+        matrix_a_data[287:272]   <= 16'h0766;  // A[5][6] = 7.40
+        matrix_a_data[271:256]   <= 16'h0000;  // A[5][7] = 0.00
+        // 第 6 行 (index 48-55)
+        matrix_a_data[255:240]   <= 16'h0000;  // A[6][0] = 0.00
+        matrix_a_data[239:224]   <= 16'h0000;  // A[6][1] = 0.00
+        matrix_a_data[223:208]   <= 16'h0000;  // A[6][2] = 0.00
+        matrix_a_data[207:192]   <= 16'h0000;  // A[6][3] = 0.00
+        matrix_a_data[191:176]   <= 16'h0000;  // A[6][4] = 0.00
+        matrix_a_data[175:160]   <= 16'h0766;  // A[6][5] = 7.40
+        matrix_a_data[159:144]   <= 16'hB91A;  // A[6][6] = -70.90
+        matrix_a_data[143:128]   <= 16'h081A;  // A[6][7] = 8.10
+        // 第 7 行 (index 56-63)
+        matrix_a_data[127:112]   <= 16'h0000;  // A[7][0] = 0.00
+        matrix_a_data[111:96]    <= 16'h0000;  // A[7][1] = 0.00
+        matrix_a_data[95:80]     <= 16'h0000;  // A[7][2] = 0.00
+        matrix_a_data[79:64]     <= 16'h0000;  // A[7][3] = 0.00
+        matrix_a_data[63:48]     <= 16'h0000;  // A[7][4] = 0.00
+        matrix_a_data[47:32]     <= 16'h0000;  // A[7][5] = 0.00
+        matrix_a_data[31:16]     <= 16'h081A;  // A[7][6] = 8.10
+        matrix_a_data[15:0]      <= 16'h63FD;  // A[7][7] = 99.99
+
+        // LU 矩阵 - LU 分解示例 (带小数，含负数测试)
+        // [  1.00,  0.50,  0.25,  0.10,  0.05,  0.02,  0.01,  0.00]
+        // [  2.00,  1.50,  0.75,  0.30,  0.15,  0.08,  0.04,  0.02]
+        // [  3.00,  2.50,  2.00,  1.00,  0.50,  0.25,  0.12,  0.06]
+        // [  4.00,  3.50,  3.00,  2.50,  1.25,  0.60,  0.30,  0.15]
+        // [  5.00,  4.50,  4.00,  3.50,  3.00,  1.50,  0.75,  0.35]
+        // [  6.00,  5.50,  5.00,  4.50,  4.00,  3.50,  1.75,  0.85]
+        // [  7.00,  6.50,  6.00,  5.50,  5.00,  4.50,  4.00,  2.00]
+        // [  8.00,  7.50,  7.00,  6.50,  6.00,  5.50,  5.00,  4.50]
+        matrix_lu_data <= 1024'd0;
+        // 第 0 行
+        matrix_lu_data[1023:1008] <= 16'h0100;  // 1.00
+        matrix_lu_data[1007:992]  <= 16'h0080;  // 0.50
+        matrix_lu_data[991:976]   <= 16'h0040;  // 0.25
+        matrix_lu_data[975:960]   <= 16'h001A;  // 0.10
+        matrix_lu_data[959:944]   <= 16'h000C;  // 0.05
+        matrix_lu_data[943:928]   <= 16'h0005;  // 0.02
+        matrix_lu_data[927:912]   <= 16'h0002;  // 0.01
+        matrix_lu_data[911:896]   <= 16'h0000;  // 0.00
+        // 第 1 行
+        matrix_lu_data[895:880]   <= 16'h0200;  // 2.00
+        matrix_lu_data[879:864]   <= 16'h0180;  // 1.50
+        matrix_lu_data[863:848]   <= 16'h00C0;  // 0.75
+        matrix_lu_data[847:832]   <= 16'h004C;  // 0.30
+        matrix_lu_data[831:816]   <= 16'h0026;  // 0.15
+        matrix_lu_data[815:800]   <= 16'h0014;  // 0.08
+        matrix_lu_data[799:784]   <= 16'h000A;  // 0.04
+        matrix_lu_data[783:768]   <= 16'h0005;  // 0.02
+        // 第 2 行
+        matrix_lu_data[767:752]   <= 16'h0300;  // 3.00
+        matrix_lu_data[751:736]   <= 16'h0280;  // 2.50
+        matrix_lu_data[735:720]   <= 16'h0200;  // 2.00
+        matrix_lu_data[719:704]   <= 16'h0100;  // 1.00
+        matrix_lu_data[703:688]   <= 16'h0080;  // 0.50
+        matrix_lu_data[687:672]   <= 16'h0040;  // 0.25
+        matrix_lu_data[671:656]   <= 16'h001F;  // 0.12
+        matrix_lu_data[655:640]   <= 16'h000F;  // 0.06
+        // 第 3 行
+        matrix_lu_data[639:624]   <= 16'h0400;  // 4.00
+        matrix_lu_data[623:608]   <= 16'h0380;  // 3.50
+        matrix_lu_data[607:592]   <= 16'h0300;  // 3.00
+        matrix_lu_data[591:576]   <= 16'h0280;  // 2.50
+        matrix_lu_data[575:560]   <= 16'h0140;  // 1.25
+        matrix_lu_data[559:544]   <= 16'h0099;  // 0.60
+        matrix_lu_data[543:528]   <= 16'h004C;  // 0.30
+        matrix_lu_data[527:512]   <= 16'h0026;  // 0.15
+        // 第 4 行
+        matrix_lu_data[511:496]   <= 16'h0500;  // 5.00
+        matrix_lu_data[495:480]   <= 16'h0480;  // 4.50
+        matrix_lu_data[479:464]   <= 16'h0400;  // 4.00
+        matrix_lu_data[463:448]   <= 16'h0380;  // 3.50
+        matrix_lu_data[447:432]   <= 16'h0300;  // 3.00
+        matrix_lu_data[431:416]   <= 16'h0180;  // 1.50
+        matrix_lu_data[415:400]   <= 16'h00C0;  // 0.75
+        matrix_lu_data[399:384]   <= 16'h0059;  // 0.35
+        // 第 5 行
+        matrix_lu_data[383:368]   <= 16'h0600;  // 6.00
+        matrix_lu_data[367:352]   <= 16'h0580;  // 5.50
+        matrix_lu_data[351:336]   <= 16'h0500;  // 5.00
+        matrix_lu_data[335:320]   <= 16'h0480;  // 4.50
+        matrix_lu_data[319:304]   <= 16'h0400;  // 4.00
+        matrix_lu_data[303:288]   <= 16'h0380;  // 3.50
+        matrix_lu_data[287:272]   <= 16'h01C0;  // 1.75
+        matrix_lu_data[271:256]   <= 16'h00D9;  // 0.85
+        // 第 6 行
+        matrix_lu_data[255:240]   <= 16'h0700;  // 7.00
+        matrix_lu_data[239:224]   <= 16'h0680;  // 6.50
+        matrix_lu_data[223:208]   <= 16'h0600;  // 6.00
+        matrix_lu_data[207:192]   <= 16'h0580;  // 5.50
+        matrix_lu_data[191:176]   <= 16'h0500;  // 5.00
+        matrix_lu_data[175:160]   <= 16'h0480;  // 4.50
+        matrix_lu_data[159:144]   <= 16'h0400;  // 4.00
+        matrix_lu_data[143:128]   <= 16'h0200;  // 2.00
+        // 第 7 行
+        matrix_lu_data[127:112]   <= 16'h0800;  // 8.00
+        matrix_lu_data[111:96]    <= 16'h0780;  // 7.50
+        matrix_lu_data[95:80]     <= 16'h0700;  // 7.00
+        matrix_lu_data[79:64]     <= 16'h0680;  // 6.50
+        matrix_lu_data[63:48]     <= 16'h0600;  // 6.00
+        matrix_lu_data[47:32]     <= 16'h0580;  // 5.50
+        matrix_lu_data[31:16]     <= 16'h0500;  // 5.00
+        matrix_lu_data[15:0]      <= 16'h0480;  // 4.50
+    end
+
+    // 全屏矩阵显示 (上下布局)
+    MatrixDisplay #(
+        .PANEL_X(0),
+        .PANEL_Y(0),
+        .PANEL_W(SCREEN_W),
+        .PANEL_H(SCREEN_H)
+    ) u_matrix_display (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .video_on(video_on),
+        .matrix_a_data(matrix_a_data),
+        .matrix_lu_data(matrix_lu_data),
+        .matrix_rendered(matrix_rendered),
+        .matrix_rgb(matrix_rgb)
+    );
+
+    // =========================================================
     // 【重點實例化：傳入更新的 KEY_W 和 KEY_H】
     // 確保這裡的尺寸與 Top 的遮罩區域完全相同
     // =========================================================
-    KeyboardVGA #( 
+    KeyboardVGA #(
         .KEY_COUNT(19),
-        .FONT_SCALE(KEYBOARD_SCALE), 
-        .KEYBOARD_X0(KEYBOARD_X), 
+        .FONT_SCALE(KEYBOARD_SCALE),
+        .KEYBOARD_X0(KEYBOARD_X),
         .KEYBOARD_Y0(KEYBOARD_Y),
         .KEY_W(KEY_W),
         .KEY_H(KEY_H)
     ) keyboard_vga_inst (
-        .clk_nav(clk_nav), .btnU(BTNU), .btnD(BTND), .btnL(BTNL), .btnR(BTNR), 
+        .clk_nav(clk_nav), .btnU(BTNU), .btnD(BTND), .btnL(BTNL), .btnR(BTNR),
         .btnC(BTNC),
         .mouse_x(mouse_xpos), .mouse_y(mouse_ypos), .mouse_left(mouse_left),
         .x(x_pos), .y(y_pos), .pixel_rgb(keyboard_rgb), .key_id(keyboard_key_id),
-        .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii)
+        .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii),
+        .key_is_digit(keyboard_key_is_digit_prop),
+        .key_is_unit(keyboard_key_is_unit_prop),
+        .key_is_action(keyboard_key_is_action_prop)
     );
-
+    
+    // 属性面板专用的KeyboardVGA信号连接（复用主键盘输入）
+    assign keyboard_key_valid_prop = keyboard_key_valid;
+    assign keyboard_key_ascii_prop = keyboard_key_ascii;
     ToolbarVGA toolbar_vga_inst (
         .clk_pixel(clk_pixel),
         .mouse_x(mouse_xpos),
@@ -481,14 +766,12 @@ module GlobalRender_top (
         .rd_addr(i_rd_addr), .rd_data(i_rd_data),
         .is_wave_pixel(is_i_wave), .is_axis_pixel(is_i_axis), .is_text_pixel(is_i_text)
     );
-
     // =========================================================
     // 【新增】8-bit Binary 轉 BCD 轉換器 (用於 OSD 顯示峰值)
     // =========================================================
     wire [3:0] v_max_h = v_max_val / 100;
     wire [3:0] v_max_t = (v_max_val % 100) / 10;
     wire [3:0] v_max_u = v_max_val % 10;
-
     wire [3:0] i_max_h = i_max_val / 100;
     wire [3:0] i_max_t = (i_max_val % 100) / 10;
     wire [3:0] i_max_u = i_max_val % 10;
@@ -502,7 +785,6 @@ module GlobalRender_top (
         glyph_hit("0" + v_max_h, 2, x_pos - 194, y_pos - 360) ||
         glyph_hit("0" + v_max_t, 2, x_pos - 206, y_pos - 360) ||
         glyph_hit("0" + v_max_u, 2, x_pos - 218, y_pos - 360);
-
     wire i_dyn_text =
         glyph_hit("M", 2, x_pos - 388, y_pos - 360) ||
         glyph_hit("A", 2, x_pos - 400, y_pos - 360) ||
@@ -511,7 +793,6 @@ module GlobalRender_top (
         glyph_hit("0" + i_max_h, 2, x_pos - 436, y_pos - 360) ||
         glyph_hit("0" + i_max_t, 2, x_pos - 448, y_pos - 360) ||
         glyph_hit("0" + i_max_u, 2, x_pos - 460, y_pos - 360);
-
     // =========================================================
     // 波形影像混合邏輯 (修復波形溢出邊框的問題)
     // =========================================================
@@ -522,7 +803,6 @@ module GlobalRender_top (
     // 加入 4 像素的安全遮罩，防止波形蓋過儀表板的外框
     wire v_wave_display = is_v_wave && (x_pos >= 4 && x_pos < 238) && (y_pos >= 356 && y_pos < 476);
     wire i_wave_display = is_i_wave && (x_pos >= 246 && x_pos < 480) && (y_pos >= 356 && y_pos < 476);
-    
     // 終極混合：加入 v_dyn_text 與 i_dyn_text 的判斷，並顯示青色 (12'h0FF)
     wire [11:0] wave_out_rgb;
     assign wave_out_rgb =
@@ -531,7 +811,6 @@ module GlobalRender_top (
         in_i_region ?
         (i_dyn_text ? 12'h0FF : is_i_text ? 12'hFFF : i_wave_display ? 12'hFF0 : is_i_axis ? 12'h444 : 12'h111) :
         12'h000;
-        
     always @(posedge clk_nav) begin
         if (keyboard_key_valid && (keyboard_key_id != 5'd18)) last_ascii <= keyboard_key_ascii;
     end
@@ -558,15 +837,22 @@ module GlobalRender_top (
         end else if (init_cycles == 32'd1) begin mouse_set_max_x <= 1'b1; mouse_set_value <= 12'd639;
         end else if (init_cycles == 32'd2) begin mouse_set_max_y <= 1'b1; mouse_set_value <= 12'd479;
         end else if (init_cycles < 32'd256) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= init_cycles[7:0]; circuit_canvas_ram_w_data <= 16'd0;
-        end else if (init_cycles == 32'd256) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd17; circuit_canvas_ram_w_data <= 16'b0000000_10_000001_1;
-        end else if (init_cycles == 32'd257) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd18; circuit_canvas_ram_w_data <= 16'b0000000_00_000101_1;
-        end else if (init_cycles == 32'd258) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd19; circuit_canvas_ram_w_data <= 16'b0000000_00_000110_1;
-        end else if (init_cycles == 32'd259) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd33; circuit_canvas_ram_w_data <= 16'b0000000_11_001000_1;
-        end else if (init_cycles == 32'd260) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd49; circuit_canvas_ram_w_data <= 16'b0000000_11_000111_1;
-        end else if (init_cycles == 32'd261) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd82; circuit_canvas_ram_w_data <= 16'b0000000_00_000010_1;
-        end else if (init_cycles == 32'd262) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd84; circuit_canvas_ram_w_data <= 16'b0000000_01_000010_1;
-        end else if (init_cycles == 32'd263) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd86; circuit_canvas_ram_w_data <= 16'b0000000_10_000010_1;
-        end else if (init_cycles == 32'd264) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd88; circuit_canvas_ram_w_data <= 16'b0000000_11_000010_1;
+        end else if (init_cycles == 32'd256) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd34; circuit_canvas_ram_w_data <= 16'h0083; // (2,2) UL
+        end else if (init_cycles == 32'd257) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd35; circuit_canvas_ram_w_data <= 16'h000F; // (3,2) V-Source L
+        end else if (init_cycles == 32'd258) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd36; circuit_canvas_ram_w_data <= 16'h0011; // (4,2) V-Source R
+        end else if (init_cycles == 32'd259) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd37; circuit_canvas_ram_w_data <= 16'h0103; // (5,2) UR
+        end else if (init_cycles == 32'd260) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd50; circuit_canvas_ram_w_data <= 16'h0281; // (2,3) Wire L
+        end else if (init_cycles == 32'd261) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd53; circuit_canvas_ram_w_data <= 16'h0081; // (5,3) Wire R
+        end else if (init_cycles == 32'd262) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd66; circuit_canvas_ram_w_data <= 16'h0285; // (2,4) Tee L
+        end else if (init_cycles == 32'd263) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd67; circuit_canvas_ram_w_data <= 16'h020B; // (3,4) Resistor L
+        end else if (init_cycles == 32'd264) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd68; circuit_canvas_ram_w_data <= 16'h020D; // (4,4) Resistor R
+        end else if (init_cycles == 32'd265) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd69; circuit_canvas_ram_w_data <= 16'h0185; // (5,4) Tee R
+        end else if (init_cycles == 32'd266) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd82; circuit_canvas_ram_w_data <= 16'h0281; // (2,5) Wire L2
+        end else if (init_cycles == 32'd267) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd85; circuit_canvas_ram_w_data <= 16'h0081; // (5,5) Wire R2
+        end else if (init_cycles == 32'd268) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd98; circuit_canvas_ram_w_data <= 16'h0003; // (2,6) LL
+        end else if (init_cycles == 32'd269) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd99; circuit_canvas_ram_w_data <= 16'h021B; // (3,6) Capacitor L
+        end else if (init_cycles == 32'd270) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd100; circuit_canvas_ram_w_data <= 16'h021D; // (4,6) Capacitor R
+        end else if (init_cycles == 32'd271) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd101; circuit_canvas_ram_w_data <= 16'h0183; // (5,6) LR
         end else if (pending_second_tool_write) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= pending_second_tool_addr;
@@ -594,7 +880,6 @@ module GlobalRender_top (
         canvas_label_active = 1'b0; title_active = 1'b0; frame_active = 1'b0;
         icon_active = 1'b0;
         grid_line_active = ((x_pos[4:0] == 5'd0) || (y_pos[4:0] == 5'd0));
-        
         if (top_bar_active) begin
             ui_rgb = rgb888_to_444(24'hE2B2A8);
             if (grid_line_active) ui_rgb = rgb888_to_444(24'hEFD2CC);
@@ -628,7 +913,6 @@ module GlobalRender_top (
         if (1'b0) title_active = 1'b1;
         if (glyph_hit("V", 5, x_pos - 240, y_pos - 446) || glyph_hit("G", 5, x_pos - 270, y_pos - 446) || glyph_hit("A", 5, x_pos - 300, y_pos - 446) || glyph_hit("6", 5, x_pos - 352, y_pos - 446) || glyph_hit("4", 5, x_pos - 382, y_pos - 446) || glyph_hit("0", 5, x_pos - 412, y_pos - 446) || glyph_hit("@", 5, x_pos - 492, y_pos - 446) || glyph_hit("6", 5, x_pos - 544, y_pos - 446) || glyph_hit("0", 5, x_pos - 574, y_pos - 446)) title_active = 1'b1;
         if ((x_pos >= 448) && (x_pos < 482) && (y_pos >= 320) && (y_pos < 332)) title_active = 1'b1;
-        
         if (title_active && !dynamic_wave_active) ui_rgb = 12'hFFF;
     end
 
@@ -637,9 +921,13 @@ module GlobalRender_top (
             rgb <= BLACK;
         end else if (mouse_display_enable) begin
             rgb <= mouse_rgb;
+        end else if (show_matrix && matrix_rendered) begin
+            // 全屏矩阵显示
+            rgb <= matrix_rgb;
         end else if (keyboard_region_active) begin
             rgb <= keyboard_rgb;
         end else if (circuit_canvas_rendered) begin
+            // 电路显示
             rgb <= circuit_canvas_rgb;
         end else if (dynamic_wave_active) begin
             rgb <= wave_out_rgb;

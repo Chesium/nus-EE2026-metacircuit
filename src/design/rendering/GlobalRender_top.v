@@ -75,7 +75,8 @@ module GlobalRender_top (
     reg  [11:0] ui_rgb;
     wire [11:0] toolbar_rgb;
     wire        toolbar_rendered;
-    wire [2:0]  selected_toolbar_idx;
+    wire [3:0]  selected_toolbar_idx;
+    wire [1:0]  selected_wire_variant;
     reg         mouse_left_d_sys = 1'b0;
     reg top_bar_active, left_bar_active, right_bar_active, canvas_label_active, title_active, frame_active, icon_active, grid_line_active;
     integer dx, dy;
@@ -98,9 +99,6 @@ module GlobalRender_top (
 
     reg         clear_canvas_active = 1'b0;
     reg  [7:0]  clear_canvas_addr = 8'd0;
-    reg         pending_second_tool_write = 1'b0;
-    reg  [7:0]  pending_second_tool_addr = 8'd0;
-    reg  [15:0] pending_second_tool_data = 16'd0;
     assign keyboard_region_active = (x_pos >= KEYBOARD_REGION_X0) && (x_pos < KEYBOARD_REGION_X1) && (y_pos >= KEYBOARD_REGION_Y0) && (y_pos < KEYBOARD_REGION_Y1);
     assign mouse_rgb = {mouse_r, mouse_g, mouse_b};
 
@@ -120,41 +118,78 @@ module GlobalRender_top (
     endfunction
 
     function [15:0] toolbar_first_cell_data;
-        input [2:0] tool_idx;
+        input [3:0] tool_idx;
         begin
             case (tool_idx)
-                3'd1: toolbar_first_cell_data = make_cell_data(2'b00, 6'd0); // wire
-                3'd2: toolbar_first_cell_data = make_cell_data(2'b00, 6'd5); // resistor left
-                3'd3: toolbar_first_cell_data = make_cell_data(2'b00, 6'd11); // inductor left
-                3'd4: toolbar_first_cell_data = make_cell_data(2'b00, 6'd13); // capacitor left
-                3'd5: toolbar_first_cell_data = make_cell_data(2'b00, 6'd7); // voltage left
-                3'd6: toolbar_first_cell_data = make_cell_data(2'b00, 6'd9); // current left
-                3'd7: toolbar_first_cell_data = make_cell_data(2'b00, 6'd15); // ground
+                4'd1: toolbar_first_cell_data = make_cell_data(2'b00, 6'd0); // wire
+                4'd2: toolbar_first_cell_data = make_cell_data(2'b00, 6'd5); // resistor left
+                4'd3: toolbar_first_cell_data = make_cell_data(2'b00, 6'd11); // inductor left
+                4'd4: toolbar_first_cell_data = make_cell_data(2'b00, 6'd13); // capacitor left
+                4'd5: toolbar_first_cell_data = make_cell_data(2'b00, 6'd7); // voltage left
+                4'd6: toolbar_first_cell_data = make_cell_data(2'b00, 6'd9); // current left
+                4'd7: toolbar_first_cell_data = make_cell_data(2'b00, 6'd15); // ground
                 default: toolbar_first_cell_data = 16'd0;
             endcase
         end
     endfunction
 
     function [15:0] toolbar_second_cell_data;
-        input [2:0] tool_idx;
+        input [3:0] tool_idx;
         begin
             case (tool_idx)
-                3'd2: toolbar_second_cell_data = make_cell_data(2'b00, 6'd6); // resistor right
-                3'd3: toolbar_second_cell_data = make_cell_data(2'b00, 6'd12); // inductor right
-                3'd4: toolbar_second_cell_data = make_cell_data(2'b00, 6'd14); // capacitor right
-                3'd5: toolbar_second_cell_data = make_cell_data(2'b00, 6'd8); // voltage right
-                3'd6: toolbar_second_cell_data = make_cell_data(2'b00, 6'd10); // current right
+                4'd2: toolbar_second_cell_data = make_cell_data(2'b00, 6'd6); // resistor right
+                4'd3: toolbar_second_cell_data = make_cell_data(2'b00, 6'd12); // inductor right
+                4'd4: toolbar_second_cell_data = make_cell_data(2'b00, 6'd14); // capacitor right
+                4'd5: toolbar_second_cell_data = make_cell_data(2'b00, 6'd8); // voltage right
+                4'd6: toolbar_second_cell_data = make_cell_data(2'b00, 6'd10); // current right
                 default: toolbar_second_cell_data = 16'd0;
             endcase
         end
     endfunction
 
     function toolbar_tool_uses_two_cells;
-        input [2:0] tool_idx;
+        input [3:0] tool_idx;
         begin
             case (tool_idx)
-                3'd2, 3'd3, 3'd4, 3'd5, 3'd6: toolbar_tool_uses_two_cells = 1'b1;
+                4'd2, 4'd3, 4'd4, 4'd5, 4'd6: toolbar_tool_uses_two_cells = 1'b1;
                 default: toolbar_tool_uses_two_cells = 1'b0;
+            endcase
+        end
+    endfunction
+
+    function [15:0] rotate_cell_data;
+        input [15:0] cell_data;
+        begin
+            if (cell_data[0]) begin
+                rotate_cell_data = {cell_data[15:9], cell_data[8:7] + 2'b01, cell_data[6:0]};
+            end else begin
+                rotate_cell_data = cell_data;
+            end
+        end
+    endfunction
+
+    function [3:0] toolbar_mode_select;
+        input [3:0] tool_idx;
+        input [1:0] wire_variant;
+        begin
+            case (tool_idx)
+                4'd1: begin
+                    case (wire_variant)
+                        2'd0: toolbar_mode_select = 4'd0;   // wire
+                        2'd1: toolbar_mode_select = 4'd1;   // junction
+                        2'd2: toolbar_mode_select = 4'd2;   // elbow
+                        default: toolbar_mode_select = 4'd3; // tee
+                    endcase
+                end
+                4'd2: toolbar_mode_select = 4'd4;   // resistor
+                4'd3: toolbar_mode_select = 4'd9;   // inductor
+                4'd4: toolbar_mode_select = 4'd10;  // capacitor
+                4'd5: toolbar_mode_select = 4'd5;   // voltage source
+                4'd6: toolbar_mode_select = 4'd6;   // current source
+                4'd7: toolbar_mode_select = 4'd11;  // ground
+                4'd8: toolbar_mode_select = 4'd7;   // rotate
+                4'd9: toolbar_mode_select = 4'd8;   // delete
+                default: toolbar_mode_select = 4'hF;
             endcase
         end
     endfunction
@@ -286,12 +321,35 @@ module GlobalRender_top (
         end
     end
 
+    wire signed [12:0] circuit_canvas_grid_pos_x;
+    wire signed [12:0] circuit_canvas_grid_pos_y;
+    reg         interaction_frame_toggle_pix = 1'b0;
+    reg         interaction_frame_sync0 = 1'b0;
+    reg         interaction_frame_sync1 = 1'b0;
+    reg         interaction_frame_sync2 = 1'b0;
+    wire        interaction_frame_tick;
+    wire [3:0]  interaction_mode_select;
+    wire        interaction_bg_cmd_valid;
+    wire        interaction_bg_cmd_write;
+    wire [7:0]  interaction_bg_cmd_addr;
+    wire [15:0] interaction_bg_cmd_wdata;
+    wire        interaction_bg_cmd_ready;
+    reg         interaction_bg_rsp_valid = 1'b0;
+    reg  [15:0] interaction_bg_rsp_rdata = 16'd0;
+    wire        interaction_frame_done;
+    wire        interaction_frame_drop_flag;
+
+    assign interaction_mode_select = toolbar_mode_select(selected_toolbar_idx, selected_wire_variant);
+    assign interaction_frame_tick = interaction_frame_sync1 ^ interaction_frame_sync2;
+
     CircuitCanvas #( .CanvasPosX(CANVAS_X0), .CanvasPosY(CANVAS_Y0), .CanvasWidth(CANVAS_W), .CanvasHeight(CANVAS_H) ) circuit_canvas_inst (
         .clk_pixel(clk_pixel), .x_pos(x_pos), .y_pos(y_pos), .rgb(circuit_canvas_rgb),
         .rendered(circuit_canvas_rendered), .mouse_x_pos(mouse_xpos), .mouse_y_pos(mouse_ypos),
         .data_addr(circuit_canvas_ram_r_addr), .incoming_data(circuit_canvas_ram_r_data),
-        .display_grid(1'b1), .mouse_left_click(mouse_left && (selected_toolbar_idx == 3'd0)),
-        .anim_phase(global_anim_phase)
+        .display_grid(1'b1), .mouse_left_click(mouse_left && (selected_toolbar_idx == 4'd0)),
+        .anim_phase(global_anim_phase),
+        .grid_pos_x_out(circuit_canvas_grid_pos_x),
+        .grid_pos_y_out(circuit_canvas_grid_pos_y)
     );
     // Component Property Panel signals 以下为属性面板例化
     wire        prop_panel_rendered;
@@ -311,11 +369,16 @@ module GlobalRender_top (
     wire        toolbar_place_two_cells;
     wire [15:0] toolbar_place_data0;
     wire [15:0] toolbar_place_data1;
+    wire        toolbar_is_rotate_tool;
+    wire        toolbar_is_delete_tool;
+    wire        toolbar_is_place_tool;
     wire        mouse_left_rising_sys;
     
     // 示例元件数据 (从 init_cycles 中复制)
     reg  [15:0] component_data [0:255];
+    reg  [15:0] canvas_shadow_data [0:255];
     reg  [7:0]  hovered_addr;
+    wire [15:0] hovered_cell_data;
 
     // =========================================================
     // Component Property Panel - 元件属性显示 (简化版)
@@ -334,8 +397,12 @@ module GlobalRender_top (
     assign toolbar_place_two_cells = toolbar_tool_uses_two_cells(selected_toolbar_idx);
     assign toolbar_place_data0 = toolbar_first_cell_data(selected_toolbar_idx);
     assign toolbar_place_data1 = toolbar_second_cell_data(selected_toolbar_idx);
+    assign toolbar_is_rotate_tool = (selected_toolbar_idx == 4'd8);
+    assign toolbar_is_delete_tool = (selected_toolbar_idx == 4'd9);
+    assign toolbar_is_place_tool = (selected_toolbar_idx != 4'd0) && !toolbar_is_rotate_tool && !toolbar_is_delete_tool;
     assign mouse_left_rising = mouse_left && !mouse_left_d;
     assign mouse_left_rising_sys = mouse_left && !mouse_left_d_sys;
+    assign hovered_cell_data = canvas_shadow_data[hovered_addr];
     // 同步鼠标点击 - 记录选中的单元格
     always @(posedge clk_pixel) begin
         mouse_left_d <= mouse_left;
@@ -380,7 +447,9 @@ module GlobalRender_top (
     // 从本地存储读取选中单元格的数据
     always @(posedge clk_pixel) begin
         if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
-            selected_cell_data <= component_data[hovered_addr];
+            selected_cell_data <= canvas_shadow_data[hovered_addr];
+        end else if (has_selection) begin
+            selected_cell_data <= canvas_shadow_data[selected_cell_i + selected_cell_j * 16];
         end
     end
 
@@ -410,6 +479,54 @@ module GlobalRender_top (
     // =========================================================
     // 矩阵显示模块 (上下布局，居中显示)
     // =========================================================
+    always @(posedge clk_pixel) begin
+        if (vsync_edge) begin
+            interaction_frame_toggle_pix <= ~interaction_frame_toggle_pix;
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
+        interaction_frame_sync0 <= interaction_frame_toggle_pix;
+        interaction_frame_sync1 <= interaction_frame_sync0;
+        interaction_frame_sync2 <= interaction_frame_sync1;
+    end
+
+    assign interaction_bg_cmd_ready = (init_cycles >= 32'd1000) && !clear_canvas_active;
+
+    InteractionController #(
+        .CanvasPosX(CANVAS_X0),
+        .CanvasPosY(CANVAS_Y0),
+        .CanvasWidth(CANVAS_W),
+        .CanvasHeight(CANVAS_H),
+        .CellSize(32),
+        .GridWidth(16),
+        .GridHeight(16),
+        .RotateFramesPerStep(8),
+        .AddrWidth(8),
+        .DataWidth(16)
+    ) interaction_controller_inst (
+        .clk(CLK100MHZ),
+        .reset(BTNC),
+        .frame_start_pulse(interaction_frame_tick && (selected_toolbar_idx != 4'd0)),
+        .mode_select(interaction_mode_select),
+        .mouse_x(mouse_xpos),
+        .mouse_y(mouse_ypos),
+        .mouse_left(mouse_left),
+        .mouse_middle(mouse_middle),
+        .mouse_right(mouse_right),
+        .grid_pos_x(circuit_canvas_grid_pos_x),
+        .grid_pos_y(circuit_canvas_grid_pos_y),
+        .bg_cmd_ready(interaction_bg_cmd_ready),
+        .bg_rsp_valid(interaction_bg_rsp_valid),
+        .bg_rsp_rdata(interaction_bg_rsp_rdata),
+        .bg_cmd_valid(interaction_bg_cmd_valid),
+        .bg_cmd_write(interaction_bg_cmd_write),
+        .bg_cmd_addr(interaction_bg_cmd_addr),
+        .bg_cmd_wdata(interaction_bg_cmd_wdata),
+        .frame_done(interaction_frame_done),
+        .frame_drop_flag(interaction_frame_drop_flag)
+    );
+
     wire        matrix_rendered;
     wire [11:0] matrix_rgb;
     reg  [1023:0] matrix_a_data;    // 8x8 Q8.8 定点数矩阵
@@ -640,7 +757,8 @@ module GlobalRender_top (
         .y(y_pos),
         .pixel_rgb(toolbar_rgb),
         .rendered(toolbar_rendered),
-        .selected_tool_idx(selected_toolbar_idx)
+        .selected_tool_idx(selected_toolbar_idx),
+        .selected_wire_variant(selected_wire_variant)
     );
     // =========================================================
     // 電壓波形 (X: 0 ~ 241, Y: 352 ~ 479)
@@ -753,52 +871,48 @@ module GlobalRender_top (
         mouse_set_max_x <= 1'b0; mouse_set_max_y <= 1'b0;
         circuit_canvas_ram_w_en <= 1'b0;
         mouse_left_d_sys <= mouse_left;
+        interaction_bg_rsp_valid <= 1'b0;
         if (init_cycles < 32'd1000) init_cycles <= init_cycles + 1'b1;
 
         if (keyboard_key_valid && (keyboard_key_id == 5'd18)) begin
             clear_canvas_active <= 1'b1;
             clear_canvas_addr <= 8'd0; init_cycles <= 32'd1000;
-            pending_second_tool_write <= 1'b0;
         end
 
         if (clear_canvas_active) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= clear_canvas_addr; circuit_canvas_ram_w_data <= 16'd0;
+            canvas_shadow_data[clear_canvas_addr] <= 16'd0;
             if (clear_canvas_addr == 8'd255) clear_canvas_active <= 1'b0;
             else clear_canvas_addr <= clear_canvas_addr + 1'b1;
         end else if (init_cycles == 32'd1) begin mouse_set_max_x <= 1'b1; mouse_set_value <= 12'd639;
         end else if (init_cycles == 32'd2) begin mouse_set_max_y <= 1'b1; mouse_set_value <= 12'd479;
-        end else if (init_cycles < 32'd256) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= init_cycles[7:0]; circuit_canvas_ram_w_data <= 16'd0;
-        end else if (init_cycles == 32'd256) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd34; circuit_canvas_ram_w_data <= 16'h0083; // (2,2) UL
-        end else if (init_cycles == 32'd257) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd35; circuit_canvas_ram_w_data <= 16'h000F; // (3,2) V-Source L
-        end else if (init_cycles == 32'd258) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd36; circuit_canvas_ram_w_data <= 16'h0011; // (4,2) V-Source R
-        end else if (init_cycles == 32'd259) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd37; circuit_canvas_ram_w_data <= 16'h0103; // (5,2) UR
-        end else if (init_cycles == 32'd260) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd50; circuit_canvas_ram_w_data <= 16'h0281; // (2,3) Wire L
-        end else if (init_cycles == 32'd261) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd53; circuit_canvas_ram_w_data <= 16'h0081; // (5,3) Wire R
-        end else if (init_cycles == 32'd262) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd66; circuit_canvas_ram_w_data <= 16'h0285; // (2,4) Tee L
-        end else if (init_cycles == 32'd263) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd67; circuit_canvas_ram_w_data <= 16'h020B; // (3,4) Resistor L
-        end else if (init_cycles == 32'd264) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd68; circuit_canvas_ram_w_data <= 16'h020D; // (4,4) Resistor R
-        end else if (init_cycles == 32'd265) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd69; circuit_canvas_ram_w_data <= 16'h0185; // (5,4) Tee R
-        end else if (init_cycles == 32'd266) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd82; circuit_canvas_ram_w_data <= 16'h0281; // (2,5) Wire L2
-        end else if (init_cycles == 32'd267) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd85; circuit_canvas_ram_w_data <= 16'h0081; // (5,5) Wire R2
-        end else if (init_cycles == 32'd268) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd98; circuit_canvas_ram_w_data <= 16'h0003; // (2,6) LL
-        end else if (init_cycles == 32'd269) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd99; circuit_canvas_ram_w_data <= 16'h021B; // (3,6) Capacitor L
-        end else if (init_cycles == 32'd270) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd100; circuit_canvas_ram_w_data <= 16'h021D; // (4,6) Capacitor R
-        end else if (init_cycles == 32'd271) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd101; circuit_canvas_ram_w_data <= 16'h0183; // (5,6) LR
-        end else if (pending_second_tool_write) begin
-            circuit_canvas_ram_w_en <= 1'b1;
-            circuit_canvas_ram_w_addr <= pending_second_tool_addr;
-            circuit_canvas_ram_w_data <= pending_second_tool_data;
-            pending_second_tool_write <= 1'b0;
-        end else if (mouse_left_rising_sys && canvas_mouse_in_bounds && (selected_toolbar_idx != 3'd0) &&
-                     (!toolbar_place_two_cells || (mouse_cell_i < 12'd15))) begin
-            circuit_canvas_ram_w_en <= 1'b1;
-            circuit_canvas_ram_w_addr <= hovered_addr;
-            circuit_canvas_ram_w_data <= toolbar_place_data0;
-            if (toolbar_place_two_cells) begin
-                pending_second_tool_write <= 1'b1;
-                pending_second_tool_addr <= hovered_addr + 8'd1;
-                pending_second_tool_data <= toolbar_place_data1;
+        end else if (init_cycles < 32'd256) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= init_cycles[7:0]; circuit_canvas_ram_w_data <= 16'd0; canvas_shadow_data[init_cycles[7:0]] <= 16'd0;
+        end else if (init_cycles == 32'd256) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd34; circuit_canvas_ram_w_data <= 16'h0083; canvas_shadow_data[8'd34] <= 16'h0083; // (2,2) UL
+        end else if (init_cycles == 32'd257) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd35; circuit_canvas_ram_w_data <= 16'h000F; canvas_shadow_data[8'd35] <= 16'h000F; // (3,2) V-Source L
+        end else if (init_cycles == 32'd258) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd36; circuit_canvas_ram_w_data <= 16'h0011; canvas_shadow_data[8'd36] <= 16'h0011; // (4,2) V-Source R
+        end else if (init_cycles == 32'd259) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd37; circuit_canvas_ram_w_data <= 16'h0103; canvas_shadow_data[8'd37] <= 16'h0103; // (5,2) UR
+        end else if (init_cycles == 32'd260) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd50; circuit_canvas_ram_w_data <= 16'h0281; canvas_shadow_data[8'd50] <= 16'h0281; // (2,3) Wire L
+        end else if (init_cycles == 32'd261) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd53; circuit_canvas_ram_w_data <= 16'h0081; canvas_shadow_data[8'd53] <= 16'h0081; // (5,3) Wire R
+        end else if (init_cycles == 32'd262) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd66; circuit_canvas_ram_w_data <= 16'h0285; canvas_shadow_data[8'd66] <= 16'h0285; // (2,4) Tee L
+        end else if (init_cycles == 32'd263) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd67; circuit_canvas_ram_w_data <= 16'h020B; canvas_shadow_data[8'd67] <= 16'h020B; // (3,4) Resistor L
+        end else if (init_cycles == 32'd264) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd68; circuit_canvas_ram_w_data <= 16'h020D; canvas_shadow_data[8'd68] <= 16'h020D; // (4,4) Resistor R
+        end else if (init_cycles == 32'd265) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd69; circuit_canvas_ram_w_data <= 16'h0185; canvas_shadow_data[8'd69] <= 16'h0185; // (5,4) Tee R
+        end else if (init_cycles == 32'd266) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd82; circuit_canvas_ram_w_data <= 16'h0281; canvas_shadow_data[8'd82] <= 16'h0281; // (2,5) Wire L2
+        end else if (init_cycles == 32'd267) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd85; circuit_canvas_ram_w_data <= 16'h0081; canvas_shadow_data[8'd85] <= 16'h0081; // (5,5) Wire R2
+        end else if (init_cycles == 32'd268) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd98; circuit_canvas_ram_w_data <= 16'h0003; canvas_shadow_data[8'd98] <= 16'h0003; // (2,6) LL
+        end else if (init_cycles == 32'd269) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd99; circuit_canvas_ram_w_data <= 16'h021B; canvas_shadow_data[8'd99] <= 16'h021B; // (3,6) Capacitor L
+        end else if (init_cycles == 32'd270) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd100; circuit_canvas_ram_w_data <= 16'h021D; canvas_shadow_data[8'd100] <= 16'h021D; // (4,6) Capacitor R
+        end else if (init_cycles == 32'd271) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 8'd101; circuit_canvas_ram_w_data <= 16'h0183; canvas_shadow_data[8'd101] <= 16'h0183; // (5,6) LR
+        end else if (interaction_bg_cmd_valid && interaction_bg_cmd_ready) begin
+            if (interaction_bg_cmd_write) begin
+                circuit_canvas_ram_w_en <= 1'b1;
+                circuit_canvas_ram_w_addr <= interaction_bg_cmd_addr;
+                circuit_canvas_ram_w_data <= interaction_bg_cmd_wdata;
+                canvas_shadow_data[interaction_bg_cmd_addr] <= interaction_bg_cmd_wdata;
+            end else begin
+                interaction_bg_rsp_valid <= 1'b1;
+                interaction_bg_rsp_rdata <= canvas_shadow_data[interaction_bg_cmd_addr];
             end
         end
     end
@@ -840,11 +954,10 @@ module GlobalRender_top (
         4, x_pos - 260, y_pos - 4) || glyph_hit("t", 4, x_pos - 276, y_pos - 4) || glyph_hit("o", 4, x_pos - 300, y_pos - 4) || glyph_hit("r", 4, x_pos - 324, y_pos - 4)) title_active = 1'b1;
         if (glyph_hit("R", 4, x_pos - 40, y_pos - 28) || glyph_hit("1", 4, x_pos - 64, y_pos - 28) || glyph_hit("2", 4, x_pos - 208, y_pos - 28) || glyph_hit("3", 4, x_pos - 232, y_pos - 28) || glyph_hit("0", 4, x_pos - 256, y_pos - 28) || glyph_hit("H", 4, x_pos - 360, y_pos - 28) || glyph_hit("o", 4, x_pos - 384, y_pos - 28) || glyph_hit("r", 4, x_pos - 408, y_pos - 28) || glyph_hit("i", 4, x_pos - 428, y_pos - 28) || glyph_hit("z", 4, x_pos - 444, y_pos - 28) || glyph_hit("o", 4, x_pos - 468, y_pos - 28) || 
         glyph_hit("n", 4, x_pos - 492, y_pos - 28) || glyph_hit("t", 4, x_pos - 516, y_pos - 28) || glyph_hit("a", 4, x_pos - 536, y_pos - 28) || glyph_hit("l", 4, x_pos - 560, y_pos - 28)) title_active = 1'b1;
-        if (glyph_hit("D", 4, x_pos - 492, y_pos - 198) || glyph_hit("e", 4, x_pos - 516, y_pos - 198) || glyph_hit("b", 4, x_pos - 540, y_pos - 198) || glyph_hit("u", 4, x_pos - 564, y_pos - 198) || glyph_hit("g", 4, x_pos - 588, y_pos - 198) || glyph_hit("D", 4, x_pos - 492, y_pos - 328) || glyph_hit("i", 4, x_pos - 516, y_pos - 328) || glyph_hit("s", 4, x_pos - 532, y_pos - 328) || glyph_hit("p", 4, x_pos - 556, y_pos - 328) || glyph_hit("l", 4, x_pos - 580, y_pos - 328) || glyph_hit("a", 4, x_pos - 596, y_pos - 328) || 
-        glyph_hit("y", 4, x_pos - 620, y_pos - 328)) title_active = 1'b1;
+        if (1'b0) title_active = 1'b1;
         if (1'b0) title_active = 1'b1;
         if (glyph_hit("V", 5, x_pos - 240, y_pos - 446) || glyph_hit("G", 5, x_pos - 270, y_pos - 446) || glyph_hit("A", 5, x_pos - 300, y_pos - 446) || glyph_hit("6", 5, x_pos - 352, y_pos - 446) || glyph_hit("4", 5, x_pos - 382, y_pos - 446) || glyph_hit("0", 5, x_pos - 412, y_pos - 446) || glyph_hit("@", 5, x_pos - 492, y_pos - 446) || glyph_hit("6", 5, x_pos - 544, y_pos - 446) || glyph_hit("0", 5, x_pos - 574, y_pos - 446)) title_active = 1'b1;
-        if ((x_pos >= 448) && (x_pos < 482) && (y_pos >= 320) && (y_pos < 332)) title_active = 1'b1;
+        if (1'b0) title_active = 1'b1;
         if (title_active && !dynamic_wave_active) ui_rgb = 12'hFFF;
     end
 

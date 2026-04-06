@@ -45,6 +45,9 @@ module InteractionController #(
   localparam [3:0] ModeDrawCurrent  = 4'd6;
   localparam [3:0] ModeRotateCell   = 4'd7;
   localparam [3:0] ModeClearCell    = 4'd8;
+  localparam [3:0] ModeDrawInductor = 4'd9;
+  localparam [3:0] ModeDrawCapacitor = 4'd10;
+  localparam [3:0] ModeDrawGround   = 4'd11;
 
   localparam [5:0] SpriteWire     = 6'd0;
   localparam [5:0] SpriteElbow    = 6'd1;
@@ -56,6 +59,11 @@ module InteractionController #(
   localparam [5:0] SpriteVoltRight = 6'd8;
   localparam [5:0] SpriteCurrLeft = 6'd9;
   localparam [5:0] SpriteCurrRight = 6'd10;
+  localparam [5:0] SpriteIndLeft  = 6'd11;
+  localparam [5:0] SpriteIndRight = 6'd12;
+  localparam [5:0] SpriteCapLeft  = 6'd13;
+  localparam [5:0] SpriteCapRight = 6'd14;
+  localparam [5:0] SpriteGround   = 6'd15;
 
   wire snapshot_valid;
   wire [11:0] snapshot_mouse_x;
@@ -75,8 +83,16 @@ module InteractionController #(
   reg cmd1_write = 1'b1;
   reg [AddrWidth-1:0] cmd1_addr = 0;
   reg [DataWidth-1:0] cmd1_wdata = 0;
+  reg cmd2_valid = 1'b0;
+  reg cmd2_write = 1'b1;
+  reg [AddrWidth-1:0] cmd2_addr = 0;
+  reg [DataWidth-1:0] cmd2_wdata = 0;
+  reg readback_is_clear = 1'b0;
+  reg clear_rsp_pending = 1'b0;
   reg rotate_rsp_pending = 1'b0;
   reg [AddrWidth-1:0] rotate_addr = 0;
+  reg [11:0] rotate_cell_i = 0;
+  reg [11:0] rotate_cell_j = 0;
   reg [RotateCtrWidth-1:0] rotate_frame_holdoff = 0;
 
   wire draw_cmd_valid;
@@ -90,6 +106,30 @@ module InteractionController #(
   wire single_action;
   wire dual_cell_fits;
   wire [AddrWidth-1:0] second_cell_addr;
+  reg [5:0] clicked_sprite_type;
+  reg [1:0] clicked_rotation;
+  reg clicked_is_two_cell;
+  reg clicked_is_left_half;
+  reg signed [12:0] pair_step_x;
+  reg signed [12:0] pair_step_y;
+  reg signed [12:0] origin_cell_i_signed;
+  reg signed [12:0] origin_cell_j_signed;
+  reg signed [12:0] partner_cell_i_signed;
+  reg signed [12:0] partner_cell_j_signed;
+  reg signed [12:0] next_pair_step_x;
+  reg signed [12:0] next_pair_step_y;
+  reg signed [12:0] next_partner_cell_i_signed;
+  reg signed [12:0] next_partner_cell_j_signed;
+  reg origin_cell_valid;
+  reg partner_cell_valid;
+  reg next_partner_cell_valid;
+  reg [AddrWidth-1:0] origin_cell_addr;
+  reg [AddrWidth-1:0] partner_cell_addr;
+  reg [AddrWidth-1:0] next_partner_cell_addr;
+  reg [5:0] primary_sprite_type;
+  reg [5:0] secondary_sprite_type;
+  reg [5:0] partner_sprite_type;
+  reg [1:0] next_rotation_value;
 
   function [DataWidth-1:0] MakeCellData;
     input [1:0] rotation;
@@ -109,6 +149,74 @@ module InteractionController #(
       end else begin
         RotateCellData = original_data;
       end
+    end
+  endfunction
+
+  function IsTwoCellSprite;
+    input [5:0] sprite_type;
+    begin
+      case (sprite_type)
+        SpriteResLeft, SpriteResRight,
+        SpriteVoltLeft, SpriteVoltRight,
+        SpriteCurrLeft, SpriteCurrRight,
+        SpriteIndLeft, SpriteIndRight,
+        SpriteCapLeft, SpriteCapRight: IsTwoCellSprite = 1'b1;
+        default: IsTwoCellSprite = 1'b0;
+      endcase
+    end
+  endfunction
+
+  function IsLeftSprite;
+    input [5:0] sprite_type;
+    begin
+      case (sprite_type)
+        SpriteResLeft, SpriteVoltLeft, SpriteCurrLeft,
+        SpriteIndLeft, SpriteCapLeft: IsLeftSprite = 1'b1;
+        default: IsLeftSprite = 1'b0;
+      endcase
+    end
+  endfunction
+
+  function [5:0] PairSpriteType;
+    input [5:0] sprite_type;
+    begin
+      case (sprite_type)
+        SpriteResLeft: PairSpriteType = SpriteResRight;
+        SpriteResRight: PairSpriteType = SpriteResLeft;
+        SpriteVoltLeft: PairSpriteType = SpriteVoltRight;
+        SpriteVoltRight: PairSpriteType = SpriteVoltLeft;
+        SpriteCurrLeft: PairSpriteType = SpriteCurrRight;
+        SpriteCurrRight: PairSpriteType = SpriteCurrLeft;
+        SpriteIndLeft: PairSpriteType = SpriteIndRight;
+        SpriteIndRight: PairSpriteType = SpriteIndLeft;
+        SpriteCapLeft: PairSpriteType = SpriteCapRight;
+        SpriteCapRight: PairSpriteType = SpriteCapLeft;
+        default: PairSpriteType = sprite_type;
+      endcase
+    end
+  endfunction
+
+  function signed [12:0] PairStepX;
+    input [1:0] rotation;
+    begin
+      case (rotation)
+        2'd0: PairStepX = 13'sd1;
+        2'd1: PairStepX = 13'sd0;
+        2'd2: PairStepX = -13'sd1;
+        default: PairStepX = 13'sd0;
+      endcase
+    end
+  endfunction
+
+  function signed [12:0] PairStepY;
+    input [1:0] rotation;
+    begin
+      case (rotation)
+        2'd0: PairStepY = 13'sd0;
+        2'd1: PairStepY = 13'sd1;
+        2'd2: PairStepY = 13'sd0;
+        default: PairStepY = -13'sd1;
+      endcase
     end
   endfunction
 
@@ -168,7 +276,61 @@ module InteractionController #(
   assign bg_cmd_write = cmd0_write;
   assign bg_cmd_addr = cmd0_addr;
   assign bg_cmd_wdata = cmd0_wdata;
-  assign frame_done = !decode_pending && !cmd0_valid && !cmd1_valid && !rotate_rsp_pending;
+  assign frame_done = !decode_pending && !cmd0_valid && !cmd1_valid && !cmd2_valid &&
+                      !clear_rsp_pending && !rotate_rsp_pending;
+
+  always @(*) begin
+    clicked_sprite_type = bg_rsp_rdata[6:1];
+    clicked_rotation = bg_rsp_rdata[8:7];
+    clicked_is_two_cell = bg_rsp_rdata[0] && IsTwoCellSprite(bg_rsp_rdata[6:1]);
+    clicked_is_left_half = IsLeftSprite(bg_rsp_rdata[6:1]);
+    pair_step_x = PairStepX(bg_rsp_rdata[8:7]);
+    pair_step_y = PairStepY(bg_rsp_rdata[8:7]);
+    partner_sprite_type = PairSpriteType(bg_rsp_rdata[6:1]);
+    primary_sprite_type = clicked_is_left_half ? clicked_sprite_type : partner_sprite_type;
+    secondary_sprite_type = clicked_is_left_half ? partner_sprite_type : clicked_sprite_type;
+    next_rotation_value = bg_rsp_rdata[8:7] + 2'b01;
+    next_pair_step_x = PairStepX(next_rotation_value);
+    next_pair_step_y = PairStepY(next_rotation_value);
+
+    if (clicked_is_left_half) begin
+      origin_cell_i_signed = $signed({1'b0, rotate_cell_i});
+      origin_cell_j_signed = $signed({1'b0, rotate_cell_j});
+    end else begin
+      origin_cell_i_signed = $signed({1'b0, rotate_cell_i}) - pair_step_x;
+      origin_cell_j_signed = $signed({1'b0, rotate_cell_j}) - pair_step_y;
+    end
+
+    partner_cell_i_signed = origin_cell_i_signed + pair_step_x;
+    partner_cell_j_signed = origin_cell_j_signed + pair_step_y;
+    next_partner_cell_i_signed = origin_cell_i_signed + next_pair_step_x;
+    next_partner_cell_j_signed = origin_cell_j_signed + next_pair_step_y;
+
+    origin_cell_valid = clicked_is_two_cell &&
+                        (origin_cell_i_signed >= 0) &&
+                        (origin_cell_i_signed < GridWidth) &&
+                        (origin_cell_j_signed >= 0) &&
+                        (origin_cell_j_signed < GridHeight);
+
+    partner_cell_valid = clicked_is_two_cell &&
+                         origin_cell_valid &&
+                         (partner_cell_i_signed >= 0) &&
+                         (partner_cell_i_signed < GridWidth) &&
+                         (partner_cell_j_signed >= 0) &&
+                         (partner_cell_j_signed < GridHeight);
+    next_partner_cell_valid = clicked_is_two_cell &&
+                              origin_cell_valid &&
+                              (next_partner_cell_i_signed >= 0) &&
+                              (next_partner_cell_i_signed < GridWidth) &&
+                              (next_partner_cell_j_signed >= 0) &&
+                              (next_partner_cell_j_signed < GridHeight);
+    origin_cell_addr = origin_cell_i_signed[AddrWidth-1:0] +
+                       (origin_cell_j_signed[AddrWidth-1:0] * GridWidth);
+    partner_cell_addr = partner_cell_i_signed[AddrWidth-1:0] +
+                        (partner_cell_j_signed[AddrWidth-1:0] * GridWidth);
+    next_partner_cell_addr = next_partner_cell_i_signed[AddrWidth-1:0] +
+                             (next_partner_cell_j_signed[AddrWidth-1:0] * GridWidth);
+  end
 
   always @(posedge clk) begin
     if (reset) begin
@@ -181,18 +343,30 @@ module InteractionController #(
       cmd1_write <= 1'b1;
       cmd1_addr <= 0;
       cmd1_wdata <= 0;
+      cmd2_valid <= 1'b0;
+      cmd2_write <= 1'b1;
+      cmd2_addr <= 0;
+      cmd2_wdata <= 0;
+      readback_is_clear <= 1'b0;
+      clear_rsp_pending <= 1'b0;
       rotate_rsp_pending <= 1'b0;
       rotate_addr <= 0;
+      rotate_cell_i <= 0;
+      rotate_cell_j <= 0;
       rotate_frame_holdoff <= 0;
       frame_drop_flag <= 1'b0;
     end else begin
       if (frame_start_pulse) begin
-        if (decode_pending || cmd0_valid || cmd1_valid || rotate_rsp_pending) begin
+        if (decode_pending || cmd0_valid || cmd1_valid || cmd2_valid ||
+            clear_rsp_pending || rotate_rsp_pending) begin
           frame_drop_flag <= 1'b1;
         end
         decode_pending <= 1'b1;
         cmd0_valid <= 1'b0;
         cmd1_valid <= 1'b0;
+        cmd2_valid <= 1'b0;
+        readback_is_clear <= 1'b0;
+        clear_rsp_pending <= 1'b0;
         rotate_rsp_pending <= 1'b0;
       end else begin
         if (decode_pending) begin
@@ -283,12 +457,51 @@ module InteractionController #(
               end
             end
 
-            ModeClearCell: begin
+            ModeDrawInductor: begin
+              if (dual_cell_fits && single_action) begin
+                cmd0_valid <= 1'b1;
+                cmd0_write <= 1'b1;
+                cmd0_addr <= draw_cmd_addr;
+                cmd0_wdata <= MakeCellData(2'b00, SpriteIndLeft);
+                cmd1_valid <= 1'b1;
+                cmd1_write <= 1'b1;
+                cmd1_addr <= second_cell_addr;
+                cmd1_wdata <= MakeCellData(2'b00, SpriteIndRight);
+              end
+            end
+
+            ModeDrawCapacitor: begin
+              if (dual_cell_fits && single_action) begin
+                cmd0_valid <= 1'b1;
+                cmd0_write <= 1'b1;
+                cmd0_addr <= draw_cmd_addr;
+                cmd0_wdata <= MakeCellData(2'b00, SpriteCapLeft);
+                cmd1_valid <= 1'b1;
+                cmd1_write <= 1'b1;
+                cmd1_addr <= second_cell_addr;
+                cmd1_wdata <= MakeCellData(2'b00, SpriteCapRight);
+              end
+            end
+
+            ModeDrawGround: begin
               if (draw_target_cell_valid && single_action) begin
                 cmd0_valid <= 1'b1;
                 cmd0_write <= 1'b1;
                 cmd0_addr <= draw_cmd_addr;
+                cmd0_wdata <= MakeCellData(2'b00, SpriteGround);
+              end
+            end
+
+            ModeClearCell: begin
+              if (draw_target_cell_valid && single_action) begin
+                cmd0_valid <= 1'b1;
+                cmd0_write <= 1'b0;
+                cmd0_addr <= draw_cmd_addr;
                 cmd0_wdata <= {DataWidth{1'b0}};
+                rotate_addr <= draw_cmd_addr;
+                rotate_cell_i <= draw_target_cell_i;
+                rotate_cell_j <= draw_target_cell_j;
+                readback_is_clear <= 1'b1;
               end
             end
 
@@ -299,6 +512,9 @@ module InteractionController #(
                 cmd0_addr <= draw_cmd_addr;
                 cmd0_wdata <= {DataWidth{1'b0}};
                 rotate_addr <= draw_cmd_addr;
+                rotate_cell_i <= draw_target_cell_i;
+                rotate_cell_j <= draw_target_cell_j;
+                readback_is_clear <= 1'b0;
               end
             end
 
@@ -309,7 +525,12 @@ module InteractionController #(
 
         if (cmd0_valid && bg_cmd_ready) begin
           if (!cmd0_write) begin
-            rotate_rsp_pending <= 1'b1;
+            if (readback_is_clear) begin
+              clear_rsp_pending <= 1'b1;
+            end else begin
+              rotate_rsp_pending <= 1'b1;
+            end
+            readback_is_clear <= 1'b0;
           end
 
           if (cmd1_valid) begin
@@ -317,18 +538,60 @@ module InteractionController #(
             cmd0_write <= cmd1_write;
             cmd0_addr <= cmd1_addr;
             cmd0_wdata <= cmd1_wdata;
-            cmd1_valid <= 1'b0;
+            if (cmd2_valid) begin
+              cmd1_valid <= 1'b1;
+              cmd1_write <= cmd2_write;
+              cmd1_addr <= cmd2_addr;
+              cmd1_wdata <= cmd2_wdata;
+              cmd2_valid <= 1'b0;
+            end else begin
+              cmd1_valid <= 1'b0;
+            end
           end else begin
             cmd0_valid <= 1'b0;
           end
         end
 
-        if (rotate_rsp_pending && bg_rsp_valid) begin
+        if (clear_rsp_pending && bg_rsp_valid) begin
+          clear_rsp_pending <= 1'b0;
+          if (clicked_is_two_cell && origin_cell_valid && partner_cell_valid) begin
+            cmd0_valid <= 1'b1;
+            cmd0_write <= 1'b1;
+            cmd0_addr <= origin_cell_addr;
+            cmd0_wdata <= {DataWidth{1'b0}};
+            cmd1_valid <= 1'b1;
+            cmd1_write <= 1'b1;
+            cmd1_addr <= partner_cell_addr;
+            cmd1_wdata <= {DataWidth{1'b0}};
+          end else begin
+            cmd0_valid <= 1'b1;
+            cmd0_write <= 1'b1;
+            cmd0_addr <= rotate_addr;
+            cmd0_wdata <= {DataWidth{1'b0}};
+          end
+        end else if (rotate_rsp_pending && bg_rsp_valid) begin
           rotate_rsp_pending <= 1'b0;
-          cmd0_valid <= 1'b1;
-          cmd0_write <= 1'b1;
-          cmd0_addr <= rotate_addr;
-          cmd0_wdata <= RotateCellData(bg_rsp_rdata);
+          if (clicked_is_two_cell && origin_cell_valid && partner_cell_valid && next_partner_cell_valid) begin
+            cmd0_valid <= 1'b1;
+            cmd0_write <= 1'b1;
+            cmd0_addr <= origin_cell_addr;
+            cmd0_wdata <= MakeCellData(next_rotation_value, primary_sprite_type);
+            cmd1_valid <= 1'b1;
+            cmd1_write <= 1'b1;
+            cmd1_addr <= next_partner_cell_addr;
+            cmd1_wdata <= MakeCellData(next_rotation_value, secondary_sprite_type);
+            if (partner_cell_addr != next_partner_cell_addr) begin
+              cmd2_valid <= 1'b1;
+              cmd2_write <= 1'b1;
+              cmd2_addr <= partner_cell_addr;
+              cmd2_wdata <= {DataWidth{1'b0}};
+            end
+          end else if (!clicked_is_two_cell) begin
+            cmd0_valid <= 1'b1;
+            cmd0_write <= 1'b1;
+            cmd0_addr <= rotate_addr;
+            cmd0_wdata <= RotateCellData(bg_rsp_rdata);
+          end
         end
       end
     end

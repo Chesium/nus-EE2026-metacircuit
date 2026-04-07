@@ -53,10 +53,14 @@ module ComponentPropertyPanel #(
     input wire [11:0] vcount,               // 当前像素 Y 坐标
     input wire video_on,                    // 视频使能信号
 
-    // 鼠标位置
+    // 鼠标位置（像素坐标，用于点击检测）
+    input wire [11:0] mouse_xpos,           // 鼠标 X 像素坐标
+    input wire [11:0] mouse_ypos,           // 鼠标 Y 像素坐标
+    input wire mouse_click,                 // 鼠标点击信号
+
+    // 鼠标位置（单元格坐标，用于元件选择）
     input wire [11:0] mouse_cell_i,         // 鼠标所在单元格行
     input wire [11:0] mouse_cell_j,         // 鼠标所在单元格列
-    input wire mouse_click,                 // 鼠标点击信号
 
     // 选中信息
     input wire has_selection,               // 选中标志
@@ -104,11 +108,15 @@ module ComponentPropertyPanel #(
     localparam integer PANEL_PAD = 8;
     localparam integer LABEL_X = PANEL_X + PANEL_PAD;
     localparam integer LABEL_Y = PANEL_Y + 6;         // 顶部留 6 像素，scale=2 字高 16 像素
-    localparam integer VALUE_X = PANEL_X + PANEL_PAD;
-    localparam integer VALUE_Y = PANEL_Y + 28;        // LABEL 下方 (6+16+6=28)
-    localparam integer VALUE_W = 300;                 // 参数区域宽度（可点击）
+    localparam integer VALUE_LABEL_X = PANEL_X + PANEL_PAD;
+    localparam integer VALUE_LABEL_Y = PANEL_Y + 28;  // LABEL 下方
+    localparam integer VALUE_INPUT_X = PANEL_X + 80;  // "Value:" 标签之后
+    localparam integer VALUE_INPUT_Y = PANEL_Y + 28;
+    localparam integer VALUE_INPUT_W = 120;           // 输入框宽度（缩小到只容纳数值）
+    localparam integer VALUE_INPUT_H = 14;            // 输入框高度
+    localparam integer VALUE_INPUT_BORDER_PAD = 2;    // 输入框边框内边距
     localparam integer COORD_X = PANEL_X + PANEL_PAD;
-    localparam integer COORD_Y = PANEL_Y + 50;        // VALUE 下方 (28+8+14=50)
+    localparam integer COORD_Y = PANEL_Y + 50;        // VALUE 下方
 
     // ========================================================================
     // ComponentStore 数据解析 (40 位)
@@ -174,9 +182,33 @@ module ComponentPropertyPanel #(
     reg [2:0] edit_unit_reg;    // 编辑中的单位 (3位)
     reg [3:0] edit_digit_count; // 已输入数字位数
 
-    // 检测区域
-    wire in_value_area = (hcount >= VALUE_X) && (hcount < VALUE_X + VALUE_W) &&
-                         (vcount >= VALUE_Y) && (vcount < VALUE_Y + 14);
+    // 参数区域的可点击检测区域（使用鼠标位置，而不是渲染位置）
+    wire in_value_area = (mouse_xpos >= VALUE_INPUT_X - 2) && (mouse_xpos < VALUE_INPUT_X + VALUE_INPUT_W + 2) &&
+                         (mouse_ypos >= VALUE_INPUT_Y - 2) && (mouse_ypos < VALUE_INPUT_Y + VALUE_INPUT_H + 2);
+
+    // 虚拟键盘区域检测（右下角，防止编辑模式下点击键盘触发保存）
+    // 键盘位置：X = 485-640, Y = 352-480
+    localparam integer KEYBOARD_X = 485;
+    localparam integer KEYBOARD_Y = 352;
+    localparam integer KEYBOARD_W = 155;
+    localparam integer KEYBOARD_H = 128;
+    wire in_keyboard_area = (mouse_xpos >= KEYBOARD_X) && (mouse_xpos < KEYBOARD_X + KEYBOARD_W) &&
+                            (mouse_ypos >= KEYBOARD_Y) && (mouse_ypos < KEYBOARD_Y + KEYBOARD_H);
+
+    // 输入框的边框检测（使用渲染位置，用于显示）
+    wire value_area_border = (
+        (hcount >= VALUE_INPUT_X - VALUE_INPUT_BORDER_PAD) && (hcount < VALUE_INPUT_X - VALUE_INPUT_BORDER_PAD + 1) &&
+        (vcount >= VALUE_INPUT_Y - VALUE_INPUT_BORDER_PAD) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H + VALUE_INPUT_BORDER_PAD)
+    ) || (
+        (hcount >= VALUE_INPUT_X + VALUE_INPUT_W + VALUE_INPUT_BORDER_PAD - 1) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W + VALUE_INPUT_BORDER_PAD) &&
+        (vcount >= VALUE_INPUT_Y - VALUE_INPUT_BORDER_PAD) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H + VALUE_INPUT_BORDER_PAD)
+    ) || (
+        (vcount >= VALUE_INPUT_Y - VALUE_INPUT_BORDER_PAD) && (vcount < VALUE_INPUT_Y - VALUE_INPUT_BORDER_PAD + 1) &&
+        (hcount >= VALUE_INPUT_X - VALUE_INPUT_BORDER_PAD) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W + VALUE_INPUT_BORDER_PAD)
+    ) || (
+        (vcount >= VALUE_INPUT_Y + VALUE_INPUT_H + VALUE_INPUT_BORDER_PAD - 1) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H + VALUE_INPUT_BORDER_PAD) &&
+        (hcount >= VALUE_INPUT_X - VALUE_INPUT_BORDER_PAD) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W + VALUE_INPUT_BORDER_PAD)
+    );
 
     // 合并鼠标和键盘处理为单一 always 块
     always @(posedge clk_pixel) begin
@@ -187,20 +219,30 @@ module ComponentPropertyPanel #(
             if (in_value_area) begin
                 // 点击参数区域，进入编辑模式
                 editing_mode <= 1'b1;
-                edit_value_reg <= 10'd0;
-                edit_unit_reg <= 3'd0;
-                edit_digit_count <= 4'd0;
-            end else if (editing_mode) begin
-                // 编辑模式下点击非参数区域，确认并保存
+                // 使用 RAM 中的当前值初始化编辑寄存器
+                edit_value_reg <= comp_value_mag;
+                edit_unit_reg <= comp_value_unit;
+                // 计算已有数字的位数
+                if (comp_value_mag >= 1000) begin
+                    edit_digit_count <= 4'd4;
+                end else if (comp_value_mag >= 100) begin
+                    edit_digit_count <= 4'd3;
+                end else if (comp_value_mag >= 10) begin
+                    edit_digit_count <= 4'd2;
+                end else begin
+                    edit_digit_count <= 4'd1;
+                end
+            end else if (editing_mode && !in_keyboard_area) begin
+                // 编辑模式下点击非参数区域且不在虚拟键盘上，确认并保存
                 comp_w_en <= 1'b1;
-                comp_w_addr <= comp_r_addr;
+                // comp_w_addr 已在组合逻辑中设置为 comp_r_addr，无需重复赋值
                 // 40位完整格式：type + position + rotation + value + node1 + node2 + 保留 + enable
                 comp_w_data <= {comp_type, comp_position, comp_rotation,
                                {edit_value_reg, edit_unit_reg}, comp_node1, comp_node2, 3'b000, 2'b01};
                 editing_mode <= 1'b0;
             end
         end
-        
+
         // 2. 键盘输入处理
         else if (editing_mode && key_valid) begin
             if (key_is_digit && edit_digit_count < 4'd4) begin
@@ -325,16 +367,14 @@ module ComponentPropertyPanel #(
                     label_data[MAX_CHARS * 8 - 17 -: 8] = "r";
                     label_data[MAX_CHARS * 8 - 25 -: 8] = "e";
                     label_len = 5'd4;
-                    // "R: 0 Ohm"
-                    value_data[MAX_CHARS * 8 - 1 -: 8] = "R";
-                    value_data[MAX_CHARS * 8 - 9 -: 8] = ":";
-                    value_data[MAX_CHARS * 8 - 17 -: 8] = " ";
-                    value_data[MAX_CHARS * 8 - 25 -: 8] = "0";
-                    value_data[MAX_CHARS * 8 - 33 -: 8] = " ";
-                    value_data[MAX_CHARS * 8 - 41 -: 8] = "O";
-                    value_data[MAX_CHARS * 8 - 49 -: 8] = "h";
-                    value_data[MAX_CHARS * 8 - 57 -: 8] = "m";
-                    value_len = 5'd8;
+                    // "Value:" 标签
+                    value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
+                    value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
+                    value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
+                    value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
+                    value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
+                    value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
+                    value_len = 5'd6;
                 end
                 is_ground: begin
                     // "Ground"
@@ -345,11 +385,14 @@ module ComponentPropertyPanel #(
                     label_data[MAX_CHARS * 8 - 33 -: 8] = "n";
                     label_data[MAX_CHARS * 8 - 41 -: 8] = "d";
                     label_len = 5'd6;
-                    // "GND"
-                    value_data[MAX_CHARS * 8 - 1 -: 8] = "G";
-                    value_data[MAX_CHARS * 8 - 9 -: 8] = "N";
-                    value_data[MAX_CHARS * 8 - 17 -: 8] = "D";
-                    value_len = 5'd3;
+                    // "Value:" 标签
+                    value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
+                    value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
+                    value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
+                    value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
+                    value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
+                    value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
+                    value_len = 5'd6;
                 end
                 is_resistor: begin
                     // "Resistor"
@@ -362,38 +405,14 @@ module ComponentPropertyPanel #(
                     label_data[MAX_CHARS * 8 - 49 -: 8] = "o";
                     label_data[MAX_CHARS * 8 - 57 -: 8] = "r";
                     label_len = 5'd8;
-
-                    // 显示数值 + 单位 (如 "Value: 100k Ohm")
+                    // "Value:" 标签
                     value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
                     value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
                     value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
                     value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
                     value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
                     value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_data[MAX_CHARS * 8 - 49 -: 8] = " ";
-                    // 数值 (最多4位)
-                    if (val_thousands > 0) begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_thousands;
-                        value_data[MAX_CHARS * 8 - 65 -: 8] = ascii_val_hundreds;
-                        value_data[MAX_CHARS * 8 - 73 -: 8] = ascii_val_tens;
-                        value_data[MAX_CHARS * 8 - 81 -: 8] = ascii_val_ones;
-                    end else if (val_hundreds > 0) begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_hundreds;
-                        value_data[MAX_CHARS * 8 - 65 -: 8] = ascii_val_tens;
-                        value_data[MAX_CHARS * 8 - 73 -: 8] = ascii_val_ones;
-                    end else if (val_tens > 0) begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_tens;
-                        value_data[MAX_CHARS * 8 - 65 -: 8] = ascii_val_ones;
-                    end else begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_ones;
-                    end
-                    // 单位
-                    value_data[MAX_CHARS * 8 - 89 -: 8] = ascii_unit;
-                    value_data[MAX_CHARS * 8 - 97 -: 8] = " ";
-                    value_data[MAX_CHARS * 8 - 105 -: 8] = "O";
-                    value_data[MAX_CHARS * 8 - 113 -: 8] = "h";
-                    value_data[MAX_CHARS * 8 - 121 -: 8] = "m";
-                    value_len = 5'd15;
+                    value_len = 5'd6;
                 end
                 is_capacitor: begin
                     // "Capacitor"
@@ -407,27 +426,14 @@ module ComponentPropertyPanel #(
                     label_data[MAX_CHARS * 8 - 57 -: 8] = "o";
                     label_data[MAX_CHARS * 8 - 65 -: 8] = "r";
                     label_len = 5'd9;
-
-                    // "Value: XXu F"
+                    // "Value:" 标签
                     value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
                     value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
                     value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
                     value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
                     value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
                     value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_data[MAX_CHARS * 8 - 49 -: 8] = " ";
-                    // 数值
-                    if (val_tens > 0) begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_tens;
-                        value_data[MAX_CHARS * 8 - 65 -: 8] = ascii_val_ones;
-                    end else begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_ones;
-                    end
-                    // 单位
-                    value_data[MAX_CHARS * 8 - 73 -: 8] = ascii_unit;
-                    value_data[MAX_CHARS * 8 - 81 -: 8] = " ";
-                    value_data[MAX_CHARS * 8 - 89 -: 8] = "F";
-                    value_len = 5'd9;
+                    value_len = 5'd6;
                 end
                 is_inductor: begin
                     // "Inductor"
@@ -440,27 +446,14 @@ module ComponentPropertyPanel #(
                     label_data[MAX_CHARS * 8 - 49 -: 8] = "o";
                     label_data[MAX_CHARS * 8 - 57 -: 8] = "r";
                     label_len = 5'd8;
-
-                    // "Value: XXm H"
+                    // "Value:" 标签
                     value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
                     value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
                     value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
                     value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
                     value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
                     value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_data[MAX_CHARS * 8 - 49 -: 8] = " ";
-                    // 数值
-                    if (val_tens > 0) begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_tens;
-                        value_data[MAX_CHARS * 8 - 65 -: 8] = ascii_val_ones;
-                    end else begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_ones;
-                    end
-                    // 单位
-                    value_data[MAX_CHARS * 8 - 73 -: 8] = ascii_unit;
-                    value_data[MAX_CHARS * 8 - 81 -: 8] = " ";
-                    value_data[MAX_CHARS * 8 - 89 -: 8] = "H";
-                    value_len = 5'd9;
+                    value_len = 5'd6;
                 end
                 is_voltage: begin
                     // "Voltage Source"
@@ -479,27 +472,14 @@ module ComponentPropertyPanel #(
                     label_data[MAX_CHARS * 8 - 97 -: 8] = "c";
                     label_data[MAX_CHARS * 8 - 105 -: 8] = "e";
                     label_len = 5'd14;
-
-                    // "Value: X.X V"
+                    // "Value:" 标签
                     value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
                     value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
                     value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
                     value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
                     value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
                     value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_data[MAX_CHARS * 8 - 49 -: 8] = " ";
-                    // 数值
-                    if (val_tens > 0) begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_tens;
-                        value_data[MAX_CHARS * 8 - 65 -: 8] = ascii_val_ones;
-                    end else begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_ones;
-                    end
-                    // 单位
-                    value_data[MAX_CHARS * 8 - 73 -: 8] = ascii_unit;
-                    value_data[MAX_CHARS * 8 - 81 -: 8] = " ";
-                    value_data[MAX_CHARS * 8 - 89 -: 8] = "V";
-                    value_len = 5'd9;
+                    value_len = 5'd6;
                 end
                 is_current: begin
                     // "Current Source"
@@ -518,27 +498,14 @@ module ComponentPropertyPanel #(
                     label_data[MAX_CHARS * 8 - 97 -: 8] = "c";
                     label_data[MAX_CHARS * 8 - 105 -: 8] = "e";
                     label_len = 5'd14;
-
-                    // "Value: XX mA"
+                    // "Value:" 标签
                     value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
                     value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
                     value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
                     value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
                     value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
                     value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_data[MAX_CHARS * 8 - 49 -: 8] = " ";
-                    // 数值
-                    if (val_tens > 0) begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_tens;
-                        value_data[MAX_CHARS * 8 - 65 -: 8] = ascii_val_ones;
-                    end else begin
-                        value_data[MAX_CHARS * 8 - 57 -: 8] = ascii_val_ones;
-                    end
-                    // 单位
-                    value_data[MAX_CHARS * 8 - 73 -: 8] = ascii_unit;
-                    value_data[MAX_CHARS * 8 - 81 -: 8] = " ";
-                    value_data[MAX_CHARS * 8 - 89 -: 8] = "A";
-                    value_len = 5'd9;
+                    value_len = 5'd6;
                 end
                 default: begin
                     label_len = 5'd0;
@@ -588,6 +555,48 @@ module ComponentPropertyPanel #(
     wire coord_text_enable;
     wire [11:0] coord_text_color;
 
+    // 编辑模式下的输入框内文本显示
+    wire edit_text_enable;
+    wire [11:0] edit_text_color;
+    
+    // 编辑模式下的数值显示（在输入框内）
+    reg [MAX_CHARS * 8 - 1:0] edit_value_display_data;
+    reg [4:0] edit_value_display_len;
+    
+    // 生成编辑状态下的显示文本（在输入框内）
+    always @(*) begin
+        edit_value_display_data = 0;
+        edit_value_display_len = 0;
+        
+        // 无论是否编辑模式，都显示当前数值
+        begin
+            // 显示当前数值（编辑模式下为 edit_value_reg，非编辑模式为 comp_value_mag）
+            if (display_value >= 1000) begin
+                // 4位数
+                edit_value_display_data[MAX_CHARS * 8 - 1 -: 8] = ascii_val_thousands;
+                edit_value_display_data[MAX_CHARS * 8 - 9 -: 8] = ascii_val_hundreds;
+                edit_value_display_data[MAX_CHARS * 8 - 17 -: 8] = ascii_val_tens;
+                edit_value_display_data[MAX_CHARS * 8 - 25 -: 8] = ascii_val_ones;
+                edit_value_display_len = 5'd4;
+            end else if (display_value >= 100) begin
+                // 3位数
+                edit_value_display_data[MAX_CHARS * 8 - 1 -: 8] = ascii_val_hundreds;
+                edit_value_display_data[MAX_CHARS * 8 - 9 -: 8] = ascii_val_tens;
+                edit_value_display_data[MAX_CHARS * 8 - 17 -: 8] = ascii_val_ones;
+                edit_value_display_len = 5'd3;
+            end else if (display_value >= 10) begin
+                // 2位数
+                edit_value_display_data[MAX_CHARS * 8 - 1 -: 8] = ascii_val_tens;
+                edit_value_display_data[MAX_CHARS * 8 - 9 -: 8] = ascii_val_ones;
+                edit_value_display_len = 5'd2;
+            end else begin
+                // 1位数
+                edit_value_display_data[MAX_CHARS * 8 - 1 -: 8] = ascii_val_ones;
+                edit_value_display_len = 5'd1;
+            end
+        end
+    end
+
     // 元件名称标签 (放大 2 倍)
     DynamicTextBox #(
         .MAX_CHARS(MAX_CHARS),
@@ -606,7 +615,7 @@ module ComponentPropertyPanel #(
         .text_color(label_text_color)
     );
 
-    // 元件值标签 (原始大小)
+    // 元件值标签 (原始大小) - 显示 "Value: " 标签
     DynamicTextBox #(
         .MAX_CHARS(MAX_CHARS),
         .CHAR_W_BASE(8),
@@ -617,8 +626,8 @@ module ComponentPropertyPanel #(
         .vcount(vcount),
         .text_data(value_data),
         .text_len(value_len),
-        .start_x({12'd0, VALUE_X}),
-        .start_y({12'd0, VALUE_Y}),
+        .start_x({12'd0, VALUE_LABEL_X}),
+        .start_y({12'd0, VALUE_LABEL_Y}),
         .scale(4'd1),
         .text_enable(value_text_enable),
         .text_color(value_text_color)
@@ -642,6 +651,24 @@ module ComponentPropertyPanel #(
         .text_color(coord_text_color)
     );
 
+    // 编辑模式下的输入框内数值显示
+    DynamicTextBox #(
+        .MAX_CHARS(MAX_CHARS),
+        .CHAR_W_BASE(8),
+        .CHAR_H_BASE(8)
+    ) u_edit_value_textbox (
+        .clk_pixel(clk_pixel),
+        .hcount(hcount),
+        .vcount(vcount),
+        .text_data(edit_value_display_data),
+        .text_len(edit_value_display_len),
+        .start_x({12'd0, VALUE_INPUT_X + 4}),
+        .start_y({12'd0, VALUE_INPUT_Y}),
+        .scale(4'd1),
+        .text_enable(edit_text_enable),
+        .text_color(edit_text_color)
+    );
+
     // ========================================================================
     // 面板渲染逻辑
     // ========================================================================
@@ -653,6 +680,11 @@ module ComponentPropertyPanel #(
         (vcount == PANEL_Y) || (vcount == PANEL_Y + PANEL_H - 1)
     );
 
+    localparam [11:0] COLOR_VALUE_BORDER_IDLE = 12'hAAA;  // 参数区域边框颜色（未激活）
+    localparam [11:0] COLOR_VALUE_BORDER_EDIT = 12'hF00;  // 参数区域边框颜色（编辑中，红色）
+    localparam [11:0] COLOR_EDIT_INPUT_BG = 12'hFFF;      // 编辑模式下输入框背景（白色）
+    localparam [11:0] COLOR_EDIT_INPUT_TEXT = 12'h000;    // 编辑模式下输入框文本（黑色）
+
     always @(posedge clk_pixel) begin
         panel_rendered <= 1'b0;
         panel_rgb <= COLOR_BG;
@@ -663,9 +695,23 @@ module ComponentPropertyPanel #(
 
             if (is_border) begin
                 panel_rgb <= COLOR_BORDER;
-            end else if (editing_mode && in_value_area) begin
-                // 编辑模式下高亮参数区域
-                panel_rgb <= COLOR_VALUE_HIGHLIGHT;
+            end else if (value_area_border && editing_mode) begin
+                // 编辑模式下输入框边框变红色
+                panel_rgb <= COLOR_VALUE_BORDER_EDIT;
+            end else if (value_area_border) begin
+                // 未激活时输入框边框灰色
+                panel_rgb <= COLOR_VALUE_BORDER_IDLE;
+            end else if (edit_text_enable) begin
+                // 输入框内文本（黑色）- 优先级最高
+                panel_rgb <= COLOR_EDIT_INPUT_TEXT;
+            end else if (editing_mode && (hcount >= VALUE_INPUT_X) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W) &&
+                         (vcount >= VALUE_INPUT_Y) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H)) begin
+                // 编辑模式下输入框背景为白色
+                panel_rgb <= COLOR_EDIT_INPUT_BG;
+            end else if ((hcount >= VALUE_INPUT_X) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W) &&
+                         (vcount >= VALUE_INPUT_Y) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H)) begin
+                // 非编辑模式下输入框背景为浅灰色
+                panel_rgb <= 12'hF8F8F8;
             end else if (label_text_enable) begin
                 panel_rgb <= label_text_color;
             end else if (value_text_enable) begin

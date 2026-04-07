@@ -26,7 +26,7 @@ module CompStoreInit #(
     parameter integer DATA_WIDTH = 40
 )(
     input wire clk,
-    input wire sw_init,          // SW[14] 上升沿触发初始化
+    input wire sw_init,          // SW[14] 上升沿触发初始化（可选，系统启动时也会自动初始化）
     output reg init_done,
     output reg [ADDR_WIDTH-1:0] init_addr,
     output reg [DATA_WIDTH-1:0] init_data,
@@ -46,6 +46,7 @@ module CompStoreInit #(
     reg [7:0] init_state;
     reg [31:0] init_counter;
     reg [3:0] step_counter;  // 步骤计数器 (0-8)
+    reg auto_init_done;
 
     localparam INIT_IDLE = 8'd0;
     localparam INIT_WRITE = 8'd1;
@@ -69,9 +70,10 @@ module CompStoreInit #(
             make_comp_data = {type, position, rotation, value, node1, node2, 3'b000, 2'b01};
         end
     endfunction
-    
+
     always @(posedge clk) begin
         if (sw_init_edge) begin
+            // SW[14] 上升沿触发，重置状态
             init_state <= INIT_IDLE;
             init_addr <= 8'd0;
             init_data <= 40'd0;
@@ -79,7 +81,9 @@ module CompStoreInit #(
             init_done <= 1'b0;
             step_counter <= 4'd0;
             init_counter <= 32'd0;
-        end else begin
+            auto_init_done <= 1'b0;
+        end else if (!auto_init_done) begin
+            // 自动初始化流程
             case (init_state)
                 INIT_IDLE: begin
                     init_counter <= init_counter + 1;
@@ -89,7 +93,7 @@ module CompStoreInit #(
                         init_counter <= 32'd0;
                     end
                 end
-                
+
                 INIT_WRITE: begin
                     // 写入测试数据 - 根据步骤设置正确的 RAM 地址
                     // 地址计算公式: addr = Xpos + Ypos * 16
@@ -134,7 +138,7 @@ module CompStoreInit #(
                     init_w_en <= 1'b1;
                     init_state <= INIT_WAIT;
                 end
-                
+
                 INIT_WAIT: begin
                     // 等待一个周期（不复位 init_addr，保持上一步设置的地址）
                     init_w_en <= 1'b0;
@@ -145,18 +149,24 @@ module CompStoreInit #(
                         // 所有测试数据写完，初始化完成
                         init_state <= INIT_DONE;
                         init_done <= 1'b1;
+                        auto_init_done <= 1'b1;
                     end
                 end
 
                 INIT_DONE: begin
                     init_w_en <= 1'b0;
                     init_done <= 1'b1;
+                    auto_init_done <= 1'b1;
                 end
-                
+
                 default: begin
                     init_state <= INIT_IDLE;
                 end
             endcase
+        end else begin
+            // 自动初始化完成后，保持状态
+            init_w_en <= 1'b0;
+            init_done <= 1'b1;
         end
     end
 

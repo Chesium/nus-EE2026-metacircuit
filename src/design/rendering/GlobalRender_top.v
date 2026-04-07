@@ -350,14 +350,16 @@ module GlobalRender_top (
     // 鼠标点击边沿检测
     assign canvas_mouse_in_bounds = (mouse_xpos >= CANVAS_X0) && (mouse_xpos < (CANVAS_X0 + CANVAS_W)) &&
                                     (mouse_ypos >= CANVAS_Y0) && (mouse_ypos < (CANVAS_Y0 + CANVAS_H)) &&
-                               
-     (mouse_cell_i < 16) && (mouse_cell_j < 16);
+                                    (mouse_cell_i < 16) && (mouse_cell_j < 16);
     assign toolbar_place_two_cells = toolbar_tool_uses_two_cells(selected_toolbar_idx);
     assign toolbar_place_data0 = toolbar_first_cell_data(selected_toolbar_idx);
     assign toolbar_place_data1 = toolbar_second_cell_data(selected_toolbar_idx);
     assign mouse_left_rising = mouse_left && !mouse_left_d;
     assign mouse_left_rising_sys = mouse_left && !mouse_left_d_sys;
-    
+
+    // 检测是否在属性面板区域内 (640x64 顶部区域)
+    wire in_prop_panel = (mouse_xpos < 640) && (mouse_ypos < 64);
+
     // 鼠标点击边沿检测
     always @(posedge clk_pixel) begin
         mouse_left_d <= mouse_left;
@@ -369,11 +371,17 @@ module GlobalRender_top (
     end
 
     // 选中单元格时设置选择标志
+    // 关键修复：只有点击画布区域时才更新选择，点击属性面板时不触发
     always @(posedge clk_pixel) begin
-        if (mouse_left_rising && mouse_cell_i < 16 && mouse_cell_j < 16) begin
+        if (mouse_left_rising && canvas_mouse_in_bounds && !in_prop_panel) begin
             selected_cell_i <= mouse_cell_i;
             selected_cell_j <= mouse_cell_j;
             has_selection <= 1'b1;
+        end else begin
+            // 保持当前值
+            selected_cell_i <= selected_cell_i;
+            selected_cell_j <= selected_cell_j;
+            has_selection <= has_selection;
         end
     end
 
@@ -453,6 +461,8 @@ module GlobalRender_top (
         .hcount(x_pos),
         .vcount(y_pos),
         .video_on(video_on),
+        .mouse_xpos(mouse_xpos),
+        .mouse_ypos(mouse_ypos),
         .mouse_cell_i(mouse_cell_i),
         .mouse_cell_j(mouse_cell_j),
         .mouse_click(mouse_left_rising),

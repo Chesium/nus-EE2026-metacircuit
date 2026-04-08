@@ -1,5 +1,6 @@
 // VGA version of the on-screen keyboard.
-// - Keeps the same 5x4 key layout and navigation behavior as Keyboard.v.
+// - Keeps the same 5x4 key layout as Keyboard.v.
+// - Uses mouse hover/click for key selection.
 // - Renders by composing reusable ButtonVGA modules.
 module KeyboardVGA #(
     parameter integer KEY_COUNT = 20,
@@ -13,11 +14,6 @@ module KeyboardVGA #(
     parameter integer KEY_H = 32
 ) (
     input  wire        clk_nav,
-    input  wire        btnU,
-    input  wire        btnD,
-    input  wire        btnL,
-    input  wire        btnR,
-    input  wire        btnC,
     input  wire [11:0] mouse_x,
     input  wire [11:0] mouse_y,
     input  wire        mouse_left,
@@ -78,23 +74,12 @@ module KeyboardVGA #(
         RGB_NONE            = 24'hE7DDD2,
         RGB_TEXT            = 24'h5B534D;
 
-    // Navigation state.
-    reg [2:0] sel_row = 3'd0;
-    reg [2:0] sel_col = 3'd0;
-    reg btnU_d = 1'b0;
-    reg btnD_d = 1'b0;
-    reg btnL_d = 1'b0;
-    reg btnR_d = 1'b0;
-    reg btnC_d = 1'b0;
+    // Mouse click state.
     reg mouse_left_d = 1'b0;
-    reg [11:0] mouse_x_d = 12'd0;
-    reg [11:0] mouse_y_d = 12'd0;
-    reg use_mouse_selection = 1'b0;
 
     reg inside_keyboard;
     reg panel_area_active;
     reg mouse_inside_keyboard;
-    reg mouse_moved;
     reg hover_valid;
     reg [11:0] mouse_rel_x;
     reg [11:0] mouse_rel_y;
@@ -258,24 +243,6 @@ module KeyboardVGA #(
         end
     endfunction
 
-    function [4:0] key_id_for_grid;
-        input integer row_idx;
-        input integer col_idx;
-        begin
-            if (row_idx == 3) begin
-                case (col_idx)
-                    0: key_id_for_grid = 15;
-                    1: key_id_for_grid = 16;
-                    2: key_id_for_grid = 17;
-                    3, 4: key_id_for_grid = 18;
-                    default: key_id_for_grid = 5'd0;
-                endcase
-            end else begin
-                key_id_for_grid = (row_idx * COLS) + col_idx;
-            end
-        end
-    endfunction
-
     function integer button_x0_for_id;
         input integer idx;
         begin
@@ -337,48 +304,10 @@ module KeyboardVGA #(
     endgenerate
 
     always @(posedge clk_nav) begin
-        btnU_d <= btnU; btnD_d <= btnD; btnL_d <= btnL; btnR_d <= btnR; btnC_d <= btnC;
-        mouse_left_d <= mouse_left; mouse_x_d <= mouse_x; mouse_y_d <= mouse_y;
+        mouse_left_d <= mouse_left;
         key_valid <= 1'b0;
 
-        if (mouse_moved) use_mouse_selection <= 1'b1;
-
-        if (btnU & ~btnU_d) begin
-            use_mouse_selection <= 1'b0;
-            if (sel_row == 0) sel_row <= ROWS - 1; else sel_row <= sel_row - 1'b1;
-            if (((sel_row == 0) ? (ROWS - 1) : (sel_row - 1'b1)) == 3 && sel_col == 4) sel_col <= 3;
-        end else if (btnD & ~btnD_d) begin
-            use_mouse_selection <= 1'b0;
-            if (sel_row == ROWS - 1) sel_row <= 0; else sel_row <= sel_row + 1'b1;
-            if (((sel_row == ROWS - 1) ? 0 : (sel_row + 1'b1)) == 3 && sel_col == 4) sel_col <= 3;
-        end else if (btnL & ~btnL_d) begin
-            use_mouse_selection <= 1'b0;
-            if (sel_row == 3) begin
-                if (sel_col == 0) sel_col <= 3;
-                else sel_col <= sel_col - 1'b1;
-            end else begin
-                if (sel_col == 0) sel_col <= COLS - 1; else sel_col <= sel_col - 1'b1;
-            end
-        end else if (btnR & ~btnR_d) begin
-            use_mouse_selection <= 1'b0;
-            if (sel_row == 3) begin
-                if (sel_col >= 3) sel_col <= 0;
-                else sel_col <= sel_col + 1'b1;
-            end else begin
-                if (sel_col == COLS - 1) sel_col <= 0; else sel_col <= sel_col + 1'b1;
-            end
-        end else if (mouse_left & ~mouse_left_d & hover_valid) begin
-            use_mouse_selection <= 1'b1;
-            if (hovered_key_id == 18) begin
-                sel_row <= 3;
-                sel_col <= 3;
-            end else begin
-                sel_row <= hovered_key_id / COLS;
-                sel_col <= hovered_key_id % COLS;
-            end
-            key_valid <= 1'b1;
-        end else if (btnC & ~btnC_d) begin
-            use_mouse_selection <= 1'b0;
+        if (mouse_left & ~mouse_left_d & hover_valid) begin
             key_valid <= 1'b1;
         end
     end
@@ -401,11 +330,10 @@ module KeyboardVGA #(
             hovered_key_id = 18;
         end
 
-        mouse_moved = (mouse_x != mouse_x_d) || (mouse_y != mouse_y_d);
         hover_valid = mouse_inside_keyboard && (hovered_key_id < KEY_COUNT);
-        active_key_valid = use_mouse_selection ? hover_valid : 1'b1;
-        active_key_id = use_mouse_selection ? hovered_key_id : key_id_for_grid(sel_row, sel_col);
-        active_pressed = (btnC && !use_mouse_selection) || (mouse_left && use_mouse_selection && hover_valid);
+        active_key_valid = hover_valid;
+        active_key_id = hovered_key_id;
+        active_pressed = mouse_left && hover_valid;
 
         if (active_key_valid) begin
             key_id = active_key_id;

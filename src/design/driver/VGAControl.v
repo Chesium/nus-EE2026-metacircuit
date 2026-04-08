@@ -39,7 +39,7 @@ module VGAControl (
 
   /* -BEGIN- Pixel Counter Logic -BEGIN- */
   // Horizontal Counter (self-increment by one for every pixel cycle, resets at HMAX)
-  always @(posedge clk_pixel or posedge reset) begin
+  always @(posedge clk_pixel) begin
     if (reset) h_count_reg <= 0;
     else if (h_count_reg == HMAX) h_count_reg <= 0;
     else h_count_reg <= h_count_reg + 1;
@@ -47,7 +47,7 @@ module VGAControl (
 
   // --- Vertical Counter Logic ---
   // Increments vertical line counter when horizontal counter resets, resets at VMAX
-  always @(posedge clk_pixel or posedge reset) begin
+  always @(posedge clk_pixel) begin
     if (reset) v_count_reg <= 0;
     else if (h_count_reg == HMAX) begin
       // Increment vertical counter at the end of each horizontal line
@@ -59,7 +59,7 @@ module VGAControl (
 
   /* -BEGIN- VGA Color Signal Generation -BEGIN- */
   // Determines pixel color based on video_on status and selected pattern (switches)
-  always @(posedge clk_pixel or posedge reset) begin
+  always @(posedge clk_pixel) begin
     if (reset || !video_on) begin  // RESET, or Outside active display area, always black
       /* BLACK */
       vgaRed   <= 4'b0000;

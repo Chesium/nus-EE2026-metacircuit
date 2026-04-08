@@ -27,15 +27,15 @@ module CircuitCanvas_top #(
 );
 
   localparam integer CanvasWordWidth = 16;
-  localparam integer CanvasWordCount = 256;
-  localparam integer CanvasAddrWidth = 8;
+  localparam integer CanvasGridWidth = 18;
+  localparam integer CanvasGridHeight = 16;
+  localparam integer CanvasWordCount = CanvasGridWidth * CanvasGridHeight;
+  localparam integer CanvasAddrWidth = $clog2(CanvasWordCount);
   localparam integer CanvasPosX = 0;
   localparam integer CanvasPosY = 0;
-  localparam integer CanvasWidth = 400;
+  localparam integer CanvasWidth = CanvasGridWidth * 32;
   localparam integer CanvasHeight = 300;
   localparam integer CanvasCellSize = 32;
-  localparam integer CanvasGridWidth = 16;
-  localparam integer CanvasGridHeight = 16;
   localparam [3:0] DefaultModeSelect = 4'd0;
 
   localparam integer BgStateInitClearA = 0;
@@ -60,12 +60,12 @@ module CircuitCanvas_top #(
         4'd0: DemoAddr = 8'd0;
         4'd1: DemoAddr = 8'd1;
         4'd2: DemoAddr = 8'd2;
-        4'd3: DemoAddr = 8'd16;
-        4'd4: DemoAddr = 8'd32;
-        4'd5: DemoAddr = 8'd82;
-        4'd6: DemoAddr = 8'd84;
-        4'd7: DemoAddr = 8'd86;
-        4'd8: DemoAddr = 8'd88;
+        4'd3: DemoAddr = 9'd18;
+        4'd4: DemoAddr = 9'd36;
+        4'd5: DemoAddr = 9'd92;
+        4'd6: DemoAddr = 9'd94;
+        4'd7: DemoAddr = 9'd96;
+        4'd8: DemoAddr = 9'd98;
         default: DemoAddr = 8'd0;
       endcase
     end

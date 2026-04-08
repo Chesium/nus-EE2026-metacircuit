@@ -1,603 +1,371 @@
 `timescale 1ns / 1ps
-/*
- * ============================================================================
- * ComponentPropertyPanel - 电路元件属性面板模块（增强版）
- * ============================================================================
- *
- * 【功能概述】
- *   在屏幕顶部 640x64 像素区域显示当前选中电路元件的属性信息。
- *   支持从 ComponentStore RAM 读取 40 位元件数据并解析显示。
- *   支持通过 KeyboardVGA 修改元件参数并写回 RAM。
- *
- * 【ComponentStore 数据格式】（40 位）
- *   - type[3:0]     : 4 位元件类型
- *   - position[7:0] : 8 位位置 (Xpos[3:0] + Ypos[3:0]<<4)
- *   - rotation[1:0] : 2 位旋转角度
- *   - value[12:0]   : 13 位数值 (10 位数值 + 3 位单位乘数)
- *   - node1[3:0]    : 4 位节点 1
- *   - node2[3:0]    : 4 位节点 2
- *
- * 【元件类型编码】(4 位 type 字段)
- *   4'b0000 = 线缆 (Wire)
- *   4'b0001 = 接地 (Ground)
- *   4'b0010 = 电阻 (Resistor)
- *   4'b0011 = 电容 (Capacitor)
- *   4'b0100 = 电感 (Inductor)
- *   4'b0101 = 电压源 (Voltage Source)
- *   4'b0110 = 电流源 (Current Source)
- *
- * 【显示内容】
- *   第一行：元件类型名称 (放大 2 倍显示)
- *   第二行：元件参数值（可点击编辑）
- *   第三行：元件坐标位置
- *
- * 【参数编辑流程】
- *   1. 点击元件后，属性面板显示参数
- *   2. 点击参数区域，激活编辑模式
- *   3. 通过 KeyboardVGA 输入新数值
- *   4. 确认后写回 ComponentStore RAM
- *
- * ============================================================================
- */
 
 module ComponentPropertyPanel #(
-    parameter integer PANEL_X = 0,          // 面板 X 起始位置
-    parameter integer PANEL_Y = 0,          // 面板 Y 起始位置
-    parameter integer PANEL_W = 640,        // 面板宽度
-    parameter integer PANEL_H = 64,         // 面板高度
-    parameter integer MAX_CHARS = 32,       // 最大字符数
-    parameter integer COMP_STORE_ADDR_WIDTH = 8  // ComponentStore 地址宽度
+    parameter integer PANEL_X = 0,
+    parameter integer PANEL_Y = 0,
+    parameter integer PANEL_W = 640,
+    parameter integer PANEL_H = 64,
+    parameter integer MAX_CHARS = 16
 )(
-    input wire clk_pixel,                   // 像素时钟
-    input wire [11:0] hcount,               // 当前像素 X 坐标
-    input wire [11:0] vcount,               // 当前像素 Y 坐标
-    input wire video_on,                    // 视频使能信号
+    input wire clk_pixel,
+    input wire [11:0] hcount,
+    input wire [11:0] vcount,
+    input wire video_on,
 
-    // 鼠标位置（像素坐标，用于点击检测）
-    input wire [11:0] mouse_xpos,           // 鼠标 X 像素坐标
-    input wire [11:0] mouse_ypos,           // 鼠标 Y 像素坐标
-    input wire mouse_click,                 // 鼠标点击信号
+    input wire [11:0] mouse_cell_i,
+    input wire [11:0] mouse_cell_j,
 
-    // 鼠标位置（单元格坐标，用于元件选择）
-    input wire [11:0] mouse_cell_i,         // 鼠标所在单元格行
-    input wire [11:0] mouse_cell_j,         // 鼠标所在单元格列
+    input wire [15:0] selected_cell_data,
+    input wire [63:0] selected_value_text,
+    input wire [3:0] selected_value_text_len,
+    input wire value_edit_active,
+    input wire value_editable,
+    input wire has_selection,
+    input wire [11:0] selected_cell_i,
+    input wire [11:0] selected_cell_j,
 
-    // 选中信息
-    input wire has_selection,               // 选中标志
-    input wire [11:0] selected_cell_i,      // 选中单元格行坐标
-    input wire [11:0] selected_cell_j,      // 选中单元格列坐标
-
-    // ComponentStore RAM 读取接口（40 位）
-    output reg [7:0] comp_r_addr,           // 读地址
-    input wire [39:0] comp_r_data,          // 读数据 (40 位)
-    input wire comp_data_valid,             // 数据有效标志
-
-    // ComponentStore RAM 写入接口
-    output reg comp_w_en,                   // 写使能
-    output reg [7:0] comp_w_addr,           // 写地址
-    output reg [39:0] comp_w_data,          // 写数据 (40 位)
-
-    // KeyboardVGA 接口
-    input wire [7:0] key_ascii,             // 键盘 ASCII 输入
-    input wire key_valid,                   // 键盘输入有效
-    input wire key_is_digit,                // 是否为数字键
-    input wire key_is_unit,                 // 是否为单位键 (M/k/m/u/n/p)
-    input wire key_is_action,               // 是否为功能键 (./Del/Rst)
-
-    output reg panel_rendered,              // 面板渲染输出
-    output reg [11:0] panel_rgb             // 面板 RGB 输出 (12 位 444 格式)
+    output reg panel_rendered,
+    output reg [11:0] panel_rgb
 );
 
-    // ========================================================================
-    // 内部参数定义
-    // ========================================================================
-    localparam [11:0] COLOR_BG = 12'hECC;       // 背景色 (浅粉色)
-    localparam [11:0] COLOR_BORDER = 12'h888;   // 边框颜色 (灰色)
-    localparam [11:0] COLOR_VALUE_HIGHLIGHT = 12'hFFD;  // 参数高亮色 (浅黄色)
+    localparam [11:0] COLOR_BG = 12'hECC;
+    localparam [11:0] COLOR_TEXT = 12'h210;
+    localparam [11:0] COLOR_CAPTION = 12'h754;
+    localparam [11:0] COLOR_BORDER = 12'hB86;
+    localparam [11:0] COLOR_BOX_BG = 12'hFED;
+    localparam [11:0] COLOR_BOX_BORDER = 12'hC96;
+    localparam [11:0] COLOR_BOX_ACTIVE = 12'hFD0;
 
-    // 元件类型定义 (4 位 type 字段)
-    localparam [3:0] TYPE_WIRE     = 4'b0000;  // 线缆
-    localparam [3:0] TYPE_GROUND   = 4'b0001;  // 接地
-    localparam [3:0] TYPE_RESISTOR = 4'b0010;  // 电阻
-    localparam [3:0] TYPE_CAPACITOR = 4'b0011; // 电容
-    localparam [3:0] TYPE_INDUCTOR = 4'b0100;  // 电感
-    localparam [3:0] TYPE_VOLTAGE  = 4'b0101;  // 电压源
-    localparam [3:0] TYPE_CURRENT  = 4'b0110;  // 电流源
+    localparam [5:0] SPRITE_WIRE       = 6'd0;
+    localparam [5:0] SPRITE_ELBOW      = 6'd1;
+    localparam [5:0] SPRITE_TEE        = 6'd2;
+    localparam [5:0] SPRITE_JUNCTION   = 6'd3;
+    localparam [5:0] SPRITE_RES_LEFT   = 6'd5;
+    localparam [5:0] SPRITE_RES_RIGHT  = 6'd6;
+    localparam [5:0] SPRITE_VOLT_LEFT  = 6'd7;
+    localparam [5:0] SPRITE_VOLT_RIGHT = 6'd8;
+    localparam [5:0] SPRITE_CURR_LEFT  = 6'd9;
+    localparam [5:0] SPRITE_CURR_RIGHT = 6'd10;
+    localparam [5:0] SPRITE_IND_LEFT   = 6'd11;
+    localparam [5:0] SPRITE_IND_RIGHT  = 6'd12;
+    localparam [5:0] SPRITE_CAP_LEFT   = 6'd13;
+    localparam [5:0] SPRITE_CAP_RIGHT  = 6'd14;
+    localparam [5:0] SPRITE_GROUND     = 6'd15;
 
-    // 面板布局 - 优化为 640x64 像素区域
-    localparam integer PANEL_PAD = 8;
-    localparam integer LABEL_X = PANEL_X + PANEL_PAD;
-    localparam integer LABEL_Y = PANEL_Y + 6;         // 顶部留 6 像素，scale=2 字高 16 像素
-    localparam integer VALUE_LABEL_X = PANEL_X + PANEL_PAD;
-    localparam integer VALUE_LABEL_Y = PANEL_Y + 28;  // LABEL 下方
-    localparam integer VALUE_INPUT_X = PANEL_X + 80;  // "Value:" 标签之后
-    localparam integer VALUE_INPUT_Y = PANEL_Y + 28;
-    localparam integer VALUE_INPUT_W = 120;           // 输入框宽度（缩小到只容纳数值）
-    localparam integer VALUE_INPUT_H = 14;            // 输入框高度
-    localparam integer VALUE_INPUT_BORDER_PAD = 2;    // 输入框边框内边距
-    localparam integer COORD_X = PANEL_X + PANEL_PAD;
-    localparam integer COORD_Y = PANEL_Y + 50;        // VALUE 下方
+    localparam integer TYPE_X = PANEL_X + 16;
+    localparam integer VALUE_X = PANEL_X + 224;
+    localparam integer POS_X = PANEL_X + 392;
+    localparam integer TITLE_Y = PANEL_Y + 10;
+    localparam integer CONTENT_Y = PANEL_Y + 30;
+    localparam integer INPUT_X = PANEL_X + 232;
+    localparam integer INPUT_Y = PANEL_Y + 30;
+    localparam [11:0] TYPE_X_POS = TYPE_X;
+    localparam [11:0] VALUE_X_POS = VALUE_X;
+    localparam [11:0] POS_X_POS = POS_X;
+    localparam [11:0] TITLE_Y_POS = TITLE_Y;
+    localparam [11:0] CONTENT_Y_POS = CONTENT_Y;
+    localparam [11:0] INPUT_X_POS = INPUT_X;
+    localparam [11:0] INPUT_Y_POS = INPUT_Y;
+    localparam [11:0] VALUE_BOX_X0 = PANEL_X + 224;
+    localparam [11:0] VALUE_BOX_Y0 = PANEL_Y + 24;
+    localparam [11:0] VALUE_BOX_X1 = PANEL_X + 336;
+    localparam [11:0] VALUE_BOX_Y1 = PANEL_Y + 44;
+    localparam [11:0] SEP0_X = PANEL_X + 192;
+    localparam [11:0] SEP1_X = PANEL_X + 376;
+    localparam [11:0] SEP_Y0 = PANEL_Y + 10;
+    localparam [11:0] SEP_Y1 = PANEL_Y + 54;
+    localparam [11:0] SUMMARY_Y = PANEL_Y + 26;
+    localparam [11:0] HINT_Y = PANEL_Y + 26;
 
-    // ========================================================================
-    // ComponentStore 数据解析 (40 位)
-    // ========================================================================
-    // 40位格式：{type[3:0], position[7:0], rotation[1:0], value[12:0], node1[3:0], node2[3:0], enable[1:0]}
-    // enable[1:0] = 2'b01 表示有效元件，2'b00 表示空单元格
-    wire [3:0]  comp_type = comp_r_data[39:36];     // 元件类型
-    wire [7:0]  comp_position = comp_r_data[35:28]; // 位置
-    wire [1:0]  comp_rotation = comp_r_data[27:26]; // 旋转
-    wire [12:0] comp_value = comp_r_data[25:13];    // 数值 (10位数值 + 3位单位)
-    wire [3:0]  comp_node1 = comp_r_data[12:9];     // 节点1
-    wire [3:0]  comp_node2 = comp_r_data[8:5];      // 节点2
-    wire [1:0]  comp_enable = comp_r_data[1:0];     // 使能标志
+    wire [5:0] cell_sprite_type = selected_cell_data[6:1];
+    wire cell_enable = selected_cell_data[0];
 
-    wire [3:0]  comp_xpos = comp_position[3:0];     // X 位置
-    wire [3:0]  comp_ypos = comp_position[7:4];     // Y 位置
-    wire [9:0]  comp_value_mag = comp_value[12:3];  // 数值大小 (10位)
-    wire [2:0]  comp_value_unit = comp_value[2:0];  // 单位乘数 (3位)
+    wire is_wire = has_selection && cell_enable && (cell_sprite_type == SPRITE_WIRE);
+    wire is_elbow = has_selection && cell_enable && (cell_sprite_type == SPRITE_ELBOW);
+    wire is_tee = has_selection && cell_enable && (cell_sprite_type == SPRITE_TEE);
+    wire is_junction = has_selection && cell_enable && (cell_sprite_type == SPRITE_JUNCTION);
+    wire is_resistor = has_selection && cell_enable &&
+        ((cell_sprite_type == SPRITE_RES_LEFT) || (cell_sprite_type == SPRITE_RES_RIGHT));
+    wire is_voltage = has_selection && cell_enable &&
+        ((cell_sprite_type == SPRITE_VOLT_LEFT) || (cell_sprite_type == SPRITE_VOLT_RIGHT));
+    wire is_current = has_selection && cell_enable &&
+        ((cell_sprite_type == SPRITE_CURR_LEFT) || (cell_sprite_type == SPRITE_CURR_RIGHT));
+    wire is_inductor = has_selection && cell_enable &&
+        ((cell_sprite_type == SPRITE_IND_LEFT) || (cell_sprite_type == SPRITE_IND_RIGHT));
+    wire is_capacitor = has_selection && cell_enable &&
+        ((cell_sprite_type == SPRITE_CAP_LEFT) || (cell_sprite_type == SPRITE_CAP_RIGHT));
+    wire is_ground = has_selection && cell_enable && (cell_sprite_type == SPRITE_GROUND);
+    wire show_detail_layout = has_selection && value_editable;
+    wire show_summary_layout = has_selection && cell_enable && !value_editable;
+    wire show_hint_layout = has_selection && !cell_enable;
 
-    // 地址生成：根据选中的单元格坐标
-    always @(*) begin
-        comp_r_addr = selected_cell_i[3:0] + (selected_cell_j[3:0] << 4);
-        comp_w_addr = comp_r_addr;  // 写地址与读地址相同
-    end
+    wire [3:0] sel_i_tens = selected_cell_i / 10;
+    wire [3:0] sel_i_ones = selected_cell_i % 10;
+    wire [3:0] sel_j_tens = selected_cell_j / 10;
+    wire [3:0] sel_j_ones = selected_cell_j % 10;
 
-    // 元件类型判断
-    reg is_wire, is_ground, is_resistor, is_capacitor, is_inductor, is_voltage, is_current, is_empty;
+    wire [7:0] ascii_sel_i_tens = sel_i_tens + 8'd48;
+    wire [7:0] ascii_sel_i_ones = sel_i_ones + 8'd48;
+    wire [7:0] ascii_sel_j_tens = sel_j_tens + 8'd48;
+    wire [7:0] ascii_sel_j_ones = sel_j_ones + 8'd48;
 
-    always @(*) begin
-        is_wire = 1'b0;
-        is_ground = 1'b0;
-        is_resistor = 1'b0;
-        is_capacitor = 1'b0;
-        is_inductor = 1'b0;
-        is_voltage = 1'b0;
-        is_current = 1'b0;
-        is_empty = 1'b0;
-
-        if (!has_selection || !comp_data_valid) begin
-            is_empty = 1'b1;
-        end else if (comp_enable != 2'b01) begin
-            // enable 标志不为 01 视为空单元格
-            is_empty = 1'b1;
-        end else begin
-            case (comp_type)
-                TYPE_WIRE:     is_wire = 1'b1;
-                TYPE_GROUND:   is_ground = 1'b1;
-                TYPE_RESISTOR: is_resistor = 1'b1;
-                TYPE_CAPACITOR: is_capacitor = 1'b1;
-                TYPE_INDUCTOR: is_inductor = 1'b1;
-                TYPE_VOLTAGE:  is_voltage = 1'b1;
-                TYPE_CURRENT:  is_current = 1'b1;
-                default:       is_empty = 1'b1;
-            endcase
-        end
-    end
-
-    // ========================================================================
-    // 参数编辑状态机 + 键盘输入处理（合并为单一 always 块，避免多驱动冲突）
-    // ========================================================================
-    reg editing_mode;           // 编辑模式标志
-    reg [9:0] edit_value_reg;   // 编辑中的数值 (10位)
-    reg [2:0] edit_unit_reg;    // 编辑中的单位 (3位)
-    reg [3:0] edit_digit_count; // 已输入数字位数
-
-    // 参数区域的可点击检测区域（使用鼠标位置，而不是渲染位置）
-    wire in_value_area = (mouse_xpos >= VALUE_INPUT_X - 2) && (mouse_xpos < VALUE_INPUT_X + VALUE_INPUT_W + 2) &&
-                         (mouse_ypos >= VALUE_INPUT_Y - 2) && (mouse_ypos < VALUE_INPUT_Y + VALUE_INPUT_H + 2);
-
-    // 虚拟键盘区域检测（右下角，防止编辑模式下点击键盘触发保存）
-    // 键盘位置：X = 485-640, Y = 352-480
-    localparam integer KEYBOARD_X = 485;
-    localparam integer KEYBOARD_Y = 352;
-    localparam integer KEYBOARD_W = 155;
-    localparam integer KEYBOARD_H = 128;
-    wire in_keyboard_area = (mouse_xpos >= KEYBOARD_X) && (mouse_xpos < KEYBOARD_X + KEYBOARD_W) &&
-                            (mouse_ypos >= KEYBOARD_Y) && (mouse_ypos < KEYBOARD_Y + KEYBOARD_H);
-
-    // 输入框的边框检测（使用渲染位置，用于显示）
-    wire value_area_border = (
-        (hcount >= VALUE_INPUT_X - VALUE_INPUT_BORDER_PAD) && (hcount < VALUE_INPUT_X - VALUE_INPUT_BORDER_PAD + 1) &&
-        (vcount >= VALUE_INPUT_Y - VALUE_INPUT_BORDER_PAD) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H + VALUE_INPUT_BORDER_PAD)
-    ) || (
-        (hcount >= VALUE_INPUT_X + VALUE_INPUT_W + VALUE_INPUT_BORDER_PAD - 1) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W + VALUE_INPUT_BORDER_PAD) &&
-        (vcount >= VALUE_INPUT_Y - VALUE_INPUT_BORDER_PAD) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H + VALUE_INPUT_BORDER_PAD)
-    ) || (
-        (vcount >= VALUE_INPUT_Y - VALUE_INPUT_BORDER_PAD) && (vcount < VALUE_INPUT_Y - VALUE_INPUT_BORDER_PAD + 1) &&
-        (hcount >= VALUE_INPUT_X - VALUE_INPUT_BORDER_PAD) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W + VALUE_INPUT_BORDER_PAD)
-    ) || (
-        (vcount >= VALUE_INPUT_Y + VALUE_INPUT_H + VALUE_INPUT_BORDER_PAD - 1) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H + VALUE_INPUT_BORDER_PAD) &&
-        (hcount >= VALUE_INPUT_X - VALUE_INPUT_BORDER_PAD) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W + VALUE_INPUT_BORDER_PAD)
-    );
-
-    // 合并鼠标和键盘处理为单一 always 块
-    always @(posedge clk_pixel) begin
-        comp_w_en <= 1'b0;  // 默认复位写使能
-
-        // 1. 鼠标点击处理
-        if (mouse_click && has_selection && !is_empty) begin
-            if (in_value_area) begin
-                // 点击参数区域，进入编辑模式
-                editing_mode <= 1'b1;
-                // 使用 RAM 中的当前值初始化编辑寄存器
-                edit_value_reg <= comp_value_mag;
-                edit_unit_reg <= comp_value_unit;
-                // 计算已有数字的位数
-                if (comp_value_mag >= 1000) begin
-                    edit_digit_count <= 4'd4;
-                end else if (comp_value_mag >= 100) begin
-                    edit_digit_count <= 4'd3;
-                end else if (comp_value_mag >= 10) begin
-                    edit_digit_count <= 4'd2;
-                end else begin
-                    edit_digit_count <= 4'd1;
-                end
-            end else if (editing_mode && !in_keyboard_area) begin
-                // 编辑模式下点击非参数区域且不在虚拟键盘上，确认并保存
-                comp_w_en <= 1'b1;
-                // comp_w_addr 已在组合逻辑中设置为 comp_r_addr，无需重复赋值
-                // 40位完整格式：type + position + rotation + value + node1 + node2 + 保留 + enable
-                comp_w_data <= {comp_type, comp_position, comp_rotation,
-                               {edit_value_reg, edit_unit_reg}, comp_node1, comp_node2, 3'b000, 2'b01};
-                editing_mode <= 1'b0;
-            end
-        end
-
-        // 2. 键盘输入处理
-        else if (editing_mode && key_valid) begin
-            if (key_is_digit && edit_digit_count < 4'd4) begin
-                // 数字输入 (0-9)
-                edit_value_reg <= edit_value_reg * 10 + (key_ascii - 8'd48);
-                edit_digit_count <= edit_digit_count + 1'b1;
-            end else if (key_is_unit) begin
-                // 单位输入 (M/k/m/u/n/p)
-                case (key_ascii)
-                    8'h4D: edit_unit_reg <= 3'd4;  // 'M' - Mega (10^6)
-                    8'h6B: edit_unit_reg <= 3'd3;  // 'k' - kilo (10^3)
-                    8'h6D: edit_unit_reg <= 3'd5;  // 'm' - milli (10^-3)
-                    8'h75: edit_unit_reg <= 3'd1;  // 'u' - micro (10^-6)
-                    8'h6E: edit_unit_reg <= 3'd2;  // 'n' - nano (10^-9)
-                    8'h70: edit_unit_reg <= 3'd6;  // 'p' - pico (10^-12)
-                    default: ;
-                endcase
-            end else if (key_ascii == 8'h08 || key_ascii == 8'h7F) begin
-                // 删除键 (Backspace/Delete) - 退格功能
-                if (edit_digit_count > 4'd0) begin
-                    edit_value_reg <= edit_value_reg / 10;
-                    edit_digit_count <= edit_digit_count - 1'b1;
-                end
-            end
-        end
-    end
-
-    // ========================================================================
-    // 数值显示转换
-    // ========================================================================
-    // 单位乘数显示映射
-    function [7:0] unit_to_ascii;
-        input [2:0] unit;
-        begin
-            case (unit)
-                3'd0: unit_to_ascii = " ";   // 无单位 (基准)
-                3'd1: unit_to_ascii = "u";   // micro
-                3'd2: unit_to_ascii = "n";   // nano
-                3'd3: unit_to_ascii = "k";   // kilo
-                3'd4: unit_to_ascii = "M";   // Mega
-                3'd5: unit_to_ascii = "m";   // milli
-                3'd6: unit_to_ascii = "p";   // pico
-                default: unit_to_ascii = " ";
-            endcase
-        end
-    endfunction
-    
-    // 坐标数字分解 - 使用实际点击的单元格坐标（而非 RAM 中的 position 字段）
-    // RAM position 字段可能为空（空白单元格），但 selected_cell_i/j 始终记录点击位置
-    wire [3:0] display_xpos = selected_cell_i[3:0];
-    wire [3:0] display_ypos = selected_cell_j[3:0];
-    
-    wire [3:0] xpos_tens = display_xpos / 10;
-    wire [3:0] xpos_ones = display_xpos % 10;
-    wire [3:0] ypos_tens = display_ypos / 10;
-    wire [3:0] ypos_ones = display_ypos % 10;
-
-    // 数值分解 (显示用)
-    wire [9:0] display_value = editing_mode ? edit_value_reg : comp_value_mag;
-    wire [3:0] val_thousands = display_value / 1000;
-    wire [3:0] val_hundreds = (display_value % 1000) / 100;
-    wire [3:0] val_tens = (display_value % 100) / 10;
-    wire [3:0] val_ones = display_value % 10;
-    
-    wire [2:0] display_unit = editing_mode ? edit_unit_reg : comp_value_unit;
-
-    // ASCII 转换 (48 = '0')
-    wire [7:0] ascii_xpos_tens = xpos_tens + 8'd48;
-    wire [7:0] ascii_xpos_ones = xpos_ones + 8'd48;
-    wire [7:0] ascii_ypos_tens = ypos_tens + 8'd48;
-    wire [7:0] ascii_ypos_ones = ypos_ones + 8'd48;
-
-    wire [7:0] ascii_val_thousands = val_thousands + 8'd48;
-    wire [7:0] ascii_val_hundreds = val_hundreds + 8'd48;
-    wire [7:0] ascii_val_tens = val_tens + 8'd48;
-    wire [7:0] ascii_val_ones = val_ones + 8'd48;
-    wire [7:0] ascii_unit = unit_to_ascii(display_unit);
-
-    // ========================================================================
-    // 文本数据总线 (MAX_CHARS * 8 位扁平化存储)
-    // ========================================================================
+    reg [MAX_CHARS * 8 - 1:0] type_title_data;
+    reg [4:0] type_title_len;
     reg [MAX_CHARS * 8 - 1:0] label_data;
     reg [4:0] label_len;
-    reg [MAX_CHARS * 8 - 1:0] value_data;
-    reg [4:0] value_len;
+    reg [MAX_CHARS * 8 - 1:0] value_label_data;
+    reg [4:0] value_label_len;
+    reg [MAX_CHARS * 8 - 1:0] pos_title_data;
+    reg [4:0] pos_title_len;
     reg [MAX_CHARS * 8 - 1:0] coord_data;
     reg [4:0] coord_len;
+    reg [MAX_CHARS * 8 - 1:0] input_data;
+    reg [4:0] input_len;
+    reg [MAX_CHARS * 8 - 1:0] type_title_data_q = {MAX_CHARS * 8{1'b0}};
+    reg [4:0] type_title_len_q = 5'd0;
+    reg [MAX_CHARS * 8 - 1:0] label_data_q = {MAX_CHARS * 8{1'b0}};
+    reg [4:0] label_len_q = 5'd0;
+    reg [MAX_CHARS * 8 - 1:0] value_label_data_q = {MAX_CHARS * 8{1'b0}};
+    reg [4:0] value_label_len_q = 5'd0;
+    reg [MAX_CHARS * 8 - 1:0] pos_title_data_q = {MAX_CHARS * 8{1'b0}};
+    reg [4:0] pos_title_len_q = 5'd0;
+    reg [MAX_CHARS * 8 - 1:0] coord_data_q = {MAX_CHARS * 8{1'b0}};
+    reg [4:0] coord_len_q = 5'd0;
+    reg [MAX_CHARS * 8 - 1:0] input_data_q = {MAX_CHARS * 8{1'b0}};
+    reg [4:0] input_len_q = 5'd0;
+    reg [22:0] blink_counter = 23'd0;
     integer i;
-    
-    // 文本生成逻辑
+
+    wire [11:0] label_text_width = ({7'd0, label_len_q} << 3);
+    wire [11:0] centered_label_x = PANEL_X + ((PANEL_W - label_text_width) >> 1);
+    wire [11:0] label_x_pos = show_hint_layout ? centered_label_x : TYPE_X_POS;
+    wire [11:0] coord_x_pos = POS_X_POS;
+    wire [11:0] label_y_pos = show_hint_layout ? HINT_Y : CONTENT_Y_POS;
+    wire [11:0] coord_y_pos = CONTENT_Y_POS;
+    wire [3:0] cursor_char_offset = (input_len_q[3:0] < 4'd8) ? input_len_q[3:0] : 4'd7;
+    wire [11:0] cursor_x0 = INPUT_X_POS + ({8'd0, cursor_char_offset} << 3);
+    wire [11:0] cursor_x1 = cursor_x0 + 12'd2;
+
     always @(*) begin
-        // 初始化所有数据为 0
         for (i = 0; i < MAX_CHARS * 8; i = i + 8) begin
+            type_title_data[i +: 8] = 8'd0;
             label_data[i +: 8] = 8'd0;
-            value_data[i +: 8] = 8'd0;
+            value_label_data[i +: 8] = 8'd0;
+            pos_title_data[i +: 8] = 8'd0;
             coord_data[i +: 8] = 8'd0;
+            input_data[i +: 8] = 8'd0;
         end
 
-        // 坐标字符串 "Pos: (XX, XX)"
-        coord_data[MAX_CHARS * 8 - 1 -: 8] = "P";
-        coord_data[MAX_CHARS * 8 - 9 -: 8] = "o";
-        coord_data[MAX_CHARS * 8 - 17 -: 8] = "s";
-        coord_data[MAX_CHARS * 8 - 25 -: 8] = ":";
-        coord_data[MAX_CHARS * 8 - 33 -: 8] = " ";
-        coord_data[MAX_CHARS * 8 - 41 -: 8] = "(";
-        coord_data[MAX_CHARS * 8 - 49 -: 8] = ascii_xpos_tens;
-        coord_data[MAX_CHARS * 8 - 57 -: 8] = ascii_xpos_ones;
-        coord_data[MAX_CHARS * 8 - 65 -: 8] = ",";
-        coord_data[MAX_CHARS * 8 - 73 -: 8] = " ";
-        coord_data[MAX_CHARS * 8 - 81 -: 8] = ascii_ypos_tens;
-        coord_data[MAX_CHARS * 8 - 89 -: 8] = ascii_ypos_ones;
-        coord_data[MAX_CHARS * 8 - 97 -: 8] = ")";
-        coord_len = 5'd13;
+        type_title_data[MAX_CHARS * 8 - 1 -: 8] = "T";
+        type_title_data[MAX_CHARS * 8 - 9 -: 8] = "y";
+        type_title_data[MAX_CHARS * 8 - 17 -: 8] = "p";
+        type_title_data[MAX_CHARS * 8 - 25 -: 8] = "e";
+        type_title_len = (show_detail_layout || show_summary_layout) ? 5'd4 : 5'd0;
 
-        // 根据元件类型生成标签和值
-        if (has_selection && !is_empty) begin
-            case (1'b1)
-                is_wire: begin
-                    // "Wire"
-                    label_data[MAX_CHARS * 8 - 1 -: 8] = "W";
-                    label_data[MAX_CHARS * 8 - 9 -: 8] = "i";
-                    label_data[MAX_CHARS * 8 - 17 -: 8] = "r";
-                    label_data[MAX_CHARS * 8 - 25 -: 8] = "e";
-                    label_len = 5'd4;
-                    // "Value:" 标签
-                    value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
-                    value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
-                    value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
-                    value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
-                    value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
-                    value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_len = 5'd6;
-                end
-                is_ground: begin
-                    // "Ground"
-                    label_data[MAX_CHARS * 8 - 1 -: 8] = "G";
-                    label_data[MAX_CHARS * 8 - 9 -: 8] = "r";
-                    label_data[MAX_CHARS * 8 - 17 -: 8] = "o";
-                    label_data[MAX_CHARS * 8 - 25 -: 8] = "u";
-                    label_data[MAX_CHARS * 8 - 33 -: 8] = "n";
-                    label_data[MAX_CHARS * 8 - 41 -: 8] = "d";
-                    label_len = 5'd6;
-                    // "Value:" 标签
-                    value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
-                    value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
-                    value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
-                    value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
-                    value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
-                    value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_len = 5'd6;
-                end
-                is_resistor: begin
-                    // "Resistor"
-                    label_data[MAX_CHARS * 8 - 1 -: 8] = "R";
-                    label_data[MAX_CHARS * 8 - 9 -: 8] = "e";
-                    label_data[MAX_CHARS * 8 - 17 -: 8] = "s";
-                    label_data[MAX_CHARS * 8 - 25 -: 8] = "i";
-                    label_data[MAX_CHARS * 8 - 33 -: 8] = "s";
-                    label_data[MAX_CHARS * 8 - 41 -: 8] = "t";
-                    label_data[MAX_CHARS * 8 - 49 -: 8] = "o";
-                    label_data[MAX_CHARS * 8 - 57 -: 8] = "r";
-                    label_len = 5'd8;
-                    // "Value:" 标签
-                    value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
-                    value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
-                    value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
-                    value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
-                    value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
-                    value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_len = 5'd6;
-                end
-                is_capacitor: begin
-                    // "Capacitor"
-                    label_data[MAX_CHARS * 8 - 1 -: 8] = "C";
-                    label_data[MAX_CHARS * 8 - 9 -: 8] = "a";
-                    label_data[MAX_CHARS * 8 - 17 -: 8] = "p";
-                    label_data[MAX_CHARS * 8 - 25 -: 8] = "a";
-                    label_data[MAX_CHARS * 8 - 33 -: 8] = "c";
-                    label_data[MAX_CHARS * 8 - 41 -: 8] = "i";
-                    label_data[MAX_CHARS * 8 - 49 -: 8] = "t";
-                    label_data[MAX_CHARS * 8 - 57 -: 8] = "o";
-                    label_data[MAX_CHARS * 8 - 65 -: 8] = "r";
-                    label_len = 5'd9;
-                    // "Value:" 标签
-                    value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
-                    value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
-                    value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
-                    value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
-                    value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
-                    value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_len = 5'd6;
-                end
-                is_inductor: begin
-                    // "Inductor"
-                    label_data[MAX_CHARS * 8 - 1 -: 8] = "I";
-                    label_data[MAX_CHARS * 8 - 9 -: 8] = "n";
-                    label_data[MAX_CHARS * 8 - 17 -: 8] = "d";
-                    label_data[MAX_CHARS * 8 - 25 -: 8] = "u";
-                    label_data[MAX_CHARS * 8 - 33 -: 8] = "c";
-                    label_data[MAX_CHARS * 8 - 41 -: 8] = "t";
-                    label_data[MAX_CHARS * 8 - 49 -: 8] = "o";
-                    label_data[MAX_CHARS * 8 - 57 -: 8] = "r";
-                    label_len = 5'd8;
-                    // "Value:" 标签
-                    value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
-                    value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
-                    value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
-                    value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
-                    value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
-                    value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_len = 5'd6;
-                end
-                is_voltage: begin
-                    // "Voltage Source"
-                    label_data[MAX_CHARS * 8 - 1 -: 8] = "V";
-                    label_data[MAX_CHARS * 8 - 9 -: 8] = "o";
-                    label_data[MAX_CHARS * 8 - 17 -: 8] = "l";
-                    label_data[MAX_CHARS * 8 - 25 -: 8] = "t";
-                    label_data[MAX_CHARS * 8 - 33 -: 8] = "a";
-                    label_data[MAX_CHARS * 8 - 41 -: 8] = "g";
-                    label_data[MAX_CHARS * 8 - 49 -: 8] = "e";
-                    label_data[MAX_CHARS * 8 - 57 -: 8] = " ";
-                    label_data[MAX_CHARS * 8 - 65 -: 8] = "S";
-                    label_data[MAX_CHARS * 8 - 73 -: 8] = "o";
-                    label_data[MAX_CHARS * 8 - 81 -: 8] = "u";
-                    label_data[MAX_CHARS * 8 - 89 -: 8] = "r";
-                    label_data[MAX_CHARS * 8 - 97 -: 8] = "c";
-                    label_data[MAX_CHARS * 8 - 105 -: 8] = "e";
-                    label_len = 5'd14;
-                    // "Value:" 标签
-                    value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
-                    value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
-                    value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
-                    value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
-                    value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
-                    value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_len = 5'd6;
-                end
-                is_current: begin
-                    // "Current Source"
-                    label_data[MAX_CHARS * 8 - 1 -: 8] = "C";
-                    label_data[MAX_CHARS * 8 - 9 -: 8] = "u";
-                    label_data[MAX_CHARS * 8 - 17 -: 8] = "r";
-                    label_data[MAX_CHARS * 8 - 25 -: 8] = "r";
-                    label_data[MAX_CHARS * 8 - 33 -: 8] = "e";
-                    label_data[MAX_CHARS * 8 - 41 -: 8] = "n";
-                    label_data[MAX_CHARS * 8 - 49 -: 8] = "t";
-                    label_data[MAX_CHARS * 8 - 57 -: 8] = " ";
-                    label_data[MAX_CHARS * 8 - 65 -: 8] = "S";
-                    label_data[MAX_CHARS * 8 - 73 -: 8] = "o";
-                    label_data[MAX_CHARS * 8 - 81 -: 8] = "u";
-                    label_data[MAX_CHARS * 8 - 89 -: 8] = "r";
-                    label_data[MAX_CHARS * 8 - 97 -: 8] = "c";
-                    label_data[MAX_CHARS * 8 - 105 -: 8] = "e";
-                    label_len = 5'd14;
-                    // "Value:" 标签
-                    value_data[MAX_CHARS * 8 - 1 -: 8] = "V";
-                    value_data[MAX_CHARS * 8 - 9 -: 8] = "a";
-                    value_data[MAX_CHARS * 8 - 17 -: 8] = "l";
-                    value_data[MAX_CHARS * 8 - 25 -: 8] = "u";
-                    value_data[MAX_CHARS * 8 - 33 -: 8] = "e";
-                    value_data[MAX_CHARS * 8 - 41 -: 8] = ":";
-                    value_len = 5'd6;
-                end
-                default: begin
-                    label_len = 5'd0;
-                    value_len = 5'd0;
-                end
-            endcase
-        end else if (has_selection && is_empty) begin
-            // "Empty Cell"
+        pos_title_data[MAX_CHARS * 8 - 1 -: 8] = "P";
+        pos_title_data[MAX_CHARS * 8 - 9 -: 8] = "o";
+        pos_title_data[MAX_CHARS * 8 - 17 -: 8] = "s";
+        pos_title_len = (show_detail_layout || show_summary_layout) ? 5'd3 : 5'd0;
+
+        if (!show_hint_layout) begin
+            coord_data[MAX_CHARS * 8 - 1 -: 8] = "(";
+            coord_data[MAX_CHARS * 8 - 9 -: 8] = ascii_sel_i_tens;
+            coord_data[MAX_CHARS * 8 - 17 -: 8] = ascii_sel_i_ones;
+            coord_data[MAX_CHARS * 8 - 25 -: 8] = ",";
+            coord_data[MAX_CHARS * 8 - 33 -: 8] = " ";
+            coord_data[MAX_CHARS * 8 - 41 -: 8] = ascii_sel_j_tens;
+            coord_data[MAX_CHARS * 8 - 49 -: 8] = ascii_sel_j_ones;
+            coord_data[MAX_CHARS * 8 - 57 -: 8] = ")";
+            coord_len = (show_detail_layout || show_summary_layout) ? 5'd8 : 5'd0;
+        end
+
+        value_label_data[MAX_CHARS * 8 - 1 -: 8] = "V";
+        value_label_data[MAX_CHARS * 8 - 9 -: 8] = "a";
+        value_label_data[MAX_CHARS * 8 - 17 -: 8] = "l";
+        value_label_data[MAX_CHARS * 8 - 25 -: 8] = "u";
+        value_label_data[MAX_CHARS * 8 - 33 -: 8] = "e";
+        value_label_len = show_detail_layout ? 5'd5 : 5'd0;
+
+        label_len = 5'd0;
+        input_len = show_detail_layout ? {1'b0, selected_value_text_len} : 5'd0;
+
+        if (!has_selection) begin
+            label_len = 5'd0;
+        end else if (is_wire) begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "W";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "i";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "r";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "e";
+            label_len = 5'd4;
+        end else if (is_elbow) begin
             label_data[MAX_CHARS * 8 - 1 -: 8] = "E";
-            label_data[MAX_CHARS * 8 - 9 -: 8] = "m";
-            label_data[MAX_CHARS * 8 - 17 -: 8] = "p";
-            label_data[MAX_CHARS * 8 - 25 -: 8] = "t";
-            label_data[MAX_CHARS * 8 - 33 -: 8] = "y";
-            label_data[MAX_CHARS * 8 - 41 -: 8] = " ";
-            label_data[MAX_CHARS * 8 - 49 -: 8] = "C";
-            label_data[MAX_CHARS * 8 - 57 -: 8] = "e";
-            label_data[MAX_CHARS * 8 - 65 -: 8] = "l";
-            label_data[MAX_CHARS * 8 - 73 -: 8] = "l";
-            label_len = 5'd10;
-            value_len = 5'd0;
-        end else begin
-            // "No Selection"
-            label_data[MAX_CHARS * 8 - 1 -: 8] = "N";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "l";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "b";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "o";
+            label_data[MAX_CHARS * 8 - 33 -: 8] = "w";
+            label_len = 5'd5;
+        end else if (is_tee) begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "T";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "e";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "e";
+            label_len = 5'd3;
+        end else if (is_junction) begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "J";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "u";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "n";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "c";
+            label_data[MAX_CHARS * 8 - 33 -: 8] = "t";
+            label_data[MAX_CHARS * 8 - 41 -: 8] = "i";
+            label_data[MAX_CHARS * 8 - 49 -: 8] = "o";
+            label_data[MAX_CHARS * 8 - 57 -: 8] = "n";
+            label_len = 5'd8;
+        end else if (is_resistor) begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "R";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "e";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "s";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "i";
+            label_data[MAX_CHARS * 8 - 33 -: 8] = "s";
+            label_data[MAX_CHARS * 8 - 41 -: 8] = "t";
+            label_data[MAX_CHARS * 8 - 49 -: 8] = "o";
+            label_data[MAX_CHARS * 8 - 57 -: 8] = "r";
+            label_len = 5'd8;
+        end else if (is_voltage) begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "V";
             label_data[MAX_CHARS * 8 - 9 -: 8] = "o";
-            label_data[MAX_CHARS * 8 - 17 -: 8] = " ";
-            label_data[MAX_CHARS * 8 - 25 -: 8] = "S";
-            label_data[MAX_CHARS * 8 - 33 -: 8] = "e";
-            label_data[MAX_CHARS * 8 - 41 -: 8] = "l";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "l";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "t";
+            label_data[MAX_CHARS * 8 - 33 -: 8] = "a";
+            label_data[MAX_CHARS * 8 - 41 -: 8] = "g";
             label_data[MAX_CHARS * 8 - 49 -: 8] = "e";
-            label_data[MAX_CHARS * 8 - 57 -: 8] = "c";
-            label_data[MAX_CHARS * 8 - 65 -: 8] = "t";
-            label_data[MAX_CHARS * 8 - 73 -: 8] = "i";
+            label_data[MAX_CHARS * 8 - 57 -: 8] = " ";
+            label_data[MAX_CHARS * 8 - 65 -: 8] = "S";
+            label_data[MAX_CHARS * 8 - 73 -: 8] = "o";
+            label_data[MAX_CHARS * 8 - 81 -: 8] = "u";
+            label_data[MAX_CHARS * 8 - 89 -: 8] = "r";
+            label_data[MAX_CHARS * 8 - 97 -: 8] = "c";
+            label_data[MAX_CHARS * 8 - 105 -: 8] = "e";
+            label_len = 5'd14;
+        end else if (is_current) begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "C";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "u";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "r";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "r";
+            label_data[MAX_CHARS * 8 - 33 -: 8] = "e";
+            label_data[MAX_CHARS * 8 - 41 -: 8] = "n";
+            label_data[MAX_CHARS * 8 - 49 -: 8] = "t";
+            label_data[MAX_CHARS * 8 - 57 -: 8] = " ";
+            label_data[MAX_CHARS * 8 - 65 -: 8] = "S";
+            label_data[MAX_CHARS * 8 - 73 -: 8] = "o";
+            label_data[MAX_CHARS * 8 - 81 -: 8] = "u";
+            label_data[MAX_CHARS * 8 - 89 -: 8] = "r";
+            label_data[MAX_CHARS * 8 - 97 -: 8] = "c";
+            label_data[MAX_CHARS * 8 - 105 -: 8] = "e";
+            label_len = 5'd14;
+        end else if (is_inductor) begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "I";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "n";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "d";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "u";
+            label_data[MAX_CHARS * 8 - 33 -: 8] = "c";
+            label_data[MAX_CHARS * 8 - 41 -: 8] = "t";
+            label_data[MAX_CHARS * 8 - 49 -: 8] = "o";
+            label_data[MAX_CHARS * 8 - 57 -: 8] = "r";
+            label_len = 5'd8;
+        end else if (is_capacitor) begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "C";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "a";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "p";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "a";
+            label_data[MAX_CHARS * 8 - 33 -: 8] = "c";
+            label_data[MAX_CHARS * 8 - 41 -: 8] = "i";
+            label_data[MAX_CHARS * 8 - 49 -: 8] = "t";
+            label_data[MAX_CHARS * 8 - 57 -: 8] = "o";
+            label_data[MAX_CHARS * 8 - 65 -: 8] = "r";
+            label_len = 5'd9;
+        end else if (is_ground) begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "G";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "r";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "o";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "u";
+            label_data[MAX_CHARS * 8 - 33 -: 8] = "n";
+            label_data[MAX_CHARS * 8 - 41 -: 8] = "d";
+            label_len = 5'd6;
+        end else begin
+            label_data[MAX_CHARS * 8 - 1 -: 8] = "C";
+            label_data[MAX_CHARS * 8 - 9 -: 8] = "l";
+            label_data[MAX_CHARS * 8 - 17 -: 8] = "i";
+            label_data[MAX_CHARS * 8 - 25 -: 8] = "c";
+            label_data[MAX_CHARS * 8 - 33 -: 8] = "k";
+            label_data[MAX_CHARS * 8 - 41 -: 8] = " ";
+            label_data[MAX_CHARS * 8 - 49 -: 8] = "c";
+            label_data[MAX_CHARS * 8 - 57 -: 8] = "o";
+            label_data[MAX_CHARS * 8 - 65 -: 8] = "m";
+            label_data[MAX_CHARS * 8 - 73 -: 8] = "p";
             label_data[MAX_CHARS * 8 - 81 -: 8] = "o";
             label_data[MAX_CHARS * 8 - 89 -: 8] = "n";
-            label_len = 5'd12;
-            value_len = 5'd0;
+            label_data[MAX_CHARS * 8 - 97 -: 8] = "e";
+            label_data[MAX_CHARS * 8 - 105 -: 8] = "n";
+            label_data[MAX_CHARS * 8 - 113 -: 8] = "t";
+            label_len = 5'd15;
+        end
+
+        if (show_detail_layout) begin
+            input_data[MAX_CHARS * 8 - 1 -: 8] = selected_value_text[63:56];
+            input_data[MAX_CHARS * 8 - 9 -: 8] = selected_value_text[55:48];
+            input_data[MAX_CHARS * 8 - 17 -: 8] = selected_value_text[47:40];
+            input_data[MAX_CHARS * 8 - 25 -: 8] = selected_value_text[39:32];
+            input_data[MAX_CHARS * 8 - 33 -: 8] = selected_value_text[31:24];
+            input_data[MAX_CHARS * 8 - 41 -: 8] = selected_value_text[23:16];
+            input_data[MAX_CHARS * 8 - 49 -: 8] = selected_value_text[15:8];
+            input_data[MAX_CHARS * 8 - 57 -: 8] = selected_value_text[7:0];
         end
     end
 
-    // ========================================================================
-    // DynamicTextBox 例化
-    // ========================================================================
+    always @(posedge clk_pixel) begin
+        type_title_data_q <= type_title_data;
+        type_title_len_q <= type_title_len;
+        label_data_q <= label_data;
+        label_len_q <= label_len;
+        value_label_data_q <= value_label_data;
+        value_label_len_q <= value_label_len;
+        pos_title_data_q <= pos_title_data;
+        pos_title_len_q <= pos_title_len;
+        coord_data_q <= coord_data;
+        coord_len_q <= coord_len;
+        input_data_q <= input_data;
+        input_len_q <= input_len;
+    end
+
+    wire type_title_text_enable;
+    wire [11:0] type_title_text_color;
     wire label_text_enable;
     wire [11:0] label_text_color;
-    wire value_text_enable;
-    wire [11:0] value_text_color;
+    wire value_label_text_enable;
+    wire [11:0] value_label_text_color;
+    wire pos_title_text_enable;
+    wire [11:0] pos_title_text_color;
     wire coord_text_enable;
     wire [11:0] coord_text_color;
+    wire input_text_enable;
+    wire [11:0] input_text_color;
 
-    // 编辑模式下的输入框内文本显示
-    wire edit_text_enable;
-    wire [11:0] edit_text_color;
-    
-    // 编辑模式下的数值显示（在输入框内）
-    reg [MAX_CHARS * 8 - 1:0] edit_value_display_data;
-    reg [4:0] edit_value_display_len;
-    
-    // 生成编辑状态下的显示文本（在输入框内）
-    always @(*) begin
-        edit_value_display_data = 0;
-        edit_value_display_len = 0;
-        
-        // 无论是否编辑模式，都显示当前数值
-        begin
-            // 显示当前数值（编辑模式下为 edit_value_reg，非编辑模式为 comp_value_mag）
-            if (display_value >= 1000) begin
-                // 4位数
-                edit_value_display_data[MAX_CHARS * 8 - 1 -: 8] = ascii_val_thousands;
-                edit_value_display_data[MAX_CHARS * 8 - 9 -: 8] = ascii_val_hundreds;
-                edit_value_display_data[MAX_CHARS * 8 - 17 -: 8] = ascii_val_tens;
-                edit_value_display_data[MAX_CHARS * 8 - 25 -: 8] = ascii_val_ones;
-                edit_value_display_len = 5'd4;
-            end else if (display_value >= 100) begin
-                // 3位数
-                edit_value_display_data[MAX_CHARS * 8 - 1 -: 8] = ascii_val_hundreds;
-                edit_value_display_data[MAX_CHARS * 8 - 9 -: 8] = ascii_val_tens;
-                edit_value_display_data[MAX_CHARS * 8 - 17 -: 8] = ascii_val_ones;
-                edit_value_display_len = 5'd3;
-            end else if (display_value >= 10) begin
-                // 2位数
-                edit_value_display_data[MAX_CHARS * 8 - 1 -: 8] = ascii_val_tens;
-                edit_value_display_data[MAX_CHARS * 8 - 9 -: 8] = ascii_val_ones;
-                edit_value_display_len = 5'd2;
-            end else begin
-                // 1位数
-                edit_value_display_data[MAX_CHARS * 8 - 1 -: 8] = ascii_val_ones;
-                edit_value_display_len = 5'd1;
-            end
-        end
-    end
+    DynamicTextBox #(
+        .MAX_CHARS(MAX_CHARS),
+        .CHAR_W_BASE(8),
+        .CHAR_H_BASE(8)
+    ) u_type_title_textbox (
+        .clk_pixel(clk_pixel),
+        .hcount(hcount),
+        .vcount(vcount),
+        .text_data(type_title_data_q),
+        .text_len(type_title_len_q),
+        .start_x(TYPE_X_POS),
+        .start_y(TITLE_Y_POS),
+        .scale(4'd1),
+        .text_enable(type_title_text_enable),
+        .text_color(type_title_text_color)
+    );
 
-    // 元件名称标签 (放大 2 倍)
     DynamicTextBox #(
         .MAX_CHARS(MAX_CHARS),
         .CHAR_W_BASE(8),
@@ -606,34 +374,49 @@ module ComponentPropertyPanel #(
         .clk_pixel(clk_pixel),
         .hcount(hcount),
         .vcount(vcount),
-        .text_data(label_data),
-        .text_len(label_len),
-        .start_x({12'd0, LABEL_X}),
-        .start_y({12'd0, LABEL_Y}),
-        .scale(4'd2),
+        .text_data(label_data_q),
+        .text_len(label_len_q),
+        .start_x(label_x_pos),
+        .start_y(label_y_pos),
+        .scale(4'd1),
         .text_enable(label_text_enable),
         .text_color(label_text_color)
     );
 
-    // 元件值标签 (原始大小) - 显示 "Value: " 标签
     DynamicTextBox #(
         .MAX_CHARS(MAX_CHARS),
         .CHAR_W_BASE(8),
         .CHAR_H_BASE(8)
-    ) u_value_textbox (
+    ) u_value_label_textbox (
         .clk_pixel(clk_pixel),
         .hcount(hcount),
         .vcount(vcount),
-        .text_data(value_data),
-        .text_len(value_len),
-        .start_x({12'd0, VALUE_LABEL_X}),
-        .start_y({12'd0, VALUE_LABEL_Y}),
+        .text_data(value_label_data_q),
+        .text_len(value_label_len_q),
+        .start_x(VALUE_X_POS),
+        .start_y(TITLE_Y_POS),
         .scale(4'd1),
-        .text_enable(value_text_enable),
-        .text_color(value_text_color)
+        .text_enable(value_label_text_enable),
+        .text_color(value_label_text_color)
     );
 
-    // 坐标标签 (原始大小)
+    DynamicTextBox #(
+        .MAX_CHARS(MAX_CHARS),
+        .CHAR_W_BASE(8),
+        .CHAR_H_BASE(8)
+    ) u_pos_title_textbox (
+        .clk_pixel(clk_pixel),
+        .hcount(hcount),
+        .vcount(vcount),
+        .text_data(pos_title_data_q),
+        .text_len(pos_title_len_q),
+        .start_x(POS_X_POS),
+        .start_y(TITLE_Y_POS),
+        .scale(4'd1),
+        .text_enable(pos_title_text_enable),
+        .text_color(pos_title_text_color)
+    );
+
     DynamicTextBox #(
         .MAX_CHARS(MAX_CHARS),
         .CHAR_W_BASE(8),
@@ -642,85 +425,88 @@ module ComponentPropertyPanel #(
         .clk_pixel(clk_pixel),
         .hcount(hcount),
         .vcount(vcount),
-        .text_data(coord_data),
-        .text_len(coord_len),
-        .start_x({12'd0, COORD_X}),
-        .start_y({12'd0, COORD_Y}),
+        .text_data(coord_data_q),
+        .text_len(coord_len_q),
+        .start_x(coord_x_pos),
+        .start_y(coord_y_pos),
         .scale(4'd1),
         .text_enable(coord_text_enable),
         .text_color(coord_text_color)
     );
 
-    // 编辑模式下的输入框内数值显示
     DynamicTextBox #(
         .MAX_CHARS(MAX_CHARS),
         .CHAR_W_BASE(8),
         .CHAR_H_BASE(8)
-    ) u_edit_value_textbox (
+    ) u_input_textbox (
         .clk_pixel(clk_pixel),
         .hcount(hcount),
         .vcount(vcount),
-        .text_data(edit_value_display_data),
-        .text_len(edit_value_display_len),
-        .start_x({12'd0, VALUE_INPUT_X + 4}),
-        .start_y({12'd0, VALUE_INPUT_Y}),
+        .text_data(input_data_q),
+        .text_len(input_len_q),
+        .start_x(INPUT_X_POS),
+        .start_y(INPUT_Y_POS),
         .scale(4'd1),
-        .text_enable(edit_text_enable),
-        .text_color(edit_text_color)
+        .text_enable(input_text_enable),
+        .text_color(input_text_color)
     );
 
-    // ========================================================================
-    // 面板渲染逻辑
-    // ========================================================================
-    wire in_panel = (hcount >= PANEL_X) && (hcount < PANEL_X + PANEL_W) &&
+    wire in_panel =
+                    (hcount >= PANEL_X) && (hcount < PANEL_X + PANEL_W) &&
                     (vcount >= PANEL_Y) && (vcount < PANEL_Y + PANEL_H);
+    wire in_value_box = in_panel && show_detail_layout &&
+                        (hcount >= VALUE_BOX_X0) && (hcount < VALUE_BOX_X1) &&
+                        (vcount >= VALUE_BOX_Y0) && (vcount < VALUE_BOX_Y1);
+    wire value_box_border = in_value_box &&
+                            ((hcount == VALUE_BOX_X0) || (hcount == VALUE_BOX_X1 - 1) ||
+                             (vcount == VALUE_BOX_Y0) || (vcount == VALUE_BOX_Y1 - 1));
+    wire cursor_visible = value_edit_active && value_editable && blink_counter[22];
+    wire cursor_active = cursor_visible && in_value_box &&
+                         (hcount >= cursor_x0) && (hcount < cursor_x1) &&
+                         (vcount >= (VALUE_BOX_Y0 + 12'd3)) && (vcount < (VALUE_BOX_Y1 - 12'd3));
+    wire separator_active = in_panel && show_detail_layout &&
+                            (((hcount == SEP0_X) || (hcount == SEP1_X)) &&
+                             (vcount >= SEP_Y0) && (vcount < SEP_Y1));
 
-    wire is_border = in_panel && (
+    wire is_border = has_selection && in_panel && (
         (hcount == PANEL_X) || (hcount == PANEL_X + PANEL_W - 1) ||
         (vcount == PANEL_Y) || (vcount == PANEL_Y + PANEL_H - 1)
     );
 
-    localparam [11:0] COLOR_VALUE_BORDER_IDLE = 12'hAAA;  // 参数区域边框颜色（未激活）
-    localparam [11:0] COLOR_VALUE_BORDER_EDIT = 12'hF00;  // 参数区域边框颜色（编辑中，红色）
-    localparam [11:0] COLOR_EDIT_INPUT_BG = 12'hFFF;      // 编辑模式下输入框背景（白色）
-    localparam [11:0] COLOR_EDIT_INPUT_TEXT = 12'h000;    // 编辑模式下输入框文本（黑色）
+    always @(posedge clk_pixel) begin
+        blink_counter <= blink_counter + 1'b1;
+    end
 
     always @(posedge clk_pixel) begin
         panel_rendered <= 1'b0;
         panel_rgb <= COLOR_BG;
 
-        // video_on 为低时不输出任何信号 (消隐期间)
         if (video_on && in_panel) begin
             panel_rendered <= 1'b1;
-
-            if (is_border) begin
+            if (is_border)
                 panel_rgb <= COLOR_BORDER;
-            end else if (value_area_border && editing_mode) begin
-                // 编辑模式下输入框边框变红色
-                panel_rgb <= COLOR_VALUE_BORDER_EDIT;
-            end else if (value_area_border) begin
-                // 未激活时输入框边框灰色
-                panel_rgb <= COLOR_VALUE_BORDER_IDLE;
-            end else if (edit_text_enable) begin
-                // 输入框内文本（黑色）- 优先级最高
-                panel_rgb <= COLOR_EDIT_INPUT_TEXT;
-            end else if (editing_mode && (hcount >= VALUE_INPUT_X) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W) &&
-                         (vcount >= VALUE_INPUT_Y) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H)) begin
-                // 编辑模式下输入框背景为白色
-                panel_rgb <= COLOR_EDIT_INPUT_BG;
-            end else if ((hcount >= VALUE_INPUT_X) && (hcount < VALUE_INPUT_X + VALUE_INPUT_W) &&
-                         (vcount >= VALUE_INPUT_Y) && (vcount < VALUE_INPUT_Y + VALUE_INPUT_H)) begin
-                // 非编辑模式下输入框背景为浅灰色
-                panel_rgb <= 12'hF8F8F8;
-            end else if (label_text_enable) begin
-                panel_rgb <= label_text_color;
-            end else if (value_text_enable) begin
-                panel_rgb <= value_text_color;
-            end else if (coord_text_enable) begin
-                panel_rgb <= coord_text_color;
-            end else begin
+            else if (value_box_border)
+                panel_rgb <= value_edit_active ? COLOR_BOX_ACTIVE : COLOR_BOX_BORDER;
+            else if (separator_active)
+                panel_rgb <= COLOR_BORDER;
+            else if (type_title_text_enable)
+                panel_rgb <= COLOR_CAPTION;
+            else if (value_label_text_enable)
+                panel_rgb <= COLOR_CAPTION;
+            else if (pos_title_text_enable)
+                panel_rgb <= COLOR_CAPTION;
+            else if (label_text_enable)
+                panel_rgb <= COLOR_TEXT;
+            else if (input_text_enable)
+                panel_rgb <= COLOR_TEXT;
+            else if (coord_text_enable)
+                panel_rgb <= COLOR_TEXT;
+            else if (cursor_active)
+                panel_rgb <= COLOR_BOX_ACTIVE;
+            else if (in_value_box)
+                panel_rgb <= COLOR_BOX_BG;
+            else
                 panel_rgb <= COLOR_BG;
-            end
         end
     end
 

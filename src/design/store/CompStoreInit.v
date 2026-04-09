@@ -26,7 +26,7 @@ module CompStoreInit #(
     parameter integer DATA_WIDTH = 40
 )(
     input wire clk,
-    input wire sw_init,          // SW[14] 上升沿触发初始化
+    input wire sw_init,          // SW[14] 上升沿触发初始化（可选，系统启动时也会自动初始化）
     output reg init_done,
     output reg [ADDR_WIDTH-1:0] init_addr,
     output reg [DATA_WIDTH-1:0] init_data,
@@ -44,17 +44,19 @@ module CompStoreInit #(
 
     // 初始化状态机
     reg [7:0] init_state;
-    reg [7:0] INIT_MARKER;
-    reg [7:0] INIT_MARKER_WAIT;
     reg [31:0] init_counter;
-    
+    reg [3:0] step_counter;  // 步骤计数器 (0-8)
+    reg auto_init_done;
+
     localparam INIT_IDLE = 8'd0;
     localparam INIT_WRITE = 8'd1;
     localparam INIT_WAIT = 8'd2;
     localparam INIT_DONE = 8'd255;
-    
+
     // 测试数据存储 (地址 -> 40位数据)
-    // 格式：{type[3:0], position[7:0], rotation[1:0], value[12:0], node1[3:0], node2[3:0]}
+    // 地址计算公式: addr = Xpos + Ypos * 16
+    // 40位格式：{type[3:0], position[7:0], rotation[1:0], value[12:0], node1[3:0], node2[3:0], enable[1:0], 保留[2:0]}
+    // 实际分配：[39:36]=type, [35:28]=position, [27:26]=rotation, [25:13]=value, [12:9]=node1, [8:5]=node2, [4:0]=5位(其中[1:0]=enable)
     function [DATA_WIDTH-1:0] make_comp_data;
         input [3:0] type;
         input [7:0] position;
@@ -63,107 +65,108 @@ module CompStoreInit #(
         input [3:0] node1;
         input [3:0] node2;
         begin
-            make_comp_data = {type, position, rotation, value, node1, node2};
+            // 总共 40 位：4+8+2+13+4+4+5 = 40
+            // 最后 5 位中，低 2 位是 enable，高 3 位保留
+            make_comp_data = {type, position, rotation, value, node1, node2, 3'b000, 2'b01};
         end
     endfunction
-    
+
     always @(posedge clk) begin
         if (sw_init_edge) begin
+            // SW[14] 上升沿触发，重置状态
             init_state <= INIT_IDLE;
             init_addr <= 8'd0;
             init_data <= 40'd0;
             init_w_en <= 1'b0;
             init_done <= 1'b0;
+            step_counter <= 4'd0;
             init_counter <= 32'd0;
-        end else begin
+            auto_init_done <= 1'b0;
+        end else if (!auto_init_done) begin
+            // 自动初始化流程
             case (init_state)
                 INIT_IDLE: begin
                     init_counter <= init_counter + 1;
                     if (init_counter == 32'd1000000) begin  // 延迟约40ms
                         init_state <= INIT_WRITE;
-                        init_addr <= 8'd0;
+                        step_counter <= 4'd0;
                         init_counter <= 32'd0;
                     end
                 end
-                
+
                 INIT_WRITE: begin
-                    // 写入测试数据
-                    case (init_addr)
-                        // 地址0: 电阻 100 Ohm at (2,3)
-                        8'd0: init_data <= make_comp_data(4'b0010, 8'h32, 2'b00, {10'd100, 3'd0}, 4'd0, 4'd1);
-                        
-                        // 地址1: 电压源 5V at (5,5)
-                        8'd1: init_data <= make_comp_data(4'b0101, 8'h55, 2'b00, {10'd5, 3'd0}, 4'd1, 4'd2);
-                        
-                        // 地址2: 电容 10uF at (8,2)
-                        8'd2: init_data <= make_comp_data(4'b0011, 8'h28, 2'b00, {10'd10, 3'd1}, 4'd2, 4'd3);
-                        
-                        // 地址3: 电感 100mH at (3,7)
-                        8'd3: init_data <= make_comp_data(4'b0100, 8'h73, 2'b00, {10'd100, 3'd0}, 4'd3, 4'd4);
-                        
-                        // 地址4: 电流源 20mA at (10,10)
-                        8'd4: init_data <= make_comp_data(4'b0110, 8'hAA, 2'b00, {10'd20, 3'd0}, 4'd4, 4'd5);
-                        
-                        // 地址5: 接地 at (1,1)
-                        8'd5: init_data <= make_comp_data(4'b0001, 8'h11, 2'b00, {13'd0}, 4'd0, 4'd0);
-                        
-                        // 地址6: 线缆 at (0,0)
-                        8'd6: init_data <= make_comp_data(4'b0000, 8'h00, 2'b00, {13'd0}, 4'd5, 4'd0);
-                        
-                        // 地址7: 电阻 1k Ohm at (6,4)
-                        8'd7: init_data <= make_comp_data(4'b0010, 8'h46, 2'b00, {10'd1, 3'd3}, 4'd5, 4'd6);
-                        
-                        // 未初始化的地址写入特殊标记 (非零)，以便识别为空单元格
-                        default: init_data <= 40'hFFFF_FFFF_F;  // 全F标记表示空单元格
+                    // 写入测试数据 - 根据步骤设置正确的 RAM 地址
+                    // 地址计算公式: addr = Xpos + Ypos * 16
+                    case (step_counter)
+                        4'd0: begin
+                            init_addr <= 8'd0;   // 线缆 at (0,0)
+                            init_data <= make_comp_data(4'b0000, 8'h00, 2'b00, {13'd0}, 4'd0, 4'd0);
+                        end
+                        4'd1: begin
+                            init_addr <= 8'd17;  // 线缆 at (1,1)
+                            init_data <= make_comp_data(4'b0000, 8'h11, 2'b00, {13'd0}, 4'd0, 4'd1);
+                        end
+                        4'd2: begin
+                            init_addr <= 8'd50;  // 电阻 100 Ohm at (2,3)
+                            init_data <= make_comp_data(4'b0010, 8'h32, 2'b00, {10'd100, 3'd0}, 4'd2, 4'd3);
+                        end
+                        4'd3: begin
+                            init_addr <= 8'd85;  // 电压源 5V at (5,5)
+                            init_data <= make_comp_data(4'b0101, 8'h55, 2'b00, {10'd5, 3'd0}, 4'd4, 4'd5);
+                        end
+                        4'd4: begin
+                            init_addr <= 8'd40;  // 电容 10uF at (8,2)
+                            init_data <= make_comp_data(4'b0011, 8'h28, 2'b00, {10'd10, 3'd1}, 4'd1, 4'd2);
+                        end
+                        4'd5: begin
+                            init_addr <= 8'd115; // 电感 100mH at (3,7)
+                            init_data <= make_comp_data(4'b0100, 8'h73, 2'b00, {10'd100, 3'd0}, 4'd5, 4'd6);
+                        end
+                        4'd6: begin
+                            init_addr <= 8'd170; // 电流源 20mA at (10,10)
+                            init_data <= make_comp_data(4'b0110, 8'hAA, 2'b00, {10'd20, 3'd0}, 4'd6, 4'd7);
+                        end
+                        4'd7: begin
+                            init_addr <= 8'd71;  // 电阻 1k Ohm at (7,4)
+                            init_data <= make_comp_data(4'b0010, 8'h47, 2'b00, {10'd1, 3'd3}, 4'd3, 4'd4);
+                        end
+                        default: begin
+                            init_data <= 40'd0;
+                        end
                     endcase
-                    
+
                     init_w_en <= 1'b1;
                     init_state <= INIT_WAIT;
                 end
-                
+
                 INIT_WAIT: begin
-                    // 等待一个周期
+                    // 等待一个周期（不复位 init_addr，保持上一步设置的地址）
                     init_w_en <= 1'b0;
-                    if (init_addr < 8'd255) begin
-                        init_addr <= init_addr + 1'b1;
-                        if (init_addr < 8'd8) begin
-                            init_state <= INIT_WRITE;  // 继续写有效数据 (地址 0-7)
-                        end else begin
-                            init_state <= INIT_MARKER;  // 开始写空标记 (地址 8-255)
-                        end
+                    if (step_counter < 4'd8) begin
+                        step_counter <= step_counter + 1'b1;
+                        init_state <= INIT_WRITE;
                     end else begin
+                        // 所有测试数据写完，初始化完成
                         init_state <= INIT_DONE;
                         init_done <= 1'b1;
+                        auto_init_done <= 1'b1;
                     end
                 end
-                
-                INIT_MARKER: begin
-                    // 为未使用的地址写入空标记
-                    init_data <= 40'hFFFF_FFFF_F;
-                    init_w_en <= 1'b1;
-                    init_state <= INIT_MARKER_WAIT;
-                end
-                
-                INIT_MARKER_WAIT: begin
-                    init_w_en <= 1'b0;
-                    if (init_addr < 8'd255) begin
-                        init_addr <= init_addr + 1'b1;
-                        init_state <= INIT_MARKER;
-                    end else begin
-                        init_state <= INIT_DONE;
-                        init_done <= 1'b1;
-                    end
-                end
-                
+
                 INIT_DONE: begin
                     init_w_en <= 1'b0;
                     init_done <= 1'b1;
+                    auto_init_done <= 1'b1;
                 end
-                
+
                 default: begin
                     init_state <= INIT_IDLE;
                 end
             endcase
+        end else begin
+            // 自动初始化完成后，保持状态
+            init_w_en <= 1'b0;
+            init_done <= 1'b1;
         end
     end
 

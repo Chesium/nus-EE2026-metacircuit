@@ -5,11 +5,11 @@ module ToolbarVGA #(
     parameter integer BAR_Y0 = 64,
     parameter integer BAR_W = 64,
     parameter integer BAR_H = 288,
-    parameter integer TOOLBAR_COUNT = 8,
+    parameter integer TOOLBAR_COUNT = 10,
     parameter integer BTN_X0 = 14,
     parameter integer BTN_W = 36,
-    parameter integer BTN_H = 28,
-    parameter integer BTN_GAP = 6,
+    parameter integer BTN_H = 24,
+    parameter integer BTN_GAP = 2,
     parameter integer BTN_Y0 = 72,
     parameter integer ICON_X0 = 20,
     parameter integer ICON_W = 24,
@@ -23,17 +23,19 @@ module ToolbarVGA #(
     input  wire [11:0] y,
     output reg  [11:0] pixel_rgb,
     output wire        rendered,
-    output reg  [2:0]  selected_tool_idx = 3'd0
+    output reg  [3:0]  selected_tool_idx = 4'd0,
+    output reg  [1:0]  selected_wire_variant = 2'd0
 );
 
     wire [TOOLBAR_COUNT-1:0] button_inside;
     wire [(TOOLBAR_COUNT*12)-1:0] button_rgb_bus;
-    reg  [2:0] hovered_tool_idx;
+    reg  [3:0] hovered_tool_idx;
     reg        hover_valid;
     reg        mouse_left_d = 1'b0;
     wire       mouse_left_rising;
     reg  [23:0] toolbar_row_bits;
     reg         toolbar_bitmap_active;
+    reg  [3:0]  display_icon_idx;
     integer     k;
 
     function integer button_y0;
@@ -202,7 +204,7 @@ module ToolbarVGA #(
                         default: toolbar_bitmap_row = 24'b000000000000000000000000;
                     endcase
                 end
-                default: begin
+                7: begin
                     case (row_idx)
                         2:  toolbar_bitmap_row = 24'b000000000001110000000000;
                         3:  toolbar_bitmap_row = 24'b000000000001110000000000;
@@ -211,9 +213,9 @@ module ToolbarVGA #(
                         6:  toolbar_bitmap_row = 24'b000000000001110000000000;
                         7:  toolbar_bitmap_row = 24'b000000000001110000000000;
                         8:  toolbar_bitmap_row = 24'b000000000001110000000000;
-                        9:  toolbar_bitmap_row = 24'b000001111111111111110000;
+                        9:  toolbar_bitmap_row = 24'b000000000001110000000000;
                         10: toolbar_bitmap_row = 24'b000001111111111111110000;
-                        11: toolbar_bitmap_row = 24'b000000110000000011100000;
+                        11: toolbar_bitmap_row = 24'b000001111111111111110000;
                         12: toolbar_bitmap_row = 24'b000000111000000011100000;
                         13: toolbar_bitmap_row = 24'b000000011100000110000000;
                         14: toolbar_bitmap_row = 24'b000000001100000110000000;
@@ -223,6 +225,121 @@ module ToolbarVGA #(
                         18: toolbar_bitmap_row = 24'b000000000001110000000000;
                         19: toolbar_bitmap_row = 24'b000000000001110000000000;
                         20: toolbar_bitmap_row = 24'b000000000000100000000000;
+                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
+                    endcase
+                end
+                8: begin
+                    case (row_idx)
+                        3:  toolbar_bitmap_row = 24'b000000000000000000000000;
+                        4:  toolbar_bitmap_row = 24'b000000000000000000000000;
+                        5:  toolbar_bitmap_row = 24'b000011111111111111110000;
+                        6:  toolbar_bitmap_row = 24'b000011111111111111110000;
+                        7:  toolbar_bitmap_row = 24'b000011111111111111110000;
+                        8:  toolbar_bitmap_row = 24'b000000000000000001110000;
+                        9:  toolbar_bitmap_row = 24'b000000000000000001110000;
+                        10: toolbar_bitmap_row = 24'b000001000000000001110000;
+                        11: toolbar_bitmap_row = 24'b000011100000000001110000;
+                        12: toolbar_bitmap_row = 24'b000111110000000001110000;
+                        13: toolbar_bitmap_row = 24'b000011100000000001110000;
+                        14: toolbar_bitmap_row = 24'b000011100000000001110000;
+                        15: toolbar_bitmap_row = 24'b000011100000000001110000;
+                        16: toolbar_bitmap_row = 24'b000011111111111111110000;
+                        17: toolbar_bitmap_row = 24'b000011111111111111110000;
+                        18: toolbar_bitmap_row = 24'b000011111111111111110000;
+                        19: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        20: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
+                    endcase
+                end
+                10: begin
+                    case (row_idx)
+                        11: toolbar_bitmap_row = 24'b000111111111111111111000;
+                        12: toolbar_bitmap_row = 24'b000111111111111111111000;
+                        13: toolbar_bitmap_row = 24'b000111111111111111111000;
+                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
+                    endcase
+                end
+                11: begin
+                    case (row_idx)
+                        4:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        5:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        6:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        7:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        8:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        9:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        10: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        11: toolbar_bitmap_row = 24'b000111111111111111111000;
+                        12: toolbar_bitmap_row = 24'b000111111111111111111000;
+                        13: toolbar_bitmap_row = 24'b000111111111111111111000;
+                        14: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        15: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        16: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        17: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        18: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        19: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        20: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
+                    endcase
+                end
+                12: begin
+                    case (row_idx)
+                        4:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        5:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        6:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        7:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        8:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        9:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        10: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        11: toolbar_bitmap_row = 24'b000000000011111111111000;
+                        12: toolbar_bitmap_row = 24'b000000000011111111111000;
+                        13: toolbar_bitmap_row = 24'b000000000011111111111000;
+                        14: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        15: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        16: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        17: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
+                    endcase
+                end
+                13: begin
+                    case (row_idx)
+                        4:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        5:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        6:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        7:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        8:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        9:  toolbar_bitmap_row = 24'b000000000011110000000000;
+                        10: toolbar_bitmap_row = 24'b000000000011110000000000;
+                        11: toolbar_bitmap_row = 24'b000111111111111111111000;
+                        12: toolbar_bitmap_row = 24'b000111111111111111111000;
+                        13: toolbar_bitmap_row = 24'b000111111111111111111000;
+                        14: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        15: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        16: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        17: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        18: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        19: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        20: toolbar_bitmap_row = 24'b000000000000000000000000;
+                        default: toolbar_bitmap_row = 24'b000000000000000000000000;
+                    endcase
+                end
+                default: begin
+                    case (row_idx)
+                        3:  toolbar_bitmap_row = 24'b000000000000000000000000;
+                        4:  toolbar_bitmap_row = 24'b000111000000000000111000;
+                        5:  toolbar_bitmap_row = 24'b000011100000000001110000;
+                        6:  toolbar_bitmap_row = 24'b000001110000000011100000;
+                        7:  toolbar_bitmap_row = 24'b000000111000000111000000;
+                        8:  toolbar_bitmap_row = 24'b000000011100001110000000;
+                        9:  toolbar_bitmap_row = 24'b000000001110011100000000;
+                        10: toolbar_bitmap_row = 24'b000000000111111000000000;
+                        11: toolbar_bitmap_row = 24'b000000000111111000000000;
+                        12: toolbar_bitmap_row = 24'b000000001110011100000000;
+                        13: toolbar_bitmap_row = 24'b000000011100001110000000;
+                        14: toolbar_bitmap_row = 24'b000000111000000111000000;
+                        15: toolbar_bitmap_row = 24'b00000111000000001110000;
+                        16: toolbar_bitmap_row = 24'b000011100000000001110000;
+                        17: toolbar_bitmap_row = 24'b000111000000000000111000;
+                        18: toolbar_bitmap_row = 24'b000000000000000000000000;
                         default: toolbar_bitmap_row = 24'b000000000000000000000000;
                     endcase
                 end
@@ -243,12 +360,12 @@ module ToolbarVGA #(
 
     always @(*) begin
         hover_valid = 1'b0;
-        hovered_tool_idx = 3'd0;
+        hovered_tool_idx = 4'd0;
         if ((mouse_x >= BTN_X0) && (mouse_x < (BTN_X0 + BTN_W))) begin
             for (k = 0; k < TOOLBAR_COUNT; k = k + 1) begin
                 if ((mouse_y >= button_y0(k)) && (mouse_y < (button_y0(k) + BTN_H))) begin
                     hover_valid = 1'b1;
-                    hovered_tool_idx = k[2:0];
+                    hovered_tool_idx = k[3:0];
                 end
             end
         end
@@ -257,6 +374,13 @@ module ToolbarVGA #(
     always @(posedge clk_pixel) begin
         mouse_left_d <= mouse_left;
         if (mouse_left_rising && hover_valid) begin
+            if (hovered_tool_idx == 4'd1) begin
+                if (selected_tool_idx == 4'd1) begin
+                    selected_wire_variant <= selected_wire_variant + 1'b1;
+                end else begin
+                    selected_wire_variant <= 2'd0;
+                end
+            end
             selected_tool_idx <= hovered_tool_idx;
         end
     end
@@ -286,8 +410,8 @@ module ToolbarVGA #(
                 .TEXT_RGB(24'hF4E7D5)
             ) toolbar_button_inst (
                 .enabled(1'b1),
-                .selected(selected_tool_idx == btn_idx[2:0]),
-                .pressed(mouse_left && hover_valid && (hovered_tool_idx == btn_idx[2:0])),
+                .selected(selected_tool_idx == btn_idx[3:0]),
+                .pressed(mouse_left && hover_valid && (hovered_tool_idx == btn_idx[3:0])),
                 .x(x),
                 .y(y),
                 .pixel_rgb(button_rgb_bus[(btn_idx * 12) +: 12]),
@@ -310,7 +434,16 @@ module ToolbarVGA #(
         for (k = 0; k < TOOLBAR_COUNT; k = k + 1) begin
             if ((x >= ICON_X0) && (x < (ICON_X0 + ICON_W)) &&
                 (y >= icon_y0(k)) && (y < (icon_y0(k) + ICON_H))) begin
-                toolbar_row_bits = toolbar_bitmap_row(k, y - icon_y0(k));
+                display_icon_idx = k[3:0];
+                if (k == 1) begin
+                    case (selected_wire_variant)
+                        2'd0: display_icon_idx = 4'd10;
+                        2'd1: display_icon_idx = 4'd11;
+                        2'd2: display_icon_idx = 4'd12;
+                        default: display_icon_idx = 4'd13;
+                    endcase
+                end
+                toolbar_row_bits = toolbar_bitmap_row(display_icon_idx, y - icon_y0(k));
                 if (toolbar_row_bits[23 - (x - ICON_X0)]) toolbar_bitmap_active = 1'b1;
             end
         end

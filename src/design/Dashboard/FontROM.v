@@ -25,7 +25,7 @@ module FontROM (
                     0: pixel_data = 8'b01100110; 1: pixel_data = 8'b01100110;
                     2: pixel_data = 8'b01100110; 3: pixel_data = 8'b00000000;
                     4: pixel_data = 8'b00000000; 5: pixel_data = 8'b00000000;
-                    5: pixel_data = 8'b00000000; 6: pixel_data = 8'b00000000;
+                    6: pixel_data = 8'b00000000;
                     7: pixel_data = 8'b00000000; default: pixel_data = 8'b00000000;
                   endcase
 

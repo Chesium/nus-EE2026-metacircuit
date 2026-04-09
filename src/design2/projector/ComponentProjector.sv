@@ -65,6 +65,15 @@ module ComponentProjector (
     endcase
   endfunction
 
+  function automatic logic [1:0] cell_rot_from_component_rot(input logic [1:0] comp_rot);
+    case (comp_rot)
+      2'd0: cell_rot_from_component_rot = 2'd1;
+      2'd1: cell_rot_from_component_rot = 2'd0;
+      2'd2: cell_rot_from_component_rot = 2'd3;
+      default: cell_rot_from_component_rot = 2'd2;
+    endcase
+  endfunction
+
   function automatic logic [4:0] second_x(input logic [39:0] comp);
     case (component_rot(comp))
       2'd1: second_x = component_anchor_x(comp) + 1'b1;
@@ -187,7 +196,7 @@ module ComponentProjector (
           cell_req_wdata <= pack_cell(
               1'b1,
               first_sprite(component_type(comp_latched)),
-              component_rot(comp_latched),
+              cell_rot_from_component_rot(component_rot(comp_latched)),
               comp_idx,
               1'b0
           );
@@ -208,7 +217,7 @@ module ComponentProjector (
           cell_req_wdata <= pack_cell(
               1'b1,
               second_sprite(component_type(comp_latched)),
-              component_rot(comp_latched),
+              cell_rot_from_component_rot(component_rot(comp_latched)),
               comp_idx,
               1'b0
           );

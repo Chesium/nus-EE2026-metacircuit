@@ -295,6 +295,31 @@
 ### Exit Criteria
 - Tool mode can be selected from the rendered UI rather than only from switches.
 
+### Stage 2 Output
+- Added shared toolbar metadata and geometry package:
+  - `src/design2/ui/toolbar/ToolbarPkg.sv`
+- Added the split toolbar modules:
+  - `src/design2/ui/toolbar/ToolbarStateController.sv`
+  - `src/design2/ui/toolbar/ToolbarRenderer.sv`
+- Integrated the new toolbar path into the production top:
+  - `src/design2/top/MetaCircuit_top.sv` now instantiates `ToolbarStateController` and `ToolbarRenderer`
+  - toolbar pixels are now composited into the live render path ahead of the canvas background
+  - selected tool state is synchronized into the pixel domain before rendering
+- Unified tool-mode definitions:
+  - `src/design2/interaction/InteractionCommandController.sv` now imports toolbar mode constants from `ToolbarPkg.sv` instead of keeping a duplicated local mode table
+- Stage 2 UI behavior now present:
+  - visible toolbar panel on screen
+  - fixed tool slots with compact labels
+  - selected-tool highlight
+  - hover indication
+  - switch override kept only as a debug fallback through `SW[15]`
+- Verification completed for Stage 2:
+  - added `src/testbench/Design2_Toolbar_test.sv`
+  - added `src/testbench/Design2_ToolbarIntegration_test.sv`
+  - updated `metacircuit-design2.tcl` to include the new toolbar files and tests
+  - local Vivado `xvlog` parse passed for the toolbar modules, integration path, and `MetaCircuit_top`
+  - local Vivado `xelab` and `xsim` runs passed for both new Stage 2 tests
+
 ## Stage 3: Replace The Placeholder Property Panel
 ### Deliverables
 - A proper property panel for selected components.

@@ -124,18 +124,22 @@ module Design2_ComponentProjector_test;
 
     expect_true(cell_valid(cell_mem[flatten_addr(5'd10, 5'd6)]), "first resistor cell missing");
     expect_true(cell_sprite(cell_mem[flatten_addr(5'd10, 5'd6)]) == SPRITE_RES_LEFT, "first resistor sprite mismatch");
+    expect_true(cell_rot(cell_mem[flatten_addr(5'd10, 5'd6)]) == 2'd0, "first resistor rotation should be horizontal");
     expect_true(cell_comp_idx(cell_mem[flatten_addr(5'd10, 5'd6)]) == 6'd0, "first resistor comp_idx mismatch");
 
     expect_true(cell_valid(cell_mem[flatten_addr(5'd11, 5'd6)]), "second resistor cell missing");
     expect_true(cell_sprite(cell_mem[flatten_addr(5'd11, 5'd6)]) == SPRITE_RES_RIGHT, "second resistor sprite mismatch");
+    expect_true(cell_rot(cell_mem[flatten_addr(5'd11, 5'd6)]) == 2'd0, "second resistor rotation should be horizontal");
     expect_true(cell_comp_idx(cell_mem[flatten_addr(5'd11, 5'd6)]) == 6'd0, "second resistor comp_idx mismatch");
 
     expect_true(cell_valid(cell_mem[flatten_addr(5'd3, 5'd4)]), "first voltage cell missing");
     expect_true(cell_sprite(cell_mem[flatten_addr(5'd3, 5'd4)]) == SPRITE_VOLT_LEFT, "first voltage sprite mismatch");
+    expect_true(cell_rot(cell_mem[flatten_addr(5'd3, 5'd4)]) == 2'd1, "first voltage rotation should be vertical");
     expect_true(cell_comp_idx(cell_mem[flatten_addr(5'd3, 5'd4)]) == 6'd1, "first voltage comp_idx mismatch");
 
     expect_true(cell_valid(cell_mem[flatten_addr(5'd3, 5'd5)]), "second voltage cell missing");
     expect_true(cell_sprite(cell_mem[flatten_addr(5'd3, 5'd5)]) == SPRITE_VOLT_RIGHT, "second voltage sprite mismatch");
+    expect_true(cell_rot(cell_mem[flatten_addr(5'd3, 5'd5)]) == 2'd1, "second voltage rotation should be vertical");
     expect_true(cell_comp_idx(cell_mem[flatten_addr(5'd3, 5'd5)]) == 6'd1, "second voltage comp_idx mismatch");
 
     $display("Design2_ComponentProjector_test passed.");

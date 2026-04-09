@@ -29,18 +29,7 @@ module InteractionCommandController #(
   import CellStorePkg::*;
   import ComponentStorePkg::*;
   import MetaCommandPkg::*;
-
-  localparam [3:0] MODE_SELECT   = 4'd0;
-  localparam [3:0] MODE_WIRE     = 4'd1;
-  localparam [3:0] MODE_JUNCTION = 4'd2;
-  localparam [3:0] MODE_ELBOW    = 4'd3;
-  localparam [3:0] MODE_TEE      = 4'd4;
-  localparam [3:0] MODE_RES      = 4'd5;
-  localparam [3:0] MODE_VOLT     = 4'd6;
-  localparam [3:0] MODE_CURR     = 4'd7;
-  localparam [3:0] MODE_ROTATE   = 4'd8;
-  localparam [3:0] MODE_DELETE   = 4'd9;
-  localparam [3:0] MODE_GROUND   = 4'd10;
+  import ToolbarPkg::*;
 
   wire snapshot_valid;
   wire [11:0] snapshot_mouse_x;

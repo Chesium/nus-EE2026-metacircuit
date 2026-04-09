@@ -24,11 +24,41 @@ module MetaCircuit_top (
   import CellStorePkg::*;
   import ComponentStorePkg::*;
   import MetaCommandPkg::*;
+  import ToolbarPkg::*;
 
   localparam integer CANVAS_X0 = 64;
   localparam integer CANVAS_Y0 = 64;
   localparam integer CANVAS_W = 420;
   localparam integer CANVAS_H = 288;
+  localparam logic [4:0] DEMO_COMP_X = 5'd10;
+  localparam logic [4:0] DEMO_COMP_Y = 5'd8;
+  localparam logic [9:0] DEMO_CELL_ADDR0 = flatten_addr(DEMO_COMP_X, DEMO_COMP_Y);
+  localparam logic [9:0] DEMO_CELL_ADDR1 = flatten_addr(DEMO_COMP_X + 5'd1, DEMO_COMP_Y);
+  localparam logic [39:0] DEMO_COMPONENT_WORD = pack_component(
+      COMP_RESISTOR,
+      13'd100,
+      NODE_NONE,
+      NODE_NONE,
+      DEMO_COMP_X,
+      DEMO_COMP_Y,
+      2'd1,
+      5'b00001
+  );
+  localparam logic [15:0] DEMO_CELL_WORD0 = pack_cell(
+      1'b1,
+      SPRITE_RES_LEFT,
+      2'd0,
+      6'd0,
+      1'b0
+  );
+  localparam logic [15:0] DEMO_CELL_WORD1 = pack_cell(
+      1'b1,
+      SPRITE_RES_RIGHT,
+      2'd0,
+      6'd0,
+      1'b0
+  );
+  localparam integer INTERACTION_LED_PULSE_CYCLES = 24'd7_500_000;
 
   typedef enum logic [4:0] {
     SYS_INIT_CLEAR_A,
@@ -83,6 +113,8 @@ module MetaCircuit_top (
   (* ASYNC_REG = "TRUE" *) reg        mouse_left_pix_sync1;
   (* ASYNC_REG = "TRUE" *) reg        mouse_middle_pix_sync0;
   (* ASYNC_REG = "TRUE" *) reg        mouse_middle_pix_sync1;
+  (* ASYNC_REG = "TRUE" *) reg [3:0]  mode_select_pix_sync0;
+  (* ASYNC_REG = "TRUE" *) reg [3:0]  mode_select_pix_sync1;
   (* ASYNC_REG = "TRUE" *) reg [39:0] selected_comp_data_pix_sync0;
   (* ASYNC_REG = "TRUE" *) reg [39:0] selected_comp_data_pix_sync1;
   (* ASYNC_REG = "TRUE" *) reg        has_selection_pix_sync0;
@@ -95,6 +127,10 @@ module MetaCircuit_top (
 
   wire [11:0] prop_panel_rgb;
   wire        prop_panel_rendered;
+  wire [11:0] toolbar_rgb;
+  wire        toolbar_rendered;
+  wire [11:0] tool_label_rgb;
+  wire        tool_label_rendered;
 
   reg render_bank_sel_pix;
   reg render_bank_sel_bg_sync0;
@@ -155,6 +191,8 @@ module MetaCircuit_top (
 
   wire arb_cmd_valid;
   wire [63:0] arb_cmd_payload;
+  reg exec_cmd_valid;
+  reg [63:0] exec_cmd_payload;
 
   reg has_selection;
   reg [5:0] selected_comp_idx;
@@ -207,20 +245,24 @@ module MetaCircuit_top (
 
   reg bg_overrun_flag;
   reg system_busy_on_flip;
+  reg [23:0] interaction_led_counter;
+  wire interaction_led_pulse_active;
 
   sys_state_t sys_state;
+
+  assign interaction_led_pulse_active = (interaction_led_counter != 24'd0);
 
   assign SEG = 8'hFF;
   assign AN = 4'hF;
   assign JC = 8'h00;
   assign LED = {
-    2'b00,
-    mode_select,
+    interaction_led_pulse_active,
     bg_overrun_flag,
     interaction_frame_drop_flag,
     property_cmd_pending,
     interaction_cmd_pending,
     has_selection,
+    mode_select,
     selected_comp_idx
   };
 
@@ -322,11 +364,17 @@ module MetaCircuit_top (
       .d_out(comp_store_d_out)
   );
 
-  ToolbarController toolbar_ctrl_inst (
+  ToolbarStateController toolbar_ctrl_inst (
       .clk(CLK100MHZ),
       .rst(BTNC),
+      .switch_override_en(SW[15]),
       .sw(SW),
-      .mode_select(mode_select)
+      .mouse_x(mouse_xpos),
+      .mouse_y(mouse_ypos),
+      .mouse_left(mouse_left),
+      .mode_select(mode_select),
+      .hover_valid(),
+      .hover_tool_idx()
   );
 
   InteractionCommandController #(
@@ -383,6 +431,29 @@ module MetaCircuit_top (
       .panel_rgb(prop_panel_rgb)
   );
 
+  ToolbarRenderer toolbar_renderer_inst (
+      .clk_pixel(clk_pixel),
+      .video_on(video_on),
+      .hcount(x_pos),
+      .vcount(y_pos),
+      .mouse_x(mouse_xpos_pix_sync1),
+      .mouse_y(mouse_ypos_pix_sync1),
+      .mouse_left(mouse_left_pix_sync1),
+      .selected_mode(mode_select_pix_sync1),
+      .rendered(toolbar_rendered),
+      .rgb(toolbar_rgb)
+  );
+
+  CurrentToolLabel current_tool_label_inst (
+      .clk_pixel(clk_pixel),
+      .video_on(video_on),
+      .hcount(x_pos),
+      .vcount(y_pos),
+      .selected_mode(mode_select_pix_sync1),
+      .rendered(tool_label_rendered),
+      .rgb(tool_label_rgb)
+  );
+
   CommandArbiter arbiter_inst (
       .interaction_cmd_valid(interaction_cmd_pending),
       .interaction_cmd_payload(interaction_cmd_pending_payload),
@@ -396,8 +467,8 @@ module MetaCircuit_top (
       .clk(CLK100MHZ),
       .rst(BTNC),
       .start(executor_start),
-      .cmd_valid(arb_cmd_valid),
-      .cmd_payload(arb_cmd_payload),
+      .cmd_valid(exec_cmd_valid),
+      .cmd_payload(exec_cmd_payload),
       .busy(executor_busy),
       .done(executor_done),
       .cell_req_valid(exec_cell_req_valid),
@@ -500,6 +571,8 @@ module MetaCircuit_top (
       mouse_left_pix_sync1 <= 1'b0;
       mouse_middle_pix_sync0 <= 1'b0;
       mouse_middle_pix_sync1 <= 1'b0;
+      mode_select_pix_sync0 <= MODE_SELECT;
+      mode_select_pix_sync1 <= MODE_SELECT;
       selected_comp_data_pix_sync0 <= 40'd0;
       selected_comp_data_pix_sync1 <= 40'd0;
       has_selection_pix_sync0 <= 1'b0;
@@ -514,6 +587,8 @@ module MetaCircuit_top (
       mouse_left_pix_sync1 <= mouse_left_pix_sync0;
       mouse_middle_pix_sync0 <= mouse_middle;
       mouse_middle_pix_sync1 <= mouse_middle_pix_sync0;
+      mode_select_pix_sync0 <= mode_select;
+      mode_select_pix_sync1 <= mode_select_pix_sync0;
       selected_comp_data_pix_sync0 <= selected_comp_data;
       selected_comp_data_pix_sync1 <= selected_comp_data_pix_sync0;
       has_selection_pix_sync0 <= has_selection;
@@ -552,7 +627,16 @@ module MetaCircuit_top (
       interaction_cmd_pending_payload <= '0;
       property_cmd_pending <= 1'b0;
       property_cmd_pending_payload <= '0;
+      exec_cmd_valid <= 1'b0;
+      exec_cmd_payload <= '0;
+      interaction_led_counter <= 24'd0;
     end else begin
+      if (interaction_cmd_valid) begin
+        interaction_led_counter <= INTERACTION_LED_PULSE_CYCLES[23:0];
+      end else if (interaction_led_counter != 24'd0) begin
+        interaction_led_counter <= interaction_led_counter - 1'b1;
+      end
+
       if (interaction_cmd_valid) begin
         interaction_cmd_pending <= 1'b1;
         interaction_cmd_pending_payload <= interaction_cmd_payload;
@@ -560,6 +644,9 @@ module MetaCircuit_top (
       if (property_cmd_valid) begin
         property_cmd_pending <= 1'b1;
         property_cmd_pending_payload <= property_cmd_payload;
+      end
+      if (sys_state == SYS_EXEC_RUN) begin
+        exec_cmd_valid <= 1'b0;
       end
       if (sys_state == SYS_EXEC_START && arb_cmd_valid) begin
         if (property_cmd_pending) begin
@@ -663,7 +750,15 @@ module MetaCircuit_top (
       executor_start <= 1'b0;
       projector_start <= 1'b0;
 
-      if (frame_flip_pulse_bg && (sys_state != SYS_WAIT_FLIP)) begin
+      if (sys_state == SYS_WAIT_FLIP) begin
+        bg_overrun_flag <= 1'b0;
+      end
+
+      if (frame_flip_pulse_bg &&
+          (sys_state != SYS_WAIT_FLIP) &&
+          (sys_state != SYS_INIT_CLEAR_A) &&
+          (sys_state != SYS_INIT_CLEAR_B) &&
+          (sys_state != SYS_INIT_CLEAR_COMP)) begin
         bg_overrun_flag <= 1'b1;
       end
 
@@ -671,7 +766,13 @@ module MetaCircuit_top (
         SYS_INIT_CLEAR_A: begin
           cell_ram_a_sys_w_en <= 1'b1;
           cell_ram_a_sys_w_addr <= sys_cell_index;
-          cell_ram_a_sys_d_in <= empty_cell();
+          if (sys_cell_index == DEMO_CELL_ADDR0) begin
+            cell_ram_a_sys_d_in <= DEMO_CELL_WORD0;
+          end else if (sys_cell_index == DEMO_CELL_ADDR1) begin
+            cell_ram_a_sys_d_in <= DEMO_CELL_WORD1;
+          end else begin
+            cell_ram_a_sys_d_in <= empty_cell();
+          end
           if (sys_cell_index == CELL_COUNT - 1) begin
             sys_cell_index <= 10'd0;
             sys_state <= SYS_INIT_CLEAR_B;
@@ -683,7 +784,13 @@ module MetaCircuit_top (
         SYS_INIT_CLEAR_B: begin
           cell_ram_b_sys_w_en <= 1'b1;
           cell_ram_b_sys_w_addr <= sys_cell_index;
-          cell_ram_b_sys_d_in <= empty_cell();
+          if (sys_cell_index == DEMO_CELL_ADDR0) begin
+            cell_ram_b_sys_d_in <= DEMO_CELL_WORD0;
+          end else if (sys_cell_index == DEMO_CELL_ADDR1) begin
+            cell_ram_b_sys_d_in <= DEMO_CELL_WORD1;
+          end else begin
+            cell_ram_b_sys_d_in <= empty_cell();
+          end
           if (sys_cell_index == CELL_COUNT - 1) begin
             sys_comp_index <= 6'd0;
             sys_state <= SYS_INIT_CLEAR_COMP;
@@ -695,7 +802,11 @@ module MetaCircuit_top (
         SYS_INIT_CLEAR_COMP: begin
           comp_store_w_en <= 1'b1;
           comp_store_w_addr <= sys_comp_index;
-          comp_store_d_in <= empty_component();
+          if (sys_comp_index == 6'd0) begin
+            comp_store_d_in <= DEMO_COMPONENT_WORD;
+          end else begin
+            comp_store_d_in <= empty_component();
+          end
           if (sys_comp_index == COMPONENT_COUNT - 1) begin
             sys_state <= SYS_WAIT_FLIP;
           end else begin
@@ -790,6 +901,8 @@ module MetaCircuit_top (
           end
           if (arb_cmd_valid &&
               (command_kind(arb_cmd_payload) != CMD_SELECT_TARGET)) begin
+            exec_cmd_valid <= 1'b1;
+            exec_cmd_payload <= arb_cmd_payload;
             executor_start <= 1'b1;
             sys_state <= SYS_EXEC_RUN;
           end else begin
@@ -885,8 +998,12 @@ module MetaCircuit_top (
       rgb <= 12'h000;
     end else if (mouse_display_enable) begin
       rgb <= mouse_rgb;
+    end else if (tool_label_rendered) begin
+      rgb <= tool_label_rgb;
     end else if (prop_panel_rendered) begin
       rgb <= prop_panel_rgb;
+    end else if (toolbar_rendered) begin
+      rgb <= toolbar_rgb;
     end else if (canvas_rendered) begin
       rgb <= canvas_rgb;
     end else begin

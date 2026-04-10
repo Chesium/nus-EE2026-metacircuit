@@ -17,6 +17,8 @@ module GlobalRender_top (
     output wire [3:0]  VGAGREEN,
     output wire        HSYNC,
     output wire        VSYNC,
+    input  wire        RsRx,
+    output wire        RsTx,
     inout              PS2CLK,
     inout              PS2DATA
 );
@@ -64,11 +66,16 @@ module GlobalRender_top (
     localparam integer STORE_VIEW_VALUE_Y = 320;
     localparam integer STORE_VIEW_RAW_Y = 344;
     localparam integer STORE_VIEW_POS_Y = 368;
+    localparam ENABLE_OLED_CALC  = 1'b0;
+    localparam ENABLE_PROP_PANEL = 1'b1;
+    localparam ENABLE_STORE_VIEW = 1'b0;
+    localparam ENABLE_MATRIX     = 1'b0;
+    localparam ENABLE_WAVEFORMS  = 1'b0;
 
     // =========================================================
-    // 【決定生死的遮罩精算】
-    // 在 Top 模組裡精準宣告 155 x 128 的物理空間，防止被切斷！
-    // 5列 * 31寬 = 155, 4行 * 32高 = 128
+    // 銆愭焙瀹氱敓姝荤殑閬僵绮剧畻銆?
+    // 鍦? Top 妯＄祫瑁＄簿婧栧鍛? 155 x 128 鐨勭墿鐞嗙┖闁擄紝闃叉琚垏鏂凤紒
+    // 5鍒? * 31瀵? = 155, 4琛? * 32楂? = 128
     // =========================================================
     localparam integer KEYBOARD_SCALE  = 2;
     localparam integer KEY_W           = 31;
@@ -79,7 +86,7 @@ module GlobalRender_top (
     localparam integer KEYBOARD_PANEL_PAD = 0;
 
     localparam integer KEYBOARD_X      = SCREEN_W - RIGHT_BAR_W + 1;
-    // 485，讓它緊貼右側邊緣
+    // 485锛岃畵瀹冪穵璨煎彸鍋撮倞绶?
     localparam integer KEYBOARD_Y      = SCREEN_H - BOTTOM_BAR_H;
     // 352
     
@@ -105,8 +112,8 @@ module GlobalRender_top (
     (* ASYNC_REG = "TRUE" *) reg  [7:0]  keyboard_ascii_sys_ff1 = 8'h00;
 
     wire        keyboard_region_active;
-    wire        show_matrix = SW[0];
-    wire        show_component_store_view = SW[1];
+    wire        show_matrix = ENABLE_MATRIX && SW[0];
+    wire        show_component_store_view = ENABLE_STORE_VIEW && SW[1];
 
     // =========================================================
     // Calculator on OLED signals
@@ -118,6 +125,7 @@ module GlobalRender_top (
     wire [6:0]  oled_x_pos;
     wire [5:0]  oled_y_pos;
     wire [15:0] oled_pixel_rgb;
+    wire [7:0]  jc_oled;
     reg  [15:0] oled_data;
 
     wire [11:0] circuit_canvas_rgb;
@@ -231,6 +239,50 @@ module GlobalRender_top (
             end else begin
                 ascii_decimal_nibble = "?";
             end
+        end
+    endfunction
+
+    function [7:0] uart_cell_packet_char;
+        input [4:0] char_index;
+        input [4:0] cell_i;
+        input [3:0] cell_j;
+        input [15:0] cell_data;
+        reg [3:0] cell_i_tens;
+        reg [3:0] cell_i_ones;
+        reg [3:0] cell_j_tens;
+        reg [3:0] cell_j_ones;
+        begin
+            cell_i_tens = (cell_i >= 5'd10) ? 4'd1 : 4'd0;
+            cell_i_ones = (cell_i >= 5'd10) ? (cell_i - 5'd10) : cell_i[3:0];
+            cell_j_tens = (cell_j >= 4'd10) ? 4'd1 : 4'd0;
+            cell_j_ones = (cell_j >= 4'd10) ? (cell_j - 4'd10) : cell_j[3:0];
+
+            case (char_index)
+                5'd0: uart_cell_packet_char = "C";
+                5'd1: uart_cell_packet_char = "E";
+                5'd2: uart_cell_packet_char = "L";
+                5'd3: uart_cell_packet_char = "L";
+                5'd4: uart_cell_packet_char = " ";
+                5'd5: uart_cell_packet_char = "(";
+                5'd6: uart_cell_packet_char = ascii_decimal_nibble(cell_i_tens);
+                5'd7: uart_cell_packet_char = ascii_decimal_nibble(cell_i_ones);
+                5'd8: uart_cell_packet_char = ",";
+                5'd9: uart_cell_packet_char = " ";
+                5'd10: uart_cell_packet_char = ascii_decimal_nibble(cell_j_tens);
+                5'd11: uart_cell_packet_char = ascii_decimal_nibble(cell_j_ones);
+                5'd12: uart_cell_packet_char = ")";
+                5'd13: uart_cell_packet_char = " ";
+                5'd14: uart_cell_packet_char = "=";
+                5'd15: uart_cell_packet_char = " ";
+                5'd16: uart_cell_packet_char = "0";
+                5'd17: uart_cell_packet_char = "x";
+                5'd18: uart_cell_packet_char = ascii_hex_nibble(cell_data[15:12]);
+                5'd19: uart_cell_packet_char = ascii_hex_nibble(cell_data[11:8]);
+                5'd20: uart_cell_packet_char = ascii_hex_nibble(cell_data[7:4]);
+                5'd21: uart_cell_packet_char = ascii_hex_nibble(cell_data[3:0]);
+                5'd22: uart_cell_packet_char = 8'h0D;
+                default: uart_cell_packet_char = 8'h0A;
+            endcase
         end
     endfunction
 
@@ -678,8 +730,8 @@ module GlobalRender_top (
         end
     endfunction
 
-    // JC 端口由 Oled_Display 模块驱动，必须移除强制拉低，否则 OLED 黑屏
-    // assign JC = 8'h00;
+    // JC 绔彛鐢� OLED 妯″潡椹卞姩锛岀鐢� OLED 鏃朵繚鎸佹媺浣庛€�
+    assign JC = ENABLE_OLED_CALC ? jc_oled : 8'h00;
     assign SEG = seg_data;
     assign AN = 4'hF;
     assign LED = SW;
@@ -688,7 +740,7 @@ module GlobalRender_top (
 
     // =========================================================
     // OLED Clock Divider: 100MHz -> 6.25MHz & 20Hz
-    // 生成 OLED 像素时钟和计算器导航时钟 (独立于系统时钟)
+    // 鐢熸垚 OLED 鍍忕礌鏃堕挓鍜岃绠楀櫒瀵艰埅鏃堕挓 (鐙珛浜庣郴缁熸椂閽?)
     // =========================================================
     reg [3:0] oled_clk_div_counter = 0;
     reg [22:0] oled_clk_div_20hz = 0;
@@ -696,26 +748,37 @@ module GlobalRender_top (
     reg oled_clk20hz = 0;
 
     always @(posedge CLK100MHZ) begin
-        if (oled_clk_div_counter == 7) begin
-            oled_clk_div_counter <= 0;
-            oled_clk6p25m <= ~oled_clk6p25m;
+        if (ENABLE_OLED_CALC) begin
+            if (oled_clk_div_counter == 7) begin
+                oled_clk_div_counter <= 0;
+                oled_clk6p25m <= ~oled_clk6p25m;
+            end else begin
+                oled_clk_div_counter <= oled_clk_div_counter + 1;
+            end
+
+            if (oled_clk_div_20hz == 2500000) begin
+                oled_clk_div_20hz <= 0;
+                oled_clk20hz <= ~oled_clk20hz;
+            end else begin
+                oled_clk_div_20hz <= oled_clk_div_20hz + 1;
+            end
         end else begin
-            oled_clk_div_counter <= oled_clk_div_counter + 1;
-        end
-        
-        if (oled_clk_div_20hz == 2500000) begin
-            oled_clk_div_20hz <= 0;
-            oled_clk20hz <= ~oled_clk20hz;
-        end else begin
-            oled_clk_div_20hz <= oled_clk_div_20hz + 1;
+            oled_clk_div_counter <= 4'd0;
+            oled_clk_div_20hz <= 23'd0;
+            oled_clk6p25m <= 1'b0;
+            oled_clk20hz <= 1'b0;
         end
     end
 
-    assign oled_x_pos = oled_pixel_index % 96;
-    assign oled_y_pos = oled_pixel_index / 96;
+    assign oled_x_pos = ENABLE_OLED_CALC ? (oled_pixel_index % 96) : 7'd0;
+    assign oled_y_pos = ENABLE_OLED_CALC ? (oled_pixel_index / 96) : 6'd0;
 
     always @(posedge oled_clk6p25m) begin
-        oled_data <= oled_pixel_rgb;
+        if (ENABLE_OLED_CALC) begin
+            oled_data <= oled_pixel_rgb;
+        end else begin
+            oled_data <= 16'd0;
+        end
     end
 
     VGAControl vga_ctrl_inst (
@@ -724,7 +787,7 @@ module GlobalRender_top (
         .h_count_reg(x_pos), .v_count_reg(y_pos),
         .vgaRed(VGARED), .vgaGreen(VGAGREEN), .vgaBlue(VGABLUE)
     );
-    // 同步與重置訊號
+    // 鍚屾鑸囬噸缃▕铏?
     reg vsync_d;
     always @(posedge clk_pixel) vsync_d <= VSYNC;
     wire vsync_edge = (~VSYNC & vsync_d);
@@ -780,7 +843,7 @@ module GlobalRender_top (
     );
 
     // =========================================================
-    // 動態電流動畫產生器 (內建 1D 相位)
+    // 鍕曟厠闆绘祦鍕曠暙鐢㈢敓鍣? (鍏у缓 1D 鐩镐綅)
     // =========================================================
     reg [21:0] anim_tick = 0;
     reg [4:0]  global_anim_phase = 0;
@@ -825,7 +888,7 @@ module GlobalRender_top (
         .grid_pos_x_out(circuit_canvas_grid_pos_x),
         .grid_pos_y_out(circuit_canvas_grid_pos_y)
     );
-    // Component Property Panel signals 以下为属性面板例化
+    // Component Property Panel signals 浠ヤ笅涓哄睘鎬ч潰鏉夸緥鍖?
     wire        prop_panel_rendered;
     wire [11:0] prop_panel_rgb;
     reg  [11:0] selected_cell_i = 12'd0;
@@ -991,7 +1054,7 @@ module GlobalRender_top (
     reg  [11:0] component_store_view_rgb;
     integer    store_char_idx;
     
-    // 鼠标悬停检测
+    // 榧犳爣鎮仠妫?娴?
     wire signed [13:0] mouse_x_rel_canvas_signed;
     wire signed [13:0] mouse_y_rel_canvas_signed;
     wire signed [13:0] mouse_grid_x_signed;
@@ -1033,13 +1096,14 @@ module GlobalRender_top (
     reg  [3:0]  edit_value_next_text_len = 4'd0;
     reg         edit_value_valid = 1'b0;
     
-    // 示例元件数据 (从 init_cycles 中复制)
+    // 绀轰緥鍏冧欢鏁版嵁 (浠? init_cycles 涓鍒?)
     reg  [15:0] canvas_shadow_data [0:CANVAS_CELL_COUNT-1];
     reg  [11:0] value_shadow_data [0:CANVAS_CELL_COUNT-1];
     reg  [3:0]  value_unit_shadow_data [0:CANVAS_CELL_COUNT-1];
     // component_store entry = {unit[3:0], index[8:0], type[3:0], rotation[1:0], value[11:0], position[8:0]}
     // position[8:5] = y, position[4:0] = x
     localparam integer BACKEND_FRAME_CYCLE_BUDGET = 10000;
+    localparam integer UART_CELL_PACKET_LEN = 24;
     localparam [3:0] BACKEND_TEST_IDLE        = 4'd0;
     localparam [3:0] BACKEND_TEST_START_TYPE  = 4'd1;
     localparam [3:0] BACKEND_TEST_WAIT_TYPE   = 4'd2;
@@ -1139,6 +1203,30 @@ module GlobalRender_top (
     reg  [11:0] backend_last_value = 12'd0;
     reg  [4:0]  backend_last_x = 5'd0;
     reg  [3:0]  backend_last_y = 4'd0;
+    wire        uart_cell_debug_enable;
+    reg         uart_cell_fetch_start = 1'b0;
+    wire        uart_cell_fetch_busy;
+    wire        uart_cell_fetch_done;
+    wire [15:0] uart_cell_fetch_result;
+    wire        uart_cell_ram_ren;
+    wire [CANVAS_ADDR_W-1:0] uart_cell_ram_addr;
+    reg  [15:0] uart_cell_ram_rdata = 16'd0;
+    reg         uart_cell_frame_pending = 1'b0;
+    reg  [4:0]  uart_cell_debug_i = 5'd0;
+    reg  [3:0]  uart_cell_debug_j = 4'd0;
+    reg  [4:0]  uart_cell_fetch_i = 5'd0;
+    reg  [3:0]  uart_cell_fetch_j = 4'd0;
+    reg  [4:0]  uart_cell_debug_i_snap = 5'd0;
+    reg  [3:0]  uart_cell_debug_j_snap = 4'd0;
+    reg  [15:0] uart_cell_debug_data_snap = 16'd0;
+    reg         uart_cell_packet_pending = 1'b0;
+    reg         uart_cell_packet_sending = 1'b0;
+    reg         uart_cell_packet_last_char = 1'b0;
+    reg         uart_cell_uart_wait_busy = 1'b0;
+    reg  [4:0]  uart_cell_packet_index = 5'd0;
+    reg         uart_cell_uart_start = 1'b0;
+    reg  [7:0]  uart_cell_uart_data = 8'h00;
+    wire        uart_cell_uart_busy;
     assign seg_data = backend_fetch_test_enable ?
         {4'hF, ~backend_test_active, ~backend_frame_pending, ~component_store_busy, ~component_store_read_busy} :
         8'hFF;
@@ -1195,6 +1283,28 @@ module GlobalRender_top (
         .comp_addr(backend_fetch_y_comp_addr),
         .comp_rdata(component_store_ram_r_data)
     );
+    fetchCell uart_cell_fetch_inst (
+        .clk(CLK100MHZ),
+        .start(uart_cell_fetch_start),
+        .busy(uart_cell_fetch_busy),
+        .done(uart_cell_fetch_done),
+        .i(uart_cell_fetch_i),
+        .j(uart_cell_fetch_j),
+        .result(uart_cell_fetch_result),
+        .ram_ren(uart_cell_ram_ren),
+        .ram_addr(uart_cell_ram_addr),
+        .ram_rdata(uart_cell_ram_rdata)
+    );
+    UartTx #(
+        .ClkHz(100_000_000),
+        .BAUD(115200)
+    ) uart_cell_debug_tx_inst (
+        .clk(CLK100MHZ),
+        .start(uart_cell_uart_start),
+        .data(uart_cell_uart_data),
+        .tx(RsTx),
+        .busy(uart_cell_uart_busy)
+    );
     SimpleRam #( .WordWidth(12), .WordCount(CANVAS_CELL_COUNT) ) component_value_ram_inst (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
         .r_addr(selected_value_store_addr_sys), .d_in(value_ram_w_data), .d_out(value_ram_r_data)
@@ -1238,6 +1348,12 @@ module GlobalRender_top (
                 component_store_read_owner_backend <= 1'b0;
                 component_store_read_busy <= 1'b1;
             end
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
+        if (uart_cell_ram_ren) begin
+            uart_cell_ram_rdata <= canvas_shadow_data[uart_cell_ram_addr];
         end
     end
 
@@ -1344,8 +1460,94 @@ module GlobalRender_top (
         end
     end
 
+    always @(posedge CLK100MHZ) begin
+        uart_cell_fetch_start <= 1'b0;
+        uart_cell_uart_start <= 1'b0;
+
+        if (!uart_cell_debug_enable) begin
+            uart_cell_frame_pending <= 1'b0;
+            uart_cell_debug_i <= 5'd0;
+            uart_cell_debug_j <= 4'd0;
+            uart_cell_fetch_i <= 5'd0;
+            uart_cell_fetch_j <= 4'd0;
+            uart_cell_packet_pending <= 1'b0;
+            uart_cell_packet_sending <= 1'b0;
+            uart_cell_packet_last_char <= 1'b0;
+            uart_cell_uart_wait_busy <= 1'b0;
+            uart_cell_packet_index <= 5'd0;
+        end else begin
+            if (interaction_frame_tick && !clear_canvas_active && (init_cycles >= INIT_DELAY_CYCLES)) begin
+                uart_cell_frame_pending <= 1'b1;
+            end
+
+            if (uart_cell_frame_pending && !uart_cell_packet_pending &&
+                !uart_cell_packet_sending && !uart_cell_fetch_busy) begin
+                uart_cell_fetch_i <= uart_cell_debug_i;
+                uart_cell_fetch_j <= uart_cell_debug_j;
+                uart_cell_fetch_start <= 1'b1;
+            end
+
+            if (uart_cell_fetch_done) begin
+                uart_cell_debug_i_snap <= uart_cell_fetch_i;
+                uart_cell_debug_j_snap <= uart_cell_fetch_j;
+                uart_cell_debug_data_snap <= uart_cell_fetch_result;
+                uart_cell_packet_pending <= 1'b1;
+                uart_cell_frame_pending <= 1'b0;
+
+                if (uart_cell_fetch_j == CANVAS_GRID_H - 1) begin
+                    uart_cell_debug_j <= 4'd0;
+                    if (uart_cell_fetch_i == CANVAS_GRID_W - 1) begin
+                        uart_cell_debug_i <= 5'd0;
+                    end else begin
+                        uart_cell_debug_i <= uart_cell_fetch_i + 1'b1;
+                    end
+                end else begin
+                    uart_cell_debug_j <= uart_cell_fetch_j + 1'b1;
+                end
+            end
+
+            if (!uart_cell_packet_sending) begin
+                uart_cell_packet_last_char <= 1'b0;
+                if (uart_cell_packet_pending && !uart_cell_uart_busy && !uart_cell_uart_wait_busy) begin
+                    uart_cell_uart_data <= uart_cell_packet_char(
+                        5'd0,
+                        uart_cell_debug_i_snap,
+                        uart_cell_debug_j_snap,
+                        uart_cell_debug_data_snap
+                    );
+                    uart_cell_uart_start <= 1'b1;
+                    uart_cell_packet_pending <= 1'b0;
+                    uart_cell_packet_sending <= 1'b1;
+                    uart_cell_packet_index <= 5'd1;
+                    uart_cell_packet_last_char <= (UART_CELL_PACKET_LEN == 1);
+                    uart_cell_uart_wait_busy <= 1'b1;
+                end
+            end else if (uart_cell_uart_wait_busy) begin
+                if (uart_cell_uart_busy) begin
+                    uart_cell_uart_wait_busy <= 1'b0;
+                end
+            end else if (!uart_cell_uart_busy) begin
+                if (uart_cell_packet_last_char) begin
+                    uart_cell_packet_sending <= 1'b0;
+                    uart_cell_packet_last_char <= 1'b0;
+                end else begin
+                    uart_cell_uart_data <= uart_cell_packet_char(
+                        uart_cell_packet_index,
+                        uart_cell_debug_i_snap,
+                        uart_cell_debug_j_snap,
+                        uart_cell_debug_data_snap
+                    );
+                    uart_cell_uart_start <= 1'b1;
+                    uart_cell_packet_last_char <= (uart_cell_packet_index == UART_CELL_PACKET_LEN - 1);
+                    uart_cell_packet_index <= uart_cell_packet_index + 1'b1;
+                    uart_cell_uart_wait_busy <= 1'b1;
+                end
+            end
+        end
+    end
+
     // =========================================================
-    // Component Property Panel - 元件属性显示 (简化版)
+    // Component Property Panel - 鍏冧欢灞炴?ф樉绀? (绠?鍖栫増)
     // =========================================================
     assign selected_cell_addr_sys = selected_cell_i_sys + selected_cell_j_sys * CANVAS_GRID_W;
     assign selected_value_store_addr_sys =
@@ -1353,7 +1555,7 @@ module GlobalRender_top (
         pair_addr_for_cell(selected_cell_addr_sys, selected_cell_data_sys[6:1], selected_cell_data_sys[8:7]) :
         selected_cell_addr_sys;
 
-    // 鼠标悬停位置计算 (Canvas 区域：X0=64, Y0=64)
+    // 榧犳爣鎮仠浣嶇疆璁＄畻 (Canvas 鍖哄煙锛歑0=64, Y0=64)
     assign mouse_x_rel_canvas_signed = $signed({1'b0, mouse_xpos_pix}) - CANVAS_X0;
     assign mouse_y_rel_canvas_signed = $signed({1'b0, mouse_ypos_pix}) - CANVAS_Y0;
     assign mouse_grid_x_signed = mouse_x_rel_canvas_signed - $signed(circuit_canvas_grid_pos_x);
@@ -1365,7 +1567,7 @@ module GlobalRender_top (
     assign mouse_cell_valid = mouse_grid_x_valid && mouse_grid_y_valid &&
                               (mouse_cell_i < CANVAS_GRID_W) && (mouse_cell_j < CANVAS_GRID_H);
     
-    // 鼠标点击边沿检测
+    // 榧犳爣鐐瑰嚮杈规部妫?娴?
     assign canvas_mouse_in_bounds = (mouse_xpos_pix >= CANVAS_X0) && (mouse_xpos_pix < (CANVAS_X0 + CANVAS_W)) &&
                                     (mouse_ypos_pix >= CANVAS_Y0) && (mouse_ypos_pix < (CANVAS_Y0 + CANVAS_H)) &&
                                
@@ -1522,7 +1724,7 @@ module GlobalRender_top (
             component_store_view_req_pending_ui <= 1'b1;
         end
     end
-    // 同步鼠标点击 - 记录选中的单元格
+    // 鍚屾榧犳爣鐐瑰嚮 - 璁板綍閫変腑鐨勫崟鍏冩牸
     always @(posedge clk_pixel) begin
         mouse_left_d <= mouse_left_pix;
         if (show_component_store_view) begin
@@ -1546,16 +1748,16 @@ module GlobalRender_top (
 
 /*
 
-    // 示例元件数据初始化 (与 init_cycles 中的数据相同)
+    // 绀轰緥鍏冧欢鏁版嵁鍒濆鍖? (涓? init_cycles 涓殑鏁版嵁鐩稿悓)
     always @(posedge clk_pixel) begin
-        // 初始化所有单元为 0
-        // 加载示例元件 (更新為新電路：所有轉角+90度，Tee L/R翻轉)
+        // 鍒濆鍖栨墍鏈夊崟鍏冧负 0
+        // 鍔犺浇绀轰緥鍏冧欢 (鏇存柊鐐烘柊闆昏矾锛氭墍鏈夎綁瑙?+90搴︼紝Tee L/R缈昏綁)
     
-    // 计算悬停的单元格地址
+    // 璁＄畻鎮仠鐨勫崟鍏冩牸鍦板潃
     
-    // 从本地存储读取选中单元格的数据
+    // 浠庢湰鍦板瓨鍌ㄨ鍙栭?変腑鍗曞厓鏍肩殑鏁版嵁
 
-    // 例化属性面板
+    // 渚嬪寲灞炴?ч潰鏉?
     end
 
 */
@@ -1644,36 +1846,42 @@ module GlobalRender_top (
         keyboard_ascii_sys_ff1 <= keyboard_ascii_sys_ff0;
     end
 
-    ComponentPropertyPanel #(
-        .PANEL_X(0),
-        .PANEL_Y(0),
-        .PANEL_W(640),
-        .PANEL_H(64)
-    ) u_prop_panel (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .video_on(video_on),
-        .mouse_cell_i(mouse_cell_i),
-        
-        .mouse_cell_j(mouse_cell_j),
-        .selected_cell_data(selected_cell_data),
-        .selected_value_text(selected_value_text_ui),
-        .selected_value_text_len(selected_value_text_len_ui),
-        .value_edit_active(value_edit_active),
-        .value_editable(selected_is_editable_ui),
-        .has_selection(has_selection),
-        .selected_cell_i(selected_cell_i),
-        .selected_cell_j(selected_cell_j),
-        .selected_component_index_valid(selected_component_index_valid_ui),
-        .selected_component_index(selected_component_index_ui),
-        .panel_rendered(prop_panel_rendered),
-        .panel_rgb(prop_panel_rgb)
-    );
-    //属性面板例化结束
+    generate
+        if (ENABLE_PROP_PANEL) begin : gen_prop_panel
+            ComponentPropertyPanel #(
+                .PANEL_X(0),
+                .PANEL_Y(0),
+                .PANEL_W(640),
+                .PANEL_H(64)
+            ) u_prop_panel (
+                .clk_pixel(clk_pixel),
+                .hcount(x_pos),
+                .vcount(y_pos),
+                .video_on(video_on),
+                .mouse_cell_i(mouse_cell_i),
+                .mouse_cell_j(mouse_cell_j),
+                .selected_cell_data(selected_cell_data),
+                .selected_value_text(selected_value_text_ui),
+                .selected_value_text_len(selected_value_text_len_ui),
+                .value_edit_active(value_edit_active),
+                .value_editable(selected_is_editable_ui),
+                .has_selection(has_selection),
+                .selected_cell_i(selected_cell_i),
+                .selected_cell_j(selected_cell_j),
+                .selected_component_index_valid(selected_component_index_valid_ui),
+                .selected_component_index(selected_component_index_ui),
+                .panel_rendered(prop_panel_rendered),
+                .panel_rgb(prop_panel_rgb)
+            );
+        end else begin : gen_prop_panel_disabled
+            assign prop_panel_rendered = 1'b0;
+            assign prop_panel_rgb = 12'h000;
+        end
+    endgenerate
+    //灞炴?ч潰鏉夸緥鍖栫粨鏉?
 
     // =========================================================
-    // 矩阵显示模块 (上下布局，居中显示)
+    // 鐭╅樀鏄剧ず妯″潡 (涓婁笅甯冨眬锛屽眳涓樉绀?)
     // =========================================================
     always @(posedge clk_pixel) begin
         if (vsync_edge) begin
@@ -2292,17 +2500,18 @@ module GlobalRender_top (
         16'h0700, 16'h0680, 16'h0600, 16'h0580, 16'h0500, 16'h0480, 16'h0400, 16'h0200,
         16'h0800, 16'h0780, 16'h0700, 16'h0680, 16'h0600, 16'h0580, 16'h0500, 16'h0480
     };
-    reg  [1023:0] matrix_a_data;    // 8x8 Q8.8 定点数矩阵
-    reg  [1023:0] matrix_lu_data;   // 8x8 Q8.8 定点数矩阵
+    reg  [1023:0] matrix_a_data;    // 8x8 Q8.8 瀹氱偣鏁扮煩闃?
+    reg  [1023:0] matrix_lu_data;   // 8x8 Q8.8 瀹氱偣鏁扮煩闃?
 
-    // 开关控制：SW[0]=0 显示电路，SW[0]=1 显示矩阵
+    // 寮?鍏虫帶鍒讹細SW[0]=0 鏄剧ず鐢佃矾锛孲W[0]=1 鏄剧ず鐭╅樀
     assign backend_fetch_test_enable = SW[2];
+    assign uart_cell_debug_enable = SW[3];
 
-    // 初始化示例矩阵数据 (8x8 矩阵，Q8.8 定点数)
-    // 数据排列：[0][0] 在 [1023:1008], [0][1] 在 [1007:992], ..., [7][7] 在 [15:0]
-    // index = row * 8 + col, 位范围 = (63 - index) * 16 +: 16
+    // 鍒濆鍖栫ず渚嬬煩闃垫暟鎹? (8x8 鐭╅樀锛孮8.8 瀹氱偣鏁?)
+    // 鏁版嵁鎺掑垪锛歔0][0] 鍦? [1023:1008], [0][1] 鍦? [1007:992], ..., [7][7] 鍦? [15:0]
+    // index = row * 8 + col, 浣嶈寖鍥? = (63 - index) * 16 +: 16
     always @(posedge clk_pixel) begin
-        // A 矩阵 - 三对角测试矩阵 (带小数和负数)
+        // A 鐭╅樀 - 涓夊瑙掓祴璇曠煩闃? (甯﹀皬鏁板拰璐熸暟)
         // [-128.00,   2.25,   0,     0,     0,     0,     0,     0   ]
         // [  2.25,  -20.75,  3.50,  0,     0,     0,     0,     0   ]
         // [  0,      3.50,  30.10,  4.80,  0,     0,     0,     0   ]
@@ -2312,14 +2521,14 @@ module GlobalRender_top (
         // [  0,      0,      0,     0,     0,     7.40,-70.90,  8.10]
         // [  0,      0,      0,     0,     0,     0,     8.10, 99.99]
         matrix_a_data <= 1024'd0;
-        // Q8.8 格式：负数使用符号位 (bit 15)
+        // Q8.8 鏍煎紡锛氳礋鏁颁娇鐢ㄧ鍙蜂綅 (bit 15)
         // -128.00 = 0x8000 (1000 0000 0000 0000)
         // -20.75  = 0xEC40 (1110 1100 0100 0000)
         // -50.60  = 0xCD67 (1100 1101 0110 0111)
         // -70.90  = 0xB91A (1011 1001 0001 1010)
         // 99.99   = 0x63FD (0110 0011 1111 1101)
         
-        // 第 0 行 (index 0-7)
+        // 绗? 0 琛? (index 0-7)
         matrix_a_data[1023:1008] <= 16'h8000;  // A[0][0] = -128.00
         matrix_a_data[1007:992]  <= 16'h0240;  // A[0][1] = 2.25
         matrix_a_data[991:976]   <= 16'h0000;  // A[0][2] = 0.00
@@ -2328,7 +2537,7 @@ module GlobalRender_top (
         matrix_a_data[943:928]   <= 16'h0000;  // A[0][5] = 0.00
         matrix_a_data[927:912]   <= 16'h0000;  // A[0][6] = 0.00
         matrix_a_data[911:896]   <= 16'h0000;  // A[0][7] = 0.00
-        // 第 1 行 (index 8-15)
+        // 绗? 1 琛? (index 8-15)
         matrix_a_data[895:880]   <= 16'h0240;  // A[1][0] = 2.25
         matrix_a_data[879:864]   <= 16'hEC40;  // A[1][1] = -20.75
         matrix_a_data[863:848]   <= 16'h0380;  // A[1][2] = 3.50
@@ -2337,7 +2546,7 @@ module GlobalRender_top (
         matrix_a_data[815:800]   <= 16'h0000;  // A[1][5] = 0.00
         matrix_a_data[799:784]   <= 16'h0000;  // A[1][6] = 0.00
         matrix_a_data[783:768]   <= 16'h0000;  // A[1][7] = 0.00
-        // 第 2 行 (index 16-23)
+        // 绗? 2 琛? (index 16-23)
         matrix_a_data[767:752]   <= 16'h0000;  // A[2][0] = 0.00
         matrix_a_data[751:736]   <= 16'h0380;  // A[2][1] = 3.50
         matrix_a_data[735:720]   <= 16'h1E1A;  // A[2][2] = 30.10
@@ -2346,7 +2555,7 @@ module GlobalRender_top (
         matrix_a_data[687:672]   <= 16'h0000;  // A[2][5] = 0.00
         matrix_a_data[671:656]   <= 16'h0000;  // A[2][6] = 0.00
         matrix_a_data[655:640]   <= 16'h0000;  // A[2][7] = 0.00
-        // 第 3 行 (index 24-31)
+        // 绗? 3 琛? (index 24-31)
         matrix_a_data[639:624]   <= 16'h0000;  // A[3][0] = 0.00
         matrix_a_data[623:608]   <= 16'h0000;  // A[3][1] = 0.00
         matrix_a_data[607:592]   <= 16'h04CC;  // A[3][2] = 4.80
@@ -2355,7 +2564,7 @@ module GlobalRender_top (
         matrix_a_data[559:544]   <= 16'h0000;  // A[3][5] = 0.00
         matrix_a_data[543:528]   <= 16'h0000;  // A[3][6] = 0.00
         matrix_a_data[527:512]   <= 16'h0000;  // A[3][7] = 0.00
-        // 第 4 行 (index 32-39)
+        // 绗? 4 琛? (index 32-39)
         matrix_a_data[511:496]   <= 16'h0000;  // A[4][0] = 0.00
         matrix_a_data[495:480]   <= 16'h0000;  // A[4][1] = 0.00
         matrix_a_data[479:464]   <= 16'h0000;  // A[4][2] = 0.00
@@ -2364,7 +2573,7 @@ module GlobalRender_top (
         matrix_a_data[431:416]   <= 16'h06B3;  // A[4][5] = 6.70
         matrix_a_data[415:400]   <= 16'h0000;  // A[4][6] = 0.00
         matrix_a_data[399:384]   <= 16'h0000;  // A[4][7] = 0.00
-        // 第 5 行 (index 40-47)
+        // 绗? 5 琛? (index 40-47)
         matrix_a_data[383:368]   <= 16'h0000;  // A[5][0] = 0.00
         matrix_a_data[367:352]   <= 16'h0000;  // A[5][1] = 0.00
         matrix_a_data[351:336]   <= 16'h0000;  // A[5][2] = 0.00
@@ -2373,7 +2582,7 @@ module GlobalRender_top (
         matrix_a_data[303:288]   <= 16'h3CCD;  // A[5][5] = 60.80
         matrix_a_data[287:272]   <= 16'h0766;  // A[5][6] = 7.40
         matrix_a_data[271:256]   <= 16'h0000;  // A[5][7] = 0.00
-        // 第 6 行 (index 48-55)
+        // 绗? 6 琛? (index 48-55)
         matrix_a_data[255:240]   <= 16'h0000;  // A[6][0] = 0.00
         matrix_a_data[239:224]   <= 16'h0000;  // A[6][1] = 0.00
         matrix_a_data[223:208]   <= 16'h0000;  // A[6][2] = 0.00
@@ -2382,7 +2591,7 @@ module GlobalRender_top (
         matrix_a_data[175:160]   <= 16'h0766;  // A[6][5] = 7.40
         matrix_a_data[159:144]   <= 16'hB91A;  // A[6][6] = -70.90
         matrix_a_data[143:128]   <= 16'h081A;  // A[6][7] = 8.10
-        // 第 7 行 (index 56-63)
+        // 绗? 7 琛? (index 56-63)
         matrix_a_data[127:112]   <= 16'h0000;  // A[7][0] = 0.00
         matrix_a_data[111:96]    <= 16'h0000;  // A[7][1] = 0.00
         matrix_a_data[95:80]     <= 16'h0000;  // A[7][2] = 0.00
@@ -2392,7 +2601,7 @@ module GlobalRender_top (
         matrix_a_data[31:16]     <= 16'h081A;  // A[7][6] = 8.10
         matrix_a_data[15:0]      <= 16'h63FD;  // A[7][7] = 99.99
 
-        // LU 矩阵 - LU 分解示例 (带小数，含负数测试)
+        // LU 鐭╅樀 - LU 鍒嗚В绀轰緥 (甯﹀皬鏁帮紝鍚礋鏁版祴璇?)
         // [  1.00,  0.50,  0.25,  0.10,  0.05,  0.02,  0.01,  0.00]
         // [  2.00,  1.50,  0.75,  0.30,  0.15,  0.08,  0.04,  0.02]
         // [  3.00,  2.50,  2.00,  1.00,  0.50,  0.25,  0.12,  0.06]
@@ -2402,7 +2611,7 @@ module GlobalRender_top (
         // [  7.00,  6.50,  6.00,  5.50,  5.00,  4.50,  4.00,  2.00]
         // [  8.00,  7.50,  7.00,  6.50,  6.00,  5.50,  5.00,  4.50]
         matrix_lu_data <= 1024'd0;
-        // 第 0 行
+        // 绗? 0 琛?
         matrix_lu_data[1023:1008] <= 16'h0100;  // 1.00
         matrix_lu_data[1007:992]  <= 16'h0080;  // 0.50
         matrix_lu_data[991:976]   <= 16'h0040;  // 0.25
@@ -2411,7 +2620,7 @@ module GlobalRender_top (
         matrix_lu_data[943:928]   <= 16'h0005;  // 0.02
         matrix_lu_data[927:912]   <= 16'h0002;  // 0.01
         matrix_lu_data[911:896]   <= 16'h0000;  // 0.00
-        // 第 1 行
+        // 绗? 1 琛?
         matrix_lu_data[895:880]   <= 16'h0200;  // 2.00
         matrix_lu_data[879:864]   <= 16'h0180;  // 1.50
         matrix_lu_data[863:848]   <= 16'h00C0;  // 0.75
@@ -2420,7 +2629,7 @@ module GlobalRender_top (
         matrix_lu_data[815:800]   <= 16'h0014;  // 0.08
         matrix_lu_data[799:784]   <= 16'h000A;  // 0.04
         matrix_lu_data[783:768]   <= 16'h0005;  // 0.02
-        // 第 2 行
+        // 绗? 2 琛?
         matrix_lu_data[767:752]   <= 16'h0300;  // 3.00
         matrix_lu_data[751:736]   <= 16'h0280;  // 2.50
         matrix_lu_data[735:720]   <= 16'h0200;  // 2.00
@@ -2429,7 +2638,7 @@ module GlobalRender_top (
         matrix_lu_data[687:672]   <= 16'h0040;  // 0.25
         matrix_lu_data[671:656]   <= 16'h001F;  // 0.12
         matrix_lu_data[655:640]   <= 16'h000F;  // 0.06
-        // 第 3 行
+        // 绗? 3 琛?
         matrix_lu_data[639:624]   <= 16'h0400;  // 4.00
         matrix_lu_data[623:608]   <= 16'h0380;  // 3.50
         matrix_lu_data[607:592]   <= 16'h0300;  // 3.00
@@ -2438,7 +2647,7 @@ module GlobalRender_top (
         matrix_lu_data[559:544]   <= 16'h0099;  // 0.60
         matrix_lu_data[543:528]   <= 16'h004C;  // 0.30
         matrix_lu_data[527:512]   <= 16'h0026;  // 0.15
-        // 第 4 行
+        // 绗? 4 琛?
         matrix_lu_data[511:496]   <= 16'h0500;  // 5.00
         matrix_lu_data[495:480]   <= 16'h0480;  // 4.50
         matrix_lu_data[479:464]   <= 16'h0400;  // 4.00
@@ -2447,7 +2656,7 @@ module GlobalRender_top (
         matrix_lu_data[431:416]   <= 16'h0180;  // 1.50
         matrix_lu_data[415:400]   <= 16'h00C0;  // 0.75
         matrix_lu_data[399:384]   <= 16'h0059;  // 0.35
-        // 第 5 行
+        // 绗? 5 琛?
         matrix_lu_data[383:368]   <= 16'h0600;  // 6.00
         matrix_lu_data[367:352]   <= 16'h0580;  // 5.50
         matrix_lu_data[351:336]   <= 16'h0500;  // 5.00
@@ -2456,7 +2665,7 @@ module GlobalRender_top (
         matrix_lu_data[303:288]   <= 16'h0380;  // 3.50
         matrix_lu_data[287:272]   <= 16'h01C0;  // 1.75
         matrix_lu_data[271:256]   <= 16'h00D9;  // 0.85
-        // 第 6 行
+        // 绗? 6 琛?
         matrix_lu_data[255:240]   <= 16'h0700;  // 7.00
         matrix_lu_data[239:224]   <= 16'h0680;  // 6.50
         matrix_lu_data[223:208]   <= 16'h0600;  // 6.00
@@ -2465,7 +2674,7 @@ module GlobalRender_top (
         matrix_lu_data[175:160]   <= 16'h0480;  // 4.50
         matrix_lu_data[159:144]   <= 16'h0400;  // 4.00
         matrix_lu_data[143:128]   <= 16'h0200;  // 2.00
-        // 第 7 行
+        // 绗? 7 琛?
         matrix_lu_data[127:112]   <= 16'h0800;  // 8.00
         matrix_lu_data[111:96]    <= 16'h0780;  // 7.50
         matrix_lu_data[95:80]     <= 16'h0700;  // 7.00
@@ -2476,26 +2685,33 @@ module GlobalRender_top (
         matrix_lu_data[15:0]      <= 16'h0480;  // 4.50
     end
 
-    // 全屏矩阵显示 (上下布局)
-    MatrixDisplay #(
-        .PANEL_X(0),
-        .PANEL_Y(0),
-        .PANEL_W(SCREEN_W),
-        .PANEL_H(SCREEN_H)
-    ) u_matrix_display (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .video_on(video_on),
-        .matrix_a_data(MATRIX_A_CONST),
-        .matrix_lu_data(MATRIX_LU_CONST),
-        .matrix_rendered(matrix_rendered),
-        .matrix_rgb(matrix_rgb)
-    );
+    // 鍏ㄥ睆鐭╅樀鏄剧ず (涓婁笅甯冨眬)
+    generate
+        if (ENABLE_MATRIX) begin : gen_matrix
+            MatrixDisplay #(
+                .PANEL_X(0),
+                .PANEL_Y(0),
+                .PANEL_W(SCREEN_W),
+                .PANEL_H(SCREEN_H)
+            ) u_matrix_display (
+                .clk_pixel(clk_pixel),
+                .hcount(x_pos),
+                .vcount(y_pos),
+                .video_on(video_on),
+                .matrix_a_data(MATRIX_A_CONST),
+                .matrix_lu_data(MATRIX_LU_CONST),
+                .matrix_rendered(matrix_rendered),
+                .matrix_rgb(matrix_rgb)
+            );
+        end else begin : gen_matrix_disabled
+            assign matrix_rendered = 1'b0;
+            assign matrix_rgb = 12'h000;
+        end
+    endgenerate
 
     // =========================================================
-    // 【重點實例化：傳入更新的 KEY_W 和 KEY_H】
-    // 確保這裡的尺寸與 Top 的遮罩區域完全相同
+    // 銆愰噸榛炲渚嬪寲锛氬偝鍏ユ洿鏂扮殑 KEY_W 鍜? KEY_H銆?
+    // 纰轰繚閫欒！鐨勫昂瀵歌垏 Top 鐨勯伄缃╁崁鍩熷畬鍏ㄧ浉鍚?
     // =========================================================
     KeyboardVGA #( 
         .KEY_COUNT(19),
@@ -2526,99 +2742,133 @@ module GlobalRender_top (
     );
 
     // =========================================================
-    // Calculator on OLED 实例化 (96x64 OLED)
+    // Calculator on OLED 瀹炰緥鍖? (96x64 OLED)
     // =========================================================
-    Calculator #(
-        .OLED_W(96),
-        .OLED_H(64),
-        .DATA_W(10)
-    ) calculator_inst (
-        .clk(CLK100MHZ),
-        .clk_nav(oled_clk20hz),      // 使用独立的 20Hz 导航时钟
-        .btnU(BTNU),
-        .btnD(BTND),
-        .btnL(BTNL),
-        .btnR(BTNR),
-        .btnC(BTNC),                 // BTNC 用作确认键
-        .x(oled_x_pos),
-        .y(oled_y_pos),
-        .pixel_rgb(oled_pixel_rgb)
-    );
+    generate
+        if (ENABLE_OLED_CALC) begin : gen_oled_calc
+            Calculator #(
+                .OLED_W(96),
+                .OLED_H(64),
+                .DATA_W(10)
+            ) calculator_inst (
+                .clk(CLK100MHZ),
+                .clk_nav(oled_clk20hz),      // 浣跨敤鐙珛鐨? 20Hz 瀵艰埅鏃堕挓
+                .btnU(BTNU),
+                .btnD(BTND),
+                .btnL(BTNL),
+                .btnR(BTNR),
+                .btnC(BTNC),                 // BTNC 鐢ㄤ綔纭閿?
+                .x(oled_x_pos),
+                .y(oled_y_pos),
+                .pixel_rgb(oled_pixel_rgb)
+            );
 
-    Oled_Display oled_inst (
-        .clk(oled_clk6p25m),         // 使用独立的 6.25MHz 像素时钟
-        .reset(1'b0),                // OLED 始终工作，不复位
-        .frame_begin(oled_frame_begin),
-        .sending_pixels(oled_sending_pixels),
-        .sample_pixel(oled_sample_pixel),
-        .pixel_index(oled_pixel_index),
-        .pixel_data(oled_data),
-        .cs(JC[0]),
-        .sdin(JC[1]),
-        .sclk(JC[3]),
-        .d_cn(JC[4]),
-        .resn(JC[5]),
-        .vccen(JC[6]),
-        .pmoden(JC[7])
-    );
+            Oled_Display oled_inst (
+                .clk(oled_clk6p25m),         // 浣跨敤鐙珛鐨? 6.25MHz 鍍忕礌鏃堕挓
+                .reset(1'b0),                // OLED 濮嬬粓宸ヤ綔锛屼笉澶嶄綅
+                .frame_begin(oled_frame_begin),
+                .sending_pixels(oled_sending_pixels),
+                .sample_pixel(oled_sample_pixel),
+                .pixel_index(oled_pixel_index),
+                .pixel_data(oled_data),
+                .cs(jc_oled[0]),
+                .sdin(jc_oled[1]),
+                .sclk(jc_oled[3]),
+                .d_cn(jc_oled[4]),
+                .resn(jc_oled[5]),
+                .vccen(jc_oled[6]),
+                .pmoden(jc_oled[7])
+            );
+        end else begin : gen_oled_calc_disabled
+            assign oled_frame_begin = 1'b0;
+            assign oled_sending_pixels = 1'b0;
+            assign oled_sample_pixel = 1'b0;
+            assign oled_pixel_index = 13'd0;
+            assign oled_pixel_rgb = 16'd0;
+        end
+    endgenerate
+    assign jc_oled[2] = 1'b0;
     // =========================================================
-    // 電壓波形 (X: 0 ~ 241, Y: 352 ~ 479)
+    // 闆诲娉㈠舰 (X: 0 ~ 241, Y: 352 ~ 479)
     // =========================================================
     wire       v_wr_en;
     wire [7:0] v_wr_addr, v_wr_data;
     wire [7:0] v_rd_addr, v_rd_data;
     wire       is_v_wave, is_v_axis, is_v_text;
-    wire [7:0] v_max_val; // 【新增】接收電壓峰值
-
-    DummyDataGenerate v_gen (
-        .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
-        .wr_en(v_wr_en), .wr_addr(v_wr_addr), .wr_data(v_wr_data),
-        .max_out(v_max_val)   // 【新增接線】
-    );
-    PingPongBuffer #( .ADDR_WIDTH(8), .DATA_WIDTH(8) ) v_buffer (
-        .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
-        .wr_en(v_wr_en), .wr_addr(v_wr_addr), .wr_data(v_wr_data),
-        .rd_en(1'b1),    .rd_addr(v_rd_addr), .rd_data(v_rd_data)
-    );
+    wire [7:0] v_max_val; // 銆愭柊澧炪?戞帴鏀堕浕澹撳嘲鍊?
     wire [11:0] v_local_y_12bit = y_pos - 12'd352;
-    
-    WaveformPlot #( .IS_VOLTAGE(1) ) v_plot (
-        .clk(clk_pixel), .rst_n(wave_rst_n),
-        .local_x( (x_pos >= 0 && x_pos < 242) ? (x_pos[7:0] + 8'd1) : 8'd0 ),
-        .local_y( (y_pos >= 352 && y_pos < 480) ? v_local_y_12bit[7:0] : 8'd0 ),
-        .rd_addr(v_rd_addr), .rd_data(v_rd_data),
-        .is_wave_pixel(is_v_wave), .is_axis_pixel(is_v_axis), .is_text_pixel(is_v_text)
-    );
+
     // =========================================================
-    // 電流波形 (X: 242 ~ 483, Y: 352 ~ 479)
+    // 闆绘祦娉㈠舰 (X: 242 ~ 483, Y: 352 ~ 479)
     // =========================================================
     wire       i_wr_en;
     wire [7:0] i_wr_addr, i_wr_data;
     wire [7:0] i_rd_addr, i_rd_data;
     wire       is_i_wave, is_i_axis, is_i_text;
-    wire [7:0] i_max_val; // 【新增】接收電流峰值
-
-    DummyDataGenerate i_gen (
-        .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
-        .wr_en(i_wr_en), .wr_addr(i_wr_addr), .wr_data(i_wr_data),
-        .max_out(i_max_val)   // 【新增接線】
-    );
-    PingPongBuffer #( .ADDR_WIDTH(8), .DATA_WIDTH(8) ) i_buffer (
-        .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
-        .wr_en(i_wr_en), .wr_addr(i_wr_addr), .wr_data(i_wr_data),
-        .rd_en(1'b1),    .rd_addr(i_rd_addr), .rd_data(i_rd_data)
-    );
+    wire [7:0] i_max_val; // 銆愭柊澧炪?戞帴鏀堕浕娴佸嘲鍊?
     wire [11:0] i_local_x_12bit = x_pos - 12'd242;
     wire [11:0] i_local_y_12bit = y_pos - 12'd352;
-    WaveformPlot #( .IS_VOLTAGE(0) ) i_plot (
-        .clk(clk_pixel), .rst_n(wave_rst_n),
-        .local_x( (x_pos >= 242 && x_pos < 484) ? (i_local_x_12bit[7:0] + 8'd1) : 8'd0 ),
-        .local_y( (y_pos >= 352 && y_pos < 480) ? i_local_y_12bit[7:0] : 8'd0 ),
-        .rd_addr(i_rd_addr), .rd_data(i_rd_data),
-        .is_wave_pixel(is_i_wave), .is_axis_pixel(is_i_axis), .is_text_pixel(is_i_text)
-    );
+
+    generate
+        if (ENABLE_WAVEFORMS) begin : gen_waveforms
+            DummyDataGenerate v_gen (
+                .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
+                .wr_en(v_wr_en), .wr_addr(v_wr_addr), .wr_data(v_wr_data),
+                .max_out(v_max_val)   // 銆愭柊澧炴帴绶氥??
+            );
+            PingPongBuffer #( .ADDR_WIDTH(8), .DATA_WIDTH(8) ) v_buffer (
+                .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
+                .wr_en(v_wr_en), .wr_addr(v_wr_addr), .wr_data(v_wr_data),
+                .rd_en(1'b1),    .rd_addr(v_rd_addr), .rd_data(v_rd_data)
+            );
+            WaveformPlot #( .IS_VOLTAGE(1) ) v_plot (
+                .clk(clk_pixel), .rst_n(wave_rst_n),
+                .local_x((x_pos >= 0 && x_pos < 242) ? (x_pos[7:0] + 8'd1) : 8'd0),
+                .local_y((y_pos >= 352 && y_pos < 480) ? v_local_y_12bit[7:0] : 8'd0),
+                .rd_addr(v_rd_addr), .rd_data(v_rd_data),
+                .is_wave_pixel(is_v_wave), .is_axis_pixel(is_v_axis), .is_text_pixel(is_v_text)
+            );
+
+            DummyDataGenerate i_gen (
+                .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
+                .wr_en(i_wr_en), .wr_addr(i_wr_addr), .wr_data(i_wr_data),
+                .max_out(i_max_val)   // 銆愭柊澧炴帴绶氥??
+            );
+            PingPongBuffer #( .ADDR_WIDTH(8), .DATA_WIDTH(8) ) i_buffer (
+                .clk(clk_pixel), .rst_n(wave_rst_n), .vsync_edge(vsync_edge),
+                .wr_en(i_wr_en), .wr_addr(i_wr_addr), .wr_data(i_wr_data),
+                .rd_en(1'b1),    .rd_addr(i_rd_addr), .rd_data(i_rd_data)
+            );
+            WaveformPlot #( .IS_VOLTAGE(0) ) i_plot (
+                .clk(clk_pixel), .rst_n(wave_rst_n),
+                .local_x((x_pos >= 242 && x_pos < 484) ? (i_local_x_12bit[7:0] + 8'd1) : 8'd0),
+                .local_y((y_pos >= 352 && y_pos < 480) ? i_local_y_12bit[7:0] : 8'd0),
+                .rd_addr(i_rd_addr), .rd_data(i_rd_data),
+                .is_wave_pixel(is_i_wave), .is_axis_pixel(is_i_axis), .is_text_pixel(is_i_text)
+            );
+        end else begin : gen_waveforms_disabled
+            assign v_wr_en = 1'b0;
+            assign v_wr_addr = 8'd0;
+            assign v_wr_data = 8'd0;
+            assign v_rd_addr = 8'd0;
+            assign v_rd_data = 8'd0;
+            assign is_v_wave = 1'b0;
+            assign is_v_axis = 1'b0;
+            assign is_v_text = 1'b0;
+            assign v_max_val = 8'd0;
+            assign i_wr_en = 1'b0;
+            assign i_wr_addr = 8'd0;
+            assign i_wr_data = 8'd0;
+            assign i_rd_addr = 8'd0;
+            assign i_rd_data = 8'd0;
+            assign is_i_wave = 1'b0;
+            assign is_i_axis = 1'b0;
+            assign is_i_text = 1'b0;
+            assign i_max_val = 8'd0;
+        end
+    endgenerate
     // =========================================================
-    // 【新增】8-bit Binary 轉 BCD 轉換器 (用於 OSD 顯示峰值)
+    // 銆愭柊澧炪??8-bit Binary 杞? BCD 杞夋彌鍣? (鐢ㄦ柤 OSD 椤ず宄板??)
     // =========================================================
     wire [3:0] v_max_h = v_max_val / 100;
     wire [3:0] v_max_t = (v_max_val % 100) / 10;
@@ -2627,29 +2877,30 @@ module GlobalRender_top (
     wire [3:0] i_max_t = (i_max_val % 100) / 10;
     wire [3:0] i_max_u = i_max_val % 10;
 
-    // 【新增】動態字元引擎
+    // 銆愭柊澧炪?戝嫊鎱嬪瓧鍏冨紩鎿?
     wire v_dyn_text = 1'b0;
     wire i_dyn_text = 1'b0;
     // =========================================================
-    // 波形影像混合邏輯 (修復波形溢出邊框的問題)
+    // 娉㈠舰褰卞儚娣峰悎閭忚集 (淇京娉㈠舰婧㈠嚭閭婃鐨勫晱椤?)
     // =========================================================
-    wire in_v_region = (x_pos >= 0 && x_pos < 242) && (y_pos >= 352 && y_pos < 480);
-    wire in_i_region = (x_pos >= 242 && x_pos < 484) && (y_pos >= 352 && y_pos < 480);
-    wire dynamic_wave_active = in_v_region || in_i_region;
+    wire in_v_region = ENABLE_WAVEFORMS && (x_pos >= 0 && x_pos < 242) && (y_pos >= 352 && y_pos < 480);
+    wire in_i_region = ENABLE_WAVEFORMS && (x_pos >= 242 && x_pos < 484) && (y_pos >= 352 && y_pos < 480);
+    wire dynamic_wave_active = ENABLE_WAVEFORMS && (in_v_region || in_i_region);
 
-    // 加入 4 像素的安全遮罩，防止波形蓋過儀表板的外框
+    // 鍔犲叆 4 鍍忕礌鐨勫畨鍏ㄩ伄缃╋紝闃叉娉㈠舰钃嬮亷鍎?琛ㄦ澘鐨勫妗?
     wire v_wave_display = is_v_wave && (x_pos >= 4 && x_pos < 238) && (y_pos >= 356 && y_pos < 476);
     wire i_wave_display = is_i_wave && (x_pos >= 246 && x_pos < 480) && (y_pos >= 356 && y_pos < 476);
-    // 終極混合：加入 v_dyn_text 與 i_dyn_text 的判斷，並顯示青色 (12'h0FF)
+    // 绲傛サ娣峰悎锛氬姞鍏? v_dyn_text 鑸? i_dyn_text 鐨勫垽鏂凤紝涓﹂’绀洪潚鑹? (12'h0FF)
     wire [11:0] wave_out_rgb;
-    assign wave_out_rgb =
-        in_v_region ?
-        (v_dyn_text ? 12'h0FF : is_v_text ? 12'hFFF : v_wave_display ? 12'h0F0 : is_v_axis ? 12'h444 : 12'h111) :
-        in_i_region ?
-        (i_dyn_text ? 12'h0FF : is_i_text ? 12'hFFF : i_wave_display ? 12'hFF0 : is_i_axis ? 12'h444 : 12'h111) :
+    assign wave_out_rgb = ENABLE_WAVEFORMS ?
+        (in_v_region ?
+            (v_dyn_text ? 12'h0FF : is_v_text ? 12'hFFF : v_wave_display ? 12'h0F0 : is_v_axis ? 12'h444 : 12'h111) :
+         in_i_region ?
+            (i_dyn_text ? 12'h0FF : is_i_text ? 12'hFFF : i_wave_display ? 12'hFF0 : is_i_axis ? 12'h444 : 12'h111) :
+         12'h000) :
         12'h000;
 
-    // RAM 初始化與滑鼠重置
+    // RAM 鍒濆鍖栬垏婊戦紶閲嶇疆
     always @(posedge CLK100MHZ) begin
         mouse_set_value <= 12'h000;
         mouse_set_max_x <= 1'b0;
@@ -3066,12 +3317,12 @@ module GlobalRender_top (
         end else if (show_component_store_view && component_store_view_rendered) begin
             rgb <= component_store_view_rgb;
         end else if (show_matrix && matrix_rendered) begin
-            // 全屏矩阵显示
+            // 鍏ㄥ睆鐭╅樀鏄剧ず
             rgb <= matrix_rgb;
         end else if (keyboard_region_active) begin
             rgb <= keyboard_rgb;
         end else if (circuit_canvas_rendered) begin
-            // 电路显示
+            // 鐢佃矾鏄剧ず
             rgb <= circuit_canvas_rgb;
         end else if (dynamic_wave_active) begin
             rgb <= wave_out_rgb;

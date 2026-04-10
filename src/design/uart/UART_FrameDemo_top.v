@@ -49,6 +49,7 @@ module UART_FrameDemo_top (
     reg        packet_pending = 1'b0;
     reg        packet_sending = 1'b0;
     reg        last_char_inflight = 1'b0;
+    reg        uart_wait_busy = 1'b0;
     reg [5:0]  packet_index = 6'd0;
     reg        uart_start = 1'b0;
     reg [7:0]  uart_data = 8'h00;
@@ -250,13 +251,18 @@ module UART_FrameDemo_top (
 
         if (!packet_sending) begin
             last_char_inflight <= 1'b0;
-            if (packet_pending && !uart_busy) begin
+            if (packet_pending && !uart_busy && !uart_wait_busy) begin
                 uart_data <= packet_char(6'd0);
                 uart_start <= 1'b1;
                 packet_pending <= 1'b0;
                 packet_sending <= 1'b1;
                 packet_index <= 6'd1;
                 last_char_inflight <= (PacketLen == 1);
+                uart_wait_busy <= 1'b1;
+            end
+        end else if (uart_wait_busy) begin
+            if (uart_busy) begin
+                uart_wait_busy <= 1'b0;
             end
         end else if (!uart_busy) begin
             if (last_char_inflight) begin
@@ -267,6 +273,7 @@ module UART_FrameDemo_top (
                 uart_start <= 1'b1;
                 last_char_inflight <= (packet_index == PacketLen - 1);
                 packet_index <= packet_index + 1'b1;
+                uart_wait_busy <= 1'b1;
             end
         end
 

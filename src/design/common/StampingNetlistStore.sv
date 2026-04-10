@@ -49,7 +49,12 @@ module StampingNetlistStore #(
     input  wire        fetchElemVal2_start,
     input  wire [15:0] fetchElemVal2_idx,
     output reg         fetchElemVal2_done,
-    output reg  [31:0] fetchElemVal2_result
+    output reg  [31:0] fetchElemVal2_result,
+
+    input  wire        fetchElemVal3_start,
+    input  wire [15:0] fetchElemVal3_idx,
+    output reg         fetchElemVal3_done,
+    output reg  [31:0] fetchElemVal3_result
 );
 
   reg [7:0] kind_mem[0:ELEM_COUNT-1];
@@ -61,6 +66,7 @@ module StampingNetlistStore #(
   reg [31:0] v0_mem[0:ELEM_COUNT-1];
   reg [31:0] v1_mem[0:ELEM_COUNT-1];
   reg [31:0] v2_mem[0:ELEM_COUNT-1];
+  reg [31:0] v3_mem[0:ELEM_COUNT-1];
 
   reg kind_pending;
   reg [15:0] kind_pending_idx;
@@ -80,6 +86,8 @@ module StampingNetlistStore #(
   reg [15:0] v1_pending_idx;
   reg v2_pending;
   reg [15:0] v2_pending_idx;
+  reg v3_pending;
+  reg [15:0] v3_pending_idx;
 
   integer idx;
 
@@ -103,6 +111,8 @@ module StampingNetlistStore #(
       v1_pending_idx <= '0;
       v2_pending <= 1'b0;
       v2_pending_idx <= '0;
+      v3_pending <= 1'b0;
+      v3_pending_idx <= '0;
       fetchElemKind_done <= 1'b0;
       fetchElemKind_result <= '0;
       fetchElemN0_done <= 1'b0;
@@ -121,6 +131,8 @@ module StampingNetlistStore #(
       fetchElemVal1_result <= '0;
       fetchElemVal2_done <= 1'b0;
       fetchElemVal2_result <= '0;
+      fetchElemVal3_done <= 1'b0;
+      fetchElemVal3_result <= '0;
       for (idx = 0; idx < ELEM_COUNT; idx = idx + 1) begin
         kind_mem[idx] <= '0;
         n0_mem[idx] <= '0;
@@ -131,6 +143,7 @@ module StampingNetlistStore #(
         v0_mem[idx] <= '0;
         v1_mem[idx] <= '0;
         v2_mem[idx] <= '0;
+        v3_mem[idx] <= '0;
       end
     end else begin
       fetchElemKind_done <= kind_pending;
@@ -178,6 +191,11 @@ module StampingNetlistStore #(
         fetchElemVal2_result <= (v2_pending_idx < ELEM_COUNT) ? v2_mem[v2_pending_idx] : '0;
       end
 
+      fetchElemVal3_done <= v3_pending;
+      if (v3_pending) begin
+        fetchElemVal3_result <= (v3_pending_idx < ELEM_COUNT) ? v3_mem[v3_pending_idx] : '0;
+      end
+
       kind_pending <= fetchElemKind_start;
       if (fetchElemKind_start) begin
         kind_pending_idx <= fetchElemKind_idx;
@@ -221,6 +239,11 @@ module StampingNetlistStore #(
       v2_pending <= fetchElemVal2_start;
       if (fetchElemVal2_start) begin
         v2_pending_idx <= fetchElemVal2_idx;
+      end
+
+      v3_pending <= fetchElemVal3_start;
+      if (fetchElemVal3_start) begin
+        v3_pending_idx <= fetchElemVal3_idx;
       end
     end
   end

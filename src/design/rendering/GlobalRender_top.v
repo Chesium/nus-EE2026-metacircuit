@@ -242,11 +242,19 @@ module GlobalRender_top (
         end
     endfunction
 
+    function [7:0] ascii_binary_digit;
+        input bit_value;
+        begin
+            ascii_binary_digit = bit_value ? "1" : "0";
+        end
+    endfunction
+
     function [7:0] uart_cell_packet_char;
         input [4:0] char_index;
         input [4:0] cell_i;
         input [3:0] cell_j;
         input [15:0] cell_data;
+        input [3:0] cell_p;
         reg [3:0] cell_i_tens;
         reg [3:0] cell_i_ones;
         reg [3:0] cell_j_tens;
@@ -280,7 +288,14 @@ module GlobalRender_top (
                 5'd19: uart_cell_packet_char = ascii_hex_nibble(cell_data[11:8]);
                 5'd20: uart_cell_packet_char = ascii_hex_nibble(cell_data[7:4]);
                 5'd21: uart_cell_packet_char = ascii_hex_nibble(cell_data[3:0]);
-                5'd22: uart_cell_packet_char = 8'h0D;
+                5'd22: uart_cell_packet_char = " ";
+                5'd23: uart_cell_packet_char = "P";
+                5'd24: uart_cell_packet_char = "=";
+                5'd25: uart_cell_packet_char = ascii_binary_digit(cell_p[3]);
+                5'd26: uart_cell_packet_char = ascii_binary_digit(cell_p[2]);
+                5'd27: uart_cell_packet_char = ascii_binary_digit(cell_p[1]);
+                5'd28: uart_cell_packet_char = ascii_binary_digit(cell_p[0]);
+                5'd29: uart_cell_packet_char = 8'h0D;
                 default: uart_cell_packet_char = 8'h0A;
             endcase
         end
@@ -1103,7 +1118,7 @@ module GlobalRender_top (
     // component_store entry = {unit[3:0], index[8:0], type[3:0], rotation[1:0], value[11:0], position[8:0]}
     // position[8:5] = y, position[4:0] = x
     localparam integer BACKEND_FRAME_CYCLE_BUDGET = 10000;
-    localparam integer UART_CELL_PACKET_LEN = 24;
+    localparam integer UART_CELL_PACKET_LEN = 31;
     localparam [3:0] BACKEND_TEST_IDLE        = 4'd0;
     localparam [3:0] BACKEND_TEST_START_TYPE  = 4'd1;
     localparam [3:0] BACKEND_TEST_WAIT_TYPE   = 4'd2;
@@ -1208,6 +1223,15 @@ module GlobalRender_top (
     wire        uart_cell_fetch_busy;
     wire        uart_cell_fetch_done;
     wire [15:0] uart_cell_fetch_result;
+    reg         uart_cell_p_fetch_start = 1'b0;
+    wire        uart_cell_p_fetch_busy;
+    wire        uart_cell_p_fetch_done;
+    wire [3:0]  uart_cell_p_fetch_result;
+    reg         uart_cell_p_pending = 1'b0;
+    wire        uart_cell_fetch_ram_ren;
+    wire [CANVAS_ADDR_W-1:0] uart_cell_fetch_ram_addr;
+    wire        uart_cell_p_ram_ren;
+    wire [CANVAS_ADDR_W-1:0] uart_cell_p_ram_addr;
     wire        uart_cell_ram_ren;
     wire [CANVAS_ADDR_W-1:0] uart_cell_ram_addr;
     reg  [15:0] uart_cell_ram_rdata = 16'd0;
@@ -1219,6 +1243,7 @@ module GlobalRender_top (
     reg  [4:0]  uart_cell_debug_i_snap = 5'd0;
     reg  [3:0]  uart_cell_debug_j_snap = 4'd0;
     reg  [15:0] uart_cell_debug_data_snap = 16'd0;
+    reg  [3:0]  uart_cell_debug_p_snap = 4'd0;
     reg         uart_cell_packet_pending = 1'b0;
     reg         uart_cell_packet_sending = 1'b0;
     reg         uart_cell_packet_last_char = 1'b0;
@@ -1291,10 +1316,24 @@ module GlobalRender_top (
         .i(uart_cell_fetch_i),
         .j(uart_cell_fetch_j),
         .result(uart_cell_fetch_result),
-        .ram_ren(uart_cell_ram_ren),
-        .ram_addr(uart_cell_ram_addr),
+        .ram_ren(uart_cell_fetch_ram_ren),
+        .ram_addr(uart_cell_fetch_ram_addr),
         .ram_rdata(uart_cell_ram_rdata)
     );
+    fetchP uart_cell_p_fetch_inst (
+        .clk(CLK100MHZ),
+        .start(uart_cell_p_fetch_start),
+        .busy(uart_cell_p_fetch_busy),
+        .done(uart_cell_p_fetch_done),
+        .i(uart_cell_fetch_i),
+        .j(uart_cell_fetch_j),
+        .result(uart_cell_p_fetch_result),
+        .ram_ren(uart_cell_p_ram_ren),
+        .ram_addr(uart_cell_p_ram_addr),
+        .ram_rdata(uart_cell_ram_rdata)
+    );
+    assign uart_cell_ram_ren = uart_cell_fetch_ram_ren | uart_cell_p_ram_ren;
+    assign uart_cell_ram_addr = uart_cell_p_ram_ren ? uart_cell_p_ram_addr : uart_cell_fetch_ram_addr;
     UartTx #(
         .ClkHz(100_000_000),
         .BAUD(115200)
@@ -1462,6 +1501,7 @@ module GlobalRender_top (
 
     always @(posedge CLK100MHZ) begin
         uart_cell_fetch_start <= 1'b0;
+        uart_cell_p_fetch_start <= 1'b0;
         uart_cell_uart_start <= 1'b0;
 
         if (!uart_cell_debug_enable) begin
@@ -1470,6 +1510,7 @@ module GlobalRender_top (
             uart_cell_debug_j <= 4'd0;
             uart_cell_fetch_i <= 5'd0;
             uart_cell_fetch_j <= 4'd0;
+            uart_cell_p_pending <= 1'b0;
             uart_cell_packet_pending <= 1'b0;
             uart_cell_packet_sending <= 1'b0;
             uart_cell_packet_last_char <= 1'b0;
@@ -1480,17 +1521,27 @@ module GlobalRender_top (
                 uart_cell_frame_pending <= 1'b1;
             end
 
-            if (uart_cell_frame_pending && !uart_cell_packet_pending &&
-                !uart_cell_packet_sending && !uart_cell_fetch_busy) begin
+            if (uart_cell_frame_pending && !uart_cell_p_pending && !uart_cell_packet_pending &&
+                !uart_cell_packet_sending && !uart_cell_fetch_busy && !uart_cell_p_fetch_busy) begin
                 uart_cell_fetch_i <= uart_cell_debug_i;
                 uart_cell_fetch_j <= uart_cell_debug_j;
                 uart_cell_fetch_start <= 1'b1;
             end
 
             if (uart_cell_fetch_done) begin
+                uart_cell_debug_data_snap <= uart_cell_fetch_result;
+                uart_cell_p_pending <= 1'b1;
+            end
+
+            if (uart_cell_p_pending && !uart_cell_fetch_busy && !uart_cell_p_fetch_busy) begin
+                uart_cell_p_fetch_start <= 1'b1;
+                uart_cell_p_pending <= 1'b0;
+            end
+
+            if (uart_cell_p_fetch_done) begin
                 uart_cell_debug_i_snap <= uart_cell_fetch_i;
                 uart_cell_debug_j_snap <= uart_cell_fetch_j;
-                uart_cell_debug_data_snap <= uart_cell_fetch_result;
+                uart_cell_debug_p_snap <= uart_cell_p_fetch_result;
                 uart_cell_packet_pending <= 1'b1;
                 uart_cell_frame_pending <= 1'b0;
 
@@ -1513,7 +1564,8 @@ module GlobalRender_top (
                         5'd0,
                         uart_cell_debug_i_snap,
                         uart_cell_debug_j_snap,
-                        uart_cell_debug_data_snap
+                        uart_cell_debug_data_snap,
+                        uart_cell_debug_p_snap
                     );
                     uart_cell_uart_start <= 1'b1;
                     uart_cell_packet_pending <= 1'b0;
@@ -1535,7 +1587,8 @@ module GlobalRender_top (
                         uart_cell_packet_index,
                         uart_cell_debug_i_snap,
                         uart_cell_debug_j_snap,
-                        uart_cell_debug_data_snap
+                        uart_cell_debug_data_snap,
+                        uart_cell_debug_p_snap
                     );
                     uart_cell_uart_start <= 1'b1;
                     uart_cell_packet_last_char <= (uart_cell_packet_index == UART_CELL_PACKET_LEN - 1);

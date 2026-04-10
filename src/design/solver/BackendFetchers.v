@@ -37,6 +37,101 @@ module fetchCell (
     end
 endmodule
 
+module fetchP (
+    input  wire        clk,
+    input  wire        start,
+    output wire        busy,
+    output reg         done,
+    input  wire [4:0]  i,
+    input  wire [3:0]  j,
+    output reg  [3:0]  result,
+
+    output wire        ram_ren,
+    output wire [8:0]  ram_addr,
+    input  wire [15:0] ram_rdata
+);
+    wire        cell_busy;
+    wire        cell_done;
+    wire [15:0] cell_result;
+
+    function [3:0] decode_p_from_cell;
+        input [15:0] cell_data;
+        reg [5:0] sprite_id;
+        reg [1:0] rotation;
+        begin
+            if (!cell_data[0]) begin
+                decode_p_from_cell = 4'b0000;
+            end else begin
+                sprite_id = cell_data[6:1];
+                rotation = cell_data[8:7];
+                case (sprite_id)
+                    // wire
+                    6'd0: begin
+                        case (rotation)
+                            2'd0, 2'd2: decode_p_from_cell = 4'b0101;
+                            default:    decode_p_from_cell = 4'b1010;
+                        endcase
+                    end
+                    // elbow
+                    6'd1: begin
+                        case (rotation)
+                            2'd0: decode_p_from_cell = 4'b0110;
+                            2'd1: decode_p_from_cell = 4'b1100;
+                            2'd2: decode_p_from_cell = 4'b1001;
+                            default: decode_p_from_cell = 4'b0011;
+                        endcase
+                    end
+                    // tee
+                    6'd2: begin
+                        case (rotation)
+                            2'd0: decode_p_from_cell = 4'b0111;
+                            2'd1: decode_p_from_cell = 4'b1110;
+                            2'd2: decode_p_from_cell = 4'b1101;
+                            default: decode_p_from_cell = 4'b1011;
+                        endcase
+                    end
+                    // junction / [cross]
+                    6'd3, 6'd4: decode_p_from_cell = 4'b1111;
+                    // ground
+                    6'd15: begin
+                        case (rotation)
+                            2'd0: decode_p_from_cell = 4'b0010;
+                            2'd1: decode_p_from_cell = 4'b0100;
+                            2'd2: decode_p_from_cell = 4'b1000;
+                            default: decode_p_from_cell = 4'b0001;
+                        endcase
+                    end
+                    default: decode_p_from_cell = 4'b0000;
+                endcase
+            end
+        end
+    endfunction
+
+    fetchCell fetch_cell_inst (
+        .clk(clk),
+        .start(start),
+        .busy(cell_busy),
+        .done(cell_done),
+        .i(i),
+        .j(j),
+        .result(cell_result),
+        .ram_ren(ram_ren),
+        .ram_addr(ram_addr),
+        .ram_rdata(ram_rdata)
+    );
+
+    assign busy = cell_busy;
+
+    always @(posedge clk) begin
+        if (cell_done) begin
+            result <= decode_p_from_cell(cell_result);
+            done <= 1'b1;
+        end else begin
+            done <= 1'b0;
+        end
+    end
+endmodule
+
 // =========================================================================
 // 第 2 組：基於元件 Index 的查詢 (直接對接 40-bit Component Store RAM)
 // =========================================================================

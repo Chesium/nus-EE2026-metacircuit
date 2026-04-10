@@ -23,6 +23,8 @@ module ComponentPropertyPanel #(
     input wire has_selection,
     input wire [11:0] selected_cell_i,
     input wire [11:0] selected_cell_j,
+    input wire selected_component_index_valid,
+    input wire [8:0] selected_component_index,
 
     output reg panel_rendered,
     output reg [11:0] panel_rgb
@@ -108,6 +110,12 @@ module ComponentPropertyPanel #(
     wire [7:0] ascii_sel_i_ones = sel_i_ones + 8'd48;
     wire [7:0] ascii_sel_j_tens = sel_j_tens + 8'd48;
     wire [7:0] ascii_sel_j_ones = sel_j_ones + 8'd48;
+    wire [3:0] sel_idx_hundreds = selected_component_index / 100;
+    wire [3:0] sel_idx_tens = (selected_component_index % 100) / 10;
+    wire [3:0] sel_idx_ones = selected_component_index % 10;
+    wire [7:0] ascii_sel_idx_hundreds = sel_idx_hundreds + 8'd48;
+    wire [7:0] ascii_sel_idx_tens = sel_idx_tens + 8'd48;
+    wire [7:0] ascii_sel_idx_ones = sel_idx_ones + 8'd48;
 
     reg [MAX_CHARS * 8 - 1:0] type_title_data;
     reg [4:0] type_title_len;
@@ -165,18 +173,27 @@ module ComponentPropertyPanel #(
         pos_title_data[MAX_CHARS * 8 - 1 -: 8] = "P";
         pos_title_data[MAX_CHARS * 8 - 9 -: 8] = "o";
         pos_title_data[MAX_CHARS * 8 - 17 -: 8] = "s";
-        pos_title_len = (show_detail_layout || show_summary_layout) ? 5'd3 : 5'd0;
+        pos_title_data[MAX_CHARS * 8 - 25 -: 8] = "/";
+        pos_title_data[MAX_CHARS * 8 - 33 -: 8] = "I";
+        pos_title_data[MAX_CHARS * 8 - 41 -: 8] = "d";
+        pos_title_data[MAX_CHARS * 8 - 49 -: 8] = "x";
+        pos_title_len = (show_detail_layout || show_summary_layout) ? 5'd7 : 5'd0;
 
         if (!show_hint_layout) begin
-            coord_data[MAX_CHARS * 8 - 1 -: 8] = "(";
-            coord_data[MAX_CHARS * 8 - 9 -: 8] = ascii_sel_i_tens;
-            coord_data[MAX_CHARS * 8 - 17 -: 8] = ascii_sel_i_ones;
-            coord_data[MAX_CHARS * 8 - 25 -: 8] = ",";
+            coord_data[MAX_CHARS * 8 - 1 -: 8] = "#";
+            coord_data[MAX_CHARS * 8 - 9 -: 8] = selected_component_index_valid ? ascii_sel_idx_hundreds : "-";
+            coord_data[MAX_CHARS * 8 - 17 -: 8] = selected_component_index_valid ? ascii_sel_idx_tens : "-";
+            coord_data[MAX_CHARS * 8 - 25 -: 8] = selected_component_index_valid ? ascii_sel_idx_ones : "-";
             coord_data[MAX_CHARS * 8 - 33 -: 8] = " ";
-            coord_data[MAX_CHARS * 8 - 41 -: 8] = ascii_sel_j_tens;
-            coord_data[MAX_CHARS * 8 - 49 -: 8] = ascii_sel_j_ones;
-            coord_data[MAX_CHARS * 8 - 57 -: 8] = ")";
-            coord_len = (show_detail_layout || show_summary_layout) ? 5'd8 : 5'd0;
+            coord_data[MAX_CHARS * 8 - 41 -: 8] = "(";
+            coord_data[MAX_CHARS * 8 - 49 -: 8] = ascii_sel_i_tens;
+            coord_data[MAX_CHARS * 8 - 57 -: 8] = ascii_sel_i_ones;
+            coord_data[MAX_CHARS * 8 - 65 -: 8] = ",";
+            coord_data[MAX_CHARS * 8 - 73 -: 8] = " ";
+            coord_data[MAX_CHARS * 8 - 81 -: 8] = ascii_sel_j_tens;
+            coord_data[MAX_CHARS * 8 - 89 -: 8] = ascii_sel_j_ones;
+            coord_data[MAX_CHARS * 8 - 97 -: 8] = ")";
+            coord_len = (show_detail_layout || show_summary_layout) ? 5'd13 : 5'd0;
         end
 
         value_label_data[MAX_CHARS * 8 - 1 -: 8] = "V";

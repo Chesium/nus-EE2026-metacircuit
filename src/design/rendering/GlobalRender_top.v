@@ -105,6 +105,8 @@ module GlobalRender_top (
     (* ASYNC_REG = "TRUE" *) reg  [7:0]  keyboard_ascii_sys_ff1 = 8'h00;
 
     wire        keyboard_region_active;
+    wire        show_matrix = SW[0];
+    wire        show_component_store_view = SW[1];
 
     // =========================================================
     // Calculator on OLED signals
@@ -121,6 +123,7 @@ module GlobalRender_top (
     wire [11:0] circuit_canvas_rgb;
     wire        circuit_canvas_rendered;
     reg  [11:0] ui_rgb;
+    wire [7:0]  seg_data;
     wire [11:0] toolbar_rgb;
     wire        toolbar_rendered;
     wire [3:0]  selected_toolbar_idx;
@@ -677,7 +680,7 @@ module GlobalRender_top (
 
     // JC 端口由 Oled_Display 模块驱动，必须移除强制拉低，否则 OLED 黑屏
     // assign JC = 8'h00;
-    assign SEG = 8'hFF;
+    assign SEG = seg_data;
     assign AN = 4'hF;
     assign LED = SW;
     ClockDivider #( .FREQ(25_000_000) ) clkdiv_pixel_inst ( .CLK100MHZ(CLK100MHZ), .clk_out(clk_pixel) );
@@ -888,8 +891,19 @@ module GlobalRender_top (
     (* ASYNC_REG = "TRUE" *) reg        component_store_next_toggle_pix_ff1 = 1'b0;
     reg         component_store_prev_toggle_seen_pix = 1'b0;
     reg         component_store_next_toggle_seen_pix = 1'b0;
+    reg         component_store_display_valid_ui = 1'b0;
     reg  [CANVAS_ADDR_W-1:0] component_store_display_index_ui = {CANVAS_ADDR_W{1'b0}};
     reg  [COMPONENT_STORE_ENTRY_W-1:0] component_store_display_entry_ui = {COMPONENT_STORE_ENTRY_W{1'b0}};
+    reg  [CANVAS_ADDR_W-1:0] component_store_view_req_index_ui = {CANVAS_ADDR_W{1'b0}};
+    reg         component_store_view_req_toggle_ui = 1'b0;
+    reg         component_store_view_req_pending_ui = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_rsp_index_ui_ff0 = {CANVAS_ADDR_W{1'b0}};
+    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_rsp_index_ui_ff1 = {CANVAS_ADDR_W{1'b0}};
+    (* ASYNC_REG = "TRUE" *) reg [COMPONENT_STORE_ENTRY_W-1:0] component_store_view_rsp_entry_ui_ff0 = {COMPONENT_STORE_ENTRY_W{1'b0}};
+    (* ASYNC_REG = "TRUE" *) reg [COMPONENT_STORE_ENTRY_W-1:0] component_store_view_rsp_entry_ui_ff1 = {COMPONENT_STORE_ENTRY_W{1'b0}};
+    (* ASYNC_REG = "TRUE" *) reg        component_store_view_rsp_toggle_ui_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        component_store_view_rsp_toggle_ui_ff1 = 1'b0;
+    reg         component_store_view_rsp_toggle_seen_ui = 1'b0;
     wire [11:0] selected_cell_i_sys = selected_cell_i_sys_ff1;
     wire [11:0] selected_cell_j_sys = selected_cell_j_sys_ff1;
     wire        has_selection_sys = has_selection_sys_ff1;
@@ -920,8 +934,10 @@ module GlobalRender_top (
         (component_store_count_ui == {CANVAS_ADDR_W{1'b0}}) ? {CANVAS_ADDR_W{1'b0}} :
         ((component_store_view_index_ui < component_store_count_ui) ?
             component_store_view_index_ui : (component_store_count_ui - 1'b1));
+    wire        component_store_view_rsp_event_ui =
+        (component_store_view_rsp_toggle_ui_ff1 != component_store_view_rsp_toggle_seen_ui);
     wire        component_store_view_entry_ready_ui =
-        component_store_view_has_entry_ui &&
+        component_store_view_has_entry_ui && component_store_display_valid_ui &&
         (component_store_display_index_ui < component_store_count_ui);
     wire [3:0]  component_store_view_unit_ui = component_store_display_entry_ui[39:36];
     wire [CANVAS_ADDR_W-1:0] component_store_view_entry_index_ui =
@@ -1023,13 +1039,34 @@ module GlobalRender_top (
     reg  [3:0]  value_unit_shadow_data [0:CANVAS_CELL_COUNT-1];
     // component_store entry = {unit[3:0], index[8:0], type[3:0], rotation[1:0], value[11:0], position[8:0]}
     // position[8:5] = y, position[4:0] = x
+    localparam integer BACKEND_FRAME_CYCLE_BUDGET = 10000;
+    localparam [3:0] BACKEND_TEST_IDLE        = 4'd0;
+    localparam [3:0] BACKEND_TEST_START_TYPE  = 4'd1;
+    localparam [3:0] BACKEND_TEST_WAIT_TYPE   = 4'd2;
+    localparam [3:0] BACKEND_TEST_START_VALUE = 4'd3;
+    localparam [3:0] BACKEND_TEST_WAIT_VALUE  = 4'd4;
+    localparam [3:0] BACKEND_TEST_START_X     = 4'd5;
+    localparam [3:0] BACKEND_TEST_WAIT_X      = 4'd6;
+    localparam [3:0] BACKEND_TEST_START_Y     = 4'd7;
+    localparam [3:0] BACKEND_TEST_WAIT_Y      = 4'd8;
     reg         component_store_w_en = 1'b0;
     reg  [CANVAS_ADDR_W-1:0] component_store_w_addr = {CANVAS_ADDR_W{1'b0}};
     reg  [COMPONENT_STORE_ENTRY_W-1:0] component_store_w_data = {COMPONENT_STORE_ENTRY_W{1'b0}};
-    reg  [CANVAS_ADDR_W-1:0] component_store_r_addr = {CANVAS_ADDR_W{1'b0}};
-    wire [COMPONENT_STORE_ENTRY_W-1:0] component_store_r_data;
+    reg  [CANVAS_ADDR_W-1:0] component_store_ram_r_addr = {CANVAS_ADDR_W{1'b0}};
+    wire [COMPONENT_STORE_ENTRY_W-1:0] component_store_ram_r_data;
     reg  [CANVAS_ADDR_W-1:0] component_store_count = {CANVAS_ADDR_W{1'b0}};
     reg         component_store_dirty = 1'b1;
+    reg         component_store_read_busy = 1'b0;
+    reg         component_store_read_owner_backend = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] component_store_read_addr_latched = {CANVAS_ADDR_W{1'b0}};
+    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_req_index_sys_ff0 = {CANVAS_ADDR_W{1'b0}};
+    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_req_index_sys_ff1 = {CANVAS_ADDR_W{1'b0}};
+    (* ASYNC_REG = "TRUE" *) reg        component_store_view_req_toggle_sys_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        component_store_view_req_toggle_sys_ff1 = 1'b0;
+    reg         component_store_view_req_toggle_seen_sys = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] component_store_view_rsp_index_sys = {CANVAS_ADDR_W{1'b0}};
+    reg  [COMPONENT_STORE_ENTRY_W-1:0] component_store_view_rsp_entry_sys = {COMPONENT_STORE_ENTRY_W{1'b0}};
+    reg         component_store_view_rsp_toggle_sys = 1'b0;
     reg         component_index_map_w_en = 1'b0;
     reg  [CANVAS_ADDR_W-1:0] component_index_map_w_addr = {CANVAS_ADDR_W{1'b0}};
     reg  [CANVAS_ADDR_W-1:0] component_index_map_w_data = COMPONENT_INDEX_INVALID;
@@ -1058,14 +1095,105 @@ module GlobalRender_top (
     wire        component_store_busy =
         component_index_map_pending_pair_write || component_index_map_clear_active ||
         component_store_rebuild_active || component_store_dirty;
+    wire        backend_fetch_test_enable;
+    reg         backend_frame_pending = 1'b0;
+    reg         backend_test_active = 1'b0;
+    reg  [13:0] backend_cycle_budget = 14'd0;
+    reg  [CANVAS_ADDR_W-1:0] backend_test_idx = {CANVAS_ADDR_W{1'b0}};
+    reg  [CANVAS_ADDR_W-1:0] backend_test_count = {CANVAS_ADDR_W{1'b0}};
+    reg  [3:0]  backend_test_state = BACKEND_TEST_IDLE;
+    reg         backend_fetch_type_start = 1'b0;
+    reg         backend_fetch_value_start = 1'b0;
+    reg         backend_fetch_x_start = 1'b0;
+    reg         backend_fetch_y_start = 1'b0;
+    wire        backend_fetch_type_busy;
+    wire        backend_fetch_type_done;
+    wire [3:0]  backend_fetch_type_result;
+    wire        backend_fetch_type_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] backend_fetch_type_comp_addr;
+    wire        backend_fetch_value_busy;
+    wire        backend_fetch_value_done;
+    wire [11:0] backend_fetch_value_result;
+    wire        backend_fetch_value_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] backend_fetch_value_comp_addr;
+    wire        backend_fetch_x_busy;
+    wire        backend_fetch_x_done;
+    wire [4:0]  backend_fetch_x_result;
+    wire        backend_fetch_x_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] backend_fetch_x_comp_addr;
+    wire        backend_fetch_y_busy;
+    wire        backend_fetch_y_done;
+    wire [3:0]  backend_fetch_y_result;
+    wire        backend_fetch_y_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] backend_fetch_y_comp_addr;
+    wire        backend_comp_ren =
+        backend_fetch_type_comp_ren || backend_fetch_value_comp_ren ||
+        backend_fetch_x_comp_ren || backend_fetch_y_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] backend_comp_addr =
+        backend_fetch_type_comp_ren ? backend_fetch_type_comp_addr :
+        backend_fetch_value_comp_ren ? backend_fetch_value_comp_addr :
+        backend_fetch_x_comp_ren ? backend_fetch_x_comp_addr :
+        backend_fetch_y_comp_addr;
+    wire        backend_component_port_ready = !component_store_busy && !component_store_read_busy;
+    reg  [3:0]  backend_last_type = 4'd0;
+    reg  [11:0] backend_last_value = 12'd0;
+    reg  [4:0]  backend_last_x = 5'd0;
+    reg  [3:0]  backend_last_y = 4'd0;
+    assign seg_data = backend_fetch_test_enable ?
+        {4'hF, ~backend_test_active, ~backend_frame_pending, ~component_store_busy, ~component_store_read_busy} :
+        8'hFF;
     SimpleRam #( .WordWidth(CANVAS_ADDR_W), .WordCount(CANVAS_CELL_COUNT) ) component_index_map_ram_inst (
         .clk(CLK100MHZ), .w_en(component_index_map_w_en), .w_addr(component_index_map_w_addr),
         .r_addr(selected_cell_addr_sys), .d_in(component_index_map_w_data), .d_out(selected_component_index_map_data)
     );
     SimpleDualClockRam #( .WordWidth(COMPONENT_STORE_ENTRY_W), .WordCount(CANVAS_CELL_COUNT) ) component_store_ram_inst (
-        .wr_clk(CLK100MHZ), .rd_clk(clk_pixel),
+        .wr_clk(CLK100MHZ), .rd_clk(CLK100MHZ),
         .w_en(component_store_w_en), .w_addr(component_store_w_addr),
-        .r_addr(component_store_r_addr), .d_in(component_store_w_data), .d_out(component_store_r_data)
+        .r_addr(component_store_ram_r_addr), .d_in(component_store_w_data), .d_out(component_store_ram_r_data)
+    );
+    fetchComponentType backend_fetch_type_inst (
+        .clk(CLK100MHZ),
+        .start(backend_fetch_type_start),
+        .busy(backend_fetch_type_busy),
+        .done(backend_fetch_type_done),
+        .idx(backend_test_idx),
+        .result(backend_fetch_type_result),
+        .comp_ren(backend_fetch_type_comp_ren),
+        .comp_addr(backend_fetch_type_comp_addr),
+        .comp_rdata(component_store_ram_r_data)
+    );
+    fetchComponentValue backend_fetch_value_inst (
+        .clk(CLK100MHZ),
+        .start(backend_fetch_value_start),
+        .busy(backend_fetch_value_busy),
+        .done(backend_fetch_value_done),
+        .idx(backend_test_idx),
+        .result(backend_fetch_value_result),
+        .comp_ren(backend_fetch_value_comp_ren),
+        .comp_addr(backend_fetch_value_comp_addr),
+        .comp_rdata(component_store_ram_r_data)
+    );
+    fetchAnchorPositionX backend_fetch_x_inst (
+        .clk(CLK100MHZ),
+        .start(backend_fetch_x_start),
+        .busy(backend_fetch_x_busy),
+        .done(backend_fetch_x_done),
+        .idx(backend_test_idx),
+        .result(backend_fetch_x_result),
+        .comp_ren(backend_fetch_x_comp_ren),
+        .comp_addr(backend_fetch_x_comp_addr),
+        .comp_rdata(component_store_ram_r_data)
+    );
+    fetchAnchorPositionY backend_fetch_y_inst (
+        .clk(CLK100MHZ),
+        .start(backend_fetch_y_start),
+        .busy(backend_fetch_y_busy),
+        .done(backend_fetch_y_done),
+        .idx(backend_test_idx),
+        .result(backend_fetch_y_result),
+        .comp_ren(backend_fetch_y_comp_ren),
+        .comp_addr(backend_fetch_y_comp_addr),
+        .comp_rdata(component_store_ram_r_data)
     );
     SimpleRam #( .WordWidth(12), .WordCount(CANVAS_CELL_COUNT) ) component_value_ram_inst (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
@@ -1083,6 +1211,138 @@ module GlobalRender_top (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
         .r_addr(selected_value_store_addr_sys), .d_in(value_text_len_ram_w_data), .d_out(value_text_len_ram_r_data)
     );
+
+    always @(posedge CLK100MHZ) begin
+        component_store_view_req_index_sys_ff0 <= component_store_view_req_index_ui;
+        component_store_view_req_index_sys_ff1 <= component_store_view_req_index_sys_ff0;
+        component_store_view_req_toggle_sys_ff0 <= component_store_view_req_toggle_ui;
+        component_store_view_req_toggle_sys_ff1 <= component_store_view_req_toggle_sys_ff0;
+
+        if (component_store_read_busy) begin
+            component_store_read_busy <= 1'b0;
+            if (!component_store_read_owner_backend) begin
+                component_store_view_rsp_index_sys <= component_store_read_addr_latched;
+                component_store_view_rsp_entry_sys <= component_store_ram_r_data;
+                component_store_view_rsp_toggle_sys <= ~component_store_view_rsp_toggle_sys;
+            end
+        end else if (!component_store_busy) begin
+            if (backend_comp_ren) begin
+                component_store_ram_r_addr <= backend_comp_addr;
+                component_store_read_addr_latched <= backend_comp_addr;
+                component_store_read_owner_backend <= 1'b1;
+                component_store_read_busy <= 1'b1;
+            end else if (component_store_view_req_toggle_sys_ff1 != component_store_view_req_toggle_seen_sys) begin
+                component_store_view_req_toggle_seen_sys <= component_store_view_req_toggle_sys_ff1;
+                component_store_ram_r_addr <= component_store_view_req_index_sys_ff1;
+                component_store_read_addr_latched <= component_store_view_req_index_sys_ff1;
+                component_store_read_owner_backend <= 1'b0;
+                component_store_read_busy <= 1'b1;
+            end
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
+        backend_fetch_type_start <= 1'b0;
+        backend_fetch_value_start <= 1'b0;
+        backend_fetch_x_start <= 1'b0;
+        backend_fetch_y_start <= 1'b0;
+
+        if (interaction_frame_tick && backend_fetch_test_enable) begin
+            backend_frame_pending <= 1'b1;
+        end
+
+        if (!backend_fetch_test_enable) begin
+            backend_frame_pending <= 1'b0;
+            backend_test_active <= 1'b0;
+            backend_cycle_budget <= 14'd0;
+            backend_test_idx <= {CANVAS_ADDR_W{1'b0}};
+            backend_test_count <= {CANVAS_ADDR_W{1'b0}};
+            backend_test_state <= BACKEND_TEST_IDLE;
+        end else if (component_store_busy) begin
+            backend_test_active <= 1'b0;
+            backend_test_state <= BACKEND_TEST_IDLE;
+            backend_cycle_budget <= 14'd0;
+        end else begin
+            if (backend_test_active && (backend_cycle_budget != 14'd0)) begin
+                backend_cycle_budget <= backend_cycle_budget - 1'b1;
+            end
+
+            if (backend_test_active && (backend_cycle_budget == 14'd0)) begin
+                backend_test_active <= 1'b0;
+                backend_test_state <= BACKEND_TEST_IDLE;
+            end else begin
+                case (backend_test_state)
+                    BACKEND_TEST_IDLE: begin
+                        if (backend_frame_pending) begin
+                            backend_frame_pending <= 1'b0;
+                            if (component_store_count != {CANVAS_ADDR_W{1'b0}}) begin
+                                backend_test_active <= 1'b1;
+                                backend_cycle_budget <= BACKEND_FRAME_CYCLE_BUDGET;
+                                backend_test_idx <= {CANVAS_ADDR_W{1'b0}};
+                                backend_test_count <= component_store_count;
+                                backend_test_state <= BACKEND_TEST_START_TYPE;
+                            end
+                        end
+                    end
+                    BACKEND_TEST_START_TYPE: begin
+                        if (backend_component_port_ready) begin
+                            backend_fetch_type_start <= 1'b1;
+                            backend_test_state <= BACKEND_TEST_WAIT_TYPE;
+                        end
+                    end
+                    BACKEND_TEST_WAIT_TYPE: begin
+                        if (backend_fetch_type_done) begin
+                            backend_last_type <= backend_fetch_type_result;
+                            backend_test_state <= BACKEND_TEST_START_VALUE;
+                        end
+                    end
+                    BACKEND_TEST_START_VALUE: begin
+                        if (backend_component_port_ready) begin
+                            backend_fetch_value_start <= 1'b1;
+                            backend_test_state <= BACKEND_TEST_WAIT_VALUE;
+                        end
+                    end
+                    BACKEND_TEST_WAIT_VALUE: begin
+                        if (backend_fetch_value_done) begin
+                            backend_last_value <= backend_fetch_value_result;
+                            backend_test_state <= BACKEND_TEST_START_X;
+                        end
+                    end
+                    BACKEND_TEST_START_X: begin
+                        if (backend_component_port_ready) begin
+                            backend_fetch_x_start <= 1'b1;
+                            backend_test_state <= BACKEND_TEST_WAIT_X;
+                        end
+                    end
+                    BACKEND_TEST_WAIT_X: begin
+                        if (backend_fetch_x_done) begin
+                            backend_last_x <= backend_fetch_x_result;
+                            backend_test_state <= BACKEND_TEST_START_Y;
+                        end
+                    end
+                    BACKEND_TEST_START_Y: begin
+                        if (backend_component_port_ready) begin
+                            backend_fetch_y_start <= 1'b1;
+                            backend_test_state <= BACKEND_TEST_WAIT_Y;
+                        end
+                    end
+                    BACKEND_TEST_WAIT_Y: begin
+                        if (backend_fetch_y_done) begin
+                            backend_last_y <= backend_fetch_y_result;
+                            if ((backend_test_idx + 1'b1) < backend_test_count && (backend_cycle_budget > 14'd8)) begin
+                                backend_test_idx <= backend_test_idx + 1'b1;
+                                backend_test_state <= BACKEND_TEST_START_TYPE;
+                            end else begin
+                                backend_test_active <= 1'b0;
+                                backend_test_state <= BACKEND_TEST_IDLE;
+                            end
+                        end
+                    end
+                    default: backend_test_state <= BACKEND_TEST_IDLE;
+                endcase
+            end
+        end
+    end
 
     // =========================================================
     // Component Property Panel - 元件属性显示 (简化版)
@@ -1192,6 +1452,12 @@ module GlobalRender_top (
         component_store_prev_toggle_pix_ff1 <= component_store_prev_toggle_pix_ff0;
         component_store_next_toggle_pix_ff0 <= component_store_next_toggle_nav;
         component_store_next_toggle_pix_ff1 <= component_store_next_toggle_pix_ff0;
+        component_store_view_rsp_index_ui_ff0 <= component_store_view_rsp_index_sys;
+        component_store_view_rsp_index_ui_ff1 <= component_store_view_rsp_index_ui_ff0;
+        component_store_view_rsp_entry_ui_ff0 <= component_store_view_rsp_entry_sys;
+        component_store_view_rsp_entry_ui_ff1 <= component_store_view_rsp_entry_ui_ff0;
+        component_store_view_rsp_toggle_ui_ff0 <= component_store_view_rsp_toggle_sys;
+        component_store_view_rsp_toggle_ui_ff1 <= component_store_view_rsp_toggle_ui_ff0;
         component_store_view_show_d <= show_component_store_view;
 
         if (component_store_prev_event_pix) begin
@@ -1208,10 +1474,25 @@ module GlobalRender_top (
             component_store_view_index_ui <= component_store_count_ui - 1'b1;
         end
 
+        if (component_store_view_rsp_event_ui) begin
+            component_store_view_rsp_toggle_seen_ui <= component_store_view_rsp_toggle_ui_ff1;
+            component_store_display_index_ui <= component_store_view_rsp_index_ui_ff1;
+            component_store_display_entry_ui <= component_store_view_rsp_entry_ui_ff1;
+            component_store_display_valid_ui <= 1'b1;
+            component_store_view_req_pending_ui <= 1'b0;
+        end
+
         if (!show_component_store_view) begin
             component_store_view_manual_ui <= 1'b0;
+            component_store_display_valid_ui <= 1'b0;
+            component_store_view_req_pending_ui <= 1'b0;
         end else if (!component_store_view_show_d) begin
             component_store_view_manual_ui <= 1'b0;
+            component_store_display_valid_ui <= 1'b0;
+            component_store_view_req_pending_ui <= 1'b0;
+        end else if (component_store_busy_ui || !component_store_view_has_entry_ui) begin
+            component_store_display_valid_ui <= 1'b0;
+            component_store_view_req_pending_ui <= 1'b0;
         end
 
         if (show_component_store_view && component_store_view_has_entry_ui) begin
@@ -1232,9 +1513,14 @@ module GlobalRender_top (
             end
         end
 
-        component_store_r_addr <= component_store_view_index_clamped_ui;
-        component_store_display_index_ui <= component_store_r_addr;
-        component_store_display_entry_ui <= component_store_r_data;
+        if (show_component_store_view && component_store_view_has_entry_ui &&
+            !component_store_view_req_pending_ui &&
+            (!component_store_view_entry_ready_ui ||
+             (component_store_display_index_ui != component_store_view_index_clamped_ui))) begin
+            component_store_view_req_index_ui <= component_store_view_index_clamped_ui;
+            component_store_view_req_toggle_ui <= ~component_store_view_req_toggle_ui;
+            component_store_view_req_pending_ui <= 1'b1;
+        end
     end
     // 同步鼠标点击 - 记录选中的单元格
     always @(posedge clk_pixel) begin
@@ -2010,8 +2296,7 @@ module GlobalRender_top (
     reg  [1023:0] matrix_lu_data;   // 8x8 Q8.8 定点数矩阵
 
     // 开关控制：SW[0]=0 显示电路，SW[0]=1 显示矩阵
-    wire show_matrix = SW[0];
-    wire show_component_store_view = SW[1];
+    assign backend_fetch_test_enable = SW[2];
 
     // 初始化示例矩阵数据 (8x8 矩阵，Q8.8 定点数)
     // 数据排列：[0][0] 在 [1023:1008], [0][1] 在 [1007:992], ..., [7][7] 在 [15:0]

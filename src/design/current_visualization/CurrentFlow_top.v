@@ -122,6 +122,8 @@ module CurrentFlow_top (
         .rgb(canvas_rgb), .rendered(canvas_rendered), 
         .mouse_x_pos(mouse_xpos), .mouse_y_pos(mouse_ypos),
         .data_addr(ram_r_addr), .incoming_data(ram_r_data),
+        .incoming_fg_color_idx(4'hF),
+        .incoming_bg_color_idx(4'h0),
         .display_grid(1'b1), 
         .mouse_left_click(mouse_left), // 傳入滑鼠左鍵支援拖曳
         .grid_pos_x_out(canvas_pan_x), .grid_pos_y_out(canvas_pan_y)

@@ -29,6 +29,8 @@ module CircuitCanvas #(
     /* Render Stage Data RAM Handles (Read-Only) */
     output wire [AddrWidth-1:0] data_addr,
     input  wire [DataWidth-1:0] incoming_data,
+    input  wire [3:0]  incoming_fg_color_idx,
+    input  wire [3:0]  incoming_bg_color_idx,
 
     /* Other Configuration Bits */
     input wire display_grid,
@@ -140,6 +142,8 @@ module CircuitCanvas #(
   assign prefetched_i = absolute_grid_x_prefetch / CellSize;
   assign prefetched_j = absolute_grid_y_prefetch / CellSize;
   reg [DataWidth-1:0] cached_data;
+  reg [3:0] cached_fg_color_idx = 4'hF;
+  reg [3:0] cached_bg_color_idx = 4'h0;
   reg [11:0] cached_data_i = 12'b1111_1111_1111;
   reg [11:0] cached_data_j = 12'b1111_1111_1111;
   reg [11:0] requested_data_i = 12'd0;
@@ -170,7 +174,12 @@ module CircuitCanvas #(
   */
 
   localparam integer EmptyCellData = 16'b0000000_00_000000_0;
+  localparam [3:0] DefaultFgColorIdx = 4'hF;
+  localparam [3:0] DefaultBgColorIdx = 4'h0;
+  localparam [3:0] HoverBgColorIdx = 4'hE;
   reg [DataWidth-1:0] cell_data;
+  reg [3:0] cell_fg_color_idx = DefaultFgColorIdx;
+  reg [3:0] cell_bg_color_idx = DefaultBgColorIdx;
 
   // decode
   wire [6:0] cell_mode;
@@ -943,10 +952,32 @@ module CircuitCanvas #(
   wire at_cell_max_edge = (cell_offset_x == (CellSize - 1)) || (cell_offset_y == (CellSize - 1));
   wire sprite_pixel_visible = sprite_pixel && !at_cell_max_edge;
 
-  localparam integer ColorPos = 12'hFFF;  
   localparam integer ColorYellow = 12'hFF0; 
-  localparam integer ColorNeg = 12'h222;  
-  localparam integer ColorNegHovering = 12'h280; 
+  localparam integer GridColor = 12'h666;
+
+  function [11:0] palette_idx_to_rgb12;
+    input [3:0] palette_idx;
+    begin
+      case (palette_idx)
+        4'd0:  palette_idx_to_rgb12 = 12'h222;
+        4'd1:  palette_idx_to_rgb12 = 12'hC33;
+        4'd2:  palette_idx_to_rgb12 = 12'hE63;
+        4'd3:  palette_idx_to_rgb12 = 12'hF93;
+        4'd4:  palette_idx_to_rgb12 = 12'hBB3;
+        4'd5:  palette_idx_to_rgb12 = 12'h5B3;
+        4'd6:  palette_idx_to_rgb12 = 12'h2B7;
+        4'd7:  palette_idx_to_rgb12 = 12'h2AA;
+        4'd8:  palette_idx_to_rgb12 = 12'h29C;
+        4'd9:  palette_idx_to_rgb12 = 12'h36F;
+        4'd10: palette_idx_to_rgb12 = 12'h66C;
+        4'd11: palette_idx_to_rgb12 = 12'h858;
+        4'd12: palette_idx_to_rgb12 = 12'hB4A;
+        4'd13: palette_idx_to_rgb12 = 12'hD66;
+        4'd14: palette_idx_to_rgb12 = 12'h280;
+        default: palette_idx_to_rgb12 = 12'hFFF;
+      endcase
+    end
+  endfunction
 
   // 1. 產生四大絕對方向的無縫遮罩 (利用 Canvas 絕對座標，保證絕不在 Cell 內部發生縮放與折返)
   // 利用 5-bit 自然溢位的特性，完美產生 0~31 循環的 5-pixel 掃描波
@@ -999,21 +1030,21 @@ module CircuitCanvas #(
   // 網格與背景處理
   wire is_yellow = cell_enable && active_mask &&
                    (is_wire_type ? sprite_pixel_visible : is_center_line_visible);
-  
-  wire [11:0] currentColorNeg;
-  assign currentColorNeg = hovering ? ColorNegHovering : ColorNeg;
 
   localparam integer GridMarginWidth = 2;
-  localparam integer GridColor = 12'h666;  
   wire at_grid_edge;
   assign at_grid_edge =  cell_offset_x < GridMarginWidth / 2 ||
                          cell_offset_y < GridMarginWidth / 2 ||
                          cell_offset_x >= CellSize - GridMarginWidth / 2 ||
                          cell_offset_y >= CellSize - GridMarginWidth / 2;
+  wire [3:0] effective_bg_color_idx =
+      (hovering && !sprite_pixel_visible && !at_grid_edge) ? HoverBgColorIdx : cell_bg_color_idx;
+  wire [11:0] currentColorPos = palette_idx_to_rgb12(cell_fg_color_idx);
+  wire [11:0] currentColorNeg = palette_idx_to_rgb12(effective_bg_color_idx);
 
   // 最終顏色輸出 (層級優先度: 黃色電流 > 元件本體 > 網格 > 背景)
   assign rgb = is_yellow    ? ColorYellow : 
-               sprite_pixel_visible ? ColorPos : 
+               sprite_pixel_visible ? currentColorPos : 
                (at_grid_edge ? GridColor : currentColorNeg);
   // =========================================================================
 
@@ -1027,18 +1058,28 @@ module CircuitCanvas #(
 
     if (!required_cell_in_bounds) begin
       cell_data <= EmptyCellData;
+      cell_fg_color_idx <= DefaultFgColorIdx;
+      cell_bg_color_idx <= DefaultBgColorIdx;
       status <= 2'b00;
     end else if (returned_data_i == required_i && returned_data_j == required_j) begin
       cached_data <= incoming_data;
+      cached_fg_color_idx <= incoming_fg_color_idx;
+      cached_bg_color_idx <= incoming_bg_color_idx;
       cached_data_i <= returned_data_i;
       cached_data_j <= returned_data_j;
       cell_data <= incoming_data;
+      cell_fg_color_idx <= incoming_fg_color_idx;
+      cell_bg_color_idx <= incoming_bg_color_idx;
       status <= 2'b10;
     end else if (cached_data_i == required_i && cached_data_j == required_j) begin
       cell_data <= cached_data;
+      cell_fg_color_idx <= cached_fg_color_idx;
+      cell_bg_color_idx <= cached_bg_color_idx;
       status <= 2'b11;
     end else begin
       cell_data <= EmptyCellData;
+      cell_fg_color_idx <= DefaultFgColorIdx;
+      cell_bg_color_idx <= DefaultBgColorIdx;
       status <= 2'b01;
     end
   end

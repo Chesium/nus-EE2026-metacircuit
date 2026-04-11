@@ -71,6 +71,8 @@ module GlobalRender_top (
     localparam ENABLE_STORE_VIEW = 1'b0;
     localparam ENABLE_MATRIX     = 1'b0;
     localparam ENABLE_WAVEFORMS  = 1'b0;
+    localparam [3:0] CANVAS_FG_DEFAULT_COLOR_IDX = 4'hF;
+    localparam [3:0] CANVAS_BG_DEFAULT_COLOR_IDX = 4'h0;
 
     // =========================================================
     // 銆愭焙瀹氱敓姝荤殑閬僵绮剧畻銆?
@@ -182,6 +184,20 @@ module GlobalRender_top (
     wire [CANVAS_ADDR_W-1:0]  circuit_canvas_ram_r_addr;
     reg  [15:0] circuit_canvas_ram_w_data = 16'd0;
     wire [15:0] circuit_canvas_ram_r_data;
+    reg         circuit_canvas_fg_color_override_w_en = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] circuit_canvas_fg_color_override_w_addr = {CANVAS_ADDR_W{1'b0}};
+    reg  [3:0]  circuit_canvas_fg_color_override_w_data = CANVAS_FG_DEFAULT_COLOR_IDX;
+    wire        circuit_canvas_fg_color_ram_w_en;
+    wire [CANVAS_ADDR_W-1:0] circuit_canvas_fg_color_ram_w_addr;
+    wire [3:0]  circuit_canvas_fg_color_ram_w_data;
+    wire [3:0]  circuit_canvas_fg_color_ram_r_data;
+    reg         circuit_canvas_bg_color_override_w_en = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] circuit_canvas_bg_color_override_w_addr = {CANVAS_ADDR_W{1'b0}};
+    reg  [3:0]  circuit_canvas_bg_color_override_w_data = CANVAS_BG_DEFAULT_COLOR_IDX;
+    wire        circuit_canvas_bg_color_ram_w_en;
+    wire [CANVAS_ADDR_W-1:0] circuit_canvas_bg_color_ram_w_addr;
+    wire [3:0]  circuit_canvas_bg_color_ram_w_data;
+    wire [3:0]  circuit_canvas_bg_color_ram_r_data;
     localparam [9:0] INIT_DELAY_CYCLES = 10'd1000;
     reg  [9:0]  init_cycles = 10'd0;
 
@@ -249,6 +265,33 @@ module GlobalRender_top (
         end
     endfunction
 
+    function [4:0] canvas_addr_to_i;
+        input [CANVAS_ADDR_W-1:0] addr;
+        begin
+            canvas_addr_to_i = addr % CANVAS_GRID_W;
+        end
+    endfunction
+
+    function [3:0] canvas_addr_to_j;
+        input [CANVAS_ADDR_W-1:0] addr;
+        begin
+            canvas_addr_to_j = addr / CANVAS_GRID_W;
+        end
+    endfunction
+
+    function [3:0] node_result_to_bg_palette_idx;
+        input [7:0] node_result;
+        reg [7:0] wrapped_node;
+        begin
+            if (node_result == 8'd0) begin
+                node_result_to_bg_palette_idx = CANVAS_BG_DEFAULT_COLOR_IDX;
+            end else begin
+                wrapped_node = (node_result - 8'd1) % 8'd13;
+                node_result_to_bg_palette_idx = 4'd1 + wrapped_node[3:0];
+            end
+        end
+    endfunction
+
     function [7:0] uart_cell_packet_char;
         input [4:0] char_index;
         input [4:0] cell_i;
@@ -302,11 +345,12 @@ module GlobalRender_top (
     endfunction
 
     function [7:0] uart_result_packet_char;
-        input [4:0] char_index;
+        input [5:0] char_index;
         input [4:0] cell_i;
         input [3:0] cell_j;
         input [7:0] cell_result;
         input [3:0] cell_p;
+        input [3:0] cell_bg_idx;
         reg [3:0] cell_i_tens;
         reg [3:0] cell_i_ones;
         reg [3:0] cell_j_tens;
@@ -318,34 +362,39 @@ module GlobalRender_top (
             cell_j_ones = (cell_j >= 4'd10) ? (cell_j - 4'd10) : cell_j[3:0];
 
             case (char_index)
-                5'd0: uart_result_packet_char = "N";
-                5'd1: uart_result_packet_char = "O";
-                5'd2: uart_result_packet_char = "D";
-                5'd3: uart_result_packet_char = "E";
-                5'd4: uart_result_packet_char = " ";
-                5'd5: uart_result_packet_char = "(";
-                5'd6: uart_result_packet_char = ascii_decimal_nibble(cell_i_tens);
-                5'd7: uart_result_packet_char = ascii_decimal_nibble(cell_i_ones);
-                5'd8: uart_result_packet_char = ",";
-                5'd9: uart_result_packet_char = " ";
-                5'd10: uart_result_packet_char = ascii_decimal_nibble(cell_j_tens);
-                5'd11: uart_result_packet_char = ascii_decimal_nibble(cell_j_ones);
-                5'd12: uart_result_packet_char = ")";
-                5'd13: uart_result_packet_char = " ";
-                5'd14: uart_result_packet_char = "=";
-                5'd15: uart_result_packet_char = " ";
-                5'd16: uart_result_packet_char = "0";
-                5'd17: uart_result_packet_char = "x";
-                5'd18: uart_result_packet_char = ascii_hex_nibble(cell_result[7:4]);
-                5'd19: uart_result_packet_char = ascii_hex_nibble(cell_result[3:0]);
-                5'd20: uart_result_packet_char = " ";
-                5'd21: uart_result_packet_char = "P";
-                5'd22: uart_result_packet_char = "=";
-                5'd23: uart_result_packet_char = ascii_binary_digit(cell_p[3]);
-                5'd24: uart_result_packet_char = ascii_binary_digit(cell_p[2]);
-                5'd25: uart_result_packet_char = ascii_binary_digit(cell_p[1]);
-                5'd26: uart_result_packet_char = ascii_binary_digit(cell_p[0]);
-                5'd27: uart_result_packet_char = 8'h0D;
+                6'd0: uart_result_packet_char = "N";
+                6'd1: uart_result_packet_char = "O";
+                6'd2: uart_result_packet_char = "D";
+                6'd3: uart_result_packet_char = "E";
+                6'd4: uart_result_packet_char = " ";
+                6'd5: uart_result_packet_char = "(";
+                6'd6: uart_result_packet_char = ascii_decimal_nibble(cell_i_tens);
+                6'd7: uart_result_packet_char = ascii_decimal_nibble(cell_i_ones);
+                6'd8: uart_result_packet_char = ",";
+                6'd9: uart_result_packet_char = " ";
+                6'd10: uart_result_packet_char = ascii_decimal_nibble(cell_j_tens);
+                6'd11: uart_result_packet_char = ascii_decimal_nibble(cell_j_ones);
+                6'd12: uart_result_packet_char = ")";
+                6'd13: uart_result_packet_char = " ";
+                6'd14: uart_result_packet_char = "=";
+                6'd15: uart_result_packet_char = " ";
+                6'd16: uart_result_packet_char = "0";
+                6'd17: uart_result_packet_char = "x";
+                6'd18: uart_result_packet_char = ascii_hex_nibble(cell_result[7:4]);
+                6'd19: uart_result_packet_char = ascii_hex_nibble(cell_result[3:0]);
+                6'd20: uart_result_packet_char = " ";
+                6'd21: uart_result_packet_char = "P";
+                6'd22: uart_result_packet_char = "=";
+                6'd23: uart_result_packet_char = ascii_binary_digit(cell_p[3]);
+                6'd24: uart_result_packet_char = ascii_binary_digit(cell_p[2]);
+                6'd25: uart_result_packet_char = ascii_binary_digit(cell_p[1]);
+                6'd26: uart_result_packet_char = ascii_binary_digit(cell_p[0]);
+                6'd27: uart_result_packet_char = " ";
+                6'd28: uart_result_packet_char = "B";
+                6'd29: uart_result_packet_char = "G";
+                6'd30: uart_result_packet_char = "=";
+                6'd31: uart_result_packet_char = ascii_hex_nibble(cell_bg_idx);
+                6'd32: uart_result_packet_char = 8'h0D;
                 default: uart_result_packet_char = 8'h0A;
             endcase
         end
@@ -906,6 +955,18 @@ module GlobalRender_top (
         .w_en(circuit_canvas_ram_w_en), .w_addr(circuit_canvas_ram_w_addr),
         .r_addr(circuit_canvas_ram_r_addr), .d_in(circuit_canvas_ram_w_data), .d_out(circuit_canvas_ram_r_data)
     );
+    SimpleDualClockRam #( .WordWidth(4), .WordCount(CANVAS_CELL_COUNT) ) circuit_canvas_fg_color_ram_inst (
+        .wr_clk(CLK100MHZ), .rd_clk(clk_pixel),
+        .w_en(circuit_canvas_fg_color_ram_w_en), .w_addr(circuit_canvas_fg_color_ram_w_addr),
+        .r_addr(circuit_canvas_ram_r_addr), .d_in(circuit_canvas_fg_color_ram_w_data),
+        .d_out(circuit_canvas_fg_color_ram_r_data)
+    );
+    SimpleDualClockRam #( .WordWidth(4), .WordCount(CANVAS_CELL_COUNT) ) circuit_canvas_bg_color_ram_inst (
+        .wr_clk(CLK100MHZ), .rd_clk(clk_pixel),
+        .w_en(circuit_canvas_bg_color_ram_w_en), .w_addr(circuit_canvas_bg_color_ram_w_addr),
+        .r_addr(circuit_canvas_ram_r_addr), .d_in(circuit_canvas_bg_color_ram_w_data),
+        .d_out(circuit_canvas_bg_color_ram_r_data)
+    );
 
     // =========================================================
     // 鍕曟厠闆绘祦鍕曠暙鐢㈢敓鍣? (鍏у缓 1D 鐩镐綅)
@@ -948,6 +1009,8 @@ module GlobalRender_top (
         .clk_pixel(clk_pixel), .x_pos(x_pos), .y_pos(y_pos), .rgb(circuit_canvas_rgb),
         .rendered(circuit_canvas_rendered), .mouse_x_pos(mouse_xpos_pix), .mouse_y_pos(mouse_ypos_pix),
         .data_addr(circuit_canvas_ram_r_addr), .incoming_data(circuit_canvas_ram_r_data),
+        .incoming_fg_color_idx(circuit_canvas_fg_color_ram_r_data),
+        .incoming_bg_color_idx(circuit_canvas_bg_color_ram_r_data),
         .display_grid(1'b1), .mouse_left_click(mouse_left_pix && (selected_toolbar_idx == 4'd0)),
         .anim_phase(global_anim_phase),
         .grid_pos_x_out(circuit_canvas_grid_pos_x),
@@ -1169,7 +1232,7 @@ module GlobalRender_top (
     // position[8:5] = y, position[4:0] = x
     localparam integer BACKEND_FRAME_CYCLE_BUDGET = 10000;
     localparam integer UART_CELL_PACKET_LEN = 31;
-    localparam integer UART_RESULT_PACKET_LEN = 29;
+    localparam integer UART_RESULT_PACKET_LEN = 34;
     localparam [3:0] BACKEND_TEST_IDLE        = 4'd0;
     localparam [3:0] BACKEND_TEST_START_TYPE  = 4'd1;
     localparam [3:0] BACKEND_TEST_WAIT_TYPE   = 4'd2;
@@ -1312,8 +1375,15 @@ module GlobalRender_top (
     wire [CANVAS_ADDR_W-1:0] flood_fetchP_ram_addr;
     reg  [15:0] flood_fetchP_ram_rdata = 16'd0;
     reg         flood_result_fetch_start = 1'b0;
+    reg         flood_color_apply_start = 1'b0;
+    wire        flood_wrapper_fetchR_done;
+    wire [7:0]  flood_wrapper_fetchR_result;
     wire        flood_result_fetch_done;
     wire [7:0]  flood_result_fetch_result;
+    reg         flood_color_apply_active = 1'b0;
+    reg         flood_color_apply_fetch_busy = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] flood_color_apply_addr = {CANVAS_ADDR_W{1'b0}};
+    reg         flood_colors_ready = 1'b0;
     reg         flood_p_fetch_start = 1'b0;
     wire        flood_p_fetch_busy;
     wire        flood_p_fetch_done;
@@ -1336,20 +1406,45 @@ module GlobalRender_top (
     reg  [3:0]  flood_debug_j_snap = 4'd0;
     reg  [7:0]  flood_debug_result_snap = 8'd0;
     reg  [3:0]  flood_debug_p_snap = 4'd0;
+    reg  [3:0]  flood_debug_bg_idx_snap = CANVAS_BG_DEFAULT_COLOR_IDX;
     reg  [7:0]  flood_debug_result_pending = 8'd0;
     reg  [3:0]  flood_debug_p_pending = 4'd0;
+    reg  [3:0]  flood_debug_bg_idx_pending = CANVAS_BG_DEFAULT_COLOR_IDX;
     reg         flood_packet_pending = 1'b0;
     reg         flood_packet_sending = 1'b0;
     reg         flood_packet_last_char = 1'b0;
     reg         flood_uart_wait_busy = 1'b0;
-    reg  [4:0]  flood_packet_index = 5'd0;
+    reg  [5:0]  flood_packet_index = 6'd0;
     reg         flood_uart_start = 1'b0;
     reg  [7:0]  flood_uart_data = 8'h00;
     wire        flood_uart_busy;
     wire        flood_uart_tx;
+    wire        flood_feature_enable = !clear_canvas_active && (init_cycles >= INIT_DELAY_CYCLES);
+    wire        flood_wrapper_fetchR_start;
+    wire [7:0]  flood_wrapper_fetchR_i;
+    wire [7:0]  flood_wrapper_fetchR_j;
+    wire        flood_color_apply_fetch_done;
     assign seg_data = backend_fetch_test_enable ?
         {4'hF, ~backend_test_active, ~backend_frame_pending, ~component_store_busy, ~component_store_read_busy} :
         8'hFF;
+    assign circuit_canvas_fg_color_ram_w_en = circuit_canvas_ram_w_en || circuit_canvas_fg_color_override_w_en;
+    assign circuit_canvas_fg_color_ram_w_addr = circuit_canvas_fg_color_override_w_en ?
+        circuit_canvas_fg_color_override_w_addr : circuit_canvas_ram_w_addr;
+    assign circuit_canvas_fg_color_ram_w_data = circuit_canvas_fg_color_override_w_en ?
+        circuit_canvas_fg_color_override_w_data : CANVAS_FG_DEFAULT_COLOR_IDX;
+    assign circuit_canvas_bg_color_ram_w_en = circuit_canvas_ram_w_en || circuit_canvas_bg_color_override_w_en;
+    assign circuit_canvas_bg_color_ram_w_addr = circuit_canvas_bg_color_override_w_en ?
+        circuit_canvas_bg_color_override_w_addr : circuit_canvas_ram_w_addr;
+    assign circuit_canvas_bg_color_ram_w_data = circuit_canvas_bg_color_override_w_en ?
+        circuit_canvas_bg_color_override_w_data : CANVAS_BG_DEFAULT_COLOR_IDX;
+    assign flood_wrapper_fetchR_start = flood_color_apply_start ? 1'b1 : flood_result_fetch_start;
+    assign flood_wrapper_fetchR_i = flood_color_apply_start ?
+        {3'd0, canvas_addr_to_i(flood_color_apply_addr)} : {3'd0, flood_fetch_i};
+    assign flood_wrapper_fetchR_j = flood_color_apply_start ?
+        {4'd0, canvas_addr_to_j(flood_color_apply_addr)} : {4'd0, flood_fetch_j};
+    assign flood_result_fetch_done = flood_wrapper_fetchR_done && flood_result_fetch_busy;
+    assign flood_result_fetch_result = flood_wrapper_fetchR_result;
+    assign flood_color_apply_fetch_done = flood_wrapper_fetchR_done && flood_color_apply_fetch_busy;
     SimpleRam #( .WordWidth(CANVAS_ADDR_W), .WordCount(CANVAS_CELL_COUNT) ) component_index_map_ram_inst (
         .clk(CLK100MHZ), .w_en(component_index_map_w_en), .w_addr(component_index_map_w_addr),
         .r_addr(selected_cell_addr_sys), .d_in(component_index_map_w_data), .d_out(selected_component_index_map_data)
@@ -1441,11 +1536,11 @@ module GlobalRender_top (
         .fetchP_ram_ren(flood_fetchP_ram_ren),
         .fetchP_ram_addr(flood_fetchP_ram_addr),
         .fetchP_ram_rdata(flood_fetchP_ram_rdata),
-        .fetchR_start(flood_result_fetch_start),
-        .fetchR_i({3'd0, flood_fetch_i}),
-        .fetchR_j({4'd0, flood_fetch_j}),
-        .fetchR_done(flood_result_fetch_done),
-        .fetchR_result(flood_result_fetch_result)
+        .fetchR_start(flood_wrapper_fetchR_start),
+        .fetchR_i(flood_wrapper_fetchR_i),
+        .fetchR_j(flood_wrapper_fetchR_j),
+        .fetchR_done(flood_wrapper_fetchR_done),
+        .fetchR_result(flood_wrapper_fetchR_result)
     );
     fetchP flood_debug_p_fetch_inst (
         .clk(CLK100MHZ),
@@ -1748,14 +1843,25 @@ module GlobalRender_top (
     end
 
     always @(posedge CLK100MHZ) begin
+        circuit_canvas_fg_color_override_w_en <= 1'b0;
+        circuit_canvas_fg_color_override_w_addr <= {CANVAS_ADDR_W{1'b0}};
+        circuit_canvas_fg_color_override_w_data <= CANVAS_FG_DEFAULT_COLOR_IDX;
+        circuit_canvas_bg_color_override_w_en <= 1'b0;
+        circuit_canvas_bg_color_override_w_addr <= {CANVAS_ADDR_W{1'b0}};
+        circuit_canvas_bg_color_override_w_data <= CANVAS_BG_DEFAULT_COLOR_IDX;
         flood_wrapper_start <= 1'b0;
         flood_result_fetch_start <= 1'b0;
+        flood_color_apply_start <= 1'b0;
         flood_p_fetch_start <= 1'b0;
         flood_uart_start <= 1'b0;
 
-        if (!uart_flood_debug_enable) begin
+        if (!flood_feature_enable) begin
             flood_run_pending <= 1'b0;
             flood_results_ready <= 1'b0;
+            flood_color_apply_active <= 1'b0;
+            flood_color_apply_fetch_busy <= 1'b0;
+            flood_color_apply_addr <= {CANVAS_ADDR_W{1'b0}};
+            flood_colors_ready <= 1'b0;
             flood_result_fetch_busy <= 1'b0;
             flood_p_fetch_busy_reg <= 1'b0;
             flood_result_value_ready <= 1'b0;
@@ -1767,21 +1873,28 @@ module GlobalRender_top (
             flood_fetch_j <= 4'd0;
             flood_debug_result_pending <= 8'd0;
             flood_debug_p_pending <= 4'd0;
+            flood_debug_bg_idx_pending <= CANVAS_BG_DEFAULT_COLOR_IDX;
             flood_packet_pending <= 1'b0;
             flood_packet_sending <= 1'b0;
             flood_packet_last_char <= 1'b0;
             flood_uart_wait_busy <= 1'b0;
-            flood_packet_index <= 5'd0;
+            flood_packet_index <= 6'd0;
         end else begin
-            if (interaction_frame_tick && !clear_canvas_active && (init_cycles >= INIT_DELAY_CYCLES) &&
-                !flood_wrapper_busy && !flood_results_ready && !flood_run_pending) begin
+            if (interaction_frame_tick && !flood_wrapper_busy && !flood_run_pending &&
+                !flood_color_apply_active && !flood_color_apply_fetch_busy &&
+                (!uart_flood_debug_enable || !flood_results_ready)) begin
                 flood_run_pending <= 1'b1;
             end
 
-            if (flood_run_pending && !flood_wrapper_busy) begin
+            if (flood_run_pending && !flood_wrapper_busy &&
+                !flood_color_apply_active && !flood_color_apply_fetch_busy) begin
                 flood_wrapper_start <= 1'b1;
                 flood_run_pending <= 1'b0;
                 flood_results_ready <= 1'b0;
+                flood_color_apply_active <= 1'b0;
+                flood_color_apply_fetch_busy <= 1'b0;
+                flood_color_apply_addr <= {CANVAS_ADDR_W{1'b0}};
+                flood_colors_ready <= 1'b0;
                 flood_debug_i <= 5'd0;
                 flood_debug_j <= 4'd0;
                 flood_fetch_i <= 5'd0;
@@ -1793,99 +1906,148 @@ module GlobalRender_top (
 
             if (flood_wrapper_done) begin
                 flood_results_ready <= 1'b1;
+                flood_color_apply_active <= 1'b1;
+                flood_color_apply_fetch_busy <= 1'b0;
+                flood_color_apply_addr <= {CANVAS_ADDR_W{1'b0}};
+                flood_colors_ready <= 1'b0;
                 flood_debug_i <= 5'd0;
                 flood_debug_j <= 4'd0;
             end
 
-            if (interaction_frame_tick && flood_results_ready && !flood_result_fetch_busy &&
-                !flood_p_fetch_busy_reg &&
-                !flood_packet_pending && !flood_packet_sending && !flood_wrapper_busy) begin
-                flood_fetch_i <= flood_debug_i;
-                flood_fetch_j <= flood_debug_j;
-                flood_result_fetch_start <= 1'b1;
-                flood_p_fetch_start <= 1'b1;
-                flood_result_fetch_busy <= 1'b1;
-                flood_p_fetch_busy_reg <= 1'b1;
-                flood_result_value_ready <= 1'b0;
-                flood_p_value_ready <= 1'b0;
+            if (flood_color_apply_active && !flood_color_apply_fetch_busy) begin
+                flood_color_apply_start <= 1'b1;
+                flood_color_apply_fetch_busy <= 1'b1;
             end
 
-            if (flood_result_fetch_done) begin
+            if (flood_color_apply_fetch_done) begin
+                circuit_canvas_bg_color_override_w_en <= 1'b1;
+                circuit_canvas_bg_color_override_w_addr <= flood_color_apply_addr;
+                circuit_canvas_bg_color_override_w_data <= node_result_to_bg_palette_idx(
+                    flood_wrapper_fetchR_result
+                );
+                flood_color_apply_fetch_busy <= 1'b0;
+                if (flood_color_apply_addr == CANVAS_CELL_COUNT - 1) begin
+                    flood_color_apply_active <= 1'b0;
+                    flood_colors_ready <= 1'b1;
+                end else begin
+                    flood_color_apply_addr <= flood_color_apply_addr + 1'b1;
+                end
+            end
+
+            if (!uart_flood_debug_enable) begin
                 flood_result_fetch_busy <= 1'b0;
-                flood_debug_result_pending <= flood_result_fetch_result;
-                flood_result_value_ready <= 1'b1;
-            end
-
-            if (flood_p_fetch_done) begin
                 flood_p_fetch_busy_reg <= 1'b0;
-                flood_debug_p_pending <= flood_p_fetch_result;
-                flood_p_value_ready <= 1'b1;
-            end
-
-            if (flood_result_value_ready && flood_p_value_ready && !flood_packet_pending) begin
-                flood_debug_i_snap <= flood_fetch_i;
-                flood_debug_j_snap <= flood_fetch_j;
-                flood_debug_result_snap <= flood_debug_result_pending;
-                flood_debug_p_snap <= flood_debug_p_pending;
-                flood_packet_pending <= 1'b1;
                 flood_result_value_ready <= 1'b0;
                 flood_p_value_ready <= 1'b0;
-
-                if (flood_fetch_j == CANVAS_GRID_H - 1) begin
-                    flood_debug_j <= 4'd0;
-                    if (flood_fetch_i == CANVAS_GRID_W - 1) begin
-                        flood_debug_i <= 5'd0;
-                        flood_refresh_pending <= 1'b1;
-                    end else begin
-                        flood_debug_i <= flood_fetch_i + 1'b1;
-                    end
-                end else begin
-                    flood_debug_j <= flood_fetch_j + 1'b1;
-                end
-            end
-
-            if (!flood_packet_sending) begin
+                flood_refresh_pending <= 1'b0;
+                flood_debug_i <= 5'd0;
+                flood_debug_j <= 4'd0;
+                flood_fetch_i <= 5'd0;
+                flood_fetch_j <= 4'd0;
+                flood_debug_result_pending <= 8'd0;
+                flood_debug_p_pending <= 4'd0;
+                flood_debug_bg_idx_pending <= CANVAS_BG_DEFAULT_COLOR_IDX;
+                flood_packet_pending <= 1'b0;
+                flood_packet_sending <= 1'b0;
                 flood_packet_last_char <= 1'b0;
-                if (flood_packet_pending && !flood_uart_busy && !flood_uart_wait_busy) begin
-                    flood_uart_data <= uart_result_packet_char(
-                        5'd0,
-                        flood_debug_i_snap,
-                        flood_debug_j_snap,
-                        flood_debug_result_snap,
-                        flood_debug_p_snap
-                    );
-                    flood_uart_start <= 1'b1;
-                    flood_packet_pending <= 1'b0;
-                    flood_packet_sending <= 1'b1;
-                    flood_packet_index <= 5'd1;
-                    flood_packet_last_char <= (UART_RESULT_PACKET_LEN == 1);
-                    flood_uart_wait_busy <= 1'b1;
+                flood_uart_wait_busy <= 1'b0;
+                flood_packet_index <= 6'd0;
+            end else begin
+                if (interaction_frame_tick && flood_results_ready && flood_colors_ready &&
+                    !flood_color_apply_active && !flood_color_apply_fetch_busy &&
+                    !flood_result_fetch_busy && !flood_p_fetch_busy_reg &&
+                    !flood_packet_pending && !flood_packet_sending && !flood_wrapper_busy) begin
+                    flood_fetch_i <= flood_debug_i;
+                    flood_fetch_j <= flood_debug_j;
+                    flood_result_fetch_start <= 1'b1;
+                    flood_p_fetch_start <= 1'b1;
+                    flood_result_fetch_busy <= 1'b1;
+                    flood_p_fetch_busy_reg <= 1'b1;
+                    flood_result_value_ready <= 1'b0;
+                    flood_p_value_ready <= 1'b0;
                 end
-            end else if (flood_uart_wait_busy) begin
-                if (flood_uart_busy) begin
-                    flood_uart_wait_busy <= 1'b0;
+
+                if (flood_result_fetch_done) begin
+                    flood_result_fetch_busy <= 1'b0;
+                    flood_debug_result_pending <= flood_result_fetch_result;
+                    flood_debug_bg_idx_pending <= node_result_to_bg_palette_idx(flood_result_fetch_result);
+                    flood_result_value_ready <= 1'b1;
                 end
-            end else if (!flood_uart_busy) begin
-                if (flood_packet_last_char) begin
-                    flood_packet_sending <= 1'b0;
-                    flood_packet_last_char <= 1'b0;
-                    if (flood_refresh_pending) begin
-                        flood_refresh_pending <= 1'b0;
-                        flood_results_ready <= 1'b0;
-                        flood_run_pending <= 1'b1;
+
+                if (flood_p_fetch_done) begin
+                    flood_p_fetch_busy_reg <= 1'b0;
+                    flood_debug_p_pending <= flood_p_fetch_result;
+                    flood_p_value_ready <= 1'b1;
+                end
+
+                if (flood_result_value_ready && flood_p_value_ready && !flood_packet_pending) begin
+                    flood_debug_i_snap <= flood_fetch_i;
+                    flood_debug_j_snap <= flood_fetch_j;
+                    flood_debug_result_snap <= flood_debug_result_pending;
+                    flood_debug_p_snap <= flood_debug_p_pending;
+                    flood_debug_bg_idx_snap <= flood_debug_bg_idx_pending;
+                    flood_packet_pending <= 1'b1;
+                    flood_result_value_ready <= 1'b0;
+                    flood_p_value_ready <= 1'b0;
+
+                    if (flood_fetch_j == CANVAS_GRID_H - 1) begin
+                        flood_debug_j <= 4'd0;
+                        if (flood_fetch_i == CANVAS_GRID_W - 1) begin
+                            flood_debug_i <= 5'd0;
+                            flood_refresh_pending <= 1'b1;
+                        end else begin
+                            flood_debug_i <= flood_fetch_i + 1'b1;
+                        end
+                    end else begin
+                        flood_debug_j <= flood_fetch_j + 1'b1;
                     end
-                end else begin
-                    flood_uart_data <= uart_result_packet_char(
-                        flood_packet_index,
-                        flood_debug_i_snap,
-                        flood_debug_j_snap,
-                        flood_debug_result_snap,
-                        flood_debug_p_snap
-                    );
-                    flood_uart_start <= 1'b1;
-                    flood_packet_last_char <= (flood_packet_index == UART_RESULT_PACKET_LEN - 1);
-                    flood_packet_index <= flood_packet_index + 1'b1;
-                    flood_uart_wait_busy <= 1'b1;
+                end
+
+                if (!flood_packet_sending) begin
+                    flood_packet_last_char <= 1'b0;
+                    if (flood_packet_pending && !flood_uart_busy && !flood_uart_wait_busy) begin
+                        flood_uart_data <= uart_result_packet_char(
+                            5'd0,
+                            flood_debug_i_snap,
+                            flood_debug_j_snap,
+                            flood_debug_result_snap,
+                            flood_debug_p_snap,
+                            flood_debug_bg_idx_snap
+                        );
+                        flood_uart_start <= 1'b1;
+                        flood_packet_pending <= 1'b0;
+                        flood_packet_sending <= 1'b1;
+                        flood_packet_index <= 6'd1;
+                        flood_packet_last_char <= (UART_RESULT_PACKET_LEN == 1);
+                        flood_uart_wait_busy <= 1'b1;
+                    end
+                end else if (flood_uart_wait_busy) begin
+                    if (flood_uart_busy) begin
+                        flood_uart_wait_busy <= 1'b0;
+                    end
+                end else if (!flood_uart_busy) begin
+                    if (flood_packet_last_char) begin
+                        flood_packet_sending <= 1'b0;
+                        flood_packet_last_char <= 1'b0;
+                        if (flood_refresh_pending) begin
+                            flood_refresh_pending <= 1'b0;
+                            flood_results_ready <= 1'b0;
+                            flood_run_pending <= 1'b1;
+                        end
+                    end else begin
+                        flood_uart_data <= uart_result_packet_char(
+                            flood_packet_index,
+                            flood_debug_i_snap,
+                            flood_debug_j_snap,
+                            flood_debug_result_snap,
+                            flood_debug_p_snap,
+                            flood_debug_bg_idx_snap
+                        );
+                        flood_uart_start <= 1'b1;
+                        flood_packet_last_char <= (flood_packet_index == UART_RESULT_PACKET_LEN - 1);
+                        flood_packet_index <= flood_packet_index + 1'b1;
+                        flood_uart_wait_busy <= 1'b1;
+                    end
                 end
             end
         end

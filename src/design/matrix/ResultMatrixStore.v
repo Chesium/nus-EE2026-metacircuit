@@ -26,7 +26,6 @@ module ResultMatrixStore #(
   reg [7:0] data_mem[0:CELL_COUNT-1];
   (* ram_style = "block" *)
   reg [EPOCH_WIDTH-1:0] tag_mem[0:CELL_COUNT-1];
-  wire [7:0] mem[0:CELL_COUNT-1];
   reg       fetch_req_valid;
   reg       fetch_req_in_range;
   reg       fetch_resp_valid;
@@ -37,8 +36,6 @@ module ResultMatrixStore #(
   reg [EPOCH_WIDTH-1:0] epoch;
 
   integer idx;
-  genvar g;
-
   wire store_in_range = (storeR_i < GRID_WIDTH) && (storeR_j < GRID_HEIGHT);
   wire fetch_in_range = (fetchR_i < GRID_WIDTH) && (fetchR_j < GRID_HEIGHT);
 
@@ -61,11 +58,15 @@ module ResultMatrixStore #(
     end
   end
 
+`ifndef SYNTHESIS
+  wire [7:0] mem[0:CELL_COUNT-1];
+  genvar g;
   generate
     for (g = 0; g < CELL_COUNT; g = g + 1) begin : gen_mem_view
       assign mem[g] = (tag_mem[g] == epoch) ? data_mem[g] : 8'd0;
     end
   endgenerate
+`endif
 
   always @(posedge clk) begin
     if (storeR_start && store_in_range) begin

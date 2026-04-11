@@ -1,8 +1,5 @@
 `timescale 1ns / 1ps
 
-// =========================================================================
-// 第 1 組：基於空間座標的查詢
-// =========================================================================
 module fetchCell (
     input  wire        clk,
     input  wire        start,
@@ -11,29 +8,46 @@ module fetchCell (
     input  wire [4:0]  i,
     input  wire [3:0]  j,
     output reg  [15:0] result,
-
-    // Interface to Combined Canvas RAM
-    output wire        ram_ren,
-    output wire [8:0]  ram_addr,
-    input  wire [15:0] ram_rdata // Updated to match 16-bit Circuit Canvas RAM
+    output reg         ram_ren,
+    output reg  [8:0]  ram_addr,
+    input  wire [15:0] ram_rdata
 );
-    reg state = 1'b0;
+    localparam [1:0] STATE_IDLE    = 2'd0;
+    localparam [1:0] STATE_WAIT    = 2'd1;
+    localparam [1:0] STATE_CAPTURE = 2'd2;
 
-    assign busy = (state != 0) || start;
-    assign ram_ren = start;
-    assign ram_addr = i + (j * 18);
+    reg [1:0] state = STATE_IDLE;
+
+    assign busy = (state != STATE_IDLE) || start;
 
     always @(posedge clk) begin
-        if (start && !state) begin
-            state <= 1'b1;
-            done <= 1'b0;
-        end else if (state) begin
-            result <= ram_rdata;
-            done <= 1'b1;
-            state <= 1'b0;
-        end else begin
-            done <= 1'b0;
-        end
+        case (state)
+            STATE_IDLE: begin
+                done <= 1'b0;
+                ram_ren <= 1'b0;
+                if (start) begin
+                    ram_ren <= 1'b1;
+                    ram_addr <= i + (j * 18);
+                    state <= STATE_WAIT;
+                end
+            end
+            STATE_WAIT: begin
+                done <= 1'b0;
+                ram_ren <= 1'b0;
+                state <= STATE_CAPTURE;
+            end
+            STATE_CAPTURE: begin
+                ram_ren <= 1'b0;
+                result <= ram_rdata;
+                done <= 1'b1;
+                state <= STATE_IDLE;
+            end
+            default: begin
+                done <= 1'b0;
+                ram_ren <= 1'b0;
+                state <= STATE_IDLE;
+            end
+        endcase
     end
 endmodule
 
@@ -45,7 +59,6 @@ module fetchP (
     input  wire [4:0]  i,
     input  wire [3:0]  j,
     output reg  [3:0]  result,
-
     output wire        ram_ren,
     output wire [8:0]  ram_addr,
     input  wire [15:0] ram_rdata
@@ -54,8 +67,7 @@ module fetchP (
     wire        cell_done;
     wire [15:0] cell_result;
 
-    function [3:0] decode_p_from_cell;
-        input [15:0] cell_data;
+    function automatic [3:0] decode_p_from_cell(input [15:0] cell_data);
         reg [5:0] sprite_id;
         reg [1:0] rotation;
         begin
@@ -65,14 +77,12 @@ module fetchP (
                 sprite_id = cell_data[6:1];
                 rotation = cell_data[8:7];
                 case (sprite_id)
-                    // wire
                     6'd0: begin
                         case (rotation)
                             2'd0, 2'd2: decode_p_from_cell = 4'b0101;
                             default:    decode_p_from_cell = 4'b1010;
                         endcase
                     end
-                    // elbow
                     6'd1: begin
                         case (rotation)
                             2'd0: decode_p_from_cell = 4'b0110;
@@ -81,7 +91,6 @@ module fetchP (
                             default: decode_p_from_cell = 4'b0011;
                         endcase
                     end
-                    // tee
                     6'd2: begin
                         case (rotation)
                             2'd0: decode_p_from_cell = 4'b0111;
@@ -90,9 +99,7 @@ module fetchP (
                             default: decode_p_from_cell = 4'b1011;
                         endcase
                     end
-                    // junction / [cross]
                     6'd3, 6'd4: decode_p_from_cell = 4'b1111;
-                    // ground
                     6'd15: begin
                         case (rotation)
                             2'd0: decode_p_from_cell = 4'b0010;
@@ -132,9 +139,6 @@ module fetchP (
     end
 endmodule
 
-// =========================================================================
-// 第 2 組：基於元件 Index 的查詢 (直接對接 40-bit Component Store RAM)
-// =========================================================================
 module fetchAnchorPositionX (
     input  wire        clk,
     input  wire        start,
@@ -142,30 +146,52 @@ module fetchAnchorPositionX (
     output reg         done,
     input  wire [8:0]  idx,
     output reg  [4:0]  result,
-
-    // Interface to 40-bit Component Store RAM
-    output wire        comp_ren,
-    output wire [8:0]  comp_addr,
+    output reg         comp_ren,
+    output reg  [8:0]  comp_addr,
     input  wire [39:0] comp_rdata
 );
-    reg state = 1'b0;
+    localparam [1:0] STATE_IDLE        = 2'd0;
+    localparam [1:0] STATE_WAIT_ISSUE  = 2'd1;
+    localparam [1:0] STATE_WAIT_DATA   = 2'd2;
+    localparam [1:0] STATE_CAPTURE     = 2'd3;
 
-    assign busy = (state != 0) || start;
-    assign comp_ren = start;
-    assign comp_addr = idx;
+    reg [1:0] state = STATE_IDLE;
+
+    assign busy = (state != STATE_IDLE) || start;
 
     always @(posedge clk) begin
-        if (start && !state) begin
-            state <= 1'b1;
-            done <= 1'b0;
-        end else if (state) begin
-            // X 座標在低 5-bit: [4:0]
-            result <= comp_rdata[4:0];
-            done <= 1'b1;
-            state <= 1'b0;
-        end else begin
-            done <= 1'b0;
-        end
+        case (state)
+            STATE_IDLE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                if (start) begin
+                    comp_ren <= 1'b1;
+                    comp_addr <= idx;
+                    state <= STATE_WAIT_ISSUE;
+                end
+            end
+            STATE_WAIT_ISSUE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_WAIT_DATA;
+            end
+            STATE_WAIT_DATA: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_CAPTURE;
+            end
+            STATE_CAPTURE: begin
+                comp_ren <= 1'b0;
+                result <= comp_rdata[4:0];
+                done <= 1'b1;
+                state <= STATE_IDLE;
+            end
+            default: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_IDLE;
+            end
+        endcase
     end
 endmodule
 
@@ -176,29 +202,52 @@ module fetchAnchorPositionY (
     output reg         done,
     input  wire [8:0]  idx,
     output reg  [3:0]  result,
-
-    output wire        comp_ren,
-    output wire [8:0]  comp_addr,
+    output reg         comp_ren,
+    output reg  [8:0]  comp_addr,
     input  wire [39:0] comp_rdata
 );
-    reg state = 1'b0;
+    localparam [1:0] STATE_IDLE        = 2'd0;
+    localparam [1:0] STATE_WAIT_ISSUE  = 2'd1;
+    localparam [1:0] STATE_WAIT_DATA   = 2'd2;
+    localparam [1:0] STATE_CAPTURE     = 2'd3;
 
-    assign busy = (state != 0) || start;
-    assign comp_ren = start;
-    assign comp_addr = idx; 
+    reg [1:0] state = STATE_IDLE;
+
+    assign busy = (state != STATE_IDLE) || start;
 
     always @(posedge clk) begin
-        if (start && !state) begin
-            state <= 1'b1;
-            done <= 1'b0;
-        end else if (state) begin
-            // Y 座標在 [8:5]
-            result <= comp_rdata[8:5];
-            done <= 1'b1;
-            state <= 1'b0;
-        end else begin
-            done <= 1'b0;
-        end
+        case (state)
+            STATE_IDLE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                if (start) begin
+                    comp_ren <= 1'b1;
+                    comp_addr <= idx;
+                    state <= STATE_WAIT_ISSUE;
+                end
+            end
+            STATE_WAIT_ISSUE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_WAIT_DATA;
+            end
+            STATE_WAIT_DATA: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_CAPTURE;
+            end
+            STATE_CAPTURE: begin
+                comp_ren <= 1'b0;
+                result <= comp_rdata[8:5];
+                done <= 1'b1;
+                state <= STATE_IDLE;
+            end
+            default: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_IDLE;
+            end
+        endcase
     end
 endmodule
 
@@ -209,37 +258,111 @@ module fetchComponentType (
     output reg         done,
     input  wire [8:0]  idx,
     output reg  [3:0]  result,
-
-    // 讀取 Component Store RAM (1 Cycle Latency)
     output reg         comp_ren,
     output reg  [8:0]  comp_addr,
     input  wire [39:0] comp_rdata
 );
-    reg state;
-    assign busy = (state != 0) || start;
-    
+    localparam [1:0] STATE_IDLE        = 2'd0;
+    localparam [1:0] STATE_WAIT_ISSUE  = 2'd1;
+    localparam [1:0] STATE_WAIT_DATA   = 2'd2;
+    localparam [1:0] STATE_CAPTURE     = 2'd3;
+
+    reg [1:0] state = STATE_IDLE;
+
+    assign busy = (state != STATE_IDLE) || start;
+
     always @(posedge clk) begin
-        if (start && state == 0) begin
-            comp_ren <= 1'b1;
-            comp_addr <= idx;
-            state <= 1'b1;
-            done <= 1'b0;
-        end else if (state == 1'b1) begin
-            // Cycle 2: 拿到 40-bit 資料，提取 Type [26:23]
-            comp_ren <= 1'b0;
-            result <= comp_rdata[26:23];
-            
-            done <= 1'b1;
-            state <= 1'b0;
-        end else begin
-            done <= 1'b0;
-        end
+        case (state)
+            STATE_IDLE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                if (start) begin
+                    comp_ren <= 1'b1;
+                    comp_addr <= idx;
+                    state <= STATE_WAIT_ISSUE;
+                end
+            end
+            STATE_WAIT_ISSUE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_WAIT_DATA;
+            end
+            STATE_WAIT_DATA: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_CAPTURE;
+            end
+            STATE_CAPTURE: begin
+                comp_ren <= 1'b0;
+                result <= comp_rdata[26:23];
+                done <= 1'b1;
+                state <= STATE_IDLE;
+            end
+            default: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_IDLE;
+            end
+        endcase
     end
 endmodule
 
-// =========================================================================
-// 新增：獲取元件 Value 模組
-// =========================================================================
+module fetchComponentRotation (
+    input  wire        clk,
+    input  wire        start,
+    output wire        busy,
+    output reg         done,
+    input  wire [8:0]  idx,
+    output reg  [1:0]  result,
+    output reg         comp_ren,
+    output reg  [8:0]  comp_addr,
+    input  wire [39:0] comp_rdata
+);
+    localparam [1:0] STATE_IDLE        = 2'd0;
+    localparam [1:0] STATE_WAIT_ISSUE  = 2'd1;
+    localparam [1:0] STATE_WAIT_DATA   = 2'd2;
+    localparam [1:0] STATE_CAPTURE     = 2'd3;
+
+    reg [1:0] state = STATE_IDLE;
+
+    assign busy = (state != STATE_IDLE) || start;
+
+    always @(posedge clk) begin
+        case (state)
+            STATE_IDLE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                if (start) begin
+                    comp_ren <= 1'b1;
+                    comp_addr <= idx;
+                    state <= STATE_WAIT_ISSUE;
+                end
+            end
+            STATE_WAIT_ISSUE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_WAIT_DATA;
+            end
+            STATE_WAIT_DATA: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_CAPTURE;
+            end
+            STATE_CAPTURE: begin
+                comp_ren <= 1'b0;
+                result <= comp_rdata[22:21];
+                done <= 1'b1;
+                state <= STATE_IDLE;
+            end
+            default: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_IDLE;
+            end
+        endcase
+    end
+endmodule
+
 module fetchComponentValue (
     input  wire        clk,
     input  wire        start,
@@ -247,54 +370,95 @@ module fetchComponentValue (
     output reg         done,
     input  wire [8:0]  idx,
     output reg  [11:0] result,
-
     output reg         comp_ren,
     output reg  [8:0]  comp_addr,
     input  wire [39:0] comp_rdata
 );
-    reg state;
-    assign busy = (state != 0) || start;
-    
+    localparam [1:0] STATE_IDLE        = 2'd0;
+    localparam [1:0] STATE_WAIT_ISSUE  = 2'd1;
+    localparam [1:0] STATE_WAIT_DATA   = 2'd2;
+    localparam [1:0] STATE_CAPTURE     = 2'd3;
+
+    reg [1:0] state = STATE_IDLE;
+
+    assign busy = (state != STATE_IDLE) || start;
+
     always @(posedge clk) begin
-        if (start && state == 0) begin
-            comp_ren <= 1'b1;
-            comp_addr <= idx;
-            state <= 1'b1;
-            done <= 1'b0;
-        end else if (state == 1'b1) begin
-            comp_ren <= 1'b0;
-            // Value 欄位在 [20:9]
-            result <= comp_rdata[20:9];
-            
-            done <= 1'b1;
-            state <= 1'b0;
-        end else begin
-            done <= 1'b0;
-        end
+        case (state)
+            STATE_IDLE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                if (start) begin
+                    comp_ren <= 1'b1;
+                    comp_addr <= idx;
+                    state <= STATE_WAIT_ISSUE;
+                end
+            end
+            STATE_WAIT_ISSUE: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_WAIT_DATA;
+            end
+            STATE_WAIT_DATA: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_CAPTURE;
+            end
+            STATE_CAPTURE: begin
+                comp_ren <= 1'b0;
+                result <= comp_rdata[20:9];
+                done <= 1'b1;
+                state <= STATE_IDLE;
+            end
+            default: begin
+                done <= 1'b0;
+                comp_ren <= 1'b0;
+                state <= STATE_IDLE;
+            end
+        endcase
     end
 endmodule
 
-// =========================================================================
-// 第 3 組：網表與拓樸儲存 (對接 Node Topology RAM)
-// =========================================================================
-// 提示：在底層實作上，Node0 和 Node1 是兩塊獨立的 64-deep x 6-bit RAM
 module storeNode0 (
     input  wire       clk,
     input  wire       start,
     output wire       busy,
     output reg        done,
     input  wire [8:0] idx,
-    input  wire [5:0] node_i,
-
+    input  wire [7:0] node_i,
     output wire       ram0_wen,
-    output wire [5:0] ram0_addr,
-    output wire [5:0] ram0_wdata
+    output wire [8:0] ram0_addr,
+    output wire [7:0] ram0_wdata
 );
     assign busy = 1'b0;
     assign ram0_wen = start;
-    assign ram0_addr = idx[5:0];
+    assign ram0_addr = idx;
     assign ram0_wdata = node_i;
-    always @(posedge clk) done <= start;
+
+    always @(posedge clk) begin
+        done <= start;
+    end
+endmodule
+
+module storeNode1 (
+    input  wire       clk,
+    input  wire       start,
+    output wire       busy,
+    output reg        done,
+    input  wire [8:0] idx,
+    input  wire [7:0] node_i,
+    output wire       ram1_wen,
+    output wire [8:0] ram1_addr,
+    output wire [7:0] ram1_wdata
+);
+    assign busy = 1'b0;
+    assign ram1_wen = start;
+    assign ram1_addr = idx;
+    assign ram1_wdata = node_i;
+
+    always @(posedge clk) begin
+        done <= start;
+    end
 endmodule
 
 module storeVoltage (
@@ -304,8 +468,6 @@ module storeVoltage (
     output reg         done,
     input  wire [8:0]  idx,
     input  wire [31:0] value,
-
-    // 直接連到 WaveformHistoryBuffer 的寫入埠
     output wire        wave_wen,
     output wire [5:0]  wave_node,
     output wire [31:0] wave_wdata
@@ -314,12 +476,12 @@ module storeVoltage (
     assign wave_wen = start;
     assign wave_node = idx[5:0];
     assign wave_wdata = value;
-    always @(posedge clk) done <= start;
+
+    always @(posedge clk) begin
+        done <= start;
+    end
 endmodule
 
-// =========================================================================
-// 第 4 組：前端視覺覆寫 (對接 Color Overlay RAM)
-// =========================================================================
 module setColor (
     input  wire       clk,
     input  wire       start,
@@ -329,7 +491,6 @@ module setColor (
     input  wire [3:0] j,
     input  wire [3:0] c1,
     input  wire [3:0] c2,
-
     output wire       color_wen,
     output wire [8:0] color_addr,
     output wire [7:0] color_wdata
@@ -337,6 +498,9 @@ module setColor (
     assign busy = 1'b0;
     assign color_wen = start;
     assign color_addr = i + (j * 18);
-    assign color_wdata = {c1, c2}; // 高 4-bit 為前景，低 4-bit 為背景
-    always @(posedge clk) done <= start;
+    assign color_wdata = {c1, c2};
+
+    always @(posedge clk) begin
+        done <= start;
+    end
 endmodule

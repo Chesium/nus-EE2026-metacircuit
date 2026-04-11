@@ -25,17 +25,15 @@ module VisitedMatrixStore #(
 
   (* ram_style = "block" *)
   reg [EPOCH_WIDTH-1:0] tag_mem[0:CELL_COUNT-1];
-  wire mem[0:CELL_COUNT-1];
-
-  reg       pending_get_valid;
-  reg       pending_get_in_range;
+  reg       get_req_valid;
+  reg       get_req_in_range;
+  reg       get_resp_valid;
+  reg       get_resp_in_range;
   reg [ADDR_WIDTH-1:0] rd_addr;
   reg [EPOCH_WIDTH-1:0] rd_tag;
   reg [EPOCH_WIDTH-1:0] epoch;
 
   integer idx;
-  genvar g;
-
   wire get_in_range = (getVisited_i < GRID_WIDTH) && (getVisited_j < GRID_HEIGHT);
   wire set_in_range = (setVisited_i < GRID_WIDTH) && (setVisited_j < GRID_HEIGHT);
 
@@ -56,11 +54,15 @@ module VisitedMatrixStore #(
     end
   end
 
+`ifndef SYNTHESIS
+  wire mem[0:CELL_COUNT-1];
+  genvar g;
   generate
     for (g = 0; g < CELL_COUNT; g = g + 1) begin : gen_mem_view
       assign mem[g] = (tag_mem[g] == epoch);
     end
   endgenerate
+`endif
 
   always @(posedge clk) begin
     if (setVisited_start && set_in_range) begin
@@ -69,28 +71,34 @@ module VisitedMatrixStore #(
   end
 
   always @(posedge clk) begin
+    rd_tag <= tag_mem[rd_addr];
+  end
+
+  always @(posedge clk) begin
     if (!rst_n || clear) begin
-      pending_get_valid <= 1'b0;
-      pending_get_in_range <= 1'b0;
+      get_req_valid <= 1'b0;
+      get_req_in_range <= 1'b0;
+      get_resp_valid <= 1'b0;
+      get_resp_in_range <= 1'b0;
       rd_addr <= {ADDR_WIDTH{1'b0}};
-      rd_tag <= {EPOCH_WIDTH{1'b0}};
       epoch <= epoch + {{(EPOCH_WIDTH-1){1'b0}}, 1'b1};
       getVisited_done <= 1'b0;
       getVisited_result <= 1'b0;
       setVisited_done <= 1'b0;
     end else begin
-      getVisited_done <= pending_get_valid;
-      if (pending_get_valid && pending_get_in_range) begin
-        rd_tag <= tag_mem[rd_addr];
-        getVisited_result <= (tag_mem[rd_addr] == epoch);
+      getVisited_done <= get_resp_valid;
+      if (get_resp_valid && get_resp_in_range) begin
+        getVisited_result <= (rd_tag == epoch);
       end else begin
         getVisited_result <= 1'b0;
       end
 
       setVisited_done <= setVisited_start;
 
-      pending_get_valid <= getVisited_start;
-      pending_get_in_range <= get_in_range;
+      get_resp_valid <= get_req_valid;
+      get_resp_in_range <= get_req_in_range;
+      get_req_valid <= getVisited_start;
+      get_req_in_range <= get_in_range;
       if (getVisited_start && get_in_range) begin
         rd_addr <= flatten_addr(getVisited_i, getVisited_j);
       end

@@ -71,6 +71,10 @@ module GlobalRender_top (
     localparam ENABLE_STORE_VIEW = 1'b0;
     localparam ENABLE_MATRIX     = 1'b0;
     localparam ENABLE_WAVEFORMS  = 1'b0;
+    localparam ENABLE_BACKEND_FETCH_TEST = 1'b0;
+    localparam ENABLE_UART_NETLIST_DEBUG = 1'b1;
+    localparam ENABLE_UART_FLOOD_DEBUG   = 1'b0;
+    localparam ENABLE_UART_CELL_DEBUG    = 1'b0;
     localparam [3:0] CANVAS_FG_DEFAULT_COLOR_IDX = 4'hF;
     localparam [3:0] CANVAS_BG_DEFAULT_COLOR_IDX = 4'h0;
 
@@ -292,6 +296,18 @@ module GlobalRender_top (
         end
     endfunction
 
+    function [7:0] normalize_extracted_node_id;
+        input [7:0] raw_node_id;
+        input       has_ground_component;
+        begin
+            if (!has_ground_component && (raw_node_id != 8'd0)) begin
+                normalize_extracted_node_id = raw_node_id - 8'd1;
+            end else begin
+                normalize_extracted_node_id = raw_node_id;
+            end
+        end
+    endfunction
+
     function [7:0] uart_cell_packet_char;
         input [4:0] char_index;
         input [4:0] cell_i;
@@ -465,6 +481,81 @@ module GlobalRender_top (
             end else begin
                 rotate_cell_data = cell_data;
             end
+        end
+    endfunction
+
+    function [7:0] uart_netlist_packet_char;
+        input [5:0] char_index;
+        input [39:0] component_entry;
+        input [7:0] node0;
+        input [7:0] node1;
+        reg [8:0] component_index;
+        reg [3:0] component_unit;
+        reg [3:0] component_type;
+        reg [1:0] component_rotation;
+        reg [11:0] component_value;
+        reg [4:0] component_x;
+        reg [3:0] component_y;
+        begin
+            component_unit = component_entry[39:36];
+            component_index = component_entry[35:27];
+            component_type = component_entry[26:23];
+            component_rotation = component_entry[22:21];
+            component_value = component_entry[20:9];
+            component_y = component_entry[8:5];
+            component_x = component_entry[4:0];
+
+            case (char_index)
+                6'd0: uart_netlist_packet_char = "C";
+                6'd1: uart_netlist_packet_char = "M";
+                6'd2: uart_netlist_packet_char = "P";
+                6'd3: uart_netlist_packet_char = " ";
+                6'd4: uart_netlist_packet_char = ascii_hex_nibble({3'd0, component_index[8]});
+                6'd5: uart_netlist_packet_char = ascii_hex_nibble(component_index[7:4]);
+                6'd6: uart_netlist_packet_char = ascii_hex_nibble(component_index[3:0]);
+                6'd7: uart_netlist_packet_char = " ";
+                6'd8: uart_netlist_packet_char = "T";
+                6'd9: uart_netlist_packet_char = "=";
+                6'd10: uart_netlist_packet_char = ascii_hex_nibble(component_type);
+                6'd11: uart_netlist_packet_char = " ";
+                6'd12: uart_netlist_packet_char = "R";
+                6'd13: uart_netlist_packet_char = "=";
+                6'd14: uart_netlist_packet_char = ascii_hex_nibble({2'd0, component_rotation});
+                6'd15: uart_netlist_packet_char = " ";
+                6'd16: uart_netlist_packet_char = "X";
+                6'd17: uart_netlist_packet_char = "=";
+                6'd18: uart_netlist_packet_char = ascii_hex_nibble({3'd0, component_x[4]});
+                6'd19: uart_netlist_packet_char = ascii_hex_nibble(component_x[3:0]);
+                6'd20: uart_netlist_packet_char = " ";
+                6'd21: uart_netlist_packet_char = "Y";
+                6'd22: uart_netlist_packet_char = "=";
+                6'd23: uart_netlist_packet_char = "0";
+                6'd24: uart_netlist_packet_char = ascii_hex_nibble(component_y);
+                6'd25: uart_netlist_packet_char = " ";
+                6'd26: uart_netlist_packet_char = "V";
+                6'd27: uart_netlist_packet_char = "=";
+                6'd28: uart_netlist_packet_char = ascii_hex_nibble(component_value[11:8]);
+                6'd29: uart_netlist_packet_char = ascii_hex_nibble(component_value[7:4]);
+                6'd30: uart_netlist_packet_char = ascii_hex_nibble(component_value[3:0]);
+                6'd31: uart_netlist_packet_char = " ";
+                6'd32: uart_netlist_packet_char = "U";
+                6'd33: uart_netlist_packet_char = "=";
+                6'd34: uart_netlist_packet_char = ascii_hex_nibble(component_unit);
+                6'd35: uart_netlist_packet_char = " ";
+                6'd36: uart_netlist_packet_char = "N";
+                6'd37: uart_netlist_packet_char = "0";
+                6'd38: uart_netlist_packet_char = "=";
+                6'd39: uart_netlist_packet_char = ascii_hex_nibble(node0[7:4]);
+                6'd40: uart_netlist_packet_char = ascii_hex_nibble(node0[3:0]);
+                6'd41: uart_netlist_packet_char = " ";
+                6'd42: uart_netlist_packet_char = "N";
+                6'd43: uart_netlist_packet_char = "1";
+                6'd44: uart_netlist_packet_char = "=";
+                6'd45: uart_netlist_packet_char = ascii_hex_nibble(node1[7:4]);
+                6'd46: uart_netlist_packet_char = ascii_hex_nibble(node1[3:0]);
+                6'd47: uart_netlist_packet_char = 8'h0D;
+                default: uart_netlist_packet_char = 8'h0A;
+            endcase
         end
     endfunction
 
@@ -649,10 +740,32 @@ module GlobalRender_top (
         end
     endfunction
 
+    function [3:0] component_store_type_from_sprite;
+        input [5:0] sprite_type;
+        begin
+            component_store_type_from_sprite = sprite_type[3:0];
+        end
+    endfunction
+
+    function [3:0] component_display_type_from_store_type;
+        input [3:0] store_type;
+        begin
+            case (store_type)
+                SPRITE_GROUND[3:0]: component_display_type_from_store_type = COMPONENT_TYPE_GROUND;
+                SPRITE_RES_LEFT[3:0], SPRITE_RES_RIGHT[3:0]: component_display_type_from_store_type = COMPONENT_TYPE_RESISTOR;
+                SPRITE_CAP_LEFT[3:0], SPRITE_CAP_RIGHT[3:0]: component_display_type_from_store_type = COMPONENT_TYPE_CAPACITOR;
+                SPRITE_IND_LEFT[3:0], SPRITE_IND_RIGHT[3:0]: component_display_type_from_store_type = COMPONENT_TYPE_INDUCTOR;
+                SPRITE_VOLT_LEFT[3:0], SPRITE_VOLT_RIGHT[3:0]: component_display_type_from_store_type = COMPONENT_TYPE_VOLTAGE;
+                SPRITE_CURR_LEFT[3:0], SPRITE_CURR_RIGHT[3:0]: component_display_type_from_store_type = COMPONENT_TYPE_CURRENT;
+                default: component_display_type_from_store_type = COMPONENT_TYPE_WIRE;
+            endcase
+        end
+    endfunction
+
     function [COMPONENT_STORE_ENTRY_W-1:0] make_component_store_entry;
         input [3:0] component_unit;
         input [CANVAS_ADDR_W-1:0] store_index;
-        input [3:0] component_type;
+        input [3:0] component_store_type;
         input [1:0] component_rotation;
         input [11:0] component_value;
         input [CANVAS_ADDR_W-1:0] cell_addr;
@@ -660,7 +773,7 @@ module GlobalRender_top (
             make_component_store_entry = {
                 component_unit,
                 store_index,
-                component_type,
+                component_store_type,
                 component_rotation,
                 component_value,
                 component_position_from_addr(cell_addr)
@@ -1134,6 +1247,8 @@ module GlobalRender_top (
     wire [CANVAS_ADDR_W-1:0] component_store_view_entry_index_ui =
         component_store_display_entry_ui[35:27];
     wire [3:0]  component_store_view_type_ui = component_store_display_entry_ui[26:23];
+    wire [3:0]  component_store_view_display_type_ui =
+        component_display_type_from_store_type(component_store_view_type_ui);
     wire [1:0]  component_store_view_rotation_ui = component_store_display_entry_ui[22:21];
     wire [11:0] component_store_view_value_ui = component_store_display_entry_ui[20:9];
     wire [8:0]  component_store_view_position_ui = component_store_display_entry_ui[8:0];
@@ -1233,6 +1348,10 @@ module GlobalRender_top (
     localparam integer BACKEND_FRAME_CYCLE_BUDGET = 10000;
     localparam integer UART_CELL_PACKET_LEN = 31;
     localparam integer UART_RESULT_PACKET_LEN = 34;
+    localparam integer UART_NETLIST_PACKET_LEN = 49;
+    localparam [1:0] COMPONENT_READ_OWNER_UI      = 2'd0;
+    localparam [1:0] COMPONENT_READ_OWNER_BACKEND = 2'd1;
+    localparam [1:0] COMPONENT_READ_OWNER_NETLIST = 2'd2;
     localparam [3:0] BACKEND_TEST_IDLE        = 4'd0;
     localparam [3:0] BACKEND_TEST_START_TYPE  = 4'd1;
     localparam [3:0] BACKEND_TEST_WAIT_TYPE   = 4'd2;
@@ -1248,9 +1367,11 @@ module GlobalRender_top (
     reg  [CANVAS_ADDR_W-1:0] component_store_ram_r_addr = {CANVAS_ADDR_W{1'b0}};
     wire [COMPONENT_STORE_ENTRY_W-1:0] component_store_ram_r_data;
     reg  [CANVAS_ADDR_W-1:0] component_store_count = {CANVAS_ADDR_W{1'b0}};
+    reg         component_store_has_ground = 1'b0;
     reg         component_store_dirty = 1'b1;
     reg         component_store_read_busy = 1'b0;
-    reg         component_store_read_owner_backend = 1'b0;
+    reg         component_store_read_snapshot_pending = 1'b0;
+    reg  [1:0]  component_store_read_owner = COMPONENT_READ_OWNER_UI;
     reg  [CANVAS_ADDR_W-1:0] component_store_read_addr_latched = {CANVAS_ADDR_W{1'b0}};
     (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_req_index_sys_ff0 = {CANVAS_ADDR_W{1'b0}};
     (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_req_index_sys_ff1 = {CANVAS_ADDR_W{1'b0}};
@@ -1277,9 +1398,10 @@ module GlobalRender_top (
     wire [1:0]  component_store_scan_rotation = component_store_scan_cell[8:7];
     wire [11:0] component_store_scan_value = value_shadow_data[component_store_scan_addr];
     wire [3:0]  component_store_scan_unit = value_unit_shadow_data[component_store_scan_addr];
-    wire [3:0]  component_store_scan_type = component_type_from_sprite(component_store_scan_sprite);
-    wire        component_store_scan_needs_index = component_type_needs_index(component_store_scan_type);
-    wire        component_store_scan_is_two_cell = component_type_uses_two_cells(component_store_scan_type);
+    wire [3:0]  component_store_scan_component_type = component_type_from_sprite(component_store_scan_sprite);
+    wire [3:0]  component_store_scan_store_type = component_store_type_from_sprite(component_store_scan_sprite);
+    wire        component_store_scan_needs_index = component_type_needs_index(component_store_scan_component_type);
+    wire        component_store_scan_is_two_cell = component_type_uses_two_cells(component_store_scan_component_type);
     wire [CANVAS_ADDR_W-1:0] component_store_scan_pair_addr =
         component_pair_addr_from_origin(component_store_scan_addr, component_store_scan_rotation);
     wire [CANVAS_ADDR_W-1:0] selected_cell_addr_sys;
@@ -1419,11 +1541,105 @@ module GlobalRender_top (
     reg  [7:0]  flood_uart_data = 8'h00;
     wire        flood_uart_busy;
     wire        flood_uart_tx;
+    wire        uart_netlist_debug_enable;
+    reg         netlist_extract_start = 1'b0;
+    wire        netlist_extract_busy;
+    wire        netlist_extract_done;
+    wire        netlist_extract_fetch_type_start;
+    wire [15:0] netlist_extract_fetch_type_idx;
+    wire        netlist_extract_fetch_type_done;
+    wire [7:0]  netlist_extract_fetch_type_result;
+    wire [3:0]  netlist_extract_fetch_type_result_raw;
+    wire        netlist_extract_fetch_x_start;
+    wire [15:0] netlist_extract_fetch_x_idx;
+    wire        netlist_extract_fetch_x_done;
+    wire [7:0]  netlist_extract_fetch_x_result;
+    wire [4:0]  netlist_extract_fetch_x_result_raw;
+    wire        netlist_extract_fetch_y_start;
+    wire [15:0] netlist_extract_fetch_y_idx;
+    wire        netlist_extract_fetch_y_done;
+    wire [7:0]  netlist_extract_fetch_y_result;
+    wire [3:0]  netlist_extract_fetch_y_result_raw;
+    wire        netlist_extract_fetch_rot_start;
+    wire [15:0] netlist_extract_fetch_rot_idx;
+    wire        netlist_extract_fetch_rot_done;
+    wire [1:0]  netlist_extract_fetch_rot_result;
+    wire        netlist_extract_fetchR_start;
+    wire [7:0]  netlist_extract_fetchR_i;
+    wire [7:0]  netlist_extract_fetchR_j;
+    wire        netlist_extract_fetchR_done;
+    wire [7:0]  netlist_extract_fetchR_result;
+    wire        netlist_extract_storeNode0_start;
+    wire [15:0] netlist_extract_storeNode0_idx;
+    wire [7:0]  netlist_extract_storeNode0_node_i;
+    wire        netlist_extract_storeNode0_done;
+    wire        netlist_extract_storeNode1_start;
+    wire [15:0] netlist_extract_storeNode1_idx;
+    wire [7:0]  netlist_extract_storeNode1_node_i;
+    wire        netlist_extract_storeNode1_done;
+    wire        netlist_extract_type_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] netlist_extract_type_comp_addr;
+    wire        netlist_extract_x_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] netlist_extract_x_comp_addr;
+    wire        netlist_extract_y_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] netlist_extract_y_comp_addr;
+    wire        netlist_extract_rot_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] netlist_extract_rot_comp_addr;
+    wire        netlist_extract_comp_ren =
+        netlist_extract_type_comp_ren || netlist_extract_x_comp_ren ||
+        netlist_extract_y_comp_ren || netlist_extract_rot_comp_ren;
+    wire [CANVAS_ADDR_W-1:0] netlist_extract_comp_addr =
+        netlist_extract_type_comp_ren ? netlist_extract_type_comp_addr :
+        netlist_extract_x_comp_ren ? netlist_extract_x_comp_addr :
+        netlist_extract_y_comp_ren ? netlist_extract_y_comp_addr :
+        netlist_extract_rot_comp_addr;
+    wire        netlist_extract_storeNode0_busy_unused;
+    wire        netlist_extract_storeNode1_busy_unused;
+    wire        netlist_node0_ram_w_en;
+    wire [CANVAS_ADDR_W-1:0] netlist_node0_ram_w_addr;
+    wire [7:0]  netlist_node0_ram_w_data;
+    wire        netlist_node1_ram_w_en;
+    wire [CANVAS_ADDR_W-1:0] netlist_node1_ram_w_addr;
+    wire [7:0]  netlist_node1_ram_w_data;
+    reg  [CANVAS_ADDR_W-1:0] netlist_node_r_addr = {CANVAS_ADDR_W{1'b0}};
+    wire [7:0]  netlist_node0_ram_r_data;
+    wire [7:0]  netlist_node1_ram_r_data;
+    reg         netlist_results_ready = 1'b0;
+    reg         netlist_frame_pending = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] netlist_dump_idx = {CANVAS_ADDR_W{1'b0}};
+    reg  [CANVAS_ADDR_W-1:0] netlist_dump_count = {CANVAS_ADDR_W{1'b0}};
+    reg         netlist_component_read_request = 1'b0;
+    reg         netlist_component_read_pending = 1'b0;
+    reg  [COMPONENT_STORE_ENTRY_W-1:0] netlist_component_entry_snap = {COMPONENT_STORE_ENTRY_W{1'b0}};
+    reg  [7:0]  netlist_component_node0_snap = 8'd0;
+    reg  [7:0]  netlist_component_node1_snap = 8'd0;
+    reg         netlist_component_entry_toggle = 1'b0;
+    reg         netlist_component_entry_toggle_seen = 1'b0;
+    reg         netlist_packet_pending = 1'b0;
+    reg         netlist_packet_sending = 1'b0;
+    reg         netlist_packet_last_char = 1'b0;
+    reg         netlist_uart_wait_busy = 1'b0;
+    reg  [5:0]  netlist_packet_index = 6'd0;
+    reg         netlist_uart_start = 1'b0;
+    reg  [7:0]  netlist_uart_data = 8'h00;
+    wire        netlist_uart_busy;
+    wire        netlist_uart_tx;
+    wire [7:0]  netlist_extract_storeNode0_node_i_norm =
+        normalize_extracted_node_id(netlist_extract_storeNode0_node_i, component_store_has_ground);
+    wire [7:0]  netlist_extract_storeNode1_node_i_norm =
+        normalize_extracted_node_id(netlist_extract_storeNode1_node_i, component_store_has_ground);
     wire        flood_feature_enable = !clear_canvas_active && (init_cycles >= INIT_DELAY_CYCLES);
     wire        flood_wrapper_fetchR_start;
     wire [7:0]  flood_wrapper_fetchR_i;
     wire [7:0]  flood_wrapper_fetchR_j;
     wire        flood_color_apply_fetch_done;
+    wire        netlist_debug_holds_flood =
+        uart_netlist_debug_enable && (netlist_extract_busy || netlist_results_ready || netlist_component_read_pending);
+    wire        netlist_extract_port_active =
+        uart_netlist_debug_enable || netlist_extract_busy || netlist_component_read_pending ||
+        netlist_packet_pending || netlist_packet_sending;
+    wire        netlist_extract_comp_ren_active = netlist_extract_port_active && netlist_extract_comp_ren;
+    wire        netlist_extract_fetchR_start_active = netlist_extract_port_active && netlist_extract_fetchR_start;
     assign seg_data = backend_fetch_test_enable ?
         {4'hF, ~backend_test_active, ~backend_frame_pending, ~component_store_busy, ~component_store_read_busy} :
         8'hFF;
@@ -1437,14 +1653,22 @@ module GlobalRender_top (
         circuit_canvas_bg_color_override_w_addr : circuit_canvas_ram_w_addr;
     assign circuit_canvas_bg_color_ram_w_data = circuit_canvas_bg_color_override_w_en ?
         circuit_canvas_bg_color_override_w_data : CANVAS_BG_DEFAULT_COLOR_IDX;
-    assign flood_wrapper_fetchR_start = flood_color_apply_start ? 1'b1 : flood_result_fetch_start;
+    assign flood_wrapper_fetchR_start = flood_color_apply_start ? 1'b1 :
+        (netlist_extract_fetchR_start_active ? 1'b1 : flood_result_fetch_start);
     assign flood_wrapper_fetchR_i = flood_color_apply_start ?
-        {3'd0, canvas_addr_to_i(flood_color_apply_addr)} : {3'd0, flood_fetch_i};
+        {3'd0, canvas_addr_to_i(flood_color_apply_addr)} :
+        (netlist_extract_fetchR_start_active ? netlist_extract_fetchR_i : {3'd0, flood_fetch_i});
     assign flood_wrapper_fetchR_j = flood_color_apply_start ?
-        {4'd0, canvas_addr_to_j(flood_color_apply_addr)} : {4'd0, flood_fetch_j};
+        {4'd0, canvas_addr_to_j(flood_color_apply_addr)} :
+        (netlist_extract_fetchR_start_active ? netlist_extract_fetchR_j : {4'd0, flood_fetch_j});
     assign flood_result_fetch_done = flood_wrapper_fetchR_done && flood_result_fetch_busy;
     assign flood_result_fetch_result = flood_wrapper_fetchR_result;
     assign flood_color_apply_fetch_done = flood_wrapper_fetchR_done && flood_color_apply_fetch_busy;
+    assign netlist_extract_fetchR_done = flood_wrapper_fetchR_done;
+    assign netlist_extract_fetchR_result = flood_wrapper_fetchR_result;
+    assign netlist_extract_fetch_type_result = {4'd0, netlist_extract_fetch_type_result_raw};
+    assign netlist_extract_fetch_x_result = {3'd0, netlist_extract_fetch_x_result_raw};
+    assign netlist_extract_fetch_y_result = {4'd0, netlist_extract_fetch_y_result_raw};
     SimpleRam #( .WordWidth(CANVAS_ADDR_W), .WordCount(CANVAS_CELL_COUNT) ) component_index_map_ram_inst (
         .clk(CLK100MHZ), .w_en(component_index_map_w_en), .w_addr(component_index_map_w_addr),
         .r_addr(selected_cell_addr_sys), .d_in(component_index_map_w_data), .d_out(selected_component_index_map_data)
@@ -1542,6 +1766,127 @@ module GlobalRender_top (
         .fetchR_done(flood_wrapper_fetchR_done),
         .fetchR_result(flood_wrapper_fetchR_result)
     );
+    fetchComponentType netlist_extract_fetch_type_inst (
+        .clk(CLK100MHZ),
+        .start(netlist_extract_fetch_type_start),
+        .busy(),
+        .done(netlist_extract_fetch_type_done),
+        .idx(netlist_extract_fetch_type_idx[CANVAS_ADDR_W-1:0]),
+        .result(netlist_extract_fetch_type_result_raw),
+        .comp_ren(netlist_extract_type_comp_ren),
+        .comp_addr(netlist_extract_type_comp_addr),
+        .comp_rdata(component_store_ram_r_data)
+    );
+    fetchAnchorPositionX netlist_extract_fetch_x_inst (
+        .clk(CLK100MHZ),
+        .start(netlist_extract_fetch_x_start),
+        .busy(),
+        .done(netlist_extract_fetch_x_done),
+        .idx(netlist_extract_fetch_x_idx[CANVAS_ADDR_W-1:0]),
+        .result(netlist_extract_fetch_x_result_raw),
+        .comp_ren(netlist_extract_x_comp_ren),
+        .comp_addr(netlist_extract_x_comp_addr),
+        .comp_rdata(component_store_ram_r_data)
+    );
+    fetchAnchorPositionY netlist_extract_fetch_y_inst (
+        .clk(CLK100MHZ),
+        .start(netlist_extract_fetch_y_start),
+        .busy(),
+        .done(netlist_extract_fetch_y_done),
+        .idx(netlist_extract_fetch_y_idx[CANVAS_ADDR_W-1:0]),
+        .result(netlist_extract_fetch_y_result_raw),
+        .comp_ren(netlist_extract_y_comp_ren),
+        .comp_addr(netlist_extract_y_comp_addr),
+        .comp_rdata(component_store_ram_r_data)
+    );
+    fetchComponentRotation netlist_extract_fetch_rot_inst (
+        .clk(CLK100MHZ),
+        .start(netlist_extract_fetch_rot_start),
+        .busy(),
+        .done(netlist_extract_fetch_rot_done),
+        .idx(netlist_extract_fetch_rot_idx[CANVAS_ADDR_W-1:0]),
+        .result(netlist_extract_fetch_rot_result),
+        .comp_ren(netlist_extract_rot_comp_ren),
+        .comp_addr(netlist_extract_rot_comp_addr),
+        .comp_rdata(component_store_ram_r_data)
+    );
+    storeNode0 netlist_extract_store_node0_inst (
+        .clk(CLK100MHZ),
+        .start(netlist_extract_storeNode0_start),
+        .busy(netlist_extract_storeNode0_busy_unused),
+        .done(netlist_extract_storeNode0_done),
+        .idx(netlist_extract_storeNode0_idx[CANVAS_ADDR_W-1:0]),
+        .node_i(netlist_extract_storeNode0_node_i_norm),
+        .ram0_wen(netlist_node0_ram_w_en),
+        .ram0_addr(netlist_node0_ram_w_addr),
+        .ram0_wdata(netlist_node0_ram_w_data)
+    );
+    storeNode1 netlist_extract_store_node1_inst (
+        .clk(CLK100MHZ),
+        .start(netlist_extract_storeNode1_start),
+        .busy(netlist_extract_storeNode1_busy_unused),
+        .done(netlist_extract_storeNode1_done),
+        .idx(netlist_extract_storeNode1_idx[CANVAS_ADDR_W-1:0]),
+        .node_i(netlist_extract_storeNode1_node_i_norm),
+        .ram1_wen(netlist_node1_ram_w_en),
+        .ram1_addr(netlist_node1_ram_w_addr),
+        .ram1_wdata(netlist_node1_ram_w_data)
+    );
+    SimpleRam #( .WordWidth(8), .WordCount(CANVAS_CELL_COUNT) ) netlist_node0_ram_inst (
+        .clk(CLK100MHZ),
+        .w_en(netlist_node0_ram_w_en),
+        .w_addr(netlist_node0_ram_w_addr),
+        .r_addr(netlist_node_r_addr),
+        .d_in(netlist_node0_ram_w_data),
+        .d_out(netlist_node0_ram_r_data)
+    );
+    SimpleRam #( .WordWidth(8), .WordCount(CANVAS_CELL_COUNT) ) netlist_node1_ram_inst (
+        .clk(CLK100MHZ),
+        .w_en(netlist_node1_ram_w_en),
+        .w_addr(netlist_node1_ram_w_addr),
+        .r_addr(netlist_node_r_addr),
+        .d_in(netlist_node1_ram_w_data),
+        .d_out(netlist_node1_ram_r_data)
+    );
+    extract_component_nodes netlist_extract_inst (
+        .clk(CLK100MHZ),
+        .rst_n(~BTNC),
+        .start(netlist_extract_start),
+        .busy(netlist_extract_busy),
+        .done(netlist_extract_done),
+        .par_elem_n({{(32-CANVAS_ADDR_W){1'b0}}, component_store_count}),
+        .grid_height(CANVAS_GRID_H),
+        .grid_width(CANVAS_GRID_W),
+        .fetchComponentType_start(netlist_extract_fetch_type_start),
+        .fetchComponentType_idx(netlist_extract_fetch_type_idx),
+        .fetchComponentType_done(netlist_extract_fetch_type_done),
+        .fetchComponentType_result(netlist_extract_fetch_type_result),
+        .fetchAnchorPositionX_start(netlist_extract_fetch_x_start),
+        .fetchAnchorPositionX_idx(netlist_extract_fetch_x_idx),
+        .fetchAnchorPositionX_done(netlist_extract_fetch_x_done),
+        .fetchAnchorPositionX_result(netlist_extract_fetch_x_result),
+        .fetchAnchorPositionY_start(netlist_extract_fetch_y_start),
+        .fetchAnchorPositionY_idx(netlist_extract_fetch_y_idx),
+        .fetchAnchorPositionY_done(netlist_extract_fetch_y_done),
+        .fetchAnchorPositionY_result(netlist_extract_fetch_y_result),
+        .fetchComponentRotation_start(netlist_extract_fetch_rot_start),
+        .fetchComponentRotation_idx(netlist_extract_fetch_rot_idx),
+        .fetchComponentRotation_done(netlist_extract_fetch_rot_done),
+        .fetchComponentRotation_result(netlist_extract_fetch_rot_result),
+        .fetchR_start(netlist_extract_fetchR_start),
+        .fetchR_i(netlist_extract_fetchR_i),
+        .fetchR_j(netlist_extract_fetchR_j),
+        .fetchR_done(netlist_extract_fetchR_done),
+        .fetchR_result(netlist_extract_fetchR_result),
+        .storeNode0_start(netlist_extract_storeNode0_start),
+        .storeNode0_idx(netlist_extract_storeNode0_idx),
+        .storeNode0_node_i(netlist_extract_storeNode0_node_i),
+        .storeNode0_done(netlist_extract_storeNode0_done),
+        .storeNode1_start(netlist_extract_storeNode1_start),
+        .storeNode1_idx(netlist_extract_storeNode1_idx),
+        .storeNode1_node_i(netlist_extract_storeNode1_node_i),
+        .storeNode1_done(netlist_extract_storeNode1_done)
+    );
     fetchP flood_debug_p_fetch_inst (
         .clk(CLK100MHZ),
         .start(flood_p_fetch_start),
@@ -1574,7 +1919,18 @@ module GlobalRender_top (
         .tx(flood_uart_tx),
         .busy(flood_uart_busy)
     );
-    assign RsTx = uart_flood_debug_enable ? flood_uart_tx : uart_cell_uart_tx;
+    UartTx #(
+        .ClkHz(100_000_000),
+        .BAUD(115200)
+    ) uart_netlist_debug_tx_inst (
+        .clk(CLK100MHZ),
+        .start(netlist_uart_start),
+        .data(netlist_uart_data),
+        .tx(netlist_uart_tx),
+        .busy(netlist_uart_busy)
+    );
+    assign RsTx = uart_netlist_debug_enable ? netlist_uart_tx :
+        (uart_flood_debug_enable ? flood_uart_tx : uart_cell_uart_tx);
     SimpleRam #( .WordWidth(12), .WordCount(CANVAS_CELL_COUNT) ) component_value_ram_inst (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
         .r_addr(selected_value_store_addr_sys), .d_in(value_ram_w_data), .d_out(value_ram_r_data)
@@ -1598,24 +1954,40 @@ module GlobalRender_top (
         component_store_view_req_toggle_sys_ff0 <= component_store_view_req_toggle_ui;
         component_store_view_req_toggle_sys_ff1 <= component_store_view_req_toggle_sys_ff0;
 
-        if (component_store_read_busy) begin
-            component_store_read_busy <= 1'b0;
-            if (!component_store_read_owner_backend) begin
+        if (component_store_read_snapshot_pending) begin
+            component_store_read_snapshot_pending <= 1'b0;
+            if (component_store_read_owner == COMPONENT_READ_OWNER_UI) begin
                 component_store_view_rsp_index_sys <= component_store_read_addr_latched;
                 component_store_view_rsp_entry_sys <= component_store_ram_r_data;
                 component_store_view_rsp_toggle_sys <= ~component_store_view_rsp_toggle_sys;
+            end else if (component_store_read_owner == COMPONENT_READ_OWNER_NETLIST) begin
+                netlist_component_entry_snap <= component_store_ram_r_data;
+                netlist_component_node0_snap <= netlist_node0_ram_r_data;
+                netlist_component_node1_snap <= netlist_node1_ram_r_data;
+                netlist_component_entry_toggle <= ~netlist_component_entry_toggle;
+            end
+        end else if (component_store_read_busy) begin
+            component_store_read_busy <= 1'b0;
+            if ((component_store_read_owner == COMPONENT_READ_OWNER_UI) ||
+                (component_store_read_owner == COMPONENT_READ_OWNER_NETLIST)) begin
+                component_store_read_snapshot_pending <= 1'b1;
             end
         end else if (!component_store_busy) begin
-            if (backend_comp_ren) begin
-                component_store_ram_r_addr <= backend_comp_addr;
-                component_store_read_addr_latched <= backend_comp_addr;
-                component_store_read_owner_backend <= 1'b1;
+            if (backend_comp_ren || netlist_extract_comp_ren_active) begin
+                component_store_ram_r_addr <= backend_comp_ren ? backend_comp_addr : netlist_extract_comp_addr;
+                component_store_read_addr_latched <= backend_comp_ren ? backend_comp_addr : netlist_extract_comp_addr;
+                component_store_read_owner <= COMPONENT_READ_OWNER_BACKEND;
+                component_store_read_busy <= 1'b1;
+            end else if (netlist_component_read_request) begin
+                component_store_ram_r_addr <= netlist_dump_idx;
+                component_store_read_addr_latched <= netlist_dump_idx;
+                component_store_read_owner <= COMPONENT_READ_OWNER_NETLIST;
                 component_store_read_busy <= 1'b1;
             end else if (component_store_view_req_toggle_sys_ff1 != component_store_view_req_toggle_seen_sys) begin
                 component_store_view_req_toggle_seen_sys <= component_store_view_req_toggle_sys_ff1;
                 component_store_ram_r_addr <= component_store_view_req_index_sys_ff1;
                 component_store_read_addr_latched <= component_store_view_req_index_sys_ff1;
-                component_store_read_owner_backend <= 1'b0;
+                component_store_read_owner <= COMPONENT_READ_OWNER_UI;
                 component_store_read_busy <= 1'b1;
             end
         end
@@ -1843,6 +2215,113 @@ module GlobalRender_top (
     end
 
     always @(posedge CLK100MHZ) begin
+        netlist_extract_start <= 1'b0;
+        netlist_component_read_request <= 1'b0;
+        netlist_uart_start <= 1'b0;
+
+        if (!uart_netlist_debug_enable || component_store_busy) begin
+            netlist_results_ready <= 1'b0;
+            netlist_frame_pending <= 1'b0;
+            netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
+            netlist_dump_count <= {CANVAS_ADDR_W{1'b0}};
+            netlist_component_read_pending <= 1'b0;
+            netlist_component_entry_toggle_seen <= netlist_component_entry_toggle;
+            netlist_packet_pending <= 1'b0;
+            netlist_packet_sending <= 1'b0;
+            netlist_packet_last_char <= 1'b0;
+            netlist_uart_wait_busy <= 1'b0;
+            netlist_packet_index <= 6'd0;
+            netlist_node_r_addr <= {CANVAS_ADDR_W{1'b0}};
+        end else begin
+            if (interaction_frame_tick) begin
+                netlist_frame_pending <= 1'b1;
+            end
+
+            if (flood_results_ready && flood_colors_ready &&
+                !flood_wrapper_busy && !flood_color_apply_active && !flood_color_apply_fetch_busy &&
+                !netlist_extract_busy && !netlist_results_ready && !netlist_component_read_pending &&
+                !netlist_packet_pending && !netlist_packet_sending) begin
+                netlist_extract_start <= 1'b1;
+            end
+
+            if (netlist_extract_done) begin
+                netlist_results_ready <= 1'b1;
+                netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
+                netlist_dump_count <= component_store_count;
+                netlist_frame_pending <= 1'b0;
+            end
+
+            if ((netlist_component_entry_toggle != netlist_component_entry_toggle_seen)) begin
+                netlist_component_entry_toggle_seen <= netlist_component_entry_toggle;
+                netlist_component_read_pending <= 1'b0;
+                netlist_packet_pending <= 1'b1;
+            end
+
+            if (netlist_frame_pending && netlist_results_ready &&
+                (netlist_dump_count != {CANVAS_ADDR_W{1'b0}}) &&
+                !netlist_extract_busy && !netlist_component_read_pending &&
+                !netlist_packet_pending && !netlist_packet_sending &&
+                !component_store_read_busy && !flood_wrapper_busy &&
+                !flood_color_apply_active && !flood_color_apply_fetch_busy) begin
+                netlist_component_read_request <= 1'b1;
+                netlist_component_read_pending <= 1'b1;
+                netlist_node_r_addr <= netlist_dump_idx;
+                netlist_frame_pending <= 1'b0;
+            end
+
+            if (netlist_results_ready && (netlist_dump_count == {CANVAS_ADDR_W{1'b0}}) &&
+                !netlist_component_read_pending && !netlist_packet_pending && !netlist_packet_sending) begin
+                netlist_results_ready <= 1'b0;
+                netlist_frame_pending <= 1'b0;
+            end
+
+            if (!netlist_packet_sending) begin
+                netlist_packet_last_char <= 1'b0;
+                if (netlist_packet_pending && !netlist_uart_busy && !netlist_uart_wait_busy) begin
+                    netlist_uart_data <= uart_netlist_packet_char(
+                        6'd0,
+                        netlist_component_entry_snap,
+                        netlist_component_node0_snap,
+                        netlist_component_node1_snap
+                    );
+                    netlist_uart_start <= 1'b1;
+                    netlist_packet_pending <= 1'b0;
+                    netlist_packet_sending <= 1'b1;
+                    netlist_packet_index <= 6'd1;
+                    netlist_packet_last_char <= (UART_NETLIST_PACKET_LEN == 1);
+                    netlist_uart_wait_busy <= 1'b1;
+                end
+            end else if (netlist_uart_wait_busy) begin
+                if (netlist_uart_busy) begin
+                    netlist_uart_wait_busy <= 1'b0;
+                end
+            end else if (!netlist_uart_busy) begin
+                if (netlist_packet_last_char) begin
+                    netlist_packet_sending <= 1'b0;
+                    netlist_packet_last_char <= 1'b0;
+                    if ((netlist_dump_idx + 1'b1) >= netlist_dump_count) begin
+                        netlist_results_ready <= 1'b0;
+                        netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
+                    end else begin
+                        netlist_dump_idx <= netlist_dump_idx + 1'b1;
+                    end
+                end else begin
+                    netlist_uart_data <= uart_netlist_packet_char(
+                        netlist_packet_index,
+                        netlist_component_entry_snap,
+                        netlist_component_node0_snap,
+                        netlist_component_node1_snap
+                    );
+                    netlist_uart_start <= 1'b1;
+                    netlist_packet_last_char <= (netlist_packet_index == UART_NETLIST_PACKET_LEN - 1);
+                    netlist_packet_index <= netlist_packet_index + 1'b1;
+                    netlist_uart_wait_busy <= 1'b1;
+                end
+            end
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
         circuit_canvas_fg_color_override_w_en <= 1'b0;
         circuit_canvas_fg_color_override_w_addr <= {CANVAS_ADDR_W{1'b0}};
         circuit_canvas_fg_color_override_w_data <= CANVAS_FG_DEFAULT_COLOR_IDX;
@@ -1882,6 +2361,7 @@ module GlobalRender_top (
         end else begin
             if (interaction_frame_tick && !flood_wrapper_busy && !flood_run_pending &&
                 !flood_color_apply_active && !flood_color_apply_fetch_busy &&
+                !netlist_debug_holds_flood &&
                 (!uart_flood_debug_enable || !flood_results_ready)) begin
                 flood_run_pending <= 1'b1;
             end
@@ -2598,7 +3078,7 @@ module GlobalRender_top (
         set_store_char(store_type_data, 6, ":");
         set_store_char(store_type_data, 7, " ");
         if (component_store_view_entry_ready_ui) begin
-            case (component_store_view_type_ui)
+            case (component_store_view_display_type_ui)
                 COMPONENT_TYPE_GROUND: begin
                     set_store_char(store_type_data, 8, "G");
                     set_store_char(store_type_data, 9, "R");
@@ -3011,9 +3491,10 @@ module GlobalRender_top (
     reg  [1023:0] matrix_lu_data;   // 8x8 Q8.8 瀹氱偣鏁扮煩闃?
 
     // 寮?鍏虫帶鍒讹細SW[0]=0 鏄剧ず鐢佃矾锛孲W[0]=1 鏄剧ず鐭╅樀
-    assign backend_fetch_test_enable = SW[2];
-    assign uart_flood_debug_enable = SW[4];
-    assign uart_cell_debug_enable = SW[3] && !uart_flood_debug_enable;
+    assign backend_fetch_test_enable = ENABLE_BACKEND_FETCH_TEST && SW[2] && !uart_netlist_debug_enable;
+    assign uart_netlist_debug_enable = ENABLE_UART_NETLIST_DEBUG && SW[5];
+    assign uart_flood_debug_enable = ENABLE_UART_FLOOD_DEBUG && SW[4] && !uart_netlist_debug_enable;
+    assign uart_cell_debug_enable = ENABLE_UART_CELL_DEBUG && SW[3] && !uart_flood_debug_enable && !uart_netlist_debug_enable;
 
     // 鍒濆鍖栫ず渚嬬煩闃垫暟鎹? (8x8 鐭╅樀锛孮8.8 瀹氱偣鏁?)
     // 鏁版嵁鎺掑垪锛歔0][0] 鍦? [1023:1008], [0][1] 鍦? [1007:992], ..., [7][7] 鍦? [15:0]
@@ -3728,6 +4209,7 @@ module GlobalRender_top (
                 component_store_scan_addr <= {CANVAS_ADDR_W{1'b0}};
                 component_store_next_index <= {CANVAS_ADDR_W{1'b0}};
                 component_store_count <= {CANVAS_ADDR_W{1'b0}};
+                component_store_has_ground <= 1'b0;
             end else begin
                 component_index_map_clear_addr <= component_index_map_clear_addr + 1'b1;
             end
@@ -3739,7 +4221,7 @@ module GlobalRender_top (
                 component_store_w_data <= make_component_store_entry(
                     component_store_scan_unit,
                     component_store_next_index,
-                    component_store_scan_type,
+                    component_store_scan_store_type,
                     component_store_scan_rotation,
                     component_store_scan_value,
                     component_store_scan_addr
@@ -3747,6 +4229,9 @@ module GlobalRender_top (
                 component_index_map_w_en <= 1'b1;
                 component_index_map_w_addr <= component_store_scan_addr;
                 component_index_map_w_data <= component_store_next_index;
+                if (component_store_scan_store_type == SPRITE_GROUND[3:0]) begin
+                    component_store_has_ground <= 1'b1;
+                end
                 if (component_store_scan_is_two_cell &&
                     (component_store_scan_pair_addr != component_store_scan_addr)) begin
                     component_index_map_pending_pair_write <= 1'b1;

@@ -22,6 +22,7 @@ module VisitedMatrixStore_test;
   ) dut (
       .clk(clk),
       .rst_n(rst_n),
+      .clear(1'b0),
       .getVisited_start(getVisited_start),
       .getVisited_i(getVisited_i),
       .getVisited_j(getVisited_j),

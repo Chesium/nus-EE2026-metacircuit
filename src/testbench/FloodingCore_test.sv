@@ -109,6 +109,7 @@ module FloodingCore_test;
   ) visited_store (
       .clk(clk),
       .rst_n(rst_n),
+      .clear(1'b0),
       .getVisited_start(getVisited_start),
       .getVisited_i(getVisited_i),
       .getVisited_j(getVisited_j),
@@ -126,11 +127,17 @@ module FloodingCore_test;
   ) result_store (
       .clk(clk),
       .rst_n(rst_n),
+      .clear(1'b0),
       .storeR_start(storeR_start),
       .storeR_i(storeR_i),
       .storeR_j(storeR_j),
       .storeR_v(storeR_v),
-      .storeR_done(storeR_done)
+      .storeR_done(storeR_done),
+      .fetchR_start(1'b0),
+      .fetchR_i(8'd0),
+      .fetchR_j(8'd0),
+      .fetchR_done(),
+      .fetchR_result()
   );
 
   FloodQueueStore #(
@@ -138,6 +145,7 @@ module FloodingCore_test;
   ) queue_store (
       .clk(clk),
       .rst_n(rst_n),
+      .clear(1'b0),
       .addQueue_start(addQueue_start),
       .addQueue_i(addQueue_i),
       .addQueue_j(addQueue_j),
@@ -199,8 +207,8 @@ module FloodingCore_test;
   endtask
 
   initial begin
-    $readmemb("flooding_ports_8x8.mem", port_store.mem);
-    $readmemh("flooding_expected_nodes_8x8.mem", expected_result);
+    $readmemb("src/testbench/data/flooding_ports_8x8.mem", port_store.mem);
+    $readmemh("src/testbench/data/flooding_expected_nodes_8x8.mem", expected_result);
 
     repeat (4) @(negedge clk);
     rst_n <= 1'b1;

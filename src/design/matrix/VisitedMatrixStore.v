@@ -3,10 +3,13 @@
 module VisitedMatrixStore #(
     parameter integer GRID_WIDTH = 8,
     parameter integer GRID_HEIGHT = 8,
-    parameter integer CELL_COUNT = GRID_WIDTH * GRID_HEIGHT
+    parameter integer CELL_COUNT = GRID_WIDTH * GRID_HEIGHT,
+    parameter integer ADDR_WIDTH = (CELL_COUNT <= 1) ? 1 : $clog2(CELL_COUNT),
+    parameter integer EPOCH_WIDTH = 16
 ) (
     input  wire       clk,
     input  wire       rst_n,
+    input  wire       clear,
 
     input  wire       getVisited_start,
     input  wire [7:0] getVisited_i,
@@ -20,15 +23,23 @@ module VisitedMatrixStore #(
     output reg        setVisited_done
 );
 
-  reg mem[0:CELL_COUNT-1];
+  (* ram_style = "block" *)
+  reg [EPOCH_WIDTH-1:0] tag_mem[0:CELL_COUNT-1];
+  wire mem[0:CELL_COUNT-1];
 
   reg       pending_get_valid;
-  reg [7:0] pending_get_i;
-  reg [7:0] pending_get_j;
+  reg       pending_get_in_range;
+  reg [ADDR_WIDTH-1:0] rd_addr;
+  reg [EPOCH_WIDTH-1:0] rd_tag;
+  reg [EPOCH_WIDTH-1:0] epoch;
 
   integer idx;
+  genvar g;
 
-  function automatic integer flatten_addr(
+  wire get_in_range = (getVisited_i < GRID_WIDTH) && (getVisited_j < GRID_HEIGHT);
+  wire set_in_range = (setVisited_i < GRID_WIDTH) && (setVisited_j < GRID_HEIGHT);
+
+  function automatic [ADDR_WIDTH-1:0] flatten_addr(
       input [7:0] i,
       input [7:0] j
   );
@@ -37,38 +48,51 @@ module VisitedMatrixStore #(
     end
   endfunction
 
-  always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
+  initial begin
+    rd_tag = {EPOCH_WIDTH{1'b0}};
+    epoch = {{(EPOCH_WIDTH-1){1'b0}}, 1'b1};
+    for (idx = 0; idx < CELL_COUNT; idx = idx + 1) begin
+      tag_mem[idx] = {EPOCH_WIDTH{1'b0}};
+    end
+  end
+
+  generate
+    for (g = 0; g < CELL_COUNT; g = g + 1) begin : gen_mem_view
+      assign mem[g] = (tag_mem[g] == epoch);
+    end
+  endgenerate
+
+  always @(posedge clk) begin
+    if (setVisited_start && set_in_range) begin
+      tag_mem[flatten_addr(setVisited_i, setVisited_j)] <= epoch;
+    end
+  end
+
+  always @(posedge clk) begin
+    if (!rst_n || clear) begin
       pending_get_valid <= 1'b0;
-      pending_get_i <=0;
-      pending_get_j <=0;
+      pending_get_in_range <= 1'b0;
+      rd_addr <= {ADDR_WIDTH{1'b0}};
+      rd_tag <= {EPOCH_WIDTH{1'b0}};
+      epoch <= epoch + {{(EPOCH_WIDTH-1){1'b0}}, 1'b1};
       getVisited_done <= 1'b0;
       getVisited_result <= 1'b0;
       setVisited_done <= 1'b0;
-      for (idx = 0; idx < CELL_COUNT; idx = idx + 1) begin
-        mem[idx] <= 1'b0;
-      end
     end else begin
       getVisited_done <= pending_get_valid;
-      if (pending_get_valid) begin
-        if ((pending_get_i < GRID_WIDTH) && (pending_get_j < GRID_HEIGHT)) begin
-          idx = flatten_addr(pending_get_i, pending_get_j);
-          getVisited_result <= mem[idx];
-        end else begin
-          getVisited_result <= 1'b0;
-        end
+      if (pending_get_valid && pending_get_in_range) begin
+        rd_tag <= tag_mem[rd_addr];
+        getVisited_result <= (tag_mem[rd_addr] == epoch);
+      end else begin
+        getVisited_result <= 1'b0;
       end
 
       setVisited_done <= setVisited_start;
-      if (setVisited_start && (setVisited_i < GRID_WIDTH) && (setVisited_j < GRID_HEIGHT)) begin
-        idx = flatten_addr(setVisited_i, setVisited_j);
-        mem[idx] <= 1'b1;
-      end
 
       pending_get_valid <= getVisited_start;
-      if (getVisited_start) begin
-        pending_get_i <= getVisited_i;
-        pending_get_j <= getVisited_j;
+      pending_get_in_range <= get_in_range;
+      if (getVisited_start && get_in_range) begin
+        rd_addr <= flatten_addr(getVisited_i, getVisited_j);
       end
     end
   end

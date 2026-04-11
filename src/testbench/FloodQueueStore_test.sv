@@ -24,6 +24,7 @@ module FloodQueueStore_test;
   ) dut (
       .clk(clk),
       .rst_n(rst_n),
+      .clear(1'b0),
       .addQueue_start(addQueue_start),
       .addQueue_i(addQueue_i),
       .addQueue_j(addQueue_j),

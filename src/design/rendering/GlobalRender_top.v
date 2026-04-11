@@ -301,6 +301,56 @@ module GlobalRender_top (
         end
     endfunction
 
+    function [7:0] uart_result_packet_char;
+        input [4:0] char_index;
+        input [4:0] cell_i;
+        input [3:0] cell_j;
+        input [7:0] cell_result;
+        input [3:0] cell_p;
+        reg [3:0] cell_i_tens;
+        reg [3:0] cell_i_ones;
+        reg [3:0] cell_j_tens;
+        reg [3:0] cell_j_ones;
+        begin
+            cell_i_tens = (cell_i >= 5'd10) ? 4'd1 : 4'd0;
+            cell_i_ones = (cell_i >= 5'd10) ? (cell_i - 5'd10) : cell_i[3:0];
+            cell_j_tens = (cell_j >= 4'd10) ? 4'd1 : 4'd0;
+            cell_j_ones = (cell_j >= 4'd10) ? (cell_j - 4'd10) : cell_j[3:0];
+
+            case (char_index)
+                5'd0: uart_result_packet_char = "N";
+                5'd1: uart_result_packet_char = "O";
+                5'd2: uart_result_packet_char = "D";
+                5'd3: uart_result_packet_char = "E";
+                5'd4: uart_result_packet_char = " ";
+                5'd5: uart_result_packet_char = "(";
+                5'd6: uart_result_packet_char = ascii_decimal_nibble(cell_i_tens);
+                5'd7: uart_result_packet_char = ascii_decimal_nibble(cell_i_ones);
+                5'd8: uart_result_packet_char = ",";
+                5'd9: uart_result_packet_char = " ";
+                5'd10: uart_result_packet_char = ascii_decimal_nibble(cell_j_tens);
+                5'd11: uart_result_packet_char = ascii_decimal_nibble(cell_j_ones);
+                5'd12: uart_result_packet_char = ")";
+                5'd13: uart_result_packet_char = " ";
+                5'd14: uart_result_packet_char = "=";
+                5'd15: uart_result_packet_char = " ";
+                5'd16: uart_result_packet_char = "0";
+                5'd17: uart_result_packet_char = "x";
+                5'd18: uart_result_packet_char = ascii_hex_nibble(cell_result[7:4]);
+                5'd19: uart_result_packet_char = ascii_hex_nibble(cell_result[3:0]);
+                5'd20: uart_result_packet_char = " ";
+                5'd21: uart_result_packet_char = "P";
+                5'd22: uart_result_packet_char = "=";
+                5'd23: uart_result_packet_char = ascii_binary_digit(cell_p[3]);
+                5'd24: uart_result_packet_char = ascii_binary_digit(cell_p[2]);
+                5'd25: uart_result_packet_char = ascii_binary_digit(cell_p[1]);
+                5'd26: uart_result_packet_char = ascii_binary_digit(cell_p[0]);
+                5'd27: uart_result_packet_char = 8'h0D;
+                default: uart_result_packet_char = 8'h0A;
+            endcase
+        end
+    endfunction
+
     task set_store_char;
         inout [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] text_bus;
         input integer char_index;
@@ -1119,6 +1169,7 @@ module GlobalRender_top (
     // position[8:5] = y, position[4:0] = x
     localparam integer BACKEND_FRAME_CYCLE_BUDGET = 10000;
     localparam integer UART_CELL_PACKET_LEN = 31;
+    localparam integer UART_RESULT_PACKET_LEN = 29;
     localparam [3:0] BACKEND_TEST_IDLE        = 4'd0;
     localparam [3:0] BACKEND_TEST_START_TYPE  = 4'd1;
     localparam [3:0] BACKEND_TEST_WAIT_TYPE   = 4'd2;
@@ -1218,6 +1269,7 @@ module GlobalRender_top (
     reg  [11:0] backend_last_value = 12'd0;
     reg  [4:0]  backend_last_x = 5'd0;
     reg  [3:0]  backend_last_y = 4'd0;
+    wire        uart_flood_debug_enable;
     wire        uart_cell_debug_enable;
     reg         uart_cell_fetch_start = 1'b0;
     wire        uart_cell_fetch_busy;
@@ -1252,6 +1304,49 @@ module GlobalRender_top (
     reg         uart_cell_uart_start = 1'b0;
     reg  [7:0]  uart_cell_uart_data = 8'h00;
     wire        uart_cell_uart_busy;
+    wire        uart_cell_uart_tx;
+    reg         flood_wrapper_start = 1'b0;
+    wire        flood_wrapper_busy;
+    wire        flood_wrapper_done;
+    wire        flood_fetchP_ram_ren;
+    wire [CANVAS_ADDR_W-1:0] flood_fetchP_ram_addr;
+    reg  [15:0] flood_fetchP_ram_rdata = 16'd0;
+    reg         flood_result_fetch_start = 1'b0;
+    wire        flood_result_fetch_done;
+    wire [7:0]  flood_result_fetch_result;
+    reg         flood_p_fetch_start = 1'b0;
+    wire        flood_p_fetch_busy;
+    wire        flood_p_fetch_done;
+    wire [3:0]  flood_p_fetch_result;
+    wire        flood_p_fetch_ram_ren;
+    wire [CANVAS_ADDR_W-1:0] flood_p_fetch_ram_addr;
+    reg  [15:0] flood_p_fetch_ram_rdata = 16'd0;
+    reg         flood_run_pending = 1'b0;
+    reg         flood_results_ready = 1'b0;
+    reg         flood_result_fetch_busy = 1'b0;
+    reg         flood_p_fetch_busy_reg = 1'b0;
+    reg         flood_result_value_ready = 1'b0;
+    reg         flood_p_value_ready = 1'b0;
+    reg         flood_refresh_pending = 1'b0;
+    reg  [4:0]  flood_debug_i = 5'd0;
+    reg  [3:0]  flood_debug_j = 4'd0;
+    reg  [4:0]  flood_fetch_i = 5'd0;
+    reg  [3:0]  flood_fetch_j = 4'd0;
+    reg  [4:0]  flood_debug_i_snap = 5'd0;
+    reg  [3:0]  flood_debug_j_snap = 4'd0;
+    reg  [7:0]  flood_debug_result_snap = 8'd0;
+    reg  [3:0]  flood_debug_p_snap = 4'd0;
+    reg  [7:0]  flood_debug_result_pending = 8'd0;
+    reg  [3:0]  flood_debug_p_pending = 4'd0;
+    reg         flood_packet_pending = 1'b0;
+    reg         flood_packet_sending = 1'b0;
+    reg         flood_packet_last_char = 1'b0;
+    reg         flood_uart_wait_busy = 1'b0;
+    reg  [4:0]  flood_packet_index = 5'd0;
+    reg         flood_uart_start = 1'b0;
+    reg  [7:0]  flood_uart_data = 8'h00;
+    wire        flood_uart_busy;
+    wire        flood_uart_tx;
     assign seg_data = backend_fetch_test_enable ?
         {4'hF, ~backend_test_active, ~backend_frame_pending, ~component_store_busy, ~component_store_read_busy} :
         8'hFF;
@@ -1334,6 +1429,36 @@ module GlobalRender_top (
     );
     assign uart_cell_ram_ren = uart_cell_fetch_ram_ren | uart_cell_p_ram_ren;
     assign uart_cell_ram_addr = uart_cell_p_ram_ren ? uart_cell_p_ram_addr : uart_cell_fetch_ram_addr;
+    FloodingBackendWrapper #(
+        .GRID_WIDTH(CANVAS_GRID_W),
+        .GRID_HEIGHT(CANVAS_GRID_H)
+    ) flooding_backend_wrapper_inst (
+        .clk(CLK100MHZ),
+        .rst_n(~BTNC),
+        .start(flood_wrapper_start),
+        .busy(flood_wrapper_busy),
+        .done(flood_wrapper_done),
+        .fetchP_ram_ren(flood_fetchP_ram_ren),
+        .fetchP_ram_addr(flood_fetchP_ram_addr),
+        .fetchP_ram_rdata(flood_fetchP_ram_rdata),
+        .fetchR_start(flood_result_fetch_start),
+        .fetchR_i({3'd0, flood_fetch_i}),
+        .fetchR_j({4'd0, flood_fetch_j}),
+        .fetchR_done(flood_result_fetch_done),
+        .fetchR_result(flood_result_fetch_result)
+    );
+    fetchP flood_debug_p_fetch_inst (
+        .clk(CLK100MHZ),
+        .start(flood_p_fetch_start),
+        .busy(flood_p_fetch_busy),
+        .done(flood_p_fetch_done),
+        .i(flood_fetch_i),
+        .j(flood_fetch_j),
+        .result(flood_p_fetch_result),
+        .ram_ren(flood_p_fetch_ram_ren),
+        .ram_addr(flood_p_fetch_ram_addr),
+        .ram_rdata(flood_p_fetch_ram_rdata)
+    );
     UartTx #(
         .ClkHz(100_000_000),
         .BAUD(115200)
@@ -1341,9 +1466,20 @@ module GlobalRender_top (
         .clk(CLK100MHZ),
         .start(uart_cell_uart_start),
         .data(uart_cell_uart_data),
-        .tx(RsTx),
+        .tx(uart_cell_uart_tx),
         .busy(uart_cell_uart_busy)
     );
+    UartTx #(
+        .ClkHz(100_000_000),
+        .BAUD(115200)
+    ) uart_flood_debug_tx_inst (
+        .clk(CLK100MHZ),
+        .start(flood_uart_start),
+        .data(flood_uart_data),
+        .tx(flood_uart_tx),
+        .busy(flood_uart_busy)
+    );
+    assign RsTx = uart_flood_debug_enable ? flood_uart_tx : uart_cell_uart_tx;
     SimpleRam #( .WordWidth(12), .WordCount(CANVAS_CELL_COUNT) ) component_value_ram_inst (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
         .r_addr(selected_value_store_addr_sys), .d_in(value_ram_w_data), .d_out(value_ram_r_data)
@@ -1393,6 +1529,18 @@ module GlobalRender_top (
     always @(posedge CLK100MHZ) begin
         if (uart_cell_ram_ren) begin
             uart_cell_ram_rdata <= canvas_shadow_data[uart_cell_ram_addr];
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
+        if (flood_fetchP_ram_ren) begin
+            flood_fetchP_ram_rdata <= canvas_shadow_data[flood_fetchP_ram_addr];
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
+        if (flood_p_fetch_ram_ren) begin
+            flood_p_fetch_ram_rdata <= canvas_shadow_data[flood_p_fetch_ram_addr];
         end
     end
 
@@ -1594,6 +1742,150 @@ module GlobalRender_top (
                     uart_cell_packet_last_char <= (uart_cell_packet_index == UART_CELL_PACKET_LEN - 1);
                     uart_cell_packet_index <= uart_cell_packet_index + 1'b1;
                     uart_cell_uart_wait_busy <= 1'b1;
+                end
+            end
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
+        flood_wrapper_start <= 1'b0;
+        flood_result_fetch_start <= 1'b0;
+        flood_p_fetch_start <= 1'b0;
+        flood_uart_start <= 1'b0;
+
+        if (!uart_flood_debug_enable) begin
+            flood_run_pending <= 1'b0;
+            flood_results_ready <= 1'b0;
+            flood_result_fetch_busy <= 1'b0;
+            flood_p_fetch_busy_reg <= 1'b0;
+            flood_result_value_ready <= 1'b0;
+            flood_p_value_ready <= 1'b0;
+            flood_refresh_pending <= 1'b0;
+            flood_debug_i <= 5'd0;
+            flood_debug_j <= 4'd0;
+            flood_fetch_i <= 5'd0;
+            flood_fetch_j <= 4'd0;
+            flood_debug_result_pending <= 8'd0;
+            flood_debug_p_pending <= 4'd0;
+            flood_packet_pending <= 1'b0;
+            flood_packet_sending <= 1'b0;
+            flood_packet_last_char <= 1'b0;
+            flood_uart_wait_busy <= 1'b0;
+            flood_packet_index <= 5'd0;
+        end else begin
+            if (interaction_frame_tick && !clear_canvas_active && (init_cycles >= INIT_DELAY_CYCLES) &&
+                !flood_wrapper_busy && !flood_results_ready && !flood_run_pending) begin
+                flood_run_pending <= 1'b1;
+            end
+
+            if (flood_run_pending && !flood_wrapper_busy) begin
+                flood_wrapper_start <= 1'b1;
+                flood_run_pending <= 1'b0;
+                flood_results_ready <= 1'b0;
+                flood_debug_i <= 5'd0;
+                flood_debug_j <= 4'd0;
+                flood_fetch_i <= 5'd0;
+                flood_fetch_j <= 4'd0;
+                flood_result_value_ready <= 1'b0;
+                flood_p_value_ready <= 1'b0;
+                flood_refresh_pending <= 1'b0;
+            end
+
+            if (flood_wrapper_done) begin
+                flood_results_ready <= 1'b1;
+                flood_debug_i <= 5'd0;
+                flood_debug_j <= 4'd0;
+            end
+
+            if (interaction_frame_tick && flood_results_ready && !flood_result_fetch_busy &&
+                !flood_p_fetch_busy_reg &&
+                !flood_packet_pending && !flood_packet_sending && !flood_wrapper_busy) begin
+                flood_fetch_i <= flood_debug_i;
+                flood_fetch_j <= flood_debug_j;
+                flood_result_fetch_start <= 1'b1;
+                flood_p_fetch_start <= 1'b1;
+                flood_result_fetch_busy <= 1'b1;
+                flood_p_fetch_busy_reg <= 1'b1;
+                flood_result_value_ready <= 1'b0;
+                flood_p_value_ready <= 1'b0;
+            end
+
+            if (flood_result_fetch_done) begin
+                flood_result_fetch_busy <= 1'b0;
+                flood_debug_result_pending <= flood_result_fetch_result;
+                flood_result_value_ready <= 1'b1;
+            end
+
+            if (flood_p_fetch_done) begin
+                flood_p_fetch_busy_reg <= 1'b0;
+                flood_debug_p_pending <= flood_p_fetch_result;
+                flood_p_value_ready <= 1'b1;
+            end
+
+            if (flood_result_value_ready && flood_p_value_ready && !flood_packet_pending) begin
+                flood_debug_i_snap <= flood_fetch_i;
+                flood_debug_j_snap <= flood_fetch_j;
+                flood_debug_result_snap <= flood_debug_result_pending;
+                flood_debug_p_snap <= flood_debug_p_pending;
+                flood_packet_pending <= 1'b1;
+                flood_result_value_ready <= 1'b0;
+                flood_p_value_ready <= 1'b0;
+
+                if (flood_fetch_j == CANVAS_GRID_H - 1) begin
+                    flood_debug_j <= 4'd0;
+                    if (flood_fetch_i == CANVAS_GRID_W - 1) begin
+                        flood_debug_i <= 5'd0;
+                        flood_refresh_pending <= 1'b1;
+                    end else begin
+                        flood_debug_i <= flood_fetch_i + 1'b1;
+                    end
+                end else begin
+                    flood_debug_j <= flood_fetch_j + 1'b1;
+                end
+            end
+
+            if (!flood_packet_sending) begin
+                flood_packet_last_char <= 1'b0;
+                if (flood_packet_pending && !flood_uart_busy && !flood_uart_wait_busy) begin
+                    flood_uart_data <= uart_result_packet_char(
+                        5'd0,
+                        flood_debug_i_snap,
+                        flood_debug_j_snap,
+                        flood_debug_result_snap,
+                        flood_debug_p_snap
+                    );
+                    flood_uart_start <= 1'b1;
+                    flood_packet_pending <= 1'b0;
+                    flood_packet_sending <= 1'b1;
+                    flood_packet_index <= 5'd1;
+                    flood_packet_last_char <= (UART_RESULT_PACKET_LEN == 1);
+                    flood_uart_wait_busy <= 1'b1;
+                end
+            end else if (flood_uart_wait_busy) begin
+                if (flood_uart_busy) begin
+                    flood_uart_wait_busy <= 1'b0;
+                end
+            end else if (!flood_uart_busy) begin
+                if (flood_packet_last_char) begin
+                    flood_packet_sending <= 1'b0;
+                    flood_packet_last_char <= 1'b0;
+                    if (flood_refresh_pending) begin
+                        flood_refresh_pending <= 1'b0;
+                        flood_results_ready <= 1'b0;
+                        flood_run_pending <= 1'b1;
+                    end
+                end else begin
+                    flood_uart_data <= uart_result_packet_char(
+                        flood_packet_index,
+                        flood_debug_i_snap,
+                        flood_debug_j_snap,
+                        flood_debug_result_snap,
+                        flood_debug_p_snap
+                    );
+                    flood_uart_start <= 1'b1;
+                    flood_packet_last_char <= (flood_packet_index == UART_RESULT_PACKET_LEN - 1);
+                    flood_packet_index <= flood_packet_index + 1'b1;
+                    flood_uart_wait_busy <= 1'b1;
                 end
             end
         end
@@ -2558,7 +2850,8 @@ module GlobalRender_top (
 
     // 寮?鍏虫帶鍒讹細SW[0]=0 鏄剧ず鐢佃矾锛孲W[0]=1 鏄剧ず鐭╅樀
     assign backend_fetch_test_enable = SW[2];
-    assign uart_cell_debug_enable = SW[3];
+    assign uart_flood_debug_enable = SW[4];
+    assign uart_cell_debug_enable = SW[3] && !uart_flood_debug_enable;
 
     // 鍒濆鍖栫ず渚嬬煩闃垫暟鎹? (8x8 鐭╅樀锛孮8.8 瀹氱偣鏁?)
     // 鏁版嵁鎺掑垪锛歔0][0] 鍦? [1023:1008], [0][1] 鍦? [1007:992], ..., [7][7] 鍦? [15:0]

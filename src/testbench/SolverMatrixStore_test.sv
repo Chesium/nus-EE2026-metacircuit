@@ -7,6 +7,9 @@ module SolverMatrixStore_test;
   reg rst_n = 1'b0;
   always #5 clk = ~clk;
 
+  reg clear_start = 1'b0;
+  wire clear_done;
+
   reg store_start = 1'b0;
   reg [15:0] store_i = '0;
   reg [15:0] store_j = '0;
@@ -49,6 +52,8 @@ module SolverMatrixStore_test;
   ) dut (
       .clk(clk),
       .rst_n(rst_n),
+      .clear_start(clear_start),
+      .clear_done(clear_done),
       .store_start(store_start),
       .store_i(store_i),
       .store_j(store_j),
@@ -75,6 +80,9 @@ module SolverMatrixStore_test;
       store_start <= 1'b1;
       @(negedge clk);
       store_start <= 1'b0;
+      while (store_done !== 1'b1) begin
+        @(negedge clk);
+      end
       if (store_done !== 1'b1) begin
         $fatal(1, "store_done did not pulse");
       end
@@ -90,8 +98,23 @@ module SolverMatrixStore_test;
       accum_start <= 1'b1;
       @(negedge clk);
       accum_start <= 1'b0;
+      while (accum_done !== 1'b1) begin
+        @(negedge clk);
+      end
       if (accum_done !== 1'b1) begin
         $fatal(1, "accum_done did not pulse");
+      end
+    end
+  endtask
+
+  task automatic do_clear;
+    begin
+      @(negedge clk);
+      clear_start <= 1'b1;
+      @(negedge clk);
+      clear_start <= 1'b0;
+      while (clear_done !== 1'b1) begin
+        @(negedge clk);
       end
     end
   endtask
@@ -105,7 +128,7 @@ module SolverMatrixStore_test;
       @(negedge clk);
       fetch_start <= 1'b0;
       while (fetch_done !== 1'b1) begin
-        @(posedge clk);
+        @(negedge clk);
       end
       if (fetch_done !== 1'b1) begin
         $fatal(1, "fetch_done did not pulse");
@@ -123,6 +146,7 @@ module SolverMatrixStore_test;
   initial begin
     repeat (4) @(negedge clk);
     rst_n <= 1'b1;
+    do_clear();
 
     do_store(16'd1, 16'd2, real_to_bits(2.5));
     expect_fetch(16'd1, 16'd2, 2.5);

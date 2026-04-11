@@ -57,16 +57,18 @@ module StampingNetlistStore #(
     output reg  [31:0] fetchElemVal3_result
 );
 
-  reg [7:0] kind_mem[0:ELEM_COUNT-1];
-  reg [15:0] n0_mem[0:ELEM_COUNT-1];
-  reg [15:0] n1_mem[0:ELEM_COUNT-1];
-  reg [15:0] n2_mem[0:ELEM_COUNT-1];
-  reg [15:0] n3_mem[0:ELEM_COUNT-1];
-  reg [15:0] aux_mem[0:ELEM_COUNT-1];
-  reg [31:0] v0_mem[0:ELEM_COUNT-1];
-  reg [31:0] v1_mem[0:ELEM_COUNT-1];
-  reg [31:0] v2_mem[0:ELEM_COUNT-1];
-  reg [31:0] v3_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [7:0] kind_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [15:0] n0_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [15:0] n1_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [15:0] n2_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [15:0] n3_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [15:0] aux_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [31:0] v0_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [31:0] v1_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [31:0] v2_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [31:0] v3_mem[0:ELEM_COUNT-1];
+
+  integer idx;
 
   reg kind_pending;
   reg [15:0] kind_pending_idx;
@@ -89,9 +91,22 @@ module StampingNetlistStore #(
   reg v3_pending;
   reg [15:0] v3_pending_idx;
 
-  integer idx;
+  initial begin
+    for (idx = 0; idx < ELEM_COUNT; idx = idx + 1) begin
+      kind_mem[idx] = '0;
+      n0_mem[idx] = '0;
+      n1_mem[idx] = '0;
+      n2_mem[idx] = '0;
+      n3_mem[idx] = '0;
+      aux_mem[idx] = '0;
+      v0_mem[idx] = '0;
+      v1_mem[idx] = '0;
+      v2_mem[idx] = '0;
+      v3_mem[idx] = '0;
+    end
+  end
 
-  always @(posedge clk or negedge rst_n) begin
+  always @(posedge clk) begin
     if (!rst_n) begin
       kind_pending <= 1'b0;
       kind_pending_idx <= '0;
@@ -133,18 +148,6 @@ module StampingNetlistStore #(
       fetchElemVal2_result <= '0;
       fetchElemVal3_done <= 1'b0;
       fetchElemVal3_result <= '0;
-      for (idx = 0; idx < ELEM_COUNT; idx = idx + 1) begin
-        kind_mem[idx] <= '0;
-        n0_mem[idx] <= '0;
-        n1_mem[idx] <= '0;
-        n2_mem[idx] <= '0;
-        n3_mem[idx] <= '0;
-        aux_mem[idx] <= '0;
-        v0_mem[idx] <= '0;
-        v1_mem[idx] <= '0;
-        v2_mem[idx] <= '0;
-        v3_mem[idx] <= '0;
-      end
     end else begin
       fetchElemKind_done <= kind_pending;
       if (kind_pending) begin

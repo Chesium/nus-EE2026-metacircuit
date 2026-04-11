@@ -150,6 +150,19 @@ module SolveCoreTransient_test;
   wire        div_done;
   wire [31:0] div_result;
 
+  reg  a_clear_start = 1'b0;
+  wire a_clear_done;
+  reg  lu_clear_start = 1'b0;
+  wire lu_clear_done;
+  reg  j_clear_start = 1'b0;
+  wire j_clear_done;
+  reg  y_clear_start = 1'b0;
+  wire y_clear_done;
+  reg  x_clear_start = 1'b0;
+  wire x_clear_done;
+  reg  prevx_clear_start = 1'b0;
+  wire prevx_clear_done;
+
   wire unused_fetchElemN2_done;
   wire [15:0] unused_fetchElemN2_result;
   wire unused_fetchElemN3_done;
@@ -369,6 +382,8 @@ module SolveCoreTransient_test;
   ) a_store (
       .clk(clk),
       .rst_n(rst_n),
+      .clear_start(a_clear_start),
+      .clear_done(a_clear_done),
       .store_start(store_A_start),
       .store_i(store_A_i),
       .store_j(store_A_j),
@@ -387,10 +402,13 @@ module SolveCoreTransient_test;
   );
 
   SolverMatrixStore #(
-      .DIM(DIM_MAX)
+      .DIM(DIM_MAX),
+      .ENABLE_ACCUM(0)
   ) lu_store (
       .clk(clk),
       .rst_n(rst_n),
+      .clear_start(lu_clear_start),
+      .clear_done(lu_clear_done),
       .store_start(store_LU_start),
       .store_i(store_LU_i),
       .store_j(store_LU_j),
@@ -413,6 +431,8 @@ module SolveCoreTransient_test;
   ) j_store (
       .clk(clk),
       .rst_n(rst_n),
+      .clear_start(j_clear_start),
+      .clear_done(j_clear_done),
       .store_start(store_J_start),
       .store_i(store_J_i),
       .store_v(store_J_v),
@@ -428,10 +448,13 @@ module SolveCoreTransient_test;
   );
 
   SolverVectorStore #(
-      .DIM(DIM_MAX)
+      .DIM(DIM_MAX),
+      .ENABLE_ACCUM(0)
   ) y_store (
       .clk(clk),
       .rst_n(rst_n),
+      .clear_start(y_clear_start),
+      .clear_done(y_clear_done),
       .store_start(store_Y_start),
       .store_i(store_Y_i),
       .store_v(store_Y_v),
@@ -447,10 +470,13 @@ module SolveCoreTransient_test;
   );
 
   SolverVectorStore #(
-      .DIM(DIM_MAX)
+      .DIM(DIM_MAX),
+      .ENABLE_ACCUM(0)
   ) x_store (
       .clk(clk),
       .rst_n(rst_n),
+      .clear_start(x_clear_start),
+      .clear_done(x_clear_done),
       .store_start(store_X_start),
       .store_i(store_X_i),
       .store_v(store_X_v),
@@ -466,10 +492,13 @@ module SolveCoreTransient_test;
   );
 
   SolverVectorStore #(
-      .DIM(DIM_MAX)
+      .DIM(DIM_MAX),
+      .ENABLE_ACCUM(0)
   ) prevx_store (
       .clk(clk),
       .rst_n(rst_n),
+      .clear_start(prevx_clear_start),
+      .clear_done(prevx_clear_done),
       .store_start(store_prevX_start),
       .store_i(store_prevX_i),
       .store_v(store_prevX_v),
@@ -529,6 +558,48 @@ module SolveCoreTransient_test;
     end
   endtask
 
+  task automatic clear_solver_stores;
+    reg seen_a_clear_done;
+    reg seen_lu_clear_done;
+    reg seen_j_clear_done;
+    reg seen_y_clear_done;
+    reg seen_x_clear_done;
+    reg seen_prevx_clear_done;
+    begin
+      @(negedge clk);
+      a_clear_start <= 1'b1;
+      lu_clear_start <= 1'b1;
+      j_clear_start <= 1'b1;
+      y_clear_start <= 1'b1;
+      x_clear_start <= 1'b1;
+      prevx_clear_start <= 1'b1;
+      @(negedge clk);
+      a_clear_start <= 1'b0;
+      lu_clear_start <= 1'b0;
+      j_clear_start <= 1'b0;
+      y_clear_start <= 1'b0;
+      x_clear_start <= 1'b0;
+      prevx_clear_start <= 1'b0;
+      seen_a_clear_done = 1'b0;
+      seen_lu_clear_done = 1'b0;
+      seen_j_clear_done = 1'b0;
+      seen_y_clear_done = 1'b0;
+      seen_x_clear_done = 1'b0;
+      seen_prevx_clear_done = 1'b0;
+      while (!(seen_a_clear_done && seen_lu_clear_done &&
+               seen_j_clear_done && seen_y_clear_done &&
+               seen_x_clear_done && seen_prevx_clear_done)) begin
+        @(negedge clk);
+        if (a_clear_done === 1'b1) seen_a_clear_done = 1'b1;
+        if (lu_clear_done === 1'b1) seen_lu_clear_done = 1'b1;
+        if (j_clear_done === 1'b1) seen_j_clear_done = 1'b1;
+        if (y_clear_done === 1'b1) seen_y_clear_done = 1'b1;
+        if (x_clear_done === 1'b1) seen_x_clear_done = 1'b1;
+        if (prevx_clear_done === 1'b1) seen_prevx_clear_done = 1'b1;
+      end
+    end
+  endtask
+
   task automatic reset_design;
     begin
       rst_n <= 1'b0;
@@ -541,6 +612,7 @@ module SolveCoreTransient_test;
       rst_n <= 1'b1;
       repeat (2) @(negedge clk);
       clear_netlist_memories();
+      clear_solver_stores();
     end
   endtask
 
@@ -617,7 +689,7 @@ module SolveCoreTransient_test;
       input real expected_value
   );
     begin
-      expect_vector_entry($sformatf("X[%0d]", vec_idx), x_store.mem[vec_idx], expected_value);
+      expect_vector_entry($sformatf("X[%0d]", vec_idx), x_store.mem_inst.mem[vec_idx], expected_value);
     end
   endtask
 
@@ -626,7 +698,7 @@ module SolveCoreTransient_test;
       input real expected_value
   );
     begin
-      expect_vector_entry($sformatf("prevX[%0d]", vec_idx), prevx_store.mem[vec_idx], expected_value);
+      expect_vector_entry($sformatf("prevX[%0d]", vec_idx), prevx_store.mem_inst.mem[vec_idx], expected_value);
     end
   endtask
 

@@ -49,27 +49,8 @@ module GlobalRender_top (
     localparam integer PROP_VALUE_BOX_Y0 = 24;
     localparam integer PROP_VALUE_BOX_X1 = 336;
     localparam integer PROP_VALUE_BOX_Y1 = 44;
-    localparam integer STORE_VIEW_TEXT_MAX_CHARS = 32;
-    localparam integer STORE_VIEW_CARD_X0 = 56;
-    localparam integer STORE_VIEW_CARD_Y0 = 40;
-    localparam integer STORE_VIEW_CARD_X1 = 584;
-    localparam integer STORE_VIEW_CARD_Y1 = 424;
-    localparam integer STORE_VIEW_TEXT_X = 88;
-    localparam integer STORE_VIEW_TITLE_Y = 72;
-    localparam integer STORE_VIEW_HINT_Y = 104;
-    localparam integer STORE_VIEW_STATUS_Y = 152;
-    localparam integer STORE_VIEW_COUNT_Y = 184;
-    localparam integer STORE_VIEW_PACKED_Y = 224;
-    localparam integer STORE_VIEW_INDEX_Y = 248;
-    localparam integer STORE_VIEW_TYPE_Y = 272;
-    localparam integer STORE_VIEW_ROT_Y = 296;
-    localparam integer STORE_VIEW_VALUE_Y = 320;
-    localparam integer STORE_VIEW_RAW_Y = 344;
-    localparam integer STORE_VIEW_POS_Y = 368;
     localparam ENABLE_OLED_CALC  = 1'b0;
     localparam ENABLE_PROP_PANEL = 1'b1;
-    localparam ENABLE_STORE_VIEW = 1'b0;
-    localparam ENABLE_MATRIX     = 1'b0;
     localparam ENABLE_WAVEFORMS  = 1'b0;
     localparam ENABLE_BACKEND_FETCH_TEST = 1'b0;
     localparam ENABLE_UART_NETLIST_DEBUG = 1'b1;
@@ -118,8 +99,6 @@ module GlobalRender_top (
     (* ASYNC_REG = "TRUE" *) reg  [7:0]  keyboard_ascii_sys_ff1 = 8'h00;
 
     wire        keyboard_region_active;
-    wire        show_matrix = ENABLE_MATRIX && SW[0];
-    wire        show_component_store_view = ENABLE_STORE_VIEW && SW[1];
 
     // =========================================================
     // Calculator on OLED signals
@@ -403,15 +382,6 @@ module GlobalRender_top (
             endcase
         end
     endfunction
-
-    task set_store_char;
-        inout [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] text_bus;
-        input integer char_index;
-        input [7:0] ch;
-        begin
-            text_bus[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (char_index * 8) -: 8] = ch;
-        end
-    endtask
 
     function [15:0] make_cell_data;
         input [1:0] rotation;
@@ -1167,36 +1137,6 @@ module GlobalRender_top (
     (* ASYNC_REG = "TRUE" *) reg [11:0] selected_component_value_ui_ff1 = 12'd0;
     (* ASYNC_REG = "TRUE" *) reg [8:0]  selected_component_position_ui_ff0 = 9'd0;
     (* ASYNC_REG = "TRUE" *) reg [8:0]  selected_component_position_ui_ff1 = 9'd0;
-    (* ASYNC_REG = "TRUE" *) reg        component_store_busy_ui_ff0 = 1'b1;
-    (* ASYNC_REG = "TRUE" *) reg        component_store_busy_ui_ff1 = 1'b1;
-    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_count_ui_ff0 = {CANVAS_ADDR_W{1'b0}};
-    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_count_ui_ff1 = {CANVAS_ADDR_W{1'b0}};
-    reg  [CANVAS_ADDR_W-1:0] component_store_view_index_ui = {CANVAS_ADDR_W{1'b0}};
-    reg         component_store_view_manual_ui = 1'b0;
-    reg         component_store_view_show_d = 1'b0;
-    reg         component_store_prev_toggle_nav = 1'b0;
-    reg         component_store_prev_btn_nav_d = 1'b0;
-    reg         component_store_next_toggle_nav = 1'b0;
-    reg         component_store_next_btn_nav_d = 1'b0;
-    (* ASYNC_REG = "TRUE" *) reg        component_store_prev_toggle_pix_ff0 = 1'b0;
-    (* ASYNC_REG = "TRUE" *) reg        component_store_prev_toggle_pix_ff1 = 1'b0;
-    (* ASYNC_REG = "TRUE" *) reg        component_store_next_toggle_pix_ff0 = 1'b0;
-    (* ASYNC_REG = "TRUE" *) reg        component_store_next_toggle_pix_ff1 = 1'b0;
-    reg         component_store_prev_toggle_seen_pix = 1'b0;
-    reg         component_store_next_toggle_seen_pix = 1'b0;
-    reg         component_store_display_valid_ui = 1'b0;
-    reg  [CANVAS_ADDR_W-1:0] component_store_display_index_ui = {CANVAS_ADDR_W{1'b0}};
-    reg  [COMPONENT_STORE_ENTRY_W-1:0] component_store_display_entry_ui = {COMPONENT_STORE_ENTRY_W{1'b0}};
-    reg  [CANVAS_ADDR_W-1:0] component_store_view_req_index_ui = {CANVAS_ADDR_W{1'b0}};
-    reg         component_store_view_req_toggle_ui = 1'b0;
-    reg         component_store_view_req_pending_ui = 1'b0;
-    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_rsp_index_ui_ff0 = {CANVAS_ADDR_W{1'b0}};
-    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_rsp_index_ui_ff1 = {CANVAS_ADDR_W{1'b0}};
-    (* ASYNC_REG = "TRUE" *) reg [COMPONENT_STORE_ENTRY_W-1:0] component_store_view_rsp_entry_ui_ff0 = {COMPONENT_STORE_ENTRY_W{1'b0}};
-    (* ASYNC_REG = "TRUE" *) reg [COMPONENT_STORE_ENTRY_W-1:0] component_store_view_rsp_entry_ui_ff1 = {COMPONENT_STORE_ENTRY_W{1'b0}};
-    (* ASYNC_REG = "TRUE" *) reg        component_store_view_rsp_toggle_ui_ff0 = 1'b0;
-    (* ASYNC_REG = "TRUE" *) reg        component_store_view_rsp_toggle_ui_ff1 = 1'b0;
-    reg         component_store_view_rsp_toggle_seen_ui = 1'b0;
     wire [11:0] selected_cell_i_sys = selected_cell_i_sys_ff1;
     wire [11:0] selected_cell_j_sys = selected_cell_j_sys_ff1;
     wire        has_selection_sys = has_selection_sys_ff1;
@@ -1210,81 +1150,7 @@ module GlobalRender_top (
     wire [1:0]  selected_component_rotation_ui = selected_component_rotation_ui_ff1;
     wire [11:0] selected_component_value_ui = selected_component_value_ui_ff1;
     wire [8:0]  selected_component_position_ui = selected_component_position_ui_ff1;
-    wire        component_store_busy_ui = component_store_busy_ui_ff1;
-    wire [CANVAS_ADDR_W-1:0] component_store_count_ui = component_store_count_ui_ff1;
-    wire        selected_component_store_ready_ui =
-        !component_store_busy_ui && selected_component_index_valid_ui &&
-        (selected_component_index_ui < component_store_count_ui);
-    wire        component_store_prev_event_pix =
-        (component_store_prev_toggle_pix_ff1 != component_store_prev_toggle_seen_pix);
-    wire        component_store_next_event_pix =
-        (component_store_next_toggle_pix_ff1 != component_store_next_toggle_seen_pix);
-    wire        component_store_view_has_entry_ui =
-        !component_store_busy_ui && (component_store_count_ui != {CANVAS_ADDR_W{1'b0}});
-    wire [CANVAS_ADDR_W-1:0] component_store_selected_index_ui =
-        selected_component_store_ready_ui ? selected_component_index_ui : {CANVAS_ADDR_W{1'b0}};
-    wire [CANVAS_ADDR_W-1:0] component_store_view_index_clamped_ui =
-        (component_store_count_ui == {CANVAS_ADDR_W{1'b0}}) ? {CANVAS_ADDR_W{1'b0}} :
-        ((component_store_view_index_ui < component_store_count_ui) ?
-            component_store_view_index_ui : (component_store_count_ui - 1'b1));
-    wire        component_store_view_rsp_event_ui =
-        (component_store_view_rsp_toggle_ui_ff1 != component_store_view_rsp_toggle_seen_ui);
-    wire        component_store_view_entry_ready_ui =
-        component_store_view_has_entry_ui && component_store_display_valid_ui &&
-        (component_store_display_index_ui < component_store_count_ui);
-    wire [3:0]  component_store_view_unit_ui = component_store_display_entry_ui[39:36];
-    wire [CANVAS_ADDR_W-1:0] component_store_view_entry_index_ui =
-        component_store_display_entry_ui[35:27];
-    wire [3:0]  component_store_view_type_ui = component_store_display_entry_ui[26:23];
-    wire [3:0]  component_store_view_display_type_ui =
-        component_display_type_from_store_type(component_store_view_type_ui);
-    wire [1:0]  component_store_view_rotation_ui = component_store_display_entry_ui[22:21];
-    wire [11:0] component_store_view_value_ui = component_store_display_entry_ui[20:9];
-    wire [8:0]  component_store_view_position_ui = component_store_display_entry_ui[8:0];
     wire        mouse_left_rising;
-    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_status_data;
-    reg  [4:0] store_status_len;
-    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_count_data;
-    reg  [4:0] store_count_len;
-    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_packed_data;
-    reg  [4:0] store_packed_len;
-    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_index_data;
-    reg  [4:0] store_index_len;
-    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_type_data;
-    reg  [4:0] store_type_len;
-    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_rot_data;
-    reg  [4:0] store_rot_len;
-    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_value_data;
-    reg  [4:0] store_value_len;
-    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_raw_data;
-    reg  [4:0] store_raw_len;
-    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_pos_data;
-    reg  [4:0] store_pos_len;
-    wire       store_title_rendered;
-    wire [11:0] store_title_rgb;
-    wire       store_hint_rendered;
-    wire [11:0] store_hint_rgb;
-    wire       store_status_rendered;
-    wire [11:0] store_status_rgb;
-    wire       store_count_rendered;
-    wire [11:0] store_count_rgb;
-    wire       store_packed_rendered;
-    wire [11:0] store_packed_rgb;
-    wire       store_index_rendered;
-    wire [11:0] store_index_rgb;
-    wire       store_type_rendered;
-    wire [11:0] store_type_rgb;
-    wire       store_rot_rendered;
-    wire [11:0] store_rot_rgb;
-    wire       store_value_rendered;
-    wire [11:0] store_value_rgb;
-    wire       store_raw_rendered;
-    wire [11:0] store_raw_rgb;
-    wire       store_pos_rendered;
-    wire [11:0] store_pos_rgb;
-    reg        component_store_view_rendered;
-    reg  [11:0] component_store_view_rgb;
-    integer    store_char_idx;
     
     // 榧犳爣鎮仠妫?娴?
     wire signed [13:0] mouse_x_rel_canvas_signed;
@@ -1338,9 +1204,8 @@ module GlobalRender_top (
     localparam integer UART_CELL_PACKET_LEN = 31;
     localparam integer UART_RESULT_PACKET_LEN = 34;
     localparam integer UART_NETLIST_PACKET_LEN = 49;
-    localparam [1:0] COMPONENT_READ_OWNER_UI      = 2'd0;
-    localparam [1:0] COMPONENT_READ_OWNER_BACKEND = 2'd1;
-    localparam [1:0] COMPONENT_READ_OWNER_NETLIST = 2'd2;
+    localparam [1:0] COMPONENT_READ_OWNER_BACKEND = 2'd0;
+    localparam [1:0] COMPONENT_READ_OWNER_NETLIST = 2'd1;
     localparam [3:0] BACKEND_TEST_IDLE        = 4'd0;
     localparam [3:0] BACKEND_TEST_START_TYPE  = 4'd1;
     localparam [3:0] BACKEND_TEST_WAIT_TYPE   = 4'd2;
@@ -1359,16 +1224,8 @@ module GlobalRender_top (
     reg         component_store_dirty = 1'b1;
     reg         component_store_read_busy = 1'b0;
     reg         component_store_read_snapshot_pending = 1'b0;
-    reg  [1:0]  component_store_read_owner = COMPONENT_READ_OWNER_UI;
+    reg  [1:0]  component_store_read_owner = COMPONENT_READ_OWNER_BACKEND;
     reg  [CANVAS_ADDR_W-1:0] component_store_read_addr_latched = {CANVAS_ADDR_W{1'b0}};
-    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_req_index_sys_ff0 = {CANVAS_ADDR_W{1'b0}};
-    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_view_req_index_sys_ff1 = {CANVAS_ADDR_W{1'b0}};
-    (* ASYNC_REG = "TRUE" *) reg        component_store_view_req_toggle_sys_ff0 = 1'b0;
-    (* ASYNC_REG = "TRUE" *) reg        component_store_view_req_toggle_sys_ff1 = 1'b0;
-    reg         component_store_view_req_toggle_seen_sys = 1'b0;
-    reg  [CANVAS_ADDR_W-1:0] component_store_view_rsp_index_sys = {CANVAS_ADDR_W{1'b0}};
-    reg  [COMPONENT_STORE_ENTRY_W-1:0] component_store_view_rsp_entry_sys = {COMPONENT_STORE_ENTRY_W{1'b0}};
-    reg         component_store_view_rsp_toggle_sys = 1'b0;
     reg         component_index_map_w_en = 1'b0;
     reg  [CANVAS_ADDR_W-1:0] component_index_map_w_addr = {CANVAS_ADDR_W{1'b0}};
     reg  [CANVAS_ADDR_W-1:0] component_index_map_w_data = COMPONENT_INDEX_INVALID;
@@ -1960,18 +1817,9 @@ module GlobalRender_top (
     );
 
     always @(posedge CLK100MHZ) begin
-        component_store_view_req_index_sys_ff0 <= component_store_view_req_index_ui;
-        component_store_view_req_index_sys_ff1 <= component_store_view_req_index_sys_ff0;
-        component_store_view_req_toggle_sys_ff0 <= component_store_view_req_toggle_ui;
-        component_store_view_req_toggle_sys_ff1 <= component_store_view_req_toggle_sys_ff0;
-
         if (component_store_read_snapshot_pending) begin
             component_store_read_snapshot_pending <= 1'b0;
-            if (component_store_read_owner == COMPONENT_READ_OWNER_UI) begin
-                component_store_view_rsp_index_sys <= component_store_read_addr_latched;
-                component_store_view_rsp_entry_sys <= component_store_ram_r_data;
-                component_store_view_rsp_toggle_sys <= ~component_store_view_rsp_toggle_sys;
-            end else if (component_store_read_owner == COMPONENT_READ_OWNER_NETLIST) begin
+            if (component_store_read_owner == COMPONENT_READ_OWNER_NETLIST) begin
                 netlist_component_entry_snap <= component_store_ram_r_data;
                 netlist_component_node0_snap <= netlist_node0_ram_r_data;
                 netlist_component_node1_snap <= netlist_node1_ram_r_data;
@@ -1979,8 +1827,7 @@ module GlobalRender_top (
             end
         end else if (component_store_read_busy) begin
             component_store_read_busy <= 1'b0;
-            if ((component_store_read_owner == COMPONENT_READ_OWNER_UI) ||
-                (component_store_read_owner == COMPONENT_READ_OWNER_NETLIST)) begin
+            if (component_store_read_owner == COMPONENT_READ_OWNER_NETLIST) begin
                 component_store_read_snapshot_pending <= 1'b1;
             end
         end else if (!component_store_busy) begin
@@ -1993,12 +1840,6 @@ module GlobalRender_top (
                 component_store_ram_r_addr <= netlist_dump_idx;
                 component_store_read_addr_latched <= netlist_dump_idx;
                 component_store_read_owner <= COMPONENT_READ_OWNER_NETLIST;
-                component_store_read_busy <= 1'b1;
-            end else if (component_store_view_req_toggle_sys_ff1 != component_store_view_req_toggle_seen_sys) begin
-                component_store_view_req_toggle_seen_sys <= component_store_view_req_toggle_sys_ff1;
-                component_store_ram_r_addr <= component_store_view_req_index_sys_ff1;
-                component_store_read_addr_latched <= component_store_view_req_index_sys_ff1;
-                component_store_read_owner <= COMPONENT_READ_OWNER_UI;
                 component_store_read_busy <= 1'b1;
             end
         end
@@ -2650,90 +2491,11 @@ module GlobalRender_top (
         selected_component_value_ui_ff1 <= selected_component_value_ui_ff0;
         selected_component_position_ui_ff0 <= selected_component_position_sys;
         selected_component_position_ui_ff1 <= selected_component_position_ui_ff0;
-        component_store_busy_ui_ff0 <= component_store_busy;
-        component_store_busy_ui_ff1 <= component_store_busy_ui_ff0;
-        component_store_count_ui_ff0 <= component_store_count;
-        component_store_count_ui_ff1 <= component_store_count_ui_ff0;
-        component_store_prev_toggle_pix_ff0 <= component_store_prev_toggle_nav;
-        component_store_prev_toggle_pix_ff1 <= component_store_prev_toggle_pix_ff0;
-        component_store_next_toggle_pix_ff0 <= component_store_next_toggle_nav;
-        component_store_next_toggle_pix_ff1 <= component_store_next_toggle_pix_ff0;
-        component_store_view_rsp_index_ui_ff0 <= component_store_view_rsp_index_sys;
-        component_store_view_rsp_index_ui_ff1 <= component_store_view_rsp_index_ui_ff0;
-        component_store_view_rsp_entry_ui_ff0 <= component_store_view_rsp_entry_sys;
-        component_store_view_rsp_entry_ui_ff1 <= component_store_view_rsp_entry_ui_ff0;
-        component_store_view_rsp_toggle_ui_ff0 <= component_store_view_rsp_toggle_sys;
-        component_store_view_rsp_toggle_ui_ff1 <= component_store_view_rsp_toggle_ui_ff0;
-        component_store_view_show_d <= show_component_store_view;
-
-        if (component_store_prev_event_pix) begin
-            component_store_prev_toggle_seen_pix <= component_store_prev_toggle_pix_ff1;
-        end
-        if (component_store_next_event_pix) begin
-            component_store_next_toggle_seen_pix <= component_store_next_toggle_pix_ff1;
-        end
-
-        if (!component_store_view_manual_ui && selected_component_store_ready_ui) begin
-            component_store_view_index_ui <= component_store_selected_index_ui;
-        end else if (component_store_view_has_entry_ui &&
-                     (component_store_view_index_ui >= component_store_count_ui)) begin
-            component_store_view_index_ui <= component_store_count_ui - 1'b1;
-        end
-
-        if (component_store_view_rsp_event_ui) begin
-            component_store_view_rsp_toggle_seen_ui <= component_store_view_rsp_toggle_ui_ff1;
-            component_store_display_index_ui <= component_store_view_rsp_index_ui_ff1;
-            component_store_display_entry_ui <= component_store_view_rsp_entry_ui_ff1;
-            component_store_display_valid_ui <= 1'b1;
-            component_store_view_req_pending_ui <= 1'b0;
-        end
-
-        if (!show_component_store_view) begin
-            component_store_view_manual_ui <= 1'b0;
-            component_store_display_valid_ui <= 1'b0;
-            component_store_view_req_pending_ui <= 1'b0;
-        end else if (!component_store_view_show_d) begin
-            component_store_view_manual_ui <= 1'b0;
-            component_store_display_valid_ui <= 1'b0;
-            component_store_view_req_pending_ui <= 1'b0;
-        end else if (component_store_busy_ui || !component_store_view_has_entry_ui) begin
-            component_store_display_valid_ui <= 1'b0;
-            component_store_view_req_pending_ui <= 1'b0;
-        end
-
-        if (show_component_store_view && component_store_view_has_entry_ui) begin
-            if (component_store_prev_event_pix) begin
-                component_store_view_manual_ui <= 1'b1;
-                if (component_store_view_index_clamped_ui == {CANVAS_ADDR_W{1'b0}}) begin
-                    component_store_view_index_ui <= component_store_count_ui - 1'b1;
-                end else begin
-                    component_store_view_index_ui <= component_store_view_index_clamped_ui - 1'b1;
-                end
-            end else if (component_store_next_event_pix) begin
-                component_store_view_manual_ui <= 1'b1;
-                if ((component_store_view_index_clamped_ui + 1'b1) >= component_store_count_ui) begin
-                    component_store_view_index_ui <= {CANVAS_ADDR_W{1'b0}};
-                end else begin
-                    component_store_view_index_ui <= component_store_view_index_clamped_ui + 1'b1;
-                end
-            end
-        end
-
-        if (show_component_store_view && component_store_view_has_entry_ui &&
-            !component_store_view_req_pending_ui &&
-            (!component_store_view_entry_ready_ui ||
-             (component_store_display_index_ui != component_store_view_index_clamped_ui))) begin
-            component_store_view_req_index_ui <= component_store_view_index_clamped_ui;
-            component_store_view_req_toggle_ui <= ~component_store_view_req_toggle_ui;
-            component_store_view_req_pending_ui <= 1'b1;
-        end
     end
     // 鍚屾榧犳爣鐐瑰嚮 - 璁板綍閫変腑鐨勫崟鍏冩牸
     always @(posedge clk_pixel) begin
         mouse_left_d <= mouse_left_pix;
-        if (show_component_store_view) begin
-            value_edit_active <= 1'b0;
-        end else if (mouse_left_rising && canvas_mouse_in_bounds) begin
+        if (mouse_left_rising && canvas_mouse_in_bounds) begin
             selected_cell_i <= mouse_cell_i;
             selected_cell_j <= mouse_cell_j;
             has_selection <= 1'b1;
@@ -2832,14 +2594,6 @@ module GlobalRender_top (
     end
 
     always @(posedge clk_nav) begin
-        component_store_prev_btn_nav_d <= BTNL;
-        component_store_next_btn_nav_d <= BTNR;
-        if (show_component_store_view && BTNL && !component_store_prev_btn_nav_d) begin
-            component_store_prev_toggle_nav <= ~component_store_prev_toggle_nav;
-        end
-        if (show_component_store_view && BTNR && !component_store_next_btn_nav_d) begin
-            component_store_next_toggle_nav <= ~component_store_next_toggle_nav;
-        end
         if (keyboard_key_valid) begin
             keyboard_event_ascii_nav <= keyboard_key_ascii;
             keyboard_event_toggle_nav <= ~keyboard_event_toggle_nav;
@@ -2884,9 +2638,6 @@ module GlobalRender_top (
     endgenerate
     //灞炴?ч潰鏉夸緥鍖栫粨鏉?
 
-    // =========================================================
-    // 鐭╅樀鏄剧ず妯″潡 (涓婁笅甯冨眬锛屽眳涓樉绀?)
-    // =========================================================
     always @(posedge clk_pixel) begin
         if (vsync_edge) begin
             interaction_frame_toggle_pix <= ~interaction_frame_toggle_pix;
@@ -2897,553 +2648,6 @@ module GlobalRender_top (
         interaction_frame_sync0 <= interaction_frame_toggle_pix;
         interaction_frame_sync1 <= interaction_frame_sync0;
         interaction_frame_sync2 <= interaction_frame_sync1;
-    end
-
-    always @(*) begin
-        for (store_char_idx = 0; store_char_idx < STORE_VIEW_TEXT_MAX_CHARS; store_char_idx = store_char_idx + 1) begin
-            store_status_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
-            store_count_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
-            store_packed_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
-            store_index_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
-            store_type_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
-            store_rot_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
-            store_value_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
-            store_raw_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
-            store_pos_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
-        end
-
-        store_status_len = 5'd0;
-        store_count_len = 5'd0;
-        store_packed_len = 5'd0;
-        store_index_len = 5'd0;
-        store_type_len = 5'd0;
-        store_rot_len = 5'd0;
-        store_value_len = 5'd0;
-        store_raw_len = 5'd0;
-        store_pos_len = 5'd0;
-
-        set_store_char(store_status_data, 0, "S");
-        set_store_char(store_status_data, 1, "t");
-        set_store_char(store_status_data, 2, "a");
-        set_store_char(store_status_data, 3, "t");
-        set_store_char(store_status_data, 4, "u");
-        set_store_char(store_status_data, 5, "s");
-        set_store_char(store_status_data, 6, ":");
-        set_store_char(store_status_data, 7, " ");
-        if (component_store_busy_ui) begin
-            set_store_char(store_status_data, 8, "s");
-            set_store_char(store_status_data, 9, "t");
-            set_store_char(store_status_data, 10, "o");
-            set_store_char(store_status_data, 11, "r");
-            set_store_char(store_status_data, 12, "e");
-            set_store_char(store_status_data, 13, " ");
-            set_store_char(store_status_data, 14, "r");
-            set_store_char(store_status_data, 15, "e");
-            set_store_char(store_status_data, 16, "b");
-            set_store_char(store_status_data, 17, "u");
-            set_store_char(store_status_data, 18, "i");
-            set_store_char(store_status_data, 19, "l");
-            set_store_char(store_status_data, 20, "d");
-            set_store_char(store_status_data, 21, "i");
-            set_store_char(store_status_data, 22, "n");
-            set_store_char(store_status_data, 23, "g");
-            set_store_char(store_status_data, 24, ".");
-            set_store_char(store_status_data, 25, ".");
-            set_store_char(store_status_data, 26, ".");
-            store_status_len = 5'd27;
-        end else if (!component_store_view_has_entry_ui) begin
-            set_store_char(store_status_data, 8, "s");
-            set_store_char(store_status_data, 9, "t");
-            set_store_char(store_status_data, 10, "o");
-            set_store_char(store_status_data, 11, "r");
-            set_store_char(store_status_data, 12, "e");
-            set_store_char(store_status_data, 13, " ");
-            set_store_char(store_status_data, 14, "e");
-            set_store_char(store_status_data, 15, "m");
-            set_store_char(store_status_data, 16, "p");
-            set_store_char(store_status_data, 17, "t");
-            set_store_char(store_status_data, 18, "y");
-            store_status_len = 5'd19;
-        end else if (component_store_view_manual_ui) begin
-            set_store_char(store_status_data, 8, "m");
-            set_store_char(store_status_data, 9, "a");
-            set_store_char(store_status_data, 10, "n");
-            set_store_char(store_status_data, 11, "u");
-            set_store_char(store_status_data, 12, "a");
-            set_store_char(store_status_data, 13, "l");
-            set_store_char(store_status_data, 14, " ");
-            set_store_char(store_status_data, 15, "b");
-            set_store_char(store_status_data, 16, "r");
-            set_store_char(store_status_data, 17, "o");
-            set_store_char(store_status_data, 18, "w");
-            set_store_char(store_status_data, 19, "s");
-            set_store_char(store_status_data, 20, "e");
-            store_status_len = 5'd21;
-        end else if (selected_component_store_ready_ui) begin
-            set_store_char(store_status_data, 8, "f");
-            set_store_char(store_status_data, 9, "o");
-            set_store_char(store_status_data, 10, "l");
-            set_store_char(store_status_data, 11, "l");
-            set_store_char(store_status_data, 12, "o");
-            set_store_char(store_status_data, 13, "w");
-            set_store_char(store_status_data, 14, " ");
-            set_store_char(store_status_data, 15, "s");
-            set_store_char(store_status_data, 16, "e");
-            set_store_char(store_status_data, 17, "l");
-            set_store_char(store_status_data, 18, "e");
-            set_store_char(store_status_data, 19, "c");
-            set_store_char(store_status_data, 20, "t");
-            set_store_char(store_status_data, 21, "i");
-            set_store_char(store_status_data, 22, "o");
-            set_store_char(store_status_data, 23, "n");
-            store_status_len = 5'd24;
-        end else begin
-            set_store_char(store_status_data, 8, "e");
-            set_store_char(store_status_data, 9, "n");
-            set_store_char(store_status_data, 10, "t");
-            set_store_char(store_status_data, 11, "r");
-            set_store_char(store_status_data, 12, "y");
-            set_store_char(store_status_data, 13, " ");
-            set_store_char(store_status_data, 14, "r");
-            set_store_char(store_status_data, 15, "e");
-            set_store_char(store_status_data, 16, "a");
-            set_store_char(store_status_data, 17, "d");
-            set_store_char(store_status_data, 18, "y");
-            store_status_len = 5'd19;
-        end
-
-        set_store_char(store_count_data, 0, "C");
-        set_store_char(store_count_data, 1, "o");
-        set_store_char(store_count_data, 2, "u");
-        set_store_char(store_count_data, 3, "n");
-        set_store_char(store_count_data, 4, "t");
-        set_store_char(store_count_data, 5, " ");
-        set_store_char(store_count_data, 6, ":");
-        set_store_char(store_count_data, 7, " ");
-        if (component_store_busy_ui) begin
-            set_store_char(store_count_data, 8, "-");
-            set_store_char(store_count_data, 9, "-");
-            set_store_char(store_count_data, 10, "-");
-        end else begin
-            set_store_char(store_count_data, 8, (component_store_count_ui / 100) + 8'd48);
-            set_store_char(store_count_data, 9, ((component_store_count_ui % 100) / 10) + 8'd48);
-            set_store_char(store_count_data, 10, (component_store_count_ui % 10) + 8'd48);
-        end
-        store_count_len = 5'd11;
-
-        set_store_char(store_packed_data, 0, "P");
-        set_store_char(store_packed_data, 1, "a");
-        set_store_char(store_packed_data, 2, "c");
-        set_store_char(store_packed_data, 3, "k");
-        set_store_char(store_packed_data, 4, "e");
-        set_store_char(store_packed_data, 5, "d");
-        set_store_char(store_packed_data, 6, ":");
-        set_store_char(store_packed_data, 7, " ");
-        if (component_store_view_entry_ready_ui) begin
-            set_store_char(store_packed_data, 8, "0");
-            set_store_char(store_packed_data, 9, "x");
-            set_store_char(store_packed_data, 10, ascii_hex_nibble(component_store_display_entry_ui[39:36]));
-            set_store_char(store_packed_data, 11, ascii_hex_nibble(component_store_display_entry_ui[35:32]));
-            set_store_char(store_packed_data, 12, ascii_hex_nibble(component_store_display_entry_ui[31:28]));
-            set_store_char(store_packed_data, 13, ascii_hex_nibble(component_store_display_entry_ui[27:24]));
-            set_store_char(store_packed_data, 14, ascii_hex_nibble(component_store_display_entry_ui[23:20]));
-            set_store_char(store_packed_data, 15, ascii_hex_nibble(component_store_display_entry_ui[19:16]));
-            set_store_char(store_packed_data, 16, ascii_hex_nibble(component_store_display_entry_ui[15:12]));
-            set_store_char(store_packed_data, 17, ascii_hex_nibble(component_store_display_entry_ui[11:8]));
-            set_store_char(store_packed_data, 18, ascii_hex_nibble(component_store_display_entry_ui[7:4]));
-            set_store_char(store_packed_data, 19, ascii_hex_nibble(component_store_display_entry_ui[3:0]));
-            store_packed_len = 5'd20;
-        end else begin
-            set_store_char(store_packed_data, 8, "-");
-            set_store_char(store_packed_data, 9, "-");
-            set_store_char(store_packed_data, 10, "-");
-            set_store_char(store_packed_data, 11, "-");
-            set_store_char(store_packed_data, 12, "-");
-            set_store_char(store_packed_data, 13, "-");
-            set_store_char(store_packed_data, 14, "-");
-            set_store_char(store_packed_data, 15, "-");
-            set_store_char(store_packed_data, 16, "-");
-            set_store_char(store_packed_data, 17, "-");
-            store_packed_len = 5'd18;
-        end
-
-        set_store_char(store_index_data, 0, "I");
-        set_store_char(store_index_data, 1, "n");
-        set_store_char(store_index_data, 2, "d");
-        set_store_char(store_index_data, 3, "e");
-        set_store_char(store_index_data, 4, "x");
-        set_store_char(store_index_data, 5, " ");
-        set_store_char(store_index_data, 6, ":");
-        set_store_char(store_index_data, 7, " ");
-        if (component_store_view_entry_ready_ui) begin
-            set_store_char(store_index_data, 8, (component_store_view_entry_index_ui / 100) + 8'd48);
-            set_store_char(store_index_data, 9, ((component_store_view_entry_index_ui % 100) / 10) + 8'd48);
-            set_store_char(store_index_data, 10, (component_store_view_entry_index_ui % 10) + 8'd48);
-        end else begin
-            set_store_char(store_index_data, 8, "-");
-            set_store_char(store_index_data, 9, "-");
-            set_store_char(store_index_data, 10, "-");
-        end
-        store_index_len = 5'd11;
-
-        set_store_char(store_type_data, 0, "T");
-        set_store_char(store_type_data, 1, "y");
-        set_store_char(store_type_data, 2, "p");
-        set_store_char(store_type_data, 3, "e");
-        set_store_char(store_type_data, 4, " ");
-        set_store_char(store_type_data, 5, " ");
-        set_store_char(store_type_data, 6, ":");
-        set_store_char(store_type_data, 7, " ");
-        if (component_store_view_entry_ready_ui) begin
-            case (component_store_view_display_type_ui)
-                COMPONENT_TYPE_GROUND: begin
-                    set_store_char(store_type_data, 8, "G");
-                    set_store_char(store_type_data, 9, "R");
-                    set_store_char(store_type_data, 10, "O");
-                    set_store_char(store_type_data, 11, "U");
-                    set_store_char(store_type_data, 12, "N");
-                    set_store_char(store_type_data, 13, "D");
-                    store_type_len = 5'd14;
-                end
-                COMPONENT_TYPE_RESISTOR: begin
-                    set_store_char(store_type_data, 8, "R");
-                    set_store_char(store_type_data, 9, "E");
-                    set_store_char(store_type_data, 10, "S");
-                    set_store_char(store_type_data, 11, "I");
-                    set_store_char(store_type_data, 12, "S");
-                    set_store_char(store_type_data, 13, "T");
-                    set_store_char(store_type_data, 14, "O");
-                    set_store_char(store_type_data, 15, "R");
-                    store_type_len = 5'd16;
-                end
-                COMPONENT_TYPE_CAPACITOR: begin
-                    set_store_char(store_type_data, 8, "C");
-                    set_store_char(store_type_data, 9, "A");
-                    set_store_char(store_type_data, 10, "P");
-                    set_store_char(store_type_data, 11, "A");
-                    set_store_char(store_type_data, 12, "C");
-                    set_store_char(store_type_data, 13, "I");
-                    set_store_char(store_type_data, 14, "T");
-                    set_store_char(store_type_data, 15, "O");
-                    set_store_char(store_type_data, 16, "R");
-                    store_type_len = 5'd17;
-                end
-                COMPONENT_TYPE_INDUCTOR: begin
-                    set_store_char(store_type_data, 8, "I");
-                    set_store_char(store_type_data, 9, "N");
-                    set_store_char(store_type_data, 10, "D");
-                    set_store_char(store_type_data, 11, "U");
-                    set_store_char(store_type_data, 12, "C");
-                    set_store_char(store_type_data, 13, "T");
-                    set_store_char(store_type_data, 14, "O");
-                    set_store_char(store_type_data, 15, "R");
-                    store_type_len = 5'd16;
-                end
-                COMPONENT_TYPE_VOLTAGE: begin
-                    set_store_char(store_type_data, 8, "V");
-                    set_store_char(store_type_data, 9, "O");
-                    set_store_char(store_type_data, 10, "L");
-                    set_store_char(store_type_data, 11, "T");
-                    set_store_char(store_type_data, 12, "A");
-                    set_store_char(store_type_data, 13, "G");
-                    set_store_char(store_type_data, 14, "E");
-                    store_type_len = 5'd15;
-                end
-                COMPONENT_TYPE_CURRENT: begin
-                    set_store_char(store_type_data, 8, "C");
-                    set_store_char(store_type_data, 9, "U");
-                    set_store_char(store_type_data, 10, "R");
-                    set_store_char(store_type_data, 11, "R");
-                    set_store_char(store_type_data, 12, "E");
-                    set_store_char(store_type_data, 13, "N");
-                    set_store_char(store_type_data, 14, "T");
-                    store_type_len = 5'd15;
-                end
-                default: begin
-                    set_store_char(store_type_data, 8, "W");
-                    set_store_char(store_type_data, 9, "I");
-                    set_store_char(store_type_data, 10, "R");
-                    set_store_char(store_type_data, 11, "E");
-                    store_type_len = 5'd12;
-                end
-            endcase
-        end else begin
-            set_store_char(store_type_data, 8, "-");
-            store_type_len = 5'd9;
-        end
-
-        set_store_char(store_rot_data, 0, "R");
-        set_store_char(store_rot_data, 1, "o");
-        set_store_char(store_rot_data, 2, "t");
-        set_store_char(store_rot_data, 3, " ");
-        set_store_char(store_rot_data, 4, " ");
-        set_store_char(store_rot_data, 5, " ");
-        set_store_char(store_rot_data, 6, ":");
-        set_store_char(store_rot_data, 7, " ");
-        if (component_store_view_entry_ready_ui) begin
-            set_store_char(store_rot_data, 8, component_store_view_rotation_ui + 8'd48);
-        end else begin
-            set_store_char(store_rot_data, 8, "-");
-        end
-        store_rot_len = 5'd9;
-
-        set_store_char(store_value_data, 0, "V");
-        set_store_char(store_value_data, 1, "a");
-        set_store_char(store_value_data, 2, "l");
-        set_store_char(store_value_data, 3, "u");
-        set_store_char(store_value_data, 4, "e");
-        set_store_char(store_value_data, 5, " ");
-        set_store_char(store_value_data, 6, ":");
-        set_store_char(store_value_data, 7, " ");
-        if (component_store_view_entry_ready_ui) begin
-            if (component_store_view_value_ui[11:8] != 4'd0) begin
-                set_store_char(store_value_data, 8, ascii_decimal_nibble(component_store_view_value_ui[11:8]));
-                set_store_char(store_value_data, 9, ascii_decimal_nibble(component_store_view_value_ui[7:4]));
-                set_store_char(store_value_data, 10, ascii_decimal_nibble(component_store_view_value_ui[3:0]));
-                store_value_len = 5'd11;
-            end else if (component_store_view_value_ui[7:4] != 4'd0) begin
-                set_store_char(store_value_data, 8, ascii_decimal_nibble(component_store_view_value_ui[7:4]));
-                set_store_char(store_value_data, 9, ascii_decimal_nibble(component_store_view_value_ui[3:0]));
-                store_value_len = 5'd10;
-            end else begin
-                set_store_char(store_value_data, 8, ascii_decimal_nibble(component_store_view_value_ui[3:0]));
-                store_value_len = 5'd9;
-            end
-            if (component_store_view_unit_ui != COMPONENT_UNIT_NONE) begin
-                set_store_char(store_value_data, store_value_len, ascii_from_component_unit(component_store_view_unit_ui));
-                store_value_len = store_value_len + 1'b1;
-            end
-        end else begin
-            set_store_char(store_value_data, 8, "-");
-            store_value_len = 5'd9;
-        end
-
-        set_store_char(store_raw_data, 0, "R");
-        set_store_char(store_raw_data, 1, "a");
-        set_store_char(store_raw_data, 2, "w");
-        set_store_char(store_raw_data, 3, " ");
-        set_store_char(store_raw_data, 4, " ");
-        set_store_char(store_raw_data, 5, " ");
-        set_store_char(store_raw_data, 6, ":");
-        set_store_char(store_raw_data, 7, " ");
-        set_store_char(store_raw_data, 8, "0");
-        set_store_char(store_raw_data, 9, "x");
-        if (component_store_view_entry_ready_ui) begin
-            set_store_char(store_raw_data, 10, ascii_hex_nibble(component_store_view_value_ui[11:8]));
-            set_store_char(store_raw_data, 11, ascii_hex_nibble(component_store_view_value_ui[7:4]));
-            set_store_char(store_raw_data, 12, ascii_hex_nibble(component_store_view_value_ui[3:0]));
-        end else begin
-            set_store_char(store_raw_data, 10, "-");
-            set_store_char(store_raw_data, 11, "-");
-            set_store_char(store_raw_data, 12, "-");
-        end
-        store_raw_len = 5'd13;
-
-        set_store_char(store_pos_data, 0, "P");
-        set_store_char(store_pos_data, 1, "o");
-        set_store_char(store_pos_data, 2, "s");
-        set_store_char(store_pos_data, 3, " ");
-        set_store_char(store_pos_data, 4, " ");
-        set_store_char(store_pos_data, 5, " ");
-        set_store_char(store_pos_data, 6, ":");
-        set_store_char(store_pos_data, 7, " ");
-        if (component_store_view_entry_ready_ui) begin
-            set_store_char(store_pos_data, 8, "(");
-            set_store_char(store_pos_data, 9, (component_store_view_position_ui[4:0] / 10) + 8'd48);
-            set_store_char(store_pos_data, 10, (component_store_view_position_ui[4:0] % 10) + 8'd48);
-            set_store_char(store_pos_data, 11, ",");
-            set_store_char(store_pos_data, 12, " ");
-            set_store_char(store_pos_data, 13, (component_store_view_position_ui[8:5] / 10) + 8'd48);
-            set_store_char(store_pos_data, 14, (component_store_view_position_ui[8:5] % 10) + 8'd48);
-            set_store_char(store_pos_data, 15, ")");
-        end else begin
-            set_store_char(store_pos_data, 8, "(");
-            set_store_char(store_pos_data, 9, "-");
-            set_store_char(store_pos_data, 10, "-");
-            set_store_char(store_pos_data, 11, ",");
-            set_store_char(store_pos_data, 12, " ");
-            set_store_char(store_pos_data, 13, "-");
-            set_store_char(store_pos_data, 14, "-");
-            set_store_char(store_pos_data, 15, ")");
-        end
-        store_pos_len = 5'd16;
-    end
-
-    TextBox #(
-        .TEXT_CONTENT("COMPONENT STORE"),
-        .TEXT_LEN(15),
-        .MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)
-    ) u_store_title (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_TITLE_Y),
-        .scale(4'd2),
-        .text_enable(store_title_rendered),
-        .text_color(store_title_rgb)
-    );
-
-    TextBox #(
-        .TEXT_CONTENT("SW1 VIEW  L/R BROWSE"),
-        .TEXT_LEN(20),
-        .MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)
-    ) u_store_hint (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_HINT_Y),
-        .scale(4'd1),
-        .text_enable(store_hint_rendered),
-        .text_color(store_hint_rgb)
-    );
-
-    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_status (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .text_data(store_status_data),
-        .text_len(store_status_len),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_STATUS_Y),
-        .scale(4'd1),
-        .text_enable(store_status_rendered),
-        .text_color(store_status_rgb)
-    );
-
-    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_count (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .text_data(store_count_data),
-        .text_len(store_count_len),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_COUNT_Y),
-        .scale(4'd1),
-        .text_enable(store_count_rendered),
-        .text_color(store_count_rgb)
-    );
-
-    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_packed (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .text_data(store_packed_data),
-        .text_len(store_packed_len),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_PACKED_Y),
-        .scale(4'd1),
-        .text_enable(store_packed_rendered),
-        .text_color(store_packed_rgb)
-    );
-
-    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_index (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .text_data(store_index_data),
-        .text_len(store_index_len),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_INDEX_Y),
-        .scale(4'd1),
-        .text_enable(store_index_rendered),
-        .text_color(store_index_rgb)
-    );
-
-    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_type (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .text_data(store_type_data),
-        .text_len(store_type_len),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_TYPE_Y),
-        .scale(4'd1),
-        .text_enable(store_type_rendered),
-        .text_color(store_type_rgb)
-    );
-
-    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_rot (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .text_data(store_rot_data),
-        .text_len(store_rot_len),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_ROT_Y),
-        .scale(4'd1),
-        .text_enable(store_rot_rendered),
-        .text_color(store_rot_rgb)
-    );
-
-    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_value (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .text_data(store_value_data),
-        .text_len(store_value_len),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_VALUE_Y),
-        .scale(4'd1),
-        .text_enable(store_value_rendered),
-        .text_color(store_value_rgb)
-    );
-
-    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_raw (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .text_data(store_raw_data),
-        .text_len(store_raw_len),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_RAW_Y),
-        .scale(4'd1),
-        .text_enable(store_raw_rendered),
-        .text_color(store_raw_rgb)
-    );
-
-    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_pos (
-        .clk_pixel(clk_pixel),
-        .hcount(x_pos),
-        .vcount(y_pos),
-        .text_data(store_pos_data),
-        .text_len(store_pos_len),
-        .start_x(STORE_VIEW_TEXT_X),
-        .start_y(STORE_VIEW_POS_Y),
-        .scale(4'd1),
-        .text_enable(store_pos_rendered),
-        .text_color(store_pos_rgb)
-    );
-
-    always @(*) begin
-        component_store_view_rendered = video_on;
-        component_store_view_rgb = 12'h132;
-
-        if ((x_pos >= STORE_VIEW_CARD_X0) && (x_pos < STORE_VIEW_CARD_X1) &&
-            (y_pos >= STORE_VIEW_CARD_Y0) && (y_pos < STORE_VIEW_CARD_Y1)) begin
-            component_store_view_rgb = 12'h254;
-            if ((x_pos < STORE_VIEW_CARD_X0 + 3) || (x_pos >= STORE_VIEW_CARD_X1 - 3) ||
-                (y_pos < STORE_VIEW_CARD_Y0 + 3) || (y_pos >= STORE_VIEW_CARD_Y1 - 3)) begin
-                component_store_view_rgb = 12'hFC9;
-            end else if (y_pos < STORE_VIEW_CARD_Y0 + 48) begin
-                component_store_view_rgb = 12'h365;
-            end else if ((y_pos == STORE_VIEW_COUNT_Y - 12) || (y_pos == STORE_VIEW_PACKED_Y - 12)) begin
-                component_store_view_rgb = 12'h486;
-            end
-        end
-
-        if (store_title_rendered) component_store_view_rgb = store_title_rgb;
-        if (store_hint_rendered) component_store_view_rgb = store_hint_rgb;
-        if (store_status_rendered) component_store_view_rgb = store_status_rgb;
-        if (store_count_rendered) component_store_view_rgb = store_count_rgb;
-        if (store_packed_rendered) component_store_view_rgb = store_packed_rgb;
-        if (store_index_rendered) component_store_view_rgb = store_index_rgb;
-        if (store_type_rendered) component_store_view_rgb = store_type_rgb;
-        if (store_rot_rendered) component_store_view_rgb = store_rot_rgb;
-        if (store_value_rendered) component_store_view_rgb = store_value_rgb;
-        if (store_raw_rendered) component_store_view_rgb = store_raw_rgb;
-        if (store_pos_rendered) component_store_view_rgb = store_pos_rgb;
     end
 
     assign interaction_bg_cmd_ready = (init_cycles >= INIT_DELAY_CYCLES) && !clear_canvas_active;
@@ -3482,238 +2686,10 @@ module GlobalRender_top (
         .frame_drop_flag(interaction_frame_drop_flag)
     );
 
-    wire        matrix_rendered;
-    wire [11:0] matrix_rgb;
-    localparam [1023:0] MATRIX_A_CONST = {
-        16'h8000, 16'h0240, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000,
-        16'h0240, 16'hEC40, 16'h0380, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000,
-        16'h0000, 16'h0380, 16'h1E1A, 16'h04CC, 16'h0000, 16'h0000, 16'h0000, 16'h0000,
-        16'h0000, 16'h0000, 16'h04CC, 16'h2840, 16'h05E6, 16'h0000, 16'h0000, 16'h0000,
-        16'h0000, 16'h0000, 16'h0000, 16'h05E6, 16'hCD67, 16'h06B3, 16'h0000, 16'h0000,
-        16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h06B3, 16'h3CCD, 16'h0766, 16'h0000,
-        16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0766, 16'hB91A, 16'h081A,
-        16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h081A, 16'h63FD
-    };
-    localparam [1023:0] MATRIX_LU_CONST = {
-        16'h0100, 16'h0080, 16'h0040, 16'h001A, 16'h000C, 16'h0005, 16'h0002, 16'h0000,
-        16'h0200, 16'h0180, 16'h00C0, 16'h004C, 16'h0026, 16'h0014, 16'h000A, 16'h0005,
-        16'h0300, 16'h0280, 16'h0200, 16'h0100, 16'h0080, 16'h0040, 16'h001F, 16'h000F,
-        16'h0400, 16'h0380, 16'h0300, 16'h0280, 16'h0140, 16'h0099, 16'h004C, 16'h0026,
-        16'h0500, 16'h0480, 16'h0400, 16'h0380, 16'h0300, 16'h0180, 16'h00C0, 16'h0059,
-        16'h0600, 16'h0580, 16'h0500, 16'h0480, 16'h0400, 16'h0380, 16'h01C0, 16'h00D9,
-        16'h0700, 16'h0680, 16'h0600, 16'h0580, 16'h0500, 16'h0480, 16'h0400, 16'h0200,
-        16'h0800, 16'h0780, 16'h0700, 16'h0680, 16'h0600, 16'h0580, 16'h0500, 16'h0480
-    };
-    reg  [1023:0] matrix_a_data;    // 8x8 Q8.8 瀹氱偣鏁扮煩闃?
-    reg  [1023:0] matrix_lu_data;   // 8x8 Q8.8 瀹氱偣鏁扮煩闃?
-
-    // 寮?鍏虫帶鍒讹細SW[0]=0 鏄剧ず鐢佃矾锛孲W[0]=1 鏄剧ず鐭╅樀
     assign backend_fetch_test_enable = ENABLE_BACKEND_FETCH_TEST && SW[2] && !uart_netlist_debug_enable;
     assign uart_netlist_debug_enable = ENABLE_UART_NETLIST_DEBUG && SW[5];
     assign uart_flood_debug_enable = ENABLE_UART_FLOOD_DEBUG && SW[4] && !uart_netlist_debug_enable;
     assign uart_cell_debug_enable = ENABLE_UART_CELL_DEBUG && SW[3] && !uart_flood_debug_enable && !uart_netlist_debug_enable;
-
-    // 鍒濆鍖栫ず渚嬬煩闃垫暟鎹? (8x8 鐭╅樀锛孮8.8 瀹氱偣鏁?)
-    // 鏁版嵁鎺掑垪锛歔0][0] 鍦? [1023:1008], [0][1] 鍦? [1007:992], ..., [7][7] 鍦? [15:0]
-    // index = row * 8 + col, 浣嶈寖鍥? = (63 - index) * 16 +: 16
-    always @(posedge clk_pixel) begin
-        // A 鐭╅樀 - 涓夊瑙掓祴璇曠煩闃? (甯﹀皬鏁板拰璐熸暟)
-        // [-128.00,   2.25,   0,     0,     0,     0,     0,     0   ]
-        // [  2.25,  -20.75,  3.50,  0,     0,     0,     0,     0   ]
-        // [  0,      3.50,  30.10,  4.80,  0,     0,     0,     0   ]
-        // [  0,      0,      4.80, 40.25,  5.90,  0,     0,     0   ]
-        // [  0,      0,      0,     5.90,-50.60,  6.70,  0,     0   ]
-        // [  0,      0,      0,     0,     6.70, 60.80,  7.40,  0   ]
-        // [  0,      0,      0,     0,     0,     7.40,-70.90,  8.10]
-        // [  0,      0,      0,     0,     0,     0,     8.10, 99.99]
-        matrix_a_data <= 1024'd0;
-        // Q8.8 鏍煎紡锛氳礋鏁颁娇鐢ㄧ鍙蜂綅 (bit 15)
-        // -128.00 = 0x8000 (1000 0000 0000 0000)
-        // -20.75  = 0xEC40 (1110 1100 0100 0000)
-        // -50.60  = 0xCD67 (1100 1101 0110 0111)
-        // -70.90  = 0xB91A (1011 1001 0001 1010)
-        // 99.99   = 0x63FD (0110 0011 1111 1101)
-        
-        // 绗? 0 琛? (index 0-7)
-        matrix_a_data[1023:1008] <= 16'h8000;  // A[0][0] = -128.00
-        matrix_a_data[1007:992]  <= 16'h0240;  // A[0][1] = 2.25
-        matrix_a_data[991:976]   <= 16'h0000;  // A[0][2] = 0.00
-        matrix_a_data[975:960]   <= 16'h0000;  // A[0][3] = 0.00
-        matrix_a_data[959:944]   <= 16'h0000;  // A[0][4] = 0.00
-        matrix_a_data[943:928]   <= 16'h0000;  // A[0][5] = 0.00
-        matrix_a_data[927:912]   <= 16'h0000;  // A[0][6] = 0.00
-        matrix_a_data[911:896]   <= 16'h0000;  // A[0][7] = 0.00
-        // 绗? 1 琛? (index 8-15)
-        matrix_a_data[895:880]   <= 16'h0240;  // A[1][0] = 2.25
-        matrix_a_data[879:864]   <= 16'hEC40;  // A[1][1] = -20.75
-        matrix_a_data[863:848]   <= 16'h0380;  // A[1][2] = 3.50
-        matrix_a_data[847:832]   <= 16'h0000;  // A[1][3] = 0.00
-        matrix_a_data[831:816]   <= 16'h0000;  // A[1][4] = 0.00
-        matrix_a_data[815:800]   <= 16'h0000;  // A[1][5] = 0.00
-        matrix_a_data[799:784]   <= 16'h0000;  // A[1][6] = 0.00
-        matrix_a_data[783:768]   <= 16'h0000;  // A[1][7] = 0.00
-        // 绗? 2 琛? (index 16-23)
-        matrix_a_data[767:752]   <= 16'h0000;  // A[2][0] = 0.00
-        matrix_a_data[751:736]   <= 16'h0380;  // A[2][1] = 3.50
-        matrix_a_data[735:720]   <= 16'h1E1A;  // A[2][2] = 30.10
-        matrix_a_data[719:704]   <= 16'h04CC;  // A[2][3] = 4.80
-        matrix_a_data[703:688]   <= 16'h0000;  // A[2][4] = 0.00
-        matrix_a_data[687:672]   <= 16'h0000;  // A[2][5] = 0.00
-        matrix_a_data[671:656]   <= 16'h0000;  // A[2][6] = 0.00
-        matrix_a_data[655:640]   <= 16'h0000;  // A[2][7] = 0.00
-        // 绗? 3 琛? (index 24-31)
-        matrix_a_data[639:624]   <= 16'h0000;  // A[3][0] = 0.00
-        matrix_a_data[623:608]   <= 16'h0000;  // A[3][1] = 0.00
-        matrix_a_data[607:592]   <= 16'h04CC;  // A[3][2] = 4.80
-        matrix_a_data[591:576]   <= 16'h2840;  // A[3][3] = 40.25
-        matrix_a_data[575:560]   <= 16'h05E6;  // A[3][4] = 5.90
-        matrix_a_data[559:544]   <= 16'h0000;  // A[3][5] = 0.00
-        matrix_a_data[543:528]   <= 16'h0000;  // A[3][6] = 0.00
-        matrix_a_data[527:512]   <= 16'h0000;  // A[3][7] = 0.00
-        // 绗? 4 琛? (index 32-39)
-        matrix_a_data[511:496]   <= 16'h0000;  // A[4][0] = 0.00
-        matrix_a_data[495:480]   <= 16'h0000;  // A[4][1] = 0.00
-        matrix_a_data[479:464]   <= 16'h0000;  // A[4][2] = 0.00
-        matrix_a_data[463:448]   <= 16'h05E6;  // A[4][3] = 5.90
-        matrix_a_data[447:432]   <= 16'hCD67;  // A[4][4] = -50.60
-        matrix_a_data[431:416]   <= 16'h06B3;  // A[4][5] = 6.70
-        matrix_a_data[415:400]   <= 16'h0000;  // A[4][6] = 0.00
-        matrix_a_data[399:384]   <= 16'h0000;  // A[4][7] = 0.00
-        // 绗? 5 琛? (index 40-47)
-        matrix_a_data[383:368]   <= 16'h0000;  // A[5][0] = 0.00
-        matrix_a_data[367:352]   <= 16'h0000;  // A[5][1] = 0.00
-        matrix_a_data[351:336]   <= 16'h0000;  // A[5][2] = 0.00
-        matrix_a_data[335:320]   <= 16'h0000;  // A[5][3] = 0.00
-        matrix_a_data[319:304]   <= 16'h06B3;  // A[5][4] = 6.70
-        matrix_a_data[303:288]   <= 16'h3CCD;  // A[5][5] = 60.80
-        matrix_a_data[287:272]   <= 16'h0766;  // A[5][6] = 7.40
-        matrix_a_data[271:256]   <= 16'h0000;  // A[5][7] = 0.00
-        // 绗? 6 琛? (index 48-55)
-        matrix_a_data[255:240]   <= 16'h0000;  // A[6][0] = 0.00
-        matrix_a_data[239:224]   <= 16'h0000;  // A[6][1] = 0.00
-        matrix_a_data[223:208]   <= 16'h0000;  // A[6][2] = 0.00
-        matrix_a_data[207:192]   <= 16'h0000;  // A[6][3] = 0.00
-        matrix_a_data[191:176]   <= 16'h0000;  // A[6][4] = 0.00
-        matrix_a_data[175:160]   <= 16'h0766;  // A[6][5] = 7.40
-        matrix_a_data[159:144]   <= 16'hB91A;  // A[6][6] = -70.90
-        matrix_a_data[143:128]   <= 16'h081A;  // A[6][7] = 8.10
-        // 绗? 7 琛? (index 56-63)
-        matrix_a_data[127:112]   <= 16'h0000;  // A[7][0] = 0.00
-        matrix_a_data[111:96]    <= 16'h0000;  // A[7][1] = 0.00
-        matrix_a_data[95:80]     <= 16'h0000;  // A[7][2] = 0.00
-        matrix_a_data[79:64]     <= 16'h0000;  // A[7][3] = 0.00
-        matrix_a_data[63:48]     <= 16'h0000;  // A[7][4] = 0.00
-        matrix_a_data[47:32]     <= 16'h0000;  // A[7][5] = 0.00
-        matrix_a_data[31:16]     <= 16'h081A;  // A[7][6] = 8.10
-        matrix_a_data[15:0]      <= 16'h63FD;  // A[7][7] = 99.99
-
-        // LU 鐭╅樀 - LU 鍒嗚В绀轰緥 (甯﹀皬鏁帮紝鍚礋鏁版祴璇?)
-        // [  1.00,  0.50,  0.25,  0.10,  0.05,  0.02,  0.01,  0.00]
-        // [  2.00,  1.50,  0.75,  0.30,  0.15,  0.08,  0.04,  0.02]
-        // [  3.00,  2.50,  2.00,  1.00,  0.50,  0.25,  0.12,  0.06]
-        // [  4.00,  3.50,  3.00,  2.50,  1.25,  0.60,  0.30,  0.15]
-        // [  5.00,  4.50,  4.00,  3.50,  3.00,  1.50,  0.75,  0.35]
-        // [  6.00,  5.50,  5.00,  4.50,  4.00,  3.50,  1.75,  0.85]
-        // [  7.00,  6.50,  6.00,  5.50,  5.00,  4.50,  4.00,  2.00]
-        // [  8.00,  7.50,  7.00,  6.50,  6.00,  5.50,  5.00,  4.50]
-        matrix_lu_data <= 1024'd0;
-        // 绗? 0 琛?
-        matrix_lu_data[1023:1008] <= 16'h0100;  // 1.00
-        matrix_lu_data[1007:992]  <= 16'h0080;  // 0.50
-        matrix_lu_data[991:976]   <= 16'h0040;  // 0.25
-        matrix_lu_data[975:960]   <= 16'h001A;  // 0.10
-        matrix_lu_data[959:944]   <= 16'h000C;  // 0.05
-        matrix_lu_data[943:928]   <= 16'h0005;  // 0.02
-        matrix_lu_data[927:912]   <= 16'h0002;  // 0.01
-        matrix_lu_data[911:896]   <= 16'h0000;  // 0.00
-        // 绗? 1 琛?
-        matrix_lu_data[895:880]   <= 16'h0200;  // 2.00
-        matrix_lu_data[879:864]   <= 16'h0180;  // 1.50
-        matrix_lu_data[863:848]   <= 16'h00C0;  // 0.75
-        matrix_lu_data[847:832]   <= 16'h004C;  // 0.30
-        matrix_lu_data[831:816]   <= 16'h0026;  // 0.15
-        matrix_lu_data[815:800]   <= 16'h0014;  // 0.08
-        matrix_lu_data[799:784]   <= 16'h000A;  // 0.04
-        matrix_lu_data[783:768]   <= 16'h0005;  // 0.02
-        // 绗? 2 琛?
-        matrix_lu_data[767:752]   <= 16'h0300;  // 3.00
-        matrix_lu_data[751:736]   <= 16'h0280;  // 2.50
-        matrix_lu_data[735:720]   <= 16'h0200;  // 2.00
-        matrix_lu_data[719:704]   <= 16'h0100;  // 1.00
-        matrix_lu_data[703:688]   <= 16'h0080;  // 0.50
-        matrix_lu_data[687:672]   <= 16'h0040;  // 0.25
-        matrix_lu_data[671:656]   <= 16'h001F;  // 0.12
-        matrix_lu_data[655:640]   <= 16'h000F;  // 0.06
-        // 绗? 3 琛?
-        matrix_lu_data[639:624]   <= 16'h0400;  // 4.00
-        matrix_lu_data[623:608]   <= 16'h0380;  // 3.50
-        matrix_lu_data[607:592]   <= 16'h0300;  // 3.00
-        matrix_lu_data[591:576]   <= 16'h0280;  // 2.50
-        matrix_lu_data[575:560]   <= 16'h0140;  // 1.25
-        matrix_lu_data[559:544]   <= 16'h0099;  // 0.60
-        matrix_lu_data[543:528]   <= 16'h004C;  // 0.30
-        matrix_lu_data[527:512]   <= 16'h0026;  // 0.15
-        // 绗? 4 琛?
-        matrix_lu_data[511:496]   <= 16'h0500;  // 5.00
-        matrix_lu_data[495:480]   <= 16'h0480;  // 4.50
-        matrix_lu_data[479:464]   <= 16'h0400;  // 4.00
-        matrix_lu_data[463:448]   <= 16'h0380;  // 3.50
-        matrix_lu_data[447:432]   <= 16'h0300;  // 3.00
-        matrix_lu_data[431:416]   <= 16'h0180;  // 1.50
-        matrix_lu_data[415:400]   <= 16'h00C0;  // 0.75
-        matrix_lu_data[399:384]   <= 16'h0059;  // 0.35
-        // 绗? 5 琛?
-        matrix_lu_data[383:368]   <= 16'h0600;  // 6.00
-        matrix_lu_data[367:352]   <= 16'h0580;  // 5.50
-        matrix_lu_data[351:336]   <= 16'h0500;  // 5.00
-        matrix_lu_data[335:320]   <= 16'h0480;  // 4.50
-        matrix_lu_data[319:304]   <= 16'h0400;  // 4.00
-        matrix_lu_data[303:288]   <= 16'h0380;  // 3.50
-        matrix_lu_data[287:272]   <= 16'h01C0;  // 1.75
-        matrix_lu_data[271:256]   <= 16'h00D9;  // 0.85
-        // 绗? 6 琛?
-        matrix_lu_data[255:240]   <= 16'h0700;  // 7.00
-        matrix_lu_data[239:224]   <= 16'h0680;  // 6.50
-        matrix_lu_data[223:208]   <= 16'h0600;  // 6.00
-        matrix_lu_data[207:192]   <= 16'h0580;  // 5.50
-        matrix_lu_data[191:176]   <= 16'h0500;  // 5.00
-        matrix_lu_data[175:160]   <= 16'h0480;  // 4.50
-        matrix_lu_data[159:144]   <= 16'h0400;  // 4.00
-        matrix_lu_data[143:128]   <= 16'h0200;  // 2.00
-        // 绗? 7 琛?
-        matrix_lu_data[127:112]   <= 16'h0800;  // 8.00
-        matrix_lu_data[111:96]    <= 16'h0780;  // 7.50
-        matrix_lu_data[95:80]     <= 16'h0700;  // 7.00
-        matrix_lu_data[79:64]     <= 16'h0680;  // 6.50
-        matrix_lu_data[63:48]     <= 16'h0600;  // 6.00
-        matrix_lu_data[47:32]     <= 16'h0580;  // 5.50
-        matrix_lu_data[31:16]     <= 16'h0500;  // 5.00
-        matrix_lu_data[15:0]      <= 16'h0480;  // 4.50
-    end
-
-    // 鍏ㄥ睆鐭╅樀鏄剧ず (涓婁笅甯冨眬)
-    generate
-        if (ENABLE_MATRIX) begin : gen_matrix
-            MatrixDisplay #(
-                .PANEL_X(0),
-                .PANEL_Y(0),
-                .PANEL_W(SCREEN_W),
-                .PANEL_H(SCREEN_H)
-            ) u_matrix_display (
-                .clk_pixel(clk_pixel),
-                .hcount(x_pos),
-                .vcount(y_pos),
-                .video_on(video_on),
-                .matrix_a_data(MATRIX_A_CONST),
-                .matrix_lu_data(MATRIX_LU_CONST),
-                .matrix_rendered(matrix_rendered),
-                .matrix_rgb(matrix_rgb)
-            );
-        end else begin : gen_matrix_disabled
-            assign matrix_rendered = 1'b0;
-            assign matrix_rgb = 12'h000;
-        end
-    endgenerate
 
     // =========================================================
     // 銆愰噸榛炲渚嬪寲锛氬偝鍏ユ洿鏂扮殑 KEY_W 鍜? KEY_H銆?
@@ -4328,11 +3304,6 @@ module GlobalRender_top (
             rgb <= BLACK;
         end else if (mouse_display_enable) begin
             rgb <= mouse_rgb;
-        end else if (show_component_store_view && component_store_view_rendered) begin
-            rgb <= component_store_view_rgb;
-        end else if (show_matrix && matrix_rendered) begin
-            // 鍏ㄥ睆鐭╅樀鏄剧ず
-            rgb <= matrix_rgb;
         end else if (keyboard_region_active) begin
             rgb <= keyboard_rgb;
         end else if (circuit_canvas_rendered) begin

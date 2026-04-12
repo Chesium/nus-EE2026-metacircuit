@@ -15,27 +15,27 @@ module StampingNetlistStore_test;
   reg fetchElemN0_start = 1'b0;
   reg [15:0] fetchElemN0_idx = '0;
   wire fetchElemN0_done;
-  wire [15:0] fetchElemN0_result;
+  wire [7:0] fetchElemN0_result;
 
   reg fetchElemN1_start = 1'b0;
   reg [15:0] fetchElemN1_idx = '0;
   wire fetchElemN1_done;
-  wire [15:0] fetchElemN1_result;
+  wire [7:0] fetchElemN1_result;
 
   reg fetchElemN2_start = 1'b0;
   reg [15:0] fetchElemN2_idx = '0;
   wire fetchElemN2_done;
-  wire [15:0] fetchElemN2_result;
+  wire [7:0] fetchElemN2_result;
 
   reg fetchElemN3_start = 1'b0;
   reg [15:0] fetchElemN3_idx = '0;
   wire fetchElemN3_done;
-  wire [15:0] fetchElemN3_result;
+  wire [7:0] fetchElemN3_result;
 
   reg fetchElemAux_start = 1'b0;
   reg [15:0] fetchElemAux_idx = '0;
   wire fetchElemAux_done;
-  wire [15:0] fetchElemAux_result;
+  wire [7:0] fetchElemAux_result;
 
   reg fetchElemVal0_start = 1'b0;
   reg [15:0] fetchElemVal0_idx = '0;
@@ -125,7 +125,7 @@ module StampingNetlistStore_test;
 
   task automatic issue_fetch_n0(
       input [15:0] idx,
-      input [15:0] expected
+      input [7:0] expected
   );
     begin
       @(negedge clk);
@@ -144,7 +144,7 @@ module StampingNetlistStore_test;
 
   task automatic issue_fetch_n1(
       input [15:0] idx,
-      input [15:0] expected
+      input [7:0] expected
   );
     begin
       @(negedge clk);
@@ -163,7 +163,7 @@ module StampingNetlistStore_test;
 
   task automatic issue_fetch_n2(
       input [15:0] idx,
-      input [15:0] expected
+      input [7:0] expected
   );
     begin
       @(negedge clk);
@@ -182,7 +182,7 @@ module StampingNetlistStore_test;
 
   task automatic issue_fetch_n3(
       input [15:0] idx,
-      input [15:0] expected
+      input [7:0] expected
   );
     begin
       @(negedge clk);
@@ -201,7 +201,7 @@ module StampingNetlistStore_test;
 
   task automatic issue_fetch_aux(
       input [15:0] idx,
-      input [15:0] expected
+      input [7:0] expected
   );
     begin
       @(negedge clk);
@@ -299,37 +299,37 @@ module StampingNetlistStore_test;
     rst_n <= 1'b1;
 
     dut.kind_mem[0] = 8'h03;
-    dut.n0_mem[0] = 16'h0001;
-    dut.n1_mem[0] = 16'hffff;
-    dut.n2_mem[0] = 16'h0000;
-    dut.n3_mem[0] = 16'h0000;
-    dut.aux_mem[0] = 16'h0004;
+    dut.n0_mem[0] = 8'h01;
+    dut.n1_mem[0] = 8'hff;
+    dut.n2_mem[0] = 8'h00;
+    dut.n3_mem[0] = 8'h00;
+    dut.aux_mem[0] = 8'h04;
     dut.v0_mem[0] = $shortrealtobits(5.0);
     dut.v1_mem[0] = $shortrealtobits(0.0);
     dut.v2_mem[0] = $shortrealtobits(1.0);
     dut.v3_mem[0] = $shortrealtobits(0.5);
 
     dut.kind_mem[1] = 8'h01;
-    dut.n0_mem[1] = 16'h0002;
-    dut.n1_mem[1] = 16'h0003;
+    dut.n0_mem[1] = 8'h02;
+    dut.n1_mem[1] = 8'h03;
     dut.v0_mem[1] = $shortrealtobits(0.25);
     dut.v1_mem[1] = $shortrealtobits(0.0);
     dut.v2_mem[1] = $shortrealtobits(1.0);
     dut.v3_mem[1] = $shortrealtobits(2.0);
 
     issue_fetch_kind(16'd0, 8'h03);
-    issue_fetch_n0(16'd0, 16'h0001);
-    issue_fetch_n1(16'd0, 16'hffff);
-    issue_fetch_n2(16'd1, 16'h0000);
-    issue_fetch_n3(16'd1, 16'h0000);
-    issue_fetch_aux(16'd0, 16'h0004);
+    issue_fetch_n0(16'd0, 8'h01);
+    issue_fetch_n1(16'd0, 8'hff);
+    issue_fetch_n2(16'd1, 8'h00);
+    issue_fetch_n3(16'd1, 8'h00);
+    issue_fetch_aux(16'd0, 8'h04);
     issue_fetch_v0(16'd1, $shortrealtobits(0.25));
     issue_fetch_v1(16'd0, $shortrealtobits(0.0));
     issue_fetch_v2(16'd0, $shortrealtobits(1.0));
     issue_fetch_v3(16'd1, $shortrealtobits(2.0));
 
     issue_fetch_kind(16'd9, 8'h00);
-    issue_fetch_aux(16'd9, 16'h0000);
+    issue_fetch_aux(16'd9, 8'h00);
 
     $display("StampingNetlistStore_test passed.");
     $finish;

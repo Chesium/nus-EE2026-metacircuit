@@ -1,5 +1,58 @@
 `timescale 1ns / 1ps
 
+module FetchCellTb #(
+    parameter integer GRID_WIDTH = 18
+) (
+    input  wire        clk,
+    input  wire        start,
+    output wire        busy,
+    output reg         done,
+    input  wire [4:0]  i,
+    input  wire [3:0]  j,
+    output reg  [15:0] result,
+    output reg         ram_ren,
+    output reg  [8:0]  ram_addr,
+    input  wire [15:0] ram_rdata
+);
+    localparam [1:0] STATE_IDLE    = 2'd0;
+    localparam [1:0] STATE_WAIT    = 2'd1;
+    localparam [1:0] STATE_CAPTURE = 2'd2;
+
+    reg [1:0] state = STATE_IDLE;
+
+    assign busy = (state != STATE_IDLE) || start;
+
+    always @(posedge clk) begin
+        case (state)
+            STATE_IDLE: begin
+                done <= 1'b0;
+                ram_ren <= 1'b0;
+                if (start) begin
+                    ram_ren <= 1'b1;
+                    ram_addr <= i + (j * GRID_WIDTH);
+                    state <= STATE_WAIT;
+                end
+            end
+            STATE_WAIT: begin
+                done <= 1'b0;
+                ram_ren <= 1'b0;
+                state <= STATE_CAPTURE;
+            end
+            STATE_CAPTURE: begin
+                result <= ram_rdata;
+                done <= 1'b1;
+                ram_ren <= 1'b0;
+                state <= STATE_IDLE;
+            end
+            default: begin
+                done <= 1'b0;
+                ram_ren <= 1'b0;
+                state <= STATE_IDLE;
+            end
+        endcase
+    end
+endmodule
+
 module ExtractComponentNodes_test;
   localparam integer GRID_WIDTH = 6;
   localparam integer GRID_HEIGHT = 6;
@@ -48,6 +101,11 @@ module ExtractComponentNodes_test;
   wire [7:0]  fetchR_j;
   wire        fetchR_done;
   wire [7:0]  fetchR_result;
+  wire        fetchCell_start;
+  wire [7:0]  fetchCell_i;
+  wire [7:0]  fetchCell_j;
+  wire        fetchCell_done;
+  wire [15:0] fetchCell_result;
 
   wire        storeNode0_start;
   wire [15:0] storeNode0_idx;
@@ -60,6 +118,7 @@ module ExtractComponentNodes_test;
   wire        storeNode1_done;
 
   reg  [39:0] component_store_mem [0:ELEM_COUNT-1];
+  reg  [15:0] cell_mem [0:CELL_COUNT-1];
   reg  [7:0]  node0_mem [0:ELEM_COUNT-1];
   reg  [7:0]  node1_mem [0:ELEM_COUNT-1];
 
@@ -102,6 +161,10 @@ module ExtractComponentNodes_test;
   reg  [7:0]  result_store_j = 8'd0;
   reg  [7:0]  result_store_v = 8'd0;
   wire        result_store_done_unused;
+  wire        fetch_cell_busy_unused;
+  wire        fetch_cell_ram_ren;
+  wire [8:0]  fetch_cell_ram_addr;
+  reg  [15:0] fetch_cell_ram_rdata = 16'd0;
 
   integer idx;
   integer cycle_count;
@@ -118,10 +181,27 @@ module ExtractComponentNodes_test;
     end
   endfunction
 
+  function automatic [15:0] make_cell_data(
+      input [1:0] rotation_value,
+      input [5:0] sprite_value
+  );
+    begin
+      make_cell_data = {7'd0, rotation_value, sprite_value, 1'b1};
+    end
+  endfunction
+
   task automatic clear_component_store;
     begin
       for (idx = 0; idx < ELEM_COUNT; idx = idx + 1) begin
         component_store_mem[idx] = 40'd0;
+      end
+    end
+  endtask
+
+  task automatic clear_cell_mem;
+    begin
+      for (idx = 0; idx < CELL_COUNT; idx = idx + 1) begin
+        cell_mem[idx] = 16'd0;
       end
     end
   endtask
@@ -131,6 +211,20 @@ module ExtractComponentNodes_test;
       for (idx = 0; idx < ELEM_COUNT; idx = idx + 1) begin
         node0_mem[idx] = 8'd0;
         node1_mem[idx] = 8'd0;
+      end
+    end
+  endtask
+
+  task automatic place_cell(
+      input [7:0] x_value,
+      input [7:0] y_value,
+      input [15:0] cell_value
+  );
+    integer addr;
+    begin
+      addr = x_value + (y_value * GRID_WIDTH);
+      if (addr >= 0 && addr < CELL_COUNT) begin
+        cell_mem[addr] = cell_value;
       end
     end
   endtask
@@ -209,6 +303,7 @@ module ExtractComponentNodes_test;
       result_store_j <= 8'd0;
       result_store_v <= 8'd0;
       clear_component_store();
+      clear_cell_mem();
       clear_node_memories();
       repeat (4) @(negedge clk);
       rst_n <= 1'b1;
@@ -221,18 +316,17 @@ module ExtractComponentNodes_test;
     begin
       reset_design();
 
-      component_store_mem[0] = make_component_store_entry(9'd0, TYPE_GROUND[3:0], 2'd1, 5'd0, 4'd2);
-      component_store_mem[1] = make_component_store_entry(9'd1, TYPE_RL[3:0], 2'd2, 5'd2, 4'd1);
-      component_store_mem[2] = make_component_store_entry(9'd2, TYPE_CL[3:0], 2'd0, 5'd1, 4'd1);
+      component_store_mem[0] = make_component_store_entry(9'd0, TYPE_RL[3:0], 2'd2, 5'd2, 4'd1);
+      component_store_mem[1] = make_component_store_entry(9'd1, TYPE_CL[3:0], 2'd0, 5'd1, 4'd1);
 
       store_region(8'd0, 8'd1, 8'd7);
       store_region(8'd3, 8'd1, 8'd11);
+      place_cell(8'd0, 8'd2, make_cell_data(2'd1, 6'd15));
 
-      run_dut(3);
+      run_dut(2);
 
-      expect_nodes(0, 8'd0, 8'd0);
-      expect_nodes(1, 8'd1, 8'd0);
-      expect_nodes(2, 8'd0, 8'd1);
+      expect_nodes(0, 8'd0, 8'hFF);
+      expect_nodes(1, 8'hFF, 8'd0);
 
       $display("run_case_ground_and_compaction passed.");
     end
@@ -252,8 +346,8 @@ module ExtractComponentNodes_test;
 
       run_dut(2);
 
-      expect_nodes(0, 8'd1, 8'd2);
-      expect_nodes(1, 8'd2, 8'd3);
+      expect_nodes(0, 8'd0, 8'd1);
+      expect_nodes(1, 8'd1, 8'd2);
 
       $display("run_case_sparse_without_ground passed.");
     end
@@ -263,22 +357,20 @@ module ExtractComponentNodes_test;
     begin
       reset_design();
 
-      component_store_mem[0] = make_component_store_entry(9'd0, TYPE_GROUND[3:0], 2'd1, 5'd0, 4'd2);
-      component_store_mem[1] = make_component_store_entry(9'd1, TYPE_GROUND[3:0], 2'd1, 5'd3, 4'd2);
-      component_store_mem[2] = make_component_store_entry(9'd2, TYPE_RL[3:0], 2'd2, 5'd2, 4'd1);
-      component_store_mem[3] = make_component_store_entry(9'd3, TYPE_CL[3:0], 2'd1, 5'd2, 4'd2);
+      component_store_mem[0] = make_component_store_entry(9'd0, TYPE_RL[3:0], 2'd2, 5'd2, 4'd1);
+      component_store_mem[1] = make_component_store_entry(9'd1, TYPE_CL[3:0], 2'd1, 5'd2, 4'd2);
 
       store_region(8'd0, 8'd1, 8'd7);
       store_region(8'd2, 8'd1, 8'd11);
       store_region(8'd3, 8'd1, 8'd11);
       store_region(8'd2, 8'd4, 8'd25);
+      place_cell(8'd0, 8'd2, make_cell_data(2'd1, 6'd15));
+      place_cell(8'd2, 8'd5, make_cell_data(2'd1, 6'd15));
 
-      run_dut(4);
+      run_dut(2);
 
-      expect_nodes(0, 8'd0, 8'd0);
-      expect_nodes(1, 8'd0, 8'd0);
-      expect_nodes(2, 8'd0, 8'd0);
-      expect_nodes(3, 8'd0, 8'd1);
+      expect_nodes(0, 8'd0, 8'hFF);
+      expect_nodes(1, 8'd0, 8'hFF);
 
       $display("run_case_multiple_ground_regions passed.");
     end
@@ -294,6 +386,9 @@ module ExtractComponentNodes_test;
   assign fetchAnchorPositionY_result = {4'd0, fetch_y_result_raw};
 
   always @(posedge clk) begin
+    if (fetch_cell_ram_ren) begin
+      fetch_cell_ram_rdata <= cell_mem[fetch_cell_ram_addr];
+    end
     if (node0_wen && (node0_addr < ELEM_COUNT)) begin
       node0_mem[node0_addr] <= node0_wdata;
     end
@@ -332,6 +427,11 @@ module ExtractComponentNodes_test;
       .fetchR_j(fetchR_j),
       .fetchR_done(fetchR_done),
       .fetchR_result(fetchR_result),
+      .fetchCell_start(fetchCell_start),
+      .fetchCell_i(fetchCell_i),
+      .fetchCell_j(fetchCell_j),
+      .fetchCell_done(fetchCell_done),
+      .fetchCell_result(fetchCell_result),
       .storeNode0_start(storeNode0_start),
       .storeNode0_idx(storeNode0_idx),
       .storeNode0_node_i(storeNode0_node_i),
@@ -407,6 +507,21 @@ module ExtractComponentNodes_test;
       .fetchR_j(fetchR_j),
       .fetchR_done(fetchR_done),
       .fetchR_result(fetchR_result)
+  );
+
+  FetchCellTb #(
+      .GRID_WIDTH(GRID_WIDTH)
+  ) fetch_cell_inst (
+      .clk(clk),
+      .start(fetchCell_start),
+      .busy(fetch_cell_busy_unused),
+      .done(fetchCell_done),
+      .i(fetchCell_i[4:0]),
+      .j(fetchCell_j[3:0]),
+      .result(fetchCell_result),
+      .ram_ren(fetch_cell_ram_ren),
+      .ram_addr(fetch_cell_ram_addr),
+      .ram_rdata(fetch_cell_ram_rdata)
   );
 
   storeNode0 store_node0_inst (

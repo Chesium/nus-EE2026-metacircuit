@@ -116,50 +116,11 @@ module GlobalRenderNetlistProbe_test;
   endtask
 
   always @(posedge CLK100MHZ) begin
-    if (dut.netlist_extract_fetch_type_done) begin
-      $display("fetchType idx=%0d -> %0d t=%0t",
-               dut.netlist_extract_fetch_type_idx,
-               dut.netlist_extract_fetch_type_result,
-               $time);
-    end
-    if (dut.netlist_extract_fetch_x_done) begin
-      $display("fetchX idx=%0d -> %0d t=%0t",
-               dut.netlist_extract_fetch_x_idx,
-               dut.netlist_extract_fetch_x_result,
-               $time);
-    end
-    if (dut.netlist_extract_fetch_y_done) begin
-      $display("fetchY idx=%0d -> %0d t=%0t",
-               dut.netlist_extract_fetch_y_idx,
-               dut.netlist_extract_fetch_y_result,
-               $time);
-    end
-    if (dut.netlist_extract_fetch_rot_done) begin
-      $display("fetchRot idx=%0d -> %0d t=%0t",
-               dut.netlist_extract_fetch_rot_idx,
-               dut.netlist_extract_fetch_rot_result,
-               $time);
-    end
-    if (dut.netlist_extract_fetchR_done) begin
-      $display("fetchR (%0d,%0d) -> %0d t=%0t",
-               dut.netlist_extract_fetchR_i,
-               dut.netlist_extract_fetchR_j,
-               dut.netlist_extract_fetchR_result,
-               $time);
-    end
     if (dut.netlist_extract_storeNode0_start) begin
       node0_write_count <= node0_write_count + 1;
-      $display("storeNode0 idx=%0d node=%0d t=%0t",
-               dut.netlist_extract_storeNode0_idx,
-               dut.netlist_extract_storeNode0_node_i,
-               $time);
     end
     if (dut.netlist_extract_storeNode1_start) begin
       node1_write_count <= node1_write_count + 1;
-      $display("storeNode1 idx=%0d node=%0d t=%0t",
-               dut.netlist_extract_storeNode1_idx,
-               dut.netlist_extract_storeNode1_node_i,
-               $time);
     end
   end
 
@@ -202,16 +163,29 @@ module GlobalRenderNetlistProbe_test;
 
     repeat (4) @(posedge CLK100MHZ);
 
-    $display("component_store_count=%0d", dut.component_store_count);
-    $display("component store entries:");
-    $display("cmp0 raw=%h", dut.component_store_ram_inst.mem[0]);
-    $display("cmp1 raw=%h", dut.component_store_ram_inst.mem[1]);
-    $display("cmp2 raw=%h", dut.component_store_ram_inst.mem[2]);
-    $display("node writes: node0=%0d node1=%0d", node0_write_count, node1_write_count);
-    $display("node RAM contents:");
-    $display("cmp0: n0=%0d n1=%0d", dut.netlist_node0_ram_inst.mem[0], dut.netlist_node1_ram_inst.mem[0]);
-    $display("cmp1: n0=%0d n1=%0d", dut.netlist_node0_ram_inst.mem[1], dut.netlist_node1_ram_inst.mem[1]);
-    $display("cmp2: n0=%0d n1=%0d", dut.netlist_node0_ram_inst.mem[2], dut.netlist_node1_ram_inst.mem[2]);
+    if (dut.component_store_count !== 9'd3) begin
+      $fatal(1, "Expected component_store_count=3, got %0d", dut.component_store_count);
+    end
+
+    if (node0_write_count !== 3 || node1_write_count !== 3) begin
+      $fatal(1, "Expected 3 node writes per port, got node0=%0d node1=%0d",
+             node0_write_count, node1_write_count);
+    end
+
+    if (dut.netlist_node0_ram_inst.mem[0] !== 8'hFF || dut.netlist_node1_ram_inst.mem[0] !== 8'h00) begin
+      $fatal(1, "cmp0 nodes mismatch: got n0=%0d n1=%0d",
+             dut.netlist_node0_ram_inst.mem[0], dut.netlist_node1_ram_inst.mem[0]);
+    end
+    if (dut.netlist_node0_ram_inst.mem[1] !== 8'hFF || dut.netlist_node1_ram_inst.mem[1] !== 8'h00) begin
+      $fatal(1, "cmp1 nodes mismatch: got n0=%0d n1=%0d",
+             dut.netlist_node0_ram_inst.mem[1], dut.netlist_node1_ram_inst.mem[1]);
+    end
+    if (dut.netlist_node0_ram_inst.mem[2] !== 8'hFF || dut.netlist_node1_ram_inst.mem[2] !== 8'h00) begin
+      $fatal(1, "cmp2 nodes mismatch: got n0=%0d n1=%0d",
+             dut.netlist_node0_ram_inst.mem[2], dut.netlist_node1_ram_inst.mem[2]);
+    end
+
+    $display("GlobalRenderNetlistProbe_test passed.");
 
     $finish;
   end

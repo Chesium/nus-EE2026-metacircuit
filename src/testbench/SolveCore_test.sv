@@ -8,12 +8,6 @@ module SolveCore_test;
   localparam [7:0] KIND_R = 8'd1;
   localparam [7:0] KIND_I = 8'd2;
   localparam [7:0] KIND_V = 8'd3;
-  localparam [7:0] KIND_C = 8'd4;
-  localparam [7:0] KIND_L = 8'd5;
-  localparam [7:0] KIND_VSIN = 8'd6;
-  localparam [7:0] KIND_ISIN = 8'd7;
-  localparam [7:0] KIND_SWPWM = 8'd8;
-  localparam [7:0] KIND_VPWM = 8'd9;
 
   reg clk = 1'b0;
   reg rst_n = 1'b0;
@@ -22,8 +16,6 @@ module SolveCore_test;
   reg start = 1'b0;
   reg [31:0] par_elem_n = '0;
   reg [31:0] par_node_n = '0;
-  reg [31:0] par_dt = '0;
-  reg [31:0] par_time = '0;
   wire busy;
   wire done;
 
@@ -35,32 +27,17 @@ module SolveCore_test;
   wire        fetchElemN0_start;
   wire [15:0] fetchElemN0_idx;
   wire        fetchElemN0_done;
-  wire [15:0] fetchElemN0_result;
+  wire [7:0]  fetchElemN0_result;
 
   wire        fetchElemN1_start;
   wire [15:0] fetchElemN1_idx;
   wire        fetchElemN1_done;
-  wire [15:0] fetchElemN1_result;
+  wire [7:0]  fetchElemN1_result;
 
   wire        fetchElemVal0_start;
   wire [15:0] fetchElemVal0_idx;
   wire        fetchElemVal0_done;
   wire [31:0] fetchElemVal0_result;
-
-  wire        fetchElemVal1_start;
-  wire [15:0] fetchElemVal1_idx;
-  wire        fetchElemVal1_done;
-  wire [31:0] fetchElemVal1_result;
-
-  wire        fetchElemVal2_start;
-  wire [15:0] fetchElemVal2_idx;
-  wire        fetchElemVal2_done;
-  wire [31:0] fetchElemVal2_result;
-
-  wire        fetchElemVal3_start;
-  wire [15:0] fetchElemVal3_idx;
-  wire        fetchElemVal3_done;
-  wire [31:0] fetchElemVal3_result;
 
   wire        store_J_start;
   wire [15:0] store_J_i;
@@ -127,16 +104,6 @@ module SolveCore_test;
   wire        fetch_X_done;
   wire [31:0] fetch_X_result;
 
-  wire        fetch_prevX_start;
-  wire [15:0] fetch_prevX_i;
-  wire        fetch_prevX_done;
-  wire [31:0] fetch_prevX_result;
-
-  wire        store_prevX_start;
-  wire [15:0] store_prevX_i;
-  wire [31:0] store_prevX_v;
-  wire        store_prevX_done;
-
   wire        fma_start;
   wire [31:0] fma_a;
   wire [31:0] fma_b;
@@ -160,15 +127,19 @@ module SolveCore_test;
   wire y_clear_done;
   reg  x_clear_start = 1'b0;
   wire x_clear_done;
-  reg  prevx_clear_start = 1'b0;
-  wire prevx_clear_done;
 
   wire unused_fetchElemN2_done;
-  wire [15:0] unused_fetchElemN2_result;
+  wire [7:0] unused_fetchElemN2_result;
   wire unused_fetchElemN3_done;
-  wire [15:0] unused_fetchElemN3_result;
+  wire [7:0] unused_fetchElemN3_result;
   wire unused_fetchElemAux_done;
-  wire [15:0] unused_fetchElemAux_result;
+  wire [7:0] unused_fetchElemAux_result;
+  wire unused_fetchElemVal1_done;
+  wire [31:0] unused_fetchElemVal1_result;
+  wire unused_fetchElemVal2_done;
+  wire [31:0] unused_fetchElemVal2_result;
+  wire unused_fetchElemVal3_done;
+  wire [31:0] unused_fetchElemVal3_result;
 
   wire fma_busy_unused;
   wire fma_underflow_unused;
@@ -198,14 +169,6 @@ module SolveCore_test;
     end
   endfunction
 
-  function automatic real bits_to_real(input [31:0] bits);
-    shortreal value_sr;
-    begin
-      value_sr = $bitstoshortreal(bits);
-      bits_to_real = value_sr;
-    end
-  endfunction
-
   function automatic real abs_real(input real value);
     begin
       abs_real = (value < 0.0) ? -value : value;
@@ -226,8 +189,6 @@ module SolveCore_test;
       .done(done),
       .par_elem_n(par_elem_n),
       .par_node_n(par_node_n),
-      .par_dt(par_dt),
-      .par_time(par_time),
       .fetchElemKind_start(fetchElemKind_start),
       .fetchElemKind_idx(fetchElemKind_idx),
       .fetchElemKind_done(fetchElemKind_done),
@@ -266,18 +227,6 @@ module SolveCore_test;
       .fetchElemVal0_idx(fetchElemVal0_idx),
       .fetchElemVal0_done(fetchElemVal0_done),
       .fetchElemVal0_result(fetchElemVal0_result),
-      .fetchElemVal1_start(fetchElemVal1_start),
-      .fetchElemVal1_idx(fetchElemVal1_idx),
-      .fetchElemVal1_done(fetchElemVal1_done),
-      .fetchElemVal1_result(fetchElemVal1_result),
-      .fetchElemVal2_start(fetchElemVal2_start),
-      .fetchElemVal2_idx(fetchElemVal2_idx),
-      .fetchElemVal2_done(fetchElemVal2_done),
-      .fetchElemVal2_result(fetchElemVal2_result),
-      .fetchElemVal3_start(fetchElemVal3_start),
-      .fetchElemVal3_idx(fetchElemVal3_idx),
-      .fetchElemVal3_done(fetchElemVal3_done),
-      .fetchElemVal3_result(fetchElemVal3_result),
       .div_start(div_start),
       .div_a(div_a),
       .div_b(div_b),
@@ -292,10 +241,6 @@ module SolveCore_test;
       .accumJ_i(accumJ_i),
       .accumJ_delta(accumJ_delta),
       .accumJ_done(accumJ_done),
-      .fetch_prevX_start(fetch_prevX_start),
-      .fetch_prevX_i(fetch_prevX_i),
-      .fetch_prevX_done(fetch_prevX_done),
-      .fetch_prevX_result(fetch_prevX_result),
       .fma_start(fma_start),
       .fma_a(fma_a),
       .fma_b(fma_b),
@@ -323,11 +268,7 @@ module SolveCore_test;
       .fetch_X_start(fetch_X_start),
       .fetch_X_i(fetch_X_i),
       .fetch_X_done(fetch_X_done),
-      .fetch_X_result(fetch_X_result),
-      .store_prevX_start(store_prevX_start),
-      .store_prevX_i(store_prevX_i),
-      .store_prevX_v(store_prevX_v),
-      .store_prevX_done(store_prevX_done)
+      .fetch_X_result(fetch_X_result)
   );
 
   StampingNetlistStore #(
@@ -363,18 +304,18 @@ module SolveCore_test;
       .fetchElemVal0_idx(fetchElemVal0_idx),
       .fetchElemVal0_done(fetchElemVal0_done),
       .fetchElemVal0_result(fetchElemVal0_result),
-      .fetchElemVal1_start(fetchElemVal1_start),
-      .fetchElemVal1_idx(fetchElemVal1_idx),
-      .fetchElemVal1_done(fetchElemVal1_done),
-      .fetchElemVal1_result(fetchElemVal1_result),
-      .fetchElemVal2_start(fetchElemVal2_start),
-      .fetchElemVal2_idx(fetchElemVal2_idx),
-      .fetchElemVal2_done(fetchElemVal2_done),
-      .fetchElemVal2_result(fetchElemVal2_result),
-      .fetchElemVal3_start(fetchElemVal3_start),
-      .fetchElemVal3_idx(fetchElemVal3_idx),
-      .fetchElemVal3_done(fetchElemVal3_done),
-      .fetchElemVal3_result(fetchElemVal3_result)
+      .fetchElemVal1_start(1'b0),
+      .fetchElemVal1_idx(16'd0),
+      .fetchElemVal1_done(unused_fetchElemVal1_done),
+      .fetchElemVal1_result(unused_fetchElemVal1_result),
+      .fetchElemVal2_start(1'b0),
+      .fetchElemVal2_idx(16'd0),
+      .fetchElemVal2_done(unused_fetchElemVal2_done),
+      .fetchElemVal2_result(unused_fetchElemVal2_result),
+      .fetchElemVal3_start(1'b0),
+      .fetchElemVal3_idx(16'd0),
+      .fetchElemVal3_done(unused_fetchElemVal3_done),
+      .fetchElemVal3_result(unused_fetchElemVal3_result)
   );
 
   SolverMatrixStore #(
@@ -491,28 +432,6 @@ module SolveCore_test;
       .accum_done()
   );
 
-  SolverVectorStore #(
-      .DIM(DIM_MAX),
-      .ENABLE_ACCUM(0)
-  ) prevx_store (
-      .clk(clk),
-      .rst_n(rst_n),
-      .clear_start(prevx_clear_start),
-      .clear_done(prevx_clear_done),
-      .store_start(store_prevX_start),
-      .store_i(store_prevX_i),
-      .store_v(store_prevX_v),
-      .store_done(store_prevX_done),
-      .fetch_start(fetch_prevX_start),
-      .fetch_i(fetch_prevX_i),
-      .fetch_done(fetch_prevX_done),
-      .fetch_result(fetch_prevX_result),
-      .accum_start(1'b0),
-      .accum_i(16'd0),
-      .accum_delta(32'd0),
-      .accum_done()
-  );
-
   fpo_fma fma_inst (
       .clk(clk),
       .start(fma_start),
@@ -564,7 +483,6 @@ module SolveCore_test;
     reg seen_j_clear_done;
     reg seen_y_clear_done;
     reg seen_x_clear_done;
-    reg seen_prevx_clear_done;
     begin
       @(negedge clk);
       a_clear_start <= 1'b1;
@@ -572,30 +490,26 @@ module SolveCore_test;
       j_clear_start <= 1'b1;
       y_clear_start <= 1'b1;
       x_clear_start <= 1'b1;
-      prevx_clear_start <= 1'b1;
       @(negedge clk);
       a_clear_start <= 1'b0;
       lu_clear_start <= 1'b0;
       j_clear_start <= 1'b0;
       y_clear_start <= 1'b0;
       x_clear_start <= 1'b0;
-      prevx_clear_start <= 1'b0;
       seen_a_clear_done = 1'b0;
       seen_lu_clear_done = 1'b0;
       seen_j_clear_done = 1'b0;
       seen_y_clear_done = 1'b0;
       seen_x_clear_done = 1'b0;
-      seen_prevx_clear_done = 1'b0;
       while (!(seen_a_clear_done && seen_lu_clear_done &&
                seen_j_clear_done && seen_y_clear_done &&
-               seen_x_clear_done && seen_prevx_clear_done)) begin
+               seen_x_clear_done)) begin
         @(negedge clk);
         if (a_clear_done === 1'b1) seen_a_clear_done = 1'b1;
         if (lu_clear_done === 1'b1) seen_lu_clear_done = 1'b1;
         if (j_clear_done === 1'b1) seen_j_clear_done = 1'b1;
         if (y_clear_done === 1'b1) seen_y_clear_done = 1'b1;
         if (x_clear_done === 1'b1) seen_x_clear_done = 1'b1;
-        if (prevx_clear_done === 1'b1) seen_prevx_clear_done = 1'b1;
       end
     end
   endtask
@@ -606,8 +520,6 @@ module SolveCore_test;
       start <= 1'b0;
       par_elem_n <= '0;
       par_node_n <= '0;
-      par_dt <= '0;
-      par_time <= '0;
       repeat (4) @(negedge clk);
       rst_n <= 1'b1;
       repeat (2) @(negedge clk);
@@ -621,33 +533,26 @@ module SolveCore_test;
       input [7:0] kind,
       input integer n0,
       input integer n1,
-      input real v0,
-      input real v1,
-      input real v2,
-      input real v3
+      input real v0
   );
     begin
       netlist_store.kind_mem[elem_idx] = kind;
-      netlist_store.n0_mem[elem_idx] = n0[15:0];
-      netlist_store.n1_mem[elem_idx] = n1[15:0];
+      netlist_store.n0_mem[elem_idx] = (n0 == 0) ? 8'hFF : (n0 - 1);
+      netlist_store.n1_mem[elem_idx] = (n1 == 0) ? 8'hFF : (n1 - 1);
       netlist_store.v0_mem[elem_idx] = real_to_bits(v0);
-      netlist_store.v1_mem[elem_idx] = real_to_bits(v1);
-      netlist_store.v2_mem[elem_idx] = real_to_bits(v2);
-      netlist_store.v3_mem[elem_idx] = real_to_bits(v3);
+      netlist_store.v1_mem[elem_idx] = 32'd0;
+      netlist_store.v2_mem[elem_idx] = 32'd0;
+      netlist_store.v3_mem[elem_idx] = 32'd0;
     end
   endtask
 
-  task automatic run_step(
+  task automatic run_case(
       input integer elem_n,
-      input integer node_n,
-      input real dt_value,
-      input real time_value
+      input integer node_n
   );
     begin
       par_elem_n <= elem_n;
       par_node_n <= node_n;
-      par_dt <= real_to_bits(dt_value);
-      par_time <= real_to_bits(time_value);
       @(negedge clk);
       start <= 1'b1;
       @(negedge clk);
@@ -658,7 +563,7 @@ module SolveCore_test;
         @(posedge clk);
         cycle_count = cycle_count + 1;
         if (cycle_count > MAX_CYCLES) begin
-          $fatal(1, "Timeout waiting for done at time=%e dt=%e", time_value, dt_value);
+          $fatal(1, "Timeout waiting for done");
         end
       end
       @(posedge clk);
@@ -693,125 +598,49 @@ module SolveCore_test;
     end
   endtask
 
-  task automatic expect_prevx(
-      input integer vec_idx,
-      input real expected_value
-  );
+  task automatic run_case_voltage_divider;
     begin
-      expect_vector_entry($sformatf("prevX[%0d]", vec_idx), prevx_store.mem_inst.mem[vec_idx], expected_value);
+      reset_design();
+      program_element(0, KIND_V, 1, 0, 10.0);
+      program_element(1, KIND_R, 1, 2, 1000.0);
+      program_element(2, KIND_R, 2, 0, 1000.0);
+      run_case(3, 2);
+      expect_x(0, 10.0);
+      expect_x(1, 5.0);
+      expect_x(2, 0.005);
+      $display("run_case_voltage_divider passed.");
     end
   endtask
 
-  task automatic run_case_rc_multistep;
+  task automatic run_case_resistor_voltage_source_network;
     begin
       reset_design();
-      program_element(0, KIND_V, 1, 0, 1.0, 0.0, 0.0, 0.0);
-      program_element(1, KIND_R, 1, 2, 1.0, 0.0, 0.0, 0.0);
-      program_element(2, KIND_C, 2, 0, 1.0, 0.0, 0.0, 0.0);
-
-      run_step(3, 2, 0.1, 0.0);
-      expect_x(0, 1.0);
-      expect_x(1, 0.09090909090909091);
-      expect_x(2, 0.9090909090909091);
-      expect_prevx(1, 0.09090909090909091);
-
-      run_step(3, 2, 0.1, 0.1);
-      expect_x(0, 1.0);
-      expect_x(1, 0.17355371900826447);
-      expect_x(2, 0.8264462809917354);
-      expect_prevx(1, 0.17355371900826447);
-
-      run_step(3, 2, 0.1, 0.2);
-      expect_x(0, 1.0);
-      expect_x(1, 0.24868519909842224);
-      expect_x(2, 0.7513148009015778);
-      expect_prevx(1, 0.24868519909842224);
-
-      $display("run_case_rc_multistep passed.");
+      program_element(0, KIND_V, 1, 0, 5.0);
+      program_element(1, KIND_R, 1, 2, 2000.0);
+      program_element(2, KIND_R, 2, 0, 1000.0);
+      run_case(3, 2);
+      expect_x(0, 5.0);
+      expect_x(1, 1.6666666666666667);
+      expect_x(2, 0.0016666666666666668);
+      $display("run_case_resistor_voltage_source_network passed.");
     end
   endtask
 
-  task automatic run_case_vpwm_levels;
+  task automatic run_case_current_source_network;
     begin
       reset_design();
-      program_element(0, KIND_VPWM, 1, 0, 0.0, 2.5, 1.0, 0.25);
-      program_element(1, KIND_R, 1, 0, 5.0, 0.0, 0.0, 0.0);
-
-      run_step(2, 1, 0.01, 0.10);
-      expect_x(0, 2.5);
-      expect_x(1, 0.5);
-
-      run_step(2, 1, 0.01, 0.60);
-      expect_x(0, 0.0);
-      expect_x(1, 0.0);
-
-      $display("run_case_vpwm_levels passed.");
-    end
-  endtask
-
-  task automatic run_case_swpwm_divider;
-    begin
-      reset_design();
-      program_element(0, KIND_V, 1, 0, 1.0, 0.0, 0.0, 0.0);
-      program_element(1, KIND_R, 1, 2, 1.0, 0.0, 0.0, 0.0);
-      program_element(2, KIND_R, 2, 0, 10.0, 0.0, 0.0, 0.0);
-      program_element(3, KIND_SWPWM, 2, 0, 0.1, 1000.0, 1.0, 0.5);
-
-      run_step(4, 2, 0.01, 0.10);
-      expect_x(0, 1.0);
-      expect_x(1, 0.09009009009009009);
-      expect_x(2, 0.9099099099099098);
-
-      run_step(4, 2, 0.01, 0.75);
-      expect_x(0, 1.0);
-      expect_x(1, 0.9082652134423251);
-      expect_x(2, 0.09173478655767482);
-
-      $display("run_case_swpwm_divider passed.");
-    end
-  endtask
-
-  task automatic run_case_boost_lite_stage;
-    begin
-      reset_design();
-      program_element(0, KIND_V, 1, 0, 1.0, 0.0, 0.0, 0.0);
-      program_element(1, KIND_L, 1, 2, 0.25, 0.0, 0.0, 0.0);
-      program_element(2, KIND_R, 2, 0, 4.0, 0.0, 0.0, 0.0);
-      program_element(3, KIND_SWPWM, 2, 0, 0.1, 1000.0, 0.4, 0.5);
-
-      run_step(4, 2, 0.02, 0.00);
-      expect_x(0, 1.0);
-      expect_x(1, -0.007866273352999017);
-      expect_x(2, -0.08062930186823992);
-      expect_x(3, 0.08062930186823992);
-
-      run_step(4, 2, 0.02, 0.02);
-      expect_x(0, 1.0);
-      expect_x(1, -0.015794424962462136);
-      expect_x(2, -0.16189285586523688);
-      expect_x(3, 0.16189285586523688);
-
-      run_step(4, 2, 0.02, 0.04);
-      expect_x(0, 1.0);
-      expect_x(1, -0.02378494157966931);
-      expect_x(2, -0.24379565119161042);
-      expect_x(3, 0.24379565119161042);
-
-      run_step(4, 2, 0.02, 0.06);
-      expect_x(0, 1.0);
-      expect_x(1, -0.03183831378481912);
-      expect_x(2, -0.326342716294396);
-      expect_x(3, 0.326342716294396);
-
-      $display("run_case_boost_lite_stage passed.");
+      program_element(0, KIND_I, 1, 0, 0.002);
+      program_element(1, KIND_R, 1, 0, 1000.0);
+      run_case(2, 1);
+      expect_x(0, -2.0);
+      $display("run_case_current_source_network passed.");
     end
   endtask
 
   initial begin
-    run_case_rc_multistep();
-    run_case_vpwm_levels();
-    run_case_swpwm_divider();
-    run_case_boost_lite_stage();
+    run_case_voltage_divider();
+    run_case_resistor_voltage_source_network();
+    run_case_current_source_network();
     $display("SolveCore_test passed.");
     $finish;
   end

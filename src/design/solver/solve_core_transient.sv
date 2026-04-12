@@ -5,6 +5,8 @@
 
 // Blocking primitives: fetchElemKind(latency=1), store_J(latency=1), store_Y(latency=1), store_X(latency=1), store_A(latency=1), store_LU(latency=1), fetchElemN0(latency=1), fetchElemN1(latency=1), fetchElemVal0(latency=1), fetchElemVal1(latency=1), fetchElemVal2(latency=1), fetchElemVal3(latency=1), div(latency=4), accumA(latency=1), accumJ(latency=1), fetch_prevX(latency=1), fma(latency=3), fetch_A(latency=1), fetch_LU(latency=1), fetch_J(latency=1), fetch_Y(latency=1), fetch_X(latency=1), store_prevX(latency=1)
 
+import StampingCombPkg::*;
+
 module solve_core_transient (
 
     input logic clk,
@@ -83,7 +85,7 @@ module solve_core_transient (
 
     input logic fetchElemN0_done,
 
-    input logic [15:0] fetchElemN0_result,
+    input logic [7:0] fetchElemN0_result,
 
     output logic fetchElemN1_start,
 
@@ -91,7 +93,7 @@ module solve_core_transient (
 
     input logic fetchElemN1_done,
 
-    input logic [15:0] fetchElemN1_result,
+    input logic [7:0] fetchElemN1_result,
 
     output logic fetchElemVal0_start,
 
@@ -137,9 +139,9 @@ module solve_core_transient (
 
     output logic accumA_start,
 
-    output logic [15:0] accumA_i,
+    output logic [7:0] accumA_i,
 
-    output logic [15:0] accumA_j,
+    output logic [7:0] accumA_j,
 
     output logic [31:0] accumA_delta,
 
@@ -147,7 +149,7 @@ module solve_core_transient (
 
     output logic accumJ_start,
 
-    output logic [15:0] accumJ_i,
+    output logic [7:0] accumJ_i,
 
     output logic [31:0] accumJ_delta,
 
@@ -155,7 +157,7 @@ module solve_core_transient (
 
     output logic fetch_prevX_start,
 
-    output logic [15:0] fetch_prevX_i,
+    output logic [7:0] fetch_prevX_i,
 
     input logic fetch_prevX_done,
 
@@ -228,8 +230,8 @@ module solve_core_transient (
 );
 
 
-import StampingCombPkg::*;
 
+import StampingCombPkg::*;
 
 typedef enum logic [8:0] {
 
@@ -331,15 +333,19 @@ typedef enum logic [8:0] {
 
     S_IF_THEN_33,
 
+    S_IF_THEN_33_WAIT,
+
     S_IF_END_34,
 
-    S_IF_ELSE_35,
+    S_AFTER_CALL_35,
 
     S_IF_THEN_36,
 
+    S_IF_THEN_36_WAIT,
+
     S_IF_END_37,
 
-    S_IF_ELSE_38,
+    S_AFTER_CALL_38,
 
     S_IF_THEN_39,
 
@@ -349,83 +355,83 @@ typedef enum logic [8:0] {
 
     S_AFTER_CALL_41,
 
-    S_IF_THEN_42,
+    S_AFTER_CALL_41_WAIT,
 
-    S_IF_THEN_42_WAIT,
+    S_AFTER_CALL_42,
 
-    S_IF_END_43,
+    S_IF_THEN_43,
 
-    S_AFTER_CALL_44,
+    S_IF_THEN_43_WAIT,
 
-    S_IF_THEN_45,
+    S_IF_END_44,
 
-    S_IF_THEN_45_WAIT,
+    S_AFTER_CALL_45,
 
-    S_IF_END_46,
+    S_IF_THEN_46,
 
-    S_AFTER_CALL_47,
+    S_IF_END_47,
 
-    S_AFTER_CALL_47_WAIT,
+    S_IF_THEN_48,
 
-    S_AFTER_CALL_48,
+    S_IF_THEN_48_WAIT,
 
-    S_IF_THEN_49,
+    S_IF_END_49,
 
-    S_IF_THEN_49_WAIT,
+    S_AFTER_CALL_50,
 
-    S_IF_END_50,
+    S_IF_THEN_51,
 
-    S_AFTER_CALL_51,
+    S_IF_THEN_51_WAIT,
 
-    S_IF_THEN_52,
+    S_IF_END_52,
 
-    S_IF_END_53,
+    S_AFTER_CALL_53,
 
     S_IF_THEN_54,
 
-    S_IF_THEN_54_WAIT,
-
     S_IF_END_55,
 
-    S_AFTER_CALL_56,
+    S_IF_THEN_56,
 
-    S_IF_THEN_57,
+    S_IF_THEN_56_WAIT,
 
-    S_IF_THEN_57_WAIT,
+    S_IF_END_57,
 
-    S_IF_END_58,
+    S_AFTER_CALL_58,
+
+    S_AFTER_CALL_58_WAIT,
 
     S_AFTER_CALL_59,
 
     S_IF_THEN_60,
 
+    S_IF_THEN_60_WAIT,
+
     S_IF_END_61,
 
-    S_IF_THEN_62,
+    S_IF_END_61_WAIT,
 
-    S_IF_THEN_62_WAIT,
+    S_AFTER_CALL_62,
 
-    S_IF_END_63,
+    S_AFTER_CALL_62_WAIT,
+
+    S_AFTER_CALL_63,
 
     S_AFTER_CALL_64,
 
-    S_AFTER_CALL_64_WAIT,
+    S_IF_THEN_65,
 
-    S_AFTER_CALL_65,
+    S_IF_THEN_65_WAIT,
 
-    S_IF_THEN_66,
+    S_IF_END_66,
 
-    S_IF_THEN_66_WAIT,
+    S_AFTER_CALL_67,
 
-    S_IF_END_67,
+    S_IF_THEN_68,
 
-    S_IF_END_67_WAIT,
+    S_IF_THEN_68_WAIT,
 
-    S_AFTER_CALL_68,
-
-    S_AFTER_CALL_68_WAIT,
-
-    S_AFTER_CALL_69,
+    S_IF_END_69,
 
     S_AFTER_CALL_70,
 
@@ -437,55 +443,55 @@ typedef enum logic [8:0] {
 
     S_AFTER_CALL_73,
 
-    S_IF_THEN_74,
+    S_AFTER_CALL_73_WAIT,
 
-    S_IF_THEN_74_WAIT,
+    S_AFTER_CALL_74,
 
-    S_IF_END_75,
+    S_IF_THEN_75,
 
-    S_AFTER_CALL_76,
+    S_IF_THEN_75_WAIT,
 
-    S_IF_THEN_77,
+    S_IF_END_76,
 
-    S_IF_THEN_77_WAIT,
+    S_AFTER_CALL_77,
 
-    S_IF_END_78,
+    S_IF_THEN_78,
 
-    S_AFTER_CALL_79,
+    S_IF_THEN_78_WAIT,
 
-    S_AFTER_CALL_79_WAIT,
+    S_IF_END_79,
 
     S_AFTER_CALL_80,
 
-    S_IF_THEN_81,
+    S_AFTER_CALL_80_WAIT,
 
-    S_IF_THEN_81_WAIT,
+    S_AFTER_CALL_81,
 
-    S_IF_END_82,
+    S_IF_THEN_82,
 
-    S_AFTER_CALL_83,
+    S_IF_THEN_82_WAIT,
 
-    S_IF_THEN_84,
+    S_IF_END_83,
 
-    S_IF_THEN_84_WAIT,
+    S_IF_END_83_WAIT,
 
-    S_IF_END_85,
+    S_AFTER_CALL_84,
 
-    S_AFTER_CALL_86,
+    S_AFTER_CALL_85,
 
-    S_AFTER_CALL_86_WAIT,
+    S_IF_THEN_86,
 
-    S_AFTER_CALL_87,
+    S_IF_THEN_86_WAIT,
 
-    S_IF_THEN_88,
+    S_IF_END_87,
 
-    S_IF_THEN_88_WAIT,
+    S_AFTER_CALL_88,
 
-    S_IF_END_89,
+    S_IF_THEN_89,
 
-    S_IF_END_89_WAIT,
+    S_IF_THEN_89_WAIT,
 
-    S_AFTER_CALL_90,
+    S_IF_END_90,
 
     S_AFTER_CALL_91,
 
@@ -497,31 +503,35 @@ typedef enum logic [8:0] {
 
     S_AFTER_CALL_94,
 
-    S_IF_THEN_95,
+    S_AFTER_CALL_94_WAIT,
 
-    S_IF_THEN_95_WAIT,
+    S_AFTER_CALL_95,
 
-    S_IF_END_96,
+    S_IF_THEN_96,
 
-    S_AFTER_CALL_97,
+    S_IF_THEN_96_WAIT,
 
-    S_IF_THEN_98,
+    S_IF_END_97,
 
-    S_IF_THEN_98_WAIT,
+    S_AFTER_CALL_98,
 
-    S_IF_END_99,
+    S_AFTER_CALL_98_WAIT,
 
-    S_AFTER_CALL_100,
+    S_AFTER_CALL_99,
 
-    S_AFTER_CALL_100_WAIT,
+    S_IF_THEN_100,
 
-    S_AFTER_CALL_101,
+    S_IF_THEN_100_WAIT,
 
-    S_IF_THEN_102,
+    S_IF_END_101,
 
-    S_IF_THEN_102_WAIT,
+    S_IF_END_101_WAIT,
 
-    S_IF_END_103,
+    S_AFTER_CALL_102,
+
+    S_AFTER_CALL_102_WAIT,
+
+    S_AFTER_CALL_103,
 
     S_AFTER_CALL_104,
 
@@ -529,249 +539,249 @@ typedef enum logic [8:0] {
 
     S_AFTER_CALL_105,
 
-    S_IF_THEN_106,
+    S_AFTER_CALL_105_WAIT,
 
-    S_IF_THEN_106_WAIT,
+    S_AFTER_CALL_106,
 
-    S_IF_END_107,
+    S_IF_THEN_107,
 
-    S_IF_END_107_WAIT,
+    S_IF_THEN_107_WAIT,
 
-    S_AFTER_CALL_108,
-
-    S_AFTER_CALL_108_WAIT,
+    S_IF_END_108,
 
     S_AFTER_CALL_109,
 
+    S_AFTER_CALL_109_WAIT,
+
     S_AFTER_CALL_110,
 
-    S_AFTER_CALL_110_WAIT,
+    S_IF_THEN_111,
 
-    S_AFTER_CALL_111,
+    S_IF_THEN_111_WAIT,
 
-    S_AFTER_CALL_111_WAIT,
+    S_IF_END_112,
 
-    S_AFTER_CALL_112,
+    S_AFTER_CALL_113,
 
-    S_IF_THEN_113,
+    S_AFTER_CALL_113_WAIT,
 
-    S_IF_THEN_113_WAIT,
+    S_AFTER_CALL_114,
 
-    S_IF_END_114,
+    S_IF_THEN_115,
 
-    S_AFTER_CALL_115,
+    S_IF_THEN_115_WAIT,
 
-    S_AFTER_CALL_115_WAIT,
+    S_IF_END_116,
 
-    S_AFTER_CALL_116,
+    S_IF_END_116_WAIT,
 
-    S_IF_THEN_117,
+    S_AFTER_CALL_117,
 
-    S_IF_THEN_117_WAIT,
+    S_AFTER_CALL_117_WAIT,
 
-    S_IF_END_118,
+    S_AFTER_CALL_118,
 
     S_AFTER_CALL_119,
 
-    S_AFTER_CALL_119_WAIT,
+    S_IF_THEN_120,
 
-    S_AFTER_CALL_120,
+    S_IF_THEN_120_WAIT,
 
-    S_IF_THEN_121,
+    S_IF_END_121,
 
-    S_IF_THEN_121_WAIT,
+    S_AFTER_CALL_122,
 
-    S_IF_END_122,
-
-    S_IF_END_122_WAIT,
+    S_AFTER_CALL_122_WAIT,
 
     S_AFTER_CALL_123,
 
-    S_AFTER_CALL_123_WAIT,
+    S_IF_THEN_124,
 
-    S_AFTER_CALL_124,
+    S_IF_THEN_124_WAIT,
 
-    S_AFTER_CALL_125,
+    S_IF_END_125,
 
-    S_IF_THEN_126,
+    S_AFTER_CALL_126,
 
-    S_IF_THEN_126_WAIT,
+    S_IF_THEN_127,
 
-    S_IF_END_127,
+    S_IF_THEN_127_WAIT,
 
-    S_AFTER_CALL_128,
-
-    S_AFTER_CALL_128_WAIT,
+    S_IF_END_128,
 
     S_AFTER_CALL_129,
 
     S_IF_THEN_130,
 
-    S_IF_THEN_130_WAIT,
-
     S_IF_END_131,
 
-    S_AFTER_CALL_132,
+    S_IF_THEN_132,
 
-    S_IF_THEN_133,
+    S_IF_END_133,
 
-    S_IF_THEN_133_WAIT,
+    S_IF_END_133_WAIT,
 
-    S_IF_END_134,
+    S_AFTER_CALL_134,
 
-    S_AFTER_CALL_135,
+    S_IF_THEN_135,
 
-    S_IF_THEN_136,
+    S_IF_THEN_135_WAIT,
 
-    S_IF_END_137,
+    S_IF_END_136,
+
+    S_AFTER_CALL_137,
 
     S_IF_THEN_138,
 
-    S_IF_END_139,
+    S_IF_THEN_138_WAIT,
 
-    S_IF_END_139_WAIT,
+    S_IF_END_139,
 
     S_AFTER_CALL_140,
 
-    S_IF_THEN_141,
+    S_AFTER_CALL_140_WAIT,
 
-    S_IF_THEN_141_WAIT,
+    S_AFTER_CALL_141,
 
-    S_IF_END_142,
+    S_IF_THEN_142,
 
-    S_AFTER_CALL_143,
+    S_IF_THEN_142_WAIT,
 
-    S_IF_THEN_144,
+    S_IF_END_143,
 
-    S_IF_THEN_144_WAIT,
+    S_AFTER_CALL_144,
 
-    S_IF_END_145,
+    S_IF_THEN_145,
 
-    S_AFTER_CALL_146,
+    S_IF_END_146,
 
-    S_AFTER_CALL_146_WAIT,
+    S_IF_THEN_147,
 
-    S_AFTER_CALL_147,
+    S_IF_END_148,
 
-    S_IF_THEN_148,
+    S_IF_THEN_149,
 
-    S_IF_THEN_148_WAIT,
+    S_IF_THEN_149_WAIT,
 
-    S_IF_END_149,
+    S_IF_END_150,
 
-    S_AFTER_CALL_150,
+    S_AFTER_CALL_151,
 
-    S_IF_THEN_151,
+    S_AFTER_CALL_151_WAIT,
 
-    S_IF_END_152,
+    S_AFTER_CALL_152,
 
     S_IF_THEN_153,
 
+    S_IF_THEN_153_WAIT,
+
     S_IF_END_154,
 
-    S_IF_THEN_155,
+    S_IF_END_154_WAIT,
 
-    S_IF_THEN_155_WAIT,
+    S_AFTER_CALL_155,
 
-    S_IF_END_156,
+    S_AFTER_CALL_155_WAIT,
+
+    S_AFTER_CALL_156,
 
     S_AFTER_CALL_157,
 
-    S_AFTER_CALL_157_WAIT,
+    S_FOR_HEADER_158,
 
-    S_AFTER_CALL_158,
+    S_FOR_BODY_159,
 
-    S_IF_THEN_159,
+    S_FOR_BODY_159_WAIT,
 
-    S_IF_THEN_159_WAIT,
-
-    S_IF_END_160,
-
-    S_IF_END_160_WAIT,
+    S_FOR_END_160,
 
     S_AFTER_CALL_161,
 
-    S_AFTER_CALL_161_WAIT,
+    S_FOR_HEADER_162,
 
-    S_AFTER_CALL_162,
+    S_FOR_BODY_163,
 
-    S_AFTER_CALL_163,
+    S_FOR_BODY_163_WAIT,
 
-    S_FOR_HEADER_164,
+    S_FOR_END_164,
 
-    S_FOR_BODY_165,
+    S_AFTER_CALL_165,
 
-    S_FOR_BODY_165_WAIT,
+    S_AFTER_CALL_165_WAIT,
 
-    S_FOR_END_166,
+    S_AFTER_CALL_166,
+
+    S_AFTER_CALL_166_WAIT,
 
     S_AFTER_CALL_167,
 
-    S_FOR_HEADER_168,
+    S_WHILE_HEADER_168,
 
-    S_FOR_BODY_169,
+    S_WHILE_BODY_169,
 
-    S_FOR_BODY_169_WAIT,
+    S_WHILE_BODY_169_WAIT,
 
-    S_FOR_END_170,
+    S_WHILE_END_170,
 
     S_AFTER_CALL_171,
 
-    S_AFTER_CALL_171_WAIT,
+    S_FOR_HEADER_172,
 
-    S_AFTER_CALL_172,
+    S_FOR_BODY_173,
 
-    S_AFTER_CALL_172_WAIT,
+    S_FOR_BODY_173_WAIT,
 
-    S_AFTER_CALL_173,
+    S_FOR_END_174,
 
-    S_WHILE_HEADER_174,
+    S_AFTER_CALL_175,
 
-    S_WHILE_BODY_175,
+    S_AFTER_CALL_175_WAIT,
 
-    S_WHILE_BODY_175_WAIT,
+    S_AFTER_CALL_176,
 
-    S_WHILE_END_176,
+    S_AFTER_CALL_176_WAIT,
 
     S_AFTER_CALL_177,
 
-    S_FOR_HEADER_178,
+    S_IF_THEN_178,
 
-    S_FOR_BODY_179,
+    S_IF_END_179,
 
-    S_FOR_BODY_179_WAIT,
+    S_IF_THEN_180,
 
-    S_FOR_END_180,
+    S_IF_END_181,
 
-    S_AFTER_CALL_181,
+    S_FOR_HEADER_182,
 
-    S_AFTER_CALL_181_WAIT,
+    S_FOR_BODY_183,
 
-    S_AFTER_CALL_182,
+    S_FOR_BODY_183_WAIT,
 
-    S_AFTER_CALL_182_WAIT,
+    S_FOR_END_184,
 
-    S_AFTER_CALL_183,
+    S_AFTER_CALL_185,
 
-    S_IF_THEN_184,
+    S_AFTER_CALL_185_WAIT,
 
-    S_IF_END_185,
+    S_AFTER_CALL_186,
 
-    S_IF_THEN_186,
+    S_AFTER_CALL_186_WAIT,
 
-    S_IF_END_187,
+    S_AFTER_CALL_187,
 
-    S_FOR_HEADER_188,
+    S_AFTER_CALL_187_WAIT,
 
-    S_FOR_BODY_189,
+    S_AFTER_CALL_188,
 
-    S_FOR_BODY_189_WAIT,
+    S_FOR_HEADER_189,
 
-    S_FOR_END_190,
+    S_FOR_BODY_190,
 
-    S_AFTER_CALL_191,
+    S_FOR_BODY_190_WAIT,
 
-    S_AFTER_CALL_191_WAIT,
+    S_FOR_END_191,
+
+    S_FOR_END_191_WAIT,
 
     S_AFTER_CALL_192,
 
@@ -783,15 +793,17 @@ typedef enum logic [8:0] {
 
     S_AFTER_CALL_194,
 
-    S_FOR_HEADER_195,
+    S_AFTER_CALL_194_WAIT,
 
-    S_FOR_BODY_196,
+    S_AFTER_CALL_195,
 
-    S_FOR_BODY_196_WAIT,
+    S_AFTER_CALL_196,
 
-    S_FOR_END_197,
+    S_AFTER_CALL_196_WAIT,
 
-    S_FOR_END_197_WAIT,
+    S_AFTER_CALL_197,
+
+    S_AFTER_CALL_197_WAIT,
 
     S_AFTER_CALL_198,
 
@@ -799,157 +811,135 @@ typedef enum logic [8:0] {
 
     S_AFTER_CALL_199,
 
-    S_AFTER_CALL_199_WAIT,
+    S_FOR_HEADER_200,
 
-    S_AFTER_CALL_200,
+    S_FOR_BODY_201,
 
-    S_AFTER_CALL_200_WAIT,
+    S_FOR_BODY_201_WAIT,
 
-    S_AFTER_CALL_201,
-
-    S_AFTER_CALL_202,
-
-    S_AFTER_CALL_202_WAIT,
+    S_FOR_END_202,
 
     S_AFTER_CALL_203,
 
-    S_AFTER_CALL_203_WAIT,
+    S_FOR_HEADER_204,
 
-    S_AFTER_CALL_204,
+    S_FOR_BODY_205,
 
-    S_AFTER_CALL_204_WAIT,
+    S_FOR_BODY_205_WAIT,
 
-    S_AFTER_CALL_205,
+    S_FOR_END_206,
 
-    S_FOR_HEADER_206,
+    S_AFTER_CALL_207,
 
-    S_FOR_BODY_207,
+    S_AFTER_CALL_207_WAIT,
 
-    S_FOR_BODY_207_WAIT,
+    S_AFTER_CALL_208,
 
-    S_FOR_END_208,
+    S_AFTER_CALL_208_WAIT,
 
     S_AFTER_CALL_209,
 
-    S_FOR_HEADER_210,
+    S_IF_THEN_210,
 
-    S_FOR_BODY_211,
+    S_IF_THEN_210_WAIT,
 
-    S_FOR_BODY_211_WAIT,
+    S_IF_END_211,
 
-    S_FOR_END_212,
+    S_IF_END_211_WAIT,
+
+    S_AFTER_CALL_212,
+
+    S_AFTER_CALL_212_WAIT,
 
     S_AFTER_CALL_213,
 
-    S_AFTER_CALL_213_WAIT,
-
     S_AFTER_CALL_214,
 
-    S_AFTER_CALL_214_WAIT,
+    S_FOR_HEADER_215,
 
-    S_AFTER_CALL_215,
+    S_FOR_BODY_216,
 
-    S_IF_THEN_216,
+    S_FOR_BODY_216_WAIT,
 
-    S_IF_THEN_216_WAIT,
-
-    S_IF_END_217,
-
-    S_IF_END_217_WAIT,
+    S_FOR_END_217,
 
     S_AFTER_CALL_218,
 
-    S_AFTER_CALL_218_WAIT,
+    S_FOR_HEADER_219,
 
-    S_AFTER_CALL_219,
+    S_FOR_BODY_220,
 
-    S_AFTER_CALL_220,
+    S_FOR_BODY_220_WAIT,
 
-    S_FOR_HEADER_221,
+    S_FOR_END_221,
 
-    S_FOR_BODY_222,
+    S_FOR_END_221_WAIT,
 
-    S_FOR_BODY_222_WAIT,
+    S_AFTER_CALL_222,
 
-    S_FOR_END_223,
+    S_AFTER_CALL_222_WAIT,
+
+    S_AFTER_CALL_223,
+
+    S_AFTER_CALL_223_WAIT,
 
     S_AFTER_CALL_224,
 
-    S_FOR_HEADER_225,
+    S_AFTER_CALL_225,
 
-    S_FOR_BODY_226,
+    S_WHILE_HEADER_226,
 
-    S_FOR_BODY_226_WAIT,
+    S_WHILE_BODY_227,
 
-    S_FOR_END_227,
+    S_WHILE_BODY_227_WAIT,
 
-    S_FOR_END_227_WAIT,
-
-    S_AFTER_CALL_228,
-
-    S_AFTER_CALL_228_WAIT,
+    S_WHILE_END_228,
 
     S_AFTER_CALL_229,
 
-    S_AFTER_CALL_229_WAIT,
+    S_WHILE_HEADER_230,
 
-    S_AFTER_CALL_230,
+    S_WHILE_BODY_231,
 
-    S_AFTER_CALL_231,
+    S_WHILE_BODY_231_WAIT,
 
-    S_WHILE_HEADER_232,
+    S_WHILE_END_232,
 
-    S_WHILE_BODY_233,
+    S_WHILE_END_232_WAIT,
 
-    S_WHILE_BODY_233_WAIT,
+    S_AFTER_CALL_233,
 
-    S_WHILE_END_234,
+    S_AFTER_CALL_233_WAIT,
+
+    S_AFTER_CALL_234,
+
+    S_AFTER_CALL_234_WAIT,
 
     S_AFTER_CALL_235,
 
-    S_WHILE_HEADER_236,
+    S_AFTER_CALL_236,
 
-    S_WHILE_BODY_237,
+    S_AFTER_CALL_236_WAIT,
 
-    S_WHILE_BODY_237_WAIT,
+    S_AFTER_CALL_237,
 
-    S_WHILE_END_238,
+    S_AFTER_CALL_237_WAIT,
 
-    S_WHILE_END_238_WAIT,
+    S_AFTER_CALL_238,
 
-    S_AFTER_CALL_239,
+    S_FOR_HEADER_239,
 
-    S_AFTER_CALL_239_WAIT,
+    S_FOR_BODY_240,
 
-    S_AFTER_CALL_240,
+    S_FOR_BODY_240_WAIT,
 
-    S_AFTER_CALL_240_WAIT,
-
-    S_AFTER_CALL_241,
+    S_FOR_END_241,
 
     S_AFTER_CALL_242,
 
     S_AFTER_CALL_242_WAIT,
 
     S_AFTER_CALL_243,
-
-    S_AFTER_CALL_243_WAIT,
-
-    S_AFTER_CALL_244,
-
-    S_FOR_HEADER_245,
-
-    S_FOR_BODY_246,
-
-    S_FOR_BODY_246_WAIT,
-
-    S_FOR_END_247,
-
-    S_AFTER_CALL_248,
-
-    S_AFTER_CALL_248_WAIT,
-
-    S_AFTER_CALL_249,
 
     S_DONE
 
@@ -977,7 +967,7 @@ logic [31:0] f32_7;
 
 logic [7:0] u8_kind;
 
-logic [15:0] u16_aux;
+logic [7:0] u8_aux;
 
 logic [15:0] u16_dim;
 
@@ -991,11 +981,11 @@ logic [15:0] u16_k;
 
 logic [15:0] u16_m;
 
-logic [15:0] u16_n0;
+logic [7:0] u8_n0;
 
-logic [15:0] u16_n1;
+logic [7:0] u8_n1;
 
-logic [15:0] u16_next_aux;
+logic [7:0] u8_next_aux;
 
 logic [15:0] u16_pivot;
 
@@ -1050,7 +1040,7 @@ logic [31:0] next_f32_7;
 
 logic [7:0] next_u8_kind;
 
-logic [15:0] next_u16_aux;
+logic [7:0] next_u8_aux;
 
 logic [15:0] next_u16_dim;
 
@@ -1064,11 +1054,11 @@ logic [15:0] next_u16_k;
 
 logic [15:0] next_u16_m;
 
-logic [15:0] next_u16_n0;
+logic [7:0] next_u8_n0;
 
-logic [15:0] next_u16_n1;
+logic [7:0] next_u8_n1;
 
-logic [15:0] next_u16_next_aux;
+logic [7:0] next_u8_next_aux;
 
 logic [15:0] next_u16_pivot;
 
@@ -1125,7 +1115,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u8_kind <=0;
 
-        u16_aux <=0;
+        u8_aux <=0;
 
         u16_dim <=0;
 
@@ -1139,11 +1129,11 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u16_m <=0;
 
-        u16_n0 <=0;
+        u8_n0 <=0;
 
-        u16_n1 <=0;
+        u8_n1 <=0;
 
-        u16_next_aux <=0;
+        u8_next_aux <=0;
 
         u16_pivot <=0;
 
@@ -1200,7 +1190,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u8_kind <= next_u8_kind;
 
-        u16_aux <= next_u16_aux;
+        u8_aux <= next_u8_aux;
 
         u16_dim <= next_u16_dim;
 
@@ -1214,11 +1204,11 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u16_m <= next_u16_m;
 
-        u16_n0 <= next_u16_n0;
+        u8_n0 <= next_u8_n0;
 
-        u16_n1 <= next_u16_n1;
+        u8_n1 <= next_u8_n1;
 
-        u16_next_aux <= next_u16_next_aux;
+        u8_next_aux <= next_u8_next_aux;
 
         u16_pivot <= next_u16_pivot;
 
@@ -1280,7 +1270,7 @@ always_comb begin
 
     next_u8_kind = u8_kind;
 
-    next_u16_aux = u16_aux;
+    next_u8_aux = u8_aux;
 
     next_u16_dim = u16_dim;
 
@@ -1294,11 +1284,11 @@ always_comb begin
 
     next_u16_m = u16_m;
 
-    next_u16_n0 = u16_n0;
+    next_u8_n0 = u8_n0;
 
-    next_u16_n1 = u16_n1;
+    next_u8_n1 = u8_n1;
 
-    next_u16_next_aux = u16_next_aux;
+    next_u8_next_aux = u8_next_aux;
 
     next_u16_pivot = u16_pivot;
 
@@ -1510,7 +1500,7 @@ always_comb begin
 
             next_u8_kind = 8'd0;
 
-            next_u16_aux = 16'd0;
+            next_u8_aux = 8'd0;
 
             next_u16_dim = 16'd0;
 
@@ -1524,11 +1514,11 @@ always_comb begin
 
             next_u16_m = 16'd0;
 
-            next_u16_n0 = 16'd0;
+            next_u8_n0 = 8'd0;
 
-            next_u16_n1 = 16'd0;
+            next_u8_n1 = 8'd0;
 
-            next_u16_next_aux = 16'd0;
+            next_u8_next_aux = 8'd0;
 
             next_u16_pivot = 16'd0;
 
@@ -1854,12 +1844,12 @@ always_comb begin
 
             // LIR block: for_end_14
 
-            // line 103: u16_next_aux = par_node_n
+            // line 103: u8_next_aux = par_node_n
 
 
 
 
-            next_u16_next_aux = par_node_n;
+            next_u8_next_aux = par_node_n;
 
             next___for_idx_3 = 16'd0;
 
@@ -2121,7 +2111,7 @@ always_comb begin
 
             // LIR block: for_header_23
 
-            // line 104: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u16_n0 = fetchElemN0(idx=u16_e)         u16_n1 = fetchElemN1(idx=u16_e)         f32_1 = fetchElemVal0(idx=u16_e)         f32_2 = fetchElemVal1(idx=u16_e)         f32_3 = fetchElemVal2(idx=u16_e)         f32_4 = fetchElemVal3(idx=u16_e)          if u16_n0 != 0:             u16_n0 = u16_n0 - 1         else:             u16_n0 = 65535          if u16_n1 != 0:             u16_n1 = u16_n1 - 1         else:             u16_n1 = 65535          if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)          if u8_kind == 2:             if u16_n0 != 65535:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u16_n0, delta=f32_6)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_1)          if u8_kind == 3:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_6)             if u16_n1 != 65535:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_6)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_1)          # Capacitor backward-Euler companion:         #   g = C / dt         #   i_hist = g * v_prev         # which becomes a resistor-like stamp plus an equivalent RHS term.         if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u16_n0 != 65535:                 f32_7 = fetch_prevX(i=u16_n0)             if u16_n1 != 65535:                 f32_2 = fetch_prevX(i=u16_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u16_n0 != 65535:                 accumJ(i=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u16_n1, delta=f32_3)          # Inductor backward-Euler companion with a branch-current unknown.         if u8_kind == 5:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u16_aux)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_2)             if u16_n1 != 65535:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_2)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u16_aux, j=u16_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u16_aux, delta=f32_2)          if u8_kind == 6:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)          if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_6)          # PWM-gated ideal switch. This is stamped as a resistor whose value         # toggles between ron and roff according to the current PWM phase.         if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)          # PWM square-wave voltage source. The branch-variable structure matches         # the ordinary V / VSIN source, but the source value is piecewise         # constant over each PWM period.         if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)
+            // line 104: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u8_n0 = fetchElemN0(idx=u16_e)         u8_n1 = fetchElemN1(idx=u16_e)         f32_1 = fetchElemVal0(idx=u16_e)         f32_2 = fetchElemVal1(idx=u16_e)         f32_3 = fetchElemVal2(idx=u16_e)         f32_4 = fetchElemVal3(idx=u16_e)          if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)          if u8_kind == 2:             if u8_n0 != 255:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u8_n0, delta=f32_6)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_1)          if u8_kind == 3:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_6)             if u8_n1 != 255:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_6)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_1)          # Capacitor backward-Euler companion:         #   g = C / dt         #   i_hist = g * v_prev         # which becomes a resistor-like stamp plus an equivalent RHS term.         if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u8_n0 != 255:                 f32_7 = fetch_prevX(i=u8_n0)             if u8_n1 != 255:                 f32_2 = fetch_prevX(i=u8_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u8_n0 != 255:                 accumJ(i=u8_n0, delta=f32_2)             if u8_n1 != 255:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u8_n1, delta=f32_3)          # Inductor backward-Euler companion with a branch-current unknown.         if u8_kind == 5:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u8_aux)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_2)             if u8_n1 != 255:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_2)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u8_aux, j=u8_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u8_aux, delta=f32_2)          if u8_kind == 6:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)          if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_6)          # PWM-gated ideal switch. This is stamped as a resistor whose value         # toggles between ron and roff according to the current PWM phase.         if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)          # PWM square-wave voltage source. The branch-variable structure matches         # the ordinary V / VSIN source, but the source value is piecewise         # constant over each PWM period.         if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)
 
 
 
@@ -2140,7 +2130,7 @@ always_comb begin
 
             // LIR block: for_body_24
 
-            // line 104: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u16_n0 = fetchElemN0(idx=u16_e)         u16_n1 = fetchElemN1(idx=u16_e)         f32_1 = fetchElemVal0(idx=u16_e)         f32_2 = fetchElemVal1(idx=u16_e)         f32_3 = fetchElemVal2(idx=u16_e)         f32_4 = fetchElemVal3(idx=u16_e)          if u16_n0 != 0:             u16_n0 = u16_n0 - 1         else:             u16_n0 = 65535          if u16_n1 != 0:             u16_n1 = u16_n1 - 1         else:             u16_n1 = 65535          if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)          if u8_kind == 2:             if u16_n0 != 65535:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u16_n0, delta=f32_6)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_1)          if u8_kind == 3:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_6)             if u16_n1 != 65535:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_6)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_1)          # Capacitor backward-Euler companion:         #   g = C / dt         #   i_hist = g * v_prev         # which becomes a resistor-like stamp plus an equivalent RHS term.         if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u16_n0 != 65535:                 f32_7 = fetch_prevX(i=u16_n0)             if u16_n1 != 65535:                 f32_2 = fetch_prevX(i=u16_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u16_n0 != 65535:                 accumJ(i=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u16_n1, delta=f32_3)          # Inductor backward-Euler companion with a branch-current unknown.         if u8_kind == 5:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u16_aux)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_2)             if u16_n1 != 65535:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_2)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u16_aux, j=u16_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u16_aux, delta=f32_2)          if u8_kind == 6:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)          if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_6)          # PWM-gated ideal switch. This is stamped as a resistor whose value         # toggles between ron and roff according to the current PWM phase.         if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)          # PWM square-wave voltage source. The branch-variable structure matches         # the ordinary V / VSIN source, but the source value is piecewise         # constant over each PWM period.         if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)
+            // line 104: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u8_n0 = fetchElemN0(idx=u16_e)         u8_n1 = fetchElemN1(idx=u16_e)         f32_1 = fetchElemVal0(idx=u16_e)         f32_2 = fetchElemVal1(idx=u16_e)         f32_3 = fetchElemVal2(idx=u16_e)         f32_4 = fetchElemVal3(idx=u16_e)          if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)          if u8_kind == 2:             if u8_n0 != 255:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u8_n0, delta=f32_6)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_1)          if u8_kind == 3:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_6)             if u8_n1 != 255:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_6)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_1)          # Capacitor backward-Euler companion:         #   g = C / dt         #   i_hist = g * v_prev         # which becomes a resistor-like stamp plus an equivalent RHS term.         if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u8_n0 != 255:                 f32_7 = fetch_prevX(i=u8_n0)             if u8_n1 != 255:                 f32_2 = fetch_prevX(i=u8_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u8_n0 != 255:                 accumJ(i=u8_n0, delta=f32_2)             if u8_n1 != 255:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u8_n1, delta=f32_3)          # Inductor backward-Euler companion with a branch-current unknown.         if u8_kind == 5:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u8_aux)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_2)             if u8_n1 != 255:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_2)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u8_aux, j=u8_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u8_aux, delta=f32_2)          if u8_kind == 6:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)          if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_6)          # PWM-gated ideal switch. This is stamped as a resistor whose value         # toggles between ron and roff according to the current PWM phase.         if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)          # PWM square-wave voltage source. The branch-variable structure matches         # the ordinary V / VSIN source, but the source value is piecewise         # constant over each PWM period.         if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)
 
 
 
@@ -2161,7 +2151,7 @@ always_comb begin
 
             // LIR block: for_body_24
 
-            // line 104: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u16_n0 = fetchElemN0(idx=u16_e)         u16_n1 = fetchElemN1(idx=u16_e)         f32_1 = fetchElemVal0(idx=u16_e)         f32_2 = fetchElemVal1(idx=u16_e)         f32_3 = fetchElemVal2(idx=u16_e)         f32_4 = fetchElemVal3(idx=u16_e)          if u16_n0 != 0:             u16_n0 = u16_n0 - 1         else:             u16_n0 = 65535          if u16_n1 != 0:             u16_n1 = u16_n1 - 1         else:             u16_n1 = 65535          if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)          if u8_kind == 2:             if u16_n0 != 65535:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u16_n0, delta=f32_6)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_1)          if u8_kind == 3:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_6)             if u16_n1 != 65535:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_6)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_1)          # Capacitor backward-Euler companion:         #   g = C / dt         #   i_hist = g * v_prev         # which becomes a resistor-like stamp plus an equivalent RHS term.         if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u16_n0 != 65535:                 f32_7 = fetch_prevX(i=u16_n0)             if u16_n1 != 65535:                 f32_2 = fetch_prevX(i=u16_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u16_n0 != 65535:                 accumJ(i=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u16_n1, delta=f32_3)          # Inductor backward-Euler companion with a branch-current unknown.         if u8_kind == 5:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u16_aux)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_2)             if u16_n1 != 65535:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_2)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u16_aux, j=u16_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u16_aux, delta=f32_2)          if u8_kind == 6:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)          if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_6)          # PWM-gated ideal switch. This is stamped as a resistor whose value         # toggles between ron and roff according to the current PWM phase.         if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)          # PWM square-wave voltage source. The branch-variable structure matches         # the ordinary V / VSIN source, but the source value is piecewise         # constant over each PWM period.         if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)
+            // line 104: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u8_n0 = fetchElemN0(idx=u16_e)         u8_n1 = fetchElemN1(idx=u16_e)         f32_1 = fetchElemVal0(idx=u16_e)         f32_2 = fetchElemVal1(idx=u16_e)         f32_3 = fetchElemVal2(idx=u16_e)         f32_4 = fetchElemVal3(idx=u16_e)          if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)          if u8_kind == 2:             if u8_n0 != 255:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u8_n0, delta=f32_6)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_1)          if u8_kind == 3:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_6)             if u8_n1 != 255:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_6)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_1)          # Capacitor backward-Euler companion:         #   g = C / dt         #   i_hist = g * v_prev         # which becomes a resistor-like stamp plus an equivalent RHS term.         if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u8_n0 != 255:                 f32_7 = fetch_prevX(i=u8_n0)             if u8_n1 != 255:                 f32_2 = fetch_prevX(i=u8_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u8_n0 != 255:                 accumJ(i=u8_n0, delta=f32_2)             if u8_n1 != 255:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u8_n1, delta=f32_3)          # Inductor backward-Euler companion with a branch-current unknown.         if u8_kind == 5:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u8_aux)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_2)             if u8_n1 != 255:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_2)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u8_aux, j=u8_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u8_aux, delta=f32_2)          if u8_kind == 6:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)          if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_6)          # PWM-gated ideal switch. This is stamped as a resistor whose value         # toggles between ron and roff according to the current PWM phase.         if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)          # PWM square-wave voltage source. The branch-variable structure matches         # the ordinary V / VSIN source, but the source value is piecewise         # constant over each PWM period.         if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)
 
             // wait for blocking primitive: fetchElemKind
 
@@ -2185,7 +2175,7 @@ always_comb begin
 
             // LIR block: for_end_25
 
-            // line 266: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 256: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
 
 
@@ -2194,7 +2184,7 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_164;
+            next_state = S_FOR_HEADER_158;
 
         end
 
@@ -2202,7 +2192,7 @@ always_comb begin
 
             // LIR block: after_call_26
 
-            // line 106: u16_n0 = fetchElemN0(idx=u16_e)
+            // line 106: u8_n0 = fetchElemN0(idx=u16_e)
 
 
 
@@ -2221,7 +2211,7 @@ always_comb begin
 
             // LIR block: after_call_26
 
-            // line 106: u16_n0 = fetchElemN0(idx=u16_e)
+            // line 106: u8_n0 = fetchElemN0(idx=u16_e)
 
             // wait for blocking primitive: fetchElemN0
 
@@ -2232,7 +2222,7 @@ always_comb begin
 
             if (fetchElemN0_done) begin
 
-                next_u16_n0 = fetchElemN0_result;
+                next_u8_n0 = fetchElemN0_result;
 
                 next_state = S_AFTER_CALL_27;
             end else begin
@@ -2245,7 +2235,7 @@ always_comb begin
 
             // LIR block: after_call_27
 
-            // line 107: u16_n1 = fetchElemN1(idx=u16_e)
+            // line 107: u8_n1 = fetchElemN1(idx=u16_e)
 
 
 
@@ -2264,7 +2254,7 @@ always_comb begin
 
             // LIR block: after_call_27
 
-            // line 107: u16_n1 = fetchElemN1(idx=u16_e)
+            // line 107: u8_n1 = fetchElemN1(idx=u16_e)
 
             // wait for blocking primitive: fetchElemN1
 
@@ -2275,7 +2265,7 @@ always_comb begin
 
             if (fetchElemN1_done) begin
 
-                next_u16_n1 = fetchElemN1_result;
+                next_u8_n1 = fetchElemN1_result;
 
                 next_state = S_AFTER_CALL_28;
             end else begin
@@ -2460,17 +2450,17 @@ always_comb begin
 
             // LIR block: after_call_32
 
-            // line 113: if u16_n0 != 0:             u16_n0 = u16_n0 - 1         else:             u16_n0 = 65535
+            // line 113: if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
 
 
 
 
 
-            if ((u16_n0 != 32'd0)) begin
+            if ((u8_kind == 32'd1)) begin
                 next_state = S_IF_THEN_33;
             end else begin
-                next_state = S_IF_ELSE_35;
+                next_state = S_IF_END_34;
             end
 
         end
@@ -2479,113 +2469,7 @@ always_comb begin
 
             // LIR block: if_then_33
 
-            // line 114: u16_n0 = u16_n0 - 1
-
-
-
-
-            next_u16_n0 = (u16_n0 - 16'd1);
-
-
-
-            next_state = S_IF_END_34;
-
-        end
-
-        S_IF_END_34: begin
-
-            // LIR block: if_end_34
-
-            // line 118: if u16_n1 != 0:             u16_n1 = u16_n1 - 1         else:             u16_n1 = 65535
-
-
-
-
-
-
-            if ((u16_n1 != 32'd0)) begin
-                next_state = S_IF_THEN_36;
-            end else begin
-                next_state = S_IF_ELSE_38;
-            end
-
-        end
-
-        S_IF_ELSE_35: begin
-
-            // LIR block: if_else_35
-
-            // line 116: u16_n0 = 65535
-
-
-
-
-            next_u16_n0 = 16'd65535;
-
-
-
-            next_state = S_IF_END_34;
-
-        end
-
-        S_IF_THEN_36: begin
-
-            // LIR block: if_then_36
-
-            // line 119: u16_n1 = u16_n1 - 1
-
-
-
-
-            next_u16_n1 = (u16_n1 - 16'd1);
-
-
-
-            next_state = S_IF_END_37;
-
-        end
-
-        S_IF_END_37: begin
-
-            // LIR block: if_end_37
-
-            // line 123: if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
-
-
-
-
-            if ((u8_kind == 32'd1)) begin
-                next_state = S_IF_THEN_39;
-            end else begin
-                next_state = S_IF_END_40;
-            end
-
-        end
-
-        S_IF_ELSE_38: begin
-
-            // LIR block: if_else_38
-
-            // line 121: u16_n1 = 65535
-
-
-
-
-            next_u16_n1 = 16'd65535;
-
-
-
-            next_state = S_IF_END_37;
-
-        end
-
-        S_IF_THEN_39: begin
-
-            // LIR block: if_then_39
-
-            // line 124: f32_6 = div(a=f32_5, b=f32_1)
+            // line 114: f32_6 = div(a=f32_5, b=f32_1)
 
 
 
@@ -2598,15 +2482,15 @@ always_comb begin
             div_start = 1'b1;
 
 
-            next_state = S_IF_THEN_39_WAIT;
+            next_state = S_IF_THEN_33_WAIT;
 
         end
 
-        S_IF_THEN_39_WAIT: begin
+        S_IF_THEN_33_WAIT: begin
 
-            // LIR block: if_then_39
+            // LIR block: if_then_33
 
-            // line 124: f32_6 = div(a=f32_5, b=f32_1)
+            // line 114: f32_6 = div(a=f32_5, b=f32_1)
 
             // wait for blocking primitive: div
 
@@ -2618,6 +2502,174 @@ always_comb begin
             if (div_done) begin
 
                 next_f32_6 = div_result;
+
+                next_state = S_AFTER_CALL_35;
+            end else begin
+                next_state = S_IF_THEN_33_WAIT;
+            end
+
+        end
+
+        S_IF_END_34: begin
+
+            // LIR block: if_end_34
+
+            // line 124: if u8_kind == 2:             if u8_n0 != 255:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u8_n0, delta=f32_6)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_1)
+
+
+
+
+
+
+            if ((u8_kind == 32'd2)) begin
+                next_state = S_IF_THEN_46;
+            end else begin
+                next_state = S_IF_END_47;
+            end
+
+        end
+
+        S_AFTER_CALL_35: begin
+
+            // LIR block: after_call_35
+
+            // line 115: if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)
+
+
+
+
+
+
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_36;
+            end else begin
+                next_state = S_IF_END_37;
+            end
+
+        end
+
+        S_IF_THEN_36: begin
+
+            // LIR block: if_then_36
+
+            // line 116: accumA(i=u8_n0, j=u8_n0, delta=f32_6)
+
+
+
+
+
+            accumA_i = u8_n0;
+
+            accumA_j = u8_n0;
+
+            accumA_delta = f32_6;
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_IF_THEN_36_WAIT;
+
+        end
+
+        S_IF_THEN_36_WAIT: begin
+
+            // LIR block: if_then_36
+
+            // line 116: accumA(i=u8_n0, j=u8_n0, delta=f32_6)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_38;
+            end else begin
+                next_state = S_IF_THEN_36_WAIT;
+            end
+
+        end
+
+        S_IF_END_37: begin
+
+            // LIR block: if_end_37
+
+            // line 121: if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
+
+
+
+
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_43;
+            end else begin
+                next_state = S_IF_END_44;
+            end
+
+        end
+
+        S_AFTER_CALL_38: begin
+
+            // LIR block: after_call_38
+
+            // line 117: if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)
+
+
+
+
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_39;
+            end else begin
+                next_state = S_IF_END_40;
+            end
+
+        end
+
+        S_IF_THEN_39: begin
+
+            // LIR block: if_then_39
+
+            // line 118: f32_7 = neg_comb(v=f32_6)
+
+
+
+
+            next_f32_7 = neg_comb(f32_6);
+
+
+            accumA_i = u8_n0;
+
+            accumA_j = u8_n1;
+
+            accumA_delta = neg_comb(f32_6);
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_IF_THEN_39_WAIT;
+
+        end
+
+        S_IF_THEN_39_WAIT: begin
+
+            // LIR block: if_then_39
+
+            // line 118: f32_7 = neg_comb(v=f32_6)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
 
                 next_state = S_AFTER_CALL_41;
             end else begin
@@ -2630,18 +2682,14 @@ always_comb begin
 
             // LIR block: if_end_40
 
-            // line 134: if u8_kind == 2:             if u16_n0 != 65535:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u16_n0, delta=f32_6)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_1)
+            // line 115: if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
 
 
 
 
 
-            if ((u8_kind == 32'd2)) begin
-                next_state = S_IF_THEN_52;
-            end else begin
-                next_state = S_IF_END_53;
-            end
+            next_state = S_IF_END_37;
 
         end
 
@@ -2649,194 +2697,30 @@ always_comb begin
 
             // LIR block: after_call_41
 
-            // line 125: if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)
+            // line 120: accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
 
 
 
 
+            accumA_i = u8_n1;
 
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_42;
-            end else begin
-                next_state = S_IF_END_43;
-            end
-
-        end
-
-        S_IF_THEN_42: begin
-
-            // LIR block: if_then_42
-
-            // line 126: accumA(i=u16_n0, j=u16_n0, delta=f32_6)
-
-
-
-
-
-            accumA_i = u16_n0;
-
-            accumA_j = u16_n0;
-
-            accumA_delta = f32_6;
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_IF_THEN_42_WAIT;
-
-        end
-
-        S_IF_THEN_42_WAIT: begin
-
-            // LIR block: if_then_42
-
-            // line 126: accumA(i=u16_n0, j=u16_n0, delta=f32_6)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_44;
-            end else begin
-                next_state = S_IF_THEN_42_WAIT;
-            end
-
-        end
-
-        S_IF_END_43: begin
-
-            // LIR block: if_end_43
-
-            // line 131: if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
-
-
-
-
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_49;
-            end else begin
-                next_state = S_IF_END_50;
-            end
-
-        end
-
-        S_AFTER_CALL_44: begin
-
-            // LIR block: after_call_44
-
-            // line 127: if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)
-
-
-
-
-
-
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_45;
-            end else begin
-                next_state = S_IF_END_46;
-            end
-
-        end
-
-        S_IF_THEN_45: begin
-
-            // LIR block: if_then_45
-
-            // line 128: f32_7 = neg_comb(v=f32_6)
-
-
-
-
-            next_f32_7 = neg_comb(f32_6);
-
-
-            accumA_i = u16_n0;
-
-            accumA_j = u16_n1;
-
-            accumA_delta = neg_comb(f32_6);
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_IF_THEN_45_WAIT;
-
-        end
-
-        S_IF_THEN_45_WAIT: begin
-
-            // LIR block: if_then_45
-
-            // line 128: f32_7 = neg_comb(v=f32_6)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_47;
-            end else begin
-                next_state = S_IF_THEN_45_WAIT;
-            end
-
-        end
-
-        S_IF_END_46: begin
-
-            // LIR block: if_end_46
-
-            // line 125: if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)
-
-
-
-
-
-
-            next_state = S_IF_END_43;
-
-        end
-
-        S_AFTER_CALL_47: begin
-
-            // LIR block: after_call_47
-
-            // line 130: accumA(i=u16_n1, j=u16_n0, delta=f32_7)
-
-
-
-
-
-            accumA_i = u16_n1;
-
-            accumA_j = u16_n0;
+            accumA_j = u8_n0;
 
             accumA_delta = f32_7;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_47_WAIT;
+            next_state = S_AFTER_CALL_41_WAIT;
 
         end
 
-        S_AFTER_CALL_47_WAIT: begin
+        S_AFTER_CALL_41_WAIT: begin
 
-            // LIR block: after_call_47
+            // LIR block: after_call_41
 
-            // line 130: accumA(i=u16_n1, j=u16_n0, delta=f32_7)
+            // line 120: accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
             // wait for blocking primitive: accumA
 
@@ -2847,78 +2731,18 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_48;
+                next_state = S_AFTER_CALL_42;
             end else begin
-                next_state = S_AFTER_CALL_47_WAIT;
+                next_state = S_AFTER_CALL_41_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_48: begin
+        S_AFTER_CALL_42: begin
 
-            // LIR block: after_call_48
+            // LIR block: after_call_42
 
-            // line 127: if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)
-
-
-
-
-
-
-            next_state = S_IF_END_46;
-
-        end
-
-        S_IF_THEN_49: begin
-
-            // LIR block: if_then_49
-
-            // line 132: accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
-
-
-
-            accumA_i = u16_n1;
-
-            accumA_j = u16_n1;
-
-            accumA_delta = f32_6;
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_IF_THEN_49_WAIT;
-
-        end
-
-        S_IF_THEN_49_WAIT: begin
-
-            // LIR block: if_then_49
-
-            // line 132: accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_51;
-            end else begin
-                next_state = S_IF_THEN_49_WAIT;
-            end
-
-        end
-
-        S_IF_END_50: begin
-
-            // LIR block: if_end_50
-
-            // line 123: if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
+            // line 117: if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
 
 
@@ -2929,45 +2753,105 @@ always_comb begin
 
         end
 
-        S_AFTER_CALL_51: begin
+        S_IF_THEN_43: begin
 
-            // LIR block: after_call_51
+            // LIR block: if_then_43
 
-            // line 131: if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
+            // line 122: accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
 
 
 
-            next_state = S_IF_END_50;
+
+            accumA_i = u8_n1;
+
+            accumA_j = u8_n1;
+
+            accumA_delta = f32_6;
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_IF_THEN_43_WAIT;
 
         end
 
-        S_IF_THEN_52: begin
+        S_IF_THEN_43_WAIT: begin
 
-            // LIR block: if_then_52
+            // LIR block: if_then_43
 
-            // line 135: if u16_n0 != 65535:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u16_n0, delta=f32_6)
+            // line 122: accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
-
-
-
+            // wait for blocking primitive: accumA
 
 
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_54;
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_45;
             end else begin
-                next_state = S_IF_END_55;
+                next_state = S_IF_THEN_43_WAIT;
             end
 
         end
 
-        S_IF_END_53: begin
+        S_IF_END_44: begin
 
-            // LIR block: if_end_53
+            // LIR block: if_end_44
 
-            // line 141: if u8_kind == 3:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_6)             if u16_n1 != 65535:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_6)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_1)
+            // line 113: if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
+
+
+
+
+
+
+            next_state = S_IF_END_34;
+
+        end
+
+        S_AFTER_CALL_45: begin
+
+            // LIR block: after_call_45
+
+            // line 121: if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
+
+
+
+
+
+
+            next_state = S_IF_END_44;
+
+        end
+
+        S_IF_THEN_46: begin
+
+            // LIR block: if_then_46
+
+            // line 125: if u8_n0 != 255:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u8_n0, delta=f32_6)
+
+
+
+
+
+
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_48;
+            end else begin
+                next_state = S_IF_END_49;
+            end
+
+        end
+
+        S_IF_END_47: begin
+
+            // LIR block: if_end_47
+
+            // line 131: if u8_kind == 3:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_6)             if u8_n1 != 255:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_6)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_1)
 
 
 
@@ -2975,18 +2859,18 @@ always_comb begin
 
 
             if ((u8_kind == 32'd3)) begin
-                next_state = S_IF_THEN_60;
+                next_state = S_IF_THEN_54;
             end else begin
-                next_state = S_IF_END_61;
+                next_state = S_IF_END_55;
             end
 
         end
 
-        S_IF_THEN_54: begin
+        S_IF_THEN_48: begin
 
-            // LIR block: if_then_54
+            // LIR block: if_then_48
 
-            // line 136: f32_6 = neg_comb(v=f32_1)
+            // line 126: f32_6 = neg_comb(v=f32_1)
 
 
 
@@ -2994,22 +2878,22 @@ always_comb begin
             next_f32_6 = neg_comb(f32_1);
 
 
-            accumJ_i = u16_n0;
+            accumJ_i = u8_n0;
 
             accumJ_delta = neg_comb(f32_1);
 
             accumJ_start = 1'b1;
 
 
-            next_state = S_IF_THEN_54_WAIT;
+            next_state = S_IF_THEN_48_WAIT;
 
         end
 
-        S_IF_THEN_54_WAIT: begin
+        S_IF_THEN_48_WAIT: begin
 
-            // LIR block: if_then_54
+            // LIR block: if_then_48
 
-            // line 136: f32_6 = neg_comb(v=f32_1)
+            // line 126: f32_6 = neg_comb(v=f32_1)
 
             // wait for blocking primitive: accumJ
 
@@ -3020,9 +2904,139 @@ always_comb begin
 
             if (accumJ_done) begin
 
-                next_state = S_AFTER_CALL_56;
+                next_state = S_AFTER_CALL_50;
             end else begin
-                next_state = S_IF_THEN_54_WAIT;
+                next_state = S_IF_THEN_48_WAIT;
+            end
+
+        end
+
+        S_IF_END_49: begin
+
+            // LIR block: if_end_49
+
+            // line 128: if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_1)
+
+
+
+
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_51;
+            end else begin
+                next_state = S_IF_END_52;
+            end
+
+        end
+
+        S_AFTER_CALL_50: begin
+
+            // LIR block: after_call_50
+
+            // line 125: if u8_n0 != 255:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u8_n0, delta=f32_6)
+
+
+
+
+
+
+            next_state = S_IF_END_49;
+
+        end
+
+        S_IF_THEN_51: begin
+
+            // LIR block: if_then_51
+
+            // line 129: accumJ(i=u8_n1, delta=f32_1)
+
+
+
+
+
+            accumJ_i = u8_n1;
+
+            accumJ_delta = f32_1;
+
+            accumJ_start = 1'b1;
+
+
+            next_state = S_IF_THEN_51_WAIT;
+
+        end
+
+        S_IF_THEN_51_WAIT: begin
+
+            // LIR block: if_then_51
+
+            // line 129: accumJ(i=u8_n1, delta=f32_1)
+
+            // wait for blocking primitive: accumJ
+
+
+
+
+
+
+            if (accumJ_done) begin
+
+                next_state = S_AFTER_CALL_53;
+            end else begin
+                next_state = S_IF_THEN_51_WAIT;
+            end
+
+        end
+
+        S_IF_END_52: begin
+
+            // LIR block: if_end_52
+
+            // line 124: if u8_kind == 2:             if u8_n0 != 255:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u8_n0, delta=f32_6)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_1)
+
+
+
+
+
+
+            next_state = S_IF_END_47;
+
+        end
+
+        S_AFTER_CALL_53: begin
+
+            // LIR block: after_call_53
+
+            // line 128: if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_1)
+
+
+
+
+
+
+            next_state = S_IF_END_52;
+
+        end
+
+        S_IF_THEN_54: begin
+
+            // LIR block: if_then_54
+
+            // line 132: u8_aux = u8_next_aux
+
+
+
+
+            next_u8_aux = u8_next_aux;
+
+            next_u8_next_aux = (u8_next_aux + 8'd1);
+
+
+
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_56;
+            end else begin
+                next_state = S_IF_END_57;
             end
 
         end
@@ -3031,91 +3045,129 @@ always_comb begin
 
             // LIR block: if_end_55
 
-            // line 138: if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_1)
+            // line 148: if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u8_n0 != 255:                 f32_7 = fetch_prevX(i=u8_n0)             if u8_n1 != 255:                 f32_2 = fetch_prevX(i=u8_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u8_n0 != 255:                 accumJ(i=u8_n0, delta=f32_2)             if u8_n1 != 255:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u8_n1, delta=f32_3)
 
 
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_57;
+            if ((u8_kind == 32'd4)) begin
+                next_state = S_IF_THEN_65;
             end else begin
-                next_state = S_IF_END_58;
+                next_state = S_IF_END_66;
             end
 
         end
 
-        S_AFTER_CALL_56: begin
+        S_IF_THEN_56: begin
 
-            // LIR block: after_call_56
+            // LIR block: if_then_56
 
-            // line 135: if u16_n0 != 65535:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u16_n0, delta=f32_6)
-
-
-
-
-
-
-            next_state = S_IF_END_55;
-
-        end
-
-        S_IF_THEN_57: begin
-
-            // LIR block: if_then_57
-
-            // line 139: accumJ(i=u16_n1, delta=f32_1)
+            // line 135: accumA(i=u8_aux, j=u8_n0, delta=f32_5)
 
 
 
 
 
-            accumJ_i = u16_n1;
+            accumA_i = u8_aux;
 
-            accumJ_delta = f32_1;
+            accumA_j = u8_n0;
 
-            accumJ_start = 1'b1;
+            accumA_delta = f32_5;
+
+            accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_57_WAIT;
+            next_state = S_IF_THEN_56_WAIT;
 
         end
 
-        S_IF_THEN_57_WAIT: begin
+        S_IF_THEN_56_WAIT: begin
 
-            // LIR block: if_then_57
+            // LIR block: if_then_56
 
-            // line 139: accumJ(i=u16_n1, delta=f32_1)
+            // line 135: accumA(i=u8_aux, j=u8_n0, delta=f32_5)
 
-            // wait for blocking primitive: accumJ
-
-
+            // wait for blocking primitive: accumA
 
 
 
 
-            if (accumJ_done) begin
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_58;
+            end else begin
+                next_state = S_IF_THEN_56_WAIT;
+            end
+
+        end
+
+        S_IF_END_57: begin
+
+            // LIR block: if_end_57
+
+            // line 138: if u8_n1 != 255:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_6)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)
+
+
+
+
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_60;
+            end else begin
+                next_state = S_IF_END_61;
+            end
+
+        end
+
+        S_AFTER_CALL_58: begin
+
+            // LIR block: after_call_58
+
+            // line 136: f32_6 = neg_comb(v=f32_5)
+
+
+
+
+            next_f32_6 = neg_comb(f32_5);
+
+
+            accumA_i = u8_n0;
+
+            accumA_j = u8_aux;
+
+            accumA_delta = neg_comb(f32_5);
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_AFTER_CALL_58_WAIT;
+
+        end
+
+        S_AFTER_CALL_58_WAIT: begin
+
+            // LIR block: after_call_58
+
+            // line 136: f32_6 = neg_comb(v=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
 
                 next_state = S_AFTER_CALL_59;
             end else begin
-                next_state = S_IF_THEN_57_WAIT;
+                next_state = S_AFTER_CALL_58_WAIT;
             end
-
-        end
-
-        S_IF_END_58: begin
-
-            // LIR block: if_end_58
-
-            // line 134: if u8_kind == 2:             if u16_n0 != 65535:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u16_n0, delta=f32_6)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_1)
-
-
-
-
-
-
-            next_state = S_IF_END_53;
 
         end
 
@@ -3123,14 +3175,14 @@ always_comb begin
 
             // LIR block: after_call_59
 
-            // line 138: if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_1)
+            // line 134: if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_6)
 
 
 
 
 
 
-            next_state = S_IF_END_58;
+            next_state = S_IF_END_57;
 
         end
 
@@ -3138,21 +3190,45 @@ always_comb begin
 
             // LIR block: if_then_60
 
-            // line 142: u16_aux = u16_next_aux
+            // line 139: f32_6 = neg_comb(v=f32_5)
 
 
 
 
-            next_u16_aux = u16_next_aux;
-
-            next_u16_next_aux = (u16_next_aux + 16'd1);
+            next_f32_6 = neg_comb(f32_5);
 
 
+            accumA_i = u8_aux;
 
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_62;
+            accumA_j = u8_n1;
+
+            accumA_delta = neg_comb(f32_5);
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_IF_THEN_60_WAIT;
+
+        end
+
+        S_IF_THEN_60_WAIT: begin
+
+            // LIR block: if_then_60
+
+            // line 139: f32_6 = neg_comb(v=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_62;
             end else begin
-                next_state = S_IF_END_63;
+                next_state = S_IF_THEN_60_WAIT;
             end
 
         end
@@ -3161,220 +3237,28 @@ always_comb begin
 
             // LIR block: if_end_61
 
-            // line 158: if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u16_n0 != 65535:                 f32_7 = fetch_prevX(i=u16_n0)             if u16_n1 != 65535:                 f32_2 = fetch_prevX(i=u16_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u16_n0 != 65535:                 accumJ(i=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u16_n1, delta=f32_3)
+            // line 142: accumJ(i=u8_aux, delta=f32_1)
 
 
 
 
 
-
-            if ((u8_kind == 32'd4)) begin
-                next_state = S_IF_THEN_71;
-            end else begin
-                next_state = S_IF_END_72;
-            end
-
-        end
-
-        S_IF_THEN_62: begin
-
-            // LIR block: if_then_62
-
-            // line 145: accumA(i=u16_aux, j=u16_n0, delta=f32_5)
-
-
-
-
-
-            accumA_i = u16_aux;
-
-            accumA_j = u16_n0;
-
-            accumA_delta = f32_5;
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_IF_THEN_62_WAIT;
-
-        end
-
-        S_IF_THEN_62_WAIT: begin
-
-            // LIR block: if_then_62
-
-            // line 145: accumA(i=u16_aux, j=u16_n0, delta=f32_5)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_64;
-            end else begin
-                next_state = S_IF_THEN_62_WAIT;
-            end
-
-        end
-
-        S_IF_END_63: begin
-
-            // LIR block: if_end_63
-
-            // line 148: if u16_n1 != 65535:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_6)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
-
-
-
-
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_66;
-            end else begin
-                next_state = S_IF_END_67;
-            end
-
-        end
-
-        S_AFTER_CALL_64: begin
-
-            // LIR block: after_call_64
-
-            // line 146: f32_6 = neg_comb(v=f32_5)
-
-
-
-
-            next_f32_6 = neg_comb(f32_5);
-
-
-            accumA_i = u16_n0;
-
-            accumA_j = u16_aux;
-
-            accumA_delta = neg_comb(f32_5);
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_64_WAIT;
-
-        end
-
-        S_AFTER_CALL_64_WAIT: begin
-
-            // LIR block: after_call_64
-
-            // line 146: f32_6 = neg_comb(v=f32_5)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_65;
-            end else begin
-                next_state = S_AFTER_CALL_64_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_65: begin
-
-            // LIR block: after_call_65
-
-            // line 144: if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_6)
-
-
-
-
-
-
-            next_state = S_IF_END_63;
-
-        end
-
-        S_IF_THEN_66: begin
-
-            // LIR block: if_then_66
-
-            // line 149: f32_6 = neg_comb(v=f32_5)
-
-
-
-
-            next_f32_6 = neg_comb(f32_5);
-
-
-            accumA_i = u16_aux;
-
-            accumA_j = u16_n1;
-
-            accumA_delta = neg_comb(f32_5);
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_IF_THEN_66_WAIT;
-
-        end
-
-        S_IF_THEN_66_WAIT: begin
-
-            // LIR block: if_then_66
-
-            // line 149: f32_6 = neg_comb(v=f32_5)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_68;
-            end else begin
-                next_state = S_IF_THEN_66_WAIT;
-            end
-
-        end
-
-        S_IF_END_67: begin
-
-            // LIR block: if_end_67
-
-            // line 152: accumJ(i=u16_aux, delta=f32_1)
-
-
-
-
-
-            accumJ_i = u16_aux;
+            accumJ_i = u8_aux;
 
             accumJ_delta = f32_1;
 
             accumJ_start = 1'b1;
 
 
-            next_state = S_IF_END_67_WAIT;
+            next_state = S_IF_END_61_WAIT;
 
         end
 
-        S_IF_END_67_WAIT: begin
+        S_IF_END_61_WAIT: begin
 
-            // LIR block: if_end_67
+            // LIR block: if_end_61
 
-            // line 152: accumJ(i=u16_aux, delta=f32_1)
+            // line 142: accumJ(i=u8_aux, delta=f32_1)
 
             // wait for blocking primitive: accumJ
 
@@ -3385,41 +3269,41 @@ always_comb begin
 
             if (accumJ_done) begin
 
-                next_state = S_AFTER_CALL_70;
+                next_state = S_AFTER_CALL_64;
             end else begin
-                next_state = S_IF_END_67_WAIT;
+                next_state = S_IF_END_61_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_68: begin
+        S_AFTER_CALL_62: begin
 
-            // LIR block: after_call_68
+            // LIR block: after_call_62
 
-            // line 151: accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
+            // line 141: accumA(i=u8_n1, j=u8_aux, delta=f32_5)
 
 
 
-            accumA_i = u16_n1;
 
-            accumA_j = u16_aux;
+
+            accumA_i = u8_n1;
+
+            accumA_j = u8_aux;
 
             accumA_delta = f32_5;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_68_WAIT;
+            next_state = S_AFTER_CALL_62_WAIT;
 
         end
 
-        S_AFTER_CALL_68_WAIT: begin
+        S_AFTER_CALL_62_WAIT: begin
 
-            // LIR block: after_call_68
+            // LIR block: after_call_62
 
-            // line 151: accumA(i=u16_n1, j=u16_aux, delta=f32_5)
+            // line 141: accumA(i=u8_n1, j=u8_aux, delta=f32_5)
 
             // wait for blocking primitive: accumA
 
@@ -3430,33 +3314,18 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_69;
+                next_state = S_AFTER_CALL_63;
             end else begin
-                next_state = S_AFTER_CALL_68_WAIT;
+                next_state = S_AFTER_CALL_62_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_69: begin
+        S_AFTER_CALL_63: begin
 
-            // LIR block: after_call_69
+            // LIR block: after_call_63
 
-            // line 148: if u16_n1 != 65535:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_6)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
-
-
-
-
-            next_state = S_IF_END_67;
-
-        end
-
-        S_AFTER_CALL_70: begin
-
-            // LIR block: after_call_70
-
-            // line 141: if u8_kind == 3:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_6)             if u16_n1 != 65535:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_6)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_1)
+            // line 138: if u8_n1 != 255:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_6)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)
 
 
 
@@ -3467,11 +3336,26 @@ always_comb begin
 
         end
 
-        S_IF_THEN_71: begin
+        S_AFTER_CALL_64: begin
 
-            // LIR block: if_then_71
+            // LIR block: after_call_64
 
-            // line 159: f32_6 = div(a=f32_1, b=par_dt)
+            // line 131: if u8_kind == 3:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_6)             if u8_n1 != 255:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_6)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_1)
+
+
+
+
+
+
+            next_state = S_IF_END_55;
+
+        end
+
+        S_IF_THEN_65: begin
+
+            // LIR block: if_then_65
+
+            // line 149: f32_6 = div(a=f32_1, b=par_dt)
 
 
 
@@ -3484,15 +3368,15 @@ always_comb begin
             div_start = 1'b1;
 
 
-            next_state = S_IF_THEN_71_WAIT;
+            next_state = S_IF_THEN_65_WAIT;
 
         end
 
-        S_IF_THEN_71_WAIT: begin
+        S_IF_THEN_65_WAIT: begin
 
-            // LIR block: if_then_71
+            // LIR block: if_then_65
 
-            // line 159: f32_6 = div(a=f32_1, b=par_dt)
+            // line 149: f32_6 = div(a=f32_1, b=par_dt)
 
             // wait for blocking primitive: div
 
@@ -3505,18 +3389,18 @@ always_comb begin
 
                 next_f32_6 = div_result;
 
-                next_state = S_AFTER_CALL_73;
+                next_state = S_AFTER_CALL_67;
             end else begin
-                next_state = S_IF_THEN_71_WAIT;
+                next_state = S_IF_THEN_65_WAIT;
             end
 
         end
 
-        S_IF_END_72: begin
+        S_IF_END_66: begin
 
-            // LIR block: if_end_72
+            // LIR block: if_end_66
 
-            // line 183: if u8_kind == 5:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u16_aux)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_2)             if u16_n1 != 65535:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_2)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u16_aux, j=u16_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u16_aux, delta=f32_2)
+            // line 173: if u8_kind == 5:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u8_aux)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_2)             if u8_n1 != 255:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_2)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u8_aux, j=u8_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u8_aux, delta=f32_2)
 
 
 
@@ -3524,18 +3408,18 @@ always_comb begin
 
 
             if ((u8_kind == 32'd5)) begin
-                next_state = S_IF_THEN_98;
+                next_state = S_IF_THEN_92;
             end else begin
-                next_state = S_IF_END_99;
+                next_state = S_IF_END_93;
             end
 
         end
 
-        S_AFTER_CALL_73: begin
+        S_AFTER_CALL_67: begin
 
-            // LIR block: after_call_73
+            // LIR block: after_call_67
 
-            // line 160: f32_7 = f32_0
+            // line 150: f32_7 = f32_0
 
 
 
@@ -3544,38 +3428,38 @@ always_comb begin
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_74;
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_68;
             end else begin
-                next_state = S_IF_END_75;
+                next_state = S_IF_END_69;
             end
 
         end
 
-        S_IF_THEN_74: begin
+        S_IF_THEN_68: begin
 
-            // LIR block: if_then_74
+            // LIR block: if_then_68
 
-            // line 162: f32_7 = fetch_prevX(i=u16_n0)
-
-
+            // line 152: f32_7 = fetch_prevX(i=u8_n0)
 
 
 
-            fetch_prevX_i = u16_n0;
+
+
+            fetch_prevX_i = u8_n0;
 
             fetch_prevX_start = 1'b1;
 
 
-            next_state = S_IF_THEN_74_WAIT;
+            next_state = S_IF_THEN_68_WAIT;
 
         end
 
-        S_IF_THEN_74_WAIT: begin
+        S_IF_THEN_68_WAIT: begin
 
-            // LIR block: if_then_74
+            // LIR block: if_then_68
 
-            // line 162: f32_7 = fetch_prevX(i=u16_n0)
+            // line 152: f32_7 = fetch_prevX(i=u8_n0)
 
             // wait for blocking primitive: fetch_prevX
 
@@ -3588,71 +3472,71 @@ always_comb begin
 
                 next_f32_7 = fetch_prevX_result;
 
-                next_state = S_AFTER_CALL_76;
+                next_state = S_AFTER_CALL_70;
             end else begin
-                next_state = S_IF_THEN_74_WAIT;
+                next_state = S_IF_THEN_68_WAIT;
             end
 
         end
 
-        S_IF_END_75: begin
+        S_IF_END_69: begin
 
-            // LIR block: if_end_75
+            // LIR block: if_end_69
 
-            // line 163: if u16_n1 != 65535:                 f32_2 = fetch_prevX(i=u16_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)
-
-
+            // line 153: if u8_n1 != 255:                 f32_2 = fetch_prevX(i=u8_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_77;
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_71;
             end else begin
-                next_state = S_IF_END_78;
+                next_state = S_IF_END_72;
             end
 
         end
 
-        S_AFTER_CALL_76: begin
+        S_AFTER_CALL_70: begin
 
-            // LIR block: after_call_76
+            // LIR block: after_call_70
 
-            // line 161: if u16_n0 != 65535:                 f32_7 = fetch_prevX(i=u16_n0)
-
-
+            // line 151: if u8_n0 != 255:                 f32_7 = fetch_prevX(i=u8_n0)
 
 
 
 
-            next_state = S_IF_END_75;
+
+
+            next_state = S_IF_END_69;
 
         end
 
-        S_IF_THEN_77: begin
+        S_IF_THEN_71: begin
 
-            // LIR block: if_then_77
+            // LIR block: if_then_71
 
-            // line 164: f32_2 = fetch_prevX(i=u16_n1)
-
-
+            // line 154: f32_2 = fetch_prevX(i=u8_n1)
 
 
 
-            fetch_prevX_i = u16_n1;
+
+
+            fetch_prevX_i = u8_n1;
 
             fetch_prevX_start = 1'b1;
 
 
-            next_state = S_IF_THEN_77_WAIT;
+            next_state = S_IF_THEN_71_WAIT;
 
         end
 
-        S_IF_THEN_77_WAIT: begin
+        S_IF_THEN_71_WAIT: begin
 
-            // LIR block: if_then_77
+            // LIR block: if_then_71
 
-            // line 164: f32_2 = fetch_prevX(i=u16_n1)
+            // line 154: f32_2 = fetch_prevX(i=u8_n1)
 
             // wait for blocking primitive: fetch_prevX
 
@@ -3665,37 +3549,37 @@ always_comb begin
 
                 next_f32_2 = fetch_prevX_result;
 
-                next_state = S_AFTER_CALL_79;
+                next_state = S_AFTER_CALL_73;
             end else begin
-                next_state = S_IF_THEN_77_WAIT;
+                next_state = S_IF_THEN_71_WAIT;
             end
 
         end
 
-        S_IF_END_78: begin
+        S_IF_END_72: begin
 
-            // LIR block: if_end_78
+            // LIR block: if_end_72
 
-            // line 167: if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)
-
-
+            // line 157: if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_81;
+
+
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_75;
             end else begin
-                next_state = S_IF_END_82;
+                next_state = S_IF_END_76;
             end
 
         end
 
-        S_AFTER_CALL_79: begin
+        S_AFTER_CALL_73: begin
 
-            // LIR block: after_call_79
+            // LIR block: after_call_73
 
-            // line 165: f32_2 = neg_comb(v=f32_2)
+            // line 155: f32_2 = neg_comb(v=f32_2)
 
 
 
@@ -3712,15 +3596,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_79_WAIT;
+            next_state = S_AFTER_CALL_73_WAIT;
 
         end
 
-        S_AFTER_CALL_79_WAIT: begin
+        S_AFTER_CALL_73_WAIT: begin
 
-            // LIR block: after_call_79
+            // LIR block: after_call_73
 
-            // line 165: f32_2 = neg_comb(v=f32_2)
+            // line 155: f32_2 = neg_comb(v=f32_2)
 
             // wait for blocking primitive: fma
 
@@ -3733,56 +3617,56 @@ always_comb begin
 
                 next_f32_7 = fma_result;
 
-                next_state = S_AFTER_CALL_80;
+                next_state = S_AFTER_CALL_74;
             end else begin
-                next_state = S_AFTER_CALL_79_WAIT;
+                next_state = S_AFTER_CALL_73_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_80: begin
+        S_AFTER_CALL_74: begin
 
-            // LIR block: after_call_80
+            // LIR block: after_call_74
 
-            // line 163: if u16_n1 != 65535:                 f32_2 = fetch_prevX(i=u16_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)
-
-
+            // line 153: if u8_n1 != 255:                 f32_2 = fetch_prevX(i=u8_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)
 
 
 
 
-            next_state = S_IF_END_78;
+
+
+            next_state = S_IF_END_72;
 
         end
 
-        S_IF_THEN_81: begin
+        S_IF_THEN_75: begin
 
-            // LIR block: if_then_81
+            // LIR block: if_then_75
 
-            // line 168: accumA(i=u16_n0, j=u16_n0, delta=f32_6)
-
-
+            // line 158: accumA(i=u8_n0, j=u8_n0, delta=f32_6)
 
 
 
-            accumA_i = u16_n0;
 
-            accumA_j = u16_n0;
+
+            accumA_i = u8_n0;
+
+            accumA_j = u8_n0;
 
             accumA_delta = f32_6;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_81_WAIT;
+            next_state = S_IF_THEN_75_WAIT;
 
         end
 
-        S_IF_THEN_81_WAIT: begin
+        S_IF_THEN_75_WAIT: begin
 
-            // LIR block: if_then_81
+            // LIR block: if_then_75
 
-            // line 168: accumA(i=u16_n0, j=u16_n0, delta=f32_6)
+            // line 158: accumA(i=u8_n0, j=u8_n0, delta=f32_6)
 
             // wait for blocking primitive: accumA
 
@@ -3793,56 +3677,56 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_83;
+                next_state = S_AFTER_CALL_77;
             end else begin
-                next_state = S_IF_THEN_81_WAIT;
+                next_state = S_IF_THEN_75_WAIT;
             end
 
         end
 
-        S_IF_END_82: begin
+        S_IF_END_76: begin
 
-            // LIR block: if_end_82
+            // LIR block: if_end_76
 
-            // line 173: if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
+            // line 163: if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_88;
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_82;
             end else begin
-                next_state = S_IF_END_89;
+                next_state = S_IF_END_83;
             end
 
         end
 
-        S_AFTER_CALL_83: begin
+        S_AFTER_CALL_77: begin
 
-            // LIR block: after_call_83
+            // LIR block: after_call_77
 
-            // line 169: if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)
-
-
+            // line 159: if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_84;
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_78;
             end else begin
-                next_state = S_IF_END_85;
+                next_state = S_IF_END_79;
             end
 
         end
 
-        S_IF_THEN_84: begin
+        S_IF_THEN_78: begin
 
-            // LIR block: if_then_84
+            // LIR block: if_then_78
 
-            // line 170: f32_2 = neg_comb(v=f32_6)
+            // line 160: f32_2 = neg_comb(v=f32_6)
 
 
 
@@ -3850,24 +3734,24 @@ always_comb begin
             next_f32_2 = neg_comb(f32_6);
 
 
-            accumA_i = u16_n0;
+            accumA_i = u8_n0;
 
-            accumA_j = u16_n1;
+            accumA_j = u8_n1;
 
             accumA_delta = neg_comb(f32_6);
 
             accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_84_WAIT;
+            next_state = S_IF_THEN_78_WAIT;
 
         end
 
-        S_IF_THEN_84_WAIT: begin
+        S_IF_THEN_78_WAIT: begin
 
-            // LIR block: if_then_84
+            // LIR block: if_then_78
 
-            // line 170: f32_2 = neg_comb(v=f32_6)
+            // line 160: f32_2 = neg_comb(v=f32_6)
 
             // wait for blocking primitive: accumA
 
@@ -3878,56 +3762,56 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_86;
+                next_state = S_AFTER_CALL_80;
             end else begin
-                next_state = S_IF_THEN_84_WAIT;
+                next_state = S_IF_THEN_78_WAIT;
             end
 
         end
 
-        S_IF_END_85: begin
+        S_IF_END_79: begin
 
-            // LIR block: if_end_85
+            // LIR block: if_end_79
 
-            // line 167: if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)
-
-
+            // line 157: if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)
 
 
 
 
-            next_state = S_IF_END_82;
+
+
+            next_state = S_IF_END_76;
 
         end
 
-        S_AFTER_CALL_86: begin
+        S_AFTER_CALL_80: begin
 
-            // LIR block: after_call_86
+            // LIR block: after_call_80
 
-            // line 172: accumA(i=u16_n1, j=u16_n0, delta=f32_2)
-
-
+            // line 162: accumA(i=u8_n1, j=u8_n0, delta=f32_2)
 
 
 
-            accumA_i = u16_n1;
 
-            accumA_j = u16_n0;
+
+            accumA_i = u8_n1;
+
+            accumA_j = u8_n0;
 
             accumA_delta = f32_2;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_86_WAIT;
+            next_state = S_AFTER_CALL_80_WAIT;
 
         end
 
-        S_AFTER_CALL_86_WAIT: begin
+        S_AFTER_CALL_80_WAIT: begin
 
-            // LIR block: after_call_86
+            // LIR block: after_call_80
 
-            // line 172: accumA(i=u16_n1, j=u16_n0, delta=f32_2)
+            // line 162: accumA(i=u8_n1, j=u8_n0, delta=f32_2)
 
             // wait for blocking primitive: accumA
 
@@ -3938,56 +3822,56 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_87;
+                next_state = S_AFTER_CALL_81;
             end else begin
-                next_state = S_AFTER_CALL_86_WAIT;
+                next_state = S_AFTER_CALL_80_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_87: begin
+        S_AFTER_CALL_81: begin
 
-            // LIR block: after_call_87
+            // LIR block: after_call_81
 
-            // line 169: if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)
-
-
+            // line 159: if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)
 
 
 
 
-            next_state = S_IF_END_85;
+
+
+            next_state = S_IF_END_79;
 
         end
 
-        S_IF_THEN_88: begin
+        S_IF_THEN_82: begin
 
-            // LIR block: if_then_88
+            // LIR block: if_then_82
 
-            // line 174: accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
+            // line 164: accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
 
 
-            accumA_i = u16_n1;
 
-            accumA_j = u16_n1;
+
+            accumA_i = u8_n1;
+
+            accumA_j = u8_n1;
 
             accumA_delta = f32_6;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_88_WAIT;
+            next_state = S_IF_THEN_82_WAIT;
 
         end
 
-        S_IF_THEN_88_WAIT: begin
+        S_IF_THEN_82_WAIT: begin
 
-            // LIR block: if_then_88
+            // LIR block: if_then_82
 
-            // line 174: accumA(i=u16_n1, j=u16_n1, delta=f32_6)
+            // line 164: accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
             // wait for blocking primitive: accumA
 
@@ -3998,18 +3882,18 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_90;
+                next_state = S_AFTER_CALL_84;
             end else begin
-                next_state = S_IF_THEN_88_WAIT;
+                next_state = S_IF_THEN_82_WAIT;
             end
 
         end
 
-        S_IF_END_89: begin
+        S_IF_END_83: begin
 
-            // LIR block: if_end_89
+            // LIR block: if_end_83
 
-            // line 175: f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)
+            // line 165: f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)
 
 
 
@@ -4024,15 +3908,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_IF_END_89_WAIT;
+            next_state = S_IF_END_83_WAIT;
 
         end
 
-        S_IF_END_89_WAIT: begin
+        S_IF_END_83_WAIT: begin
 
-            // LIR block: if_end_89
+            // LIR block: if_end_83
 
-            // line 175: f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)
+            // line 165: f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)
 
             // wait for blocking primitive: fma
 
@@ -4045,25 +3929,181 @@ always_comb begin
 
                 next_f32_2 = fma_result;
 
-                next_state = S_AFTER_CALL_91;
+                next_state = S_AFTER_CALL_85;
             end else begin
-                next_state = S_IF_END_89_WAIT;
+                next_state = S_IF_END_83_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_90: begin
+        S_AFTER_CALL_84: begin
 
-            // LIR block: after_call_90
+            // LIR block: after_call_84
 
-            // line 173: if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
+            // line 163: if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
 
 
 
-            next_state = S_IF_END_89;
+
+
+            next_state = S_IF_END_83;
+
+        end
+
+        S_AFTER_CALL_85: begin
+
+            // LIR block: after_call_85
+
+            // line 166: if u8_n0 != 255:                 accumJ(i=u8_n0, delta=f32_2)
+
+
+
+
+
+
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_86;
+            end else begin
+                next_state = S_IF_END_87;
+            end
+
+        end
+
+        S_IF_THEN_86: begin
+
+            // LIR block: if_then_86
+
+            // line 167: accumJ(i=u8_n0, delta=f32_2)
+
+
+
+
+
+            accumJ_i = u8_n0;
+
+            accumJ_delta = f32_2;
+
+            accumJ_start = 1'b1;
+
+
+            next_state = S_IF_THEN_86_WAIT;
+
+        end
+
+        S_IF_THEN_86_WAIT: begin
+
+            // LIR block: if_then_86
+
+            // line 167: accumJ(i=u8_n0, delta=f32_2)
+
+            // wait for blocking primitive: accumJ
+
+
+
+
+
+
+            if (accumJ_done) begin
+
+                next_state = S_AFTER_CALL_88;
+            end else begin
+                next_state = S_IF_THEN_86_WAIT;
+            end
+
+        end
+
+        S_IF_END_87: begin
+
+            // LIR block: if_end_87
+
+            // line 168: if u8_n1 != 255:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u8_n1, delta=f32_3)
+
+
+
+
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_89;
+            end else begin
+                next_state = S_IF_END_90;
+            end
+
+        end
+
+        S_AFTER_CALL_88: begin
+
+            // LIR block: after_call_88
+
+            // line 166: if u8_n0 != 255:                 accumJ(i=u8_n0, delta=f32_2)
+
+
+
+
+
+
+            next_state = S_IF_END_87;
+
+        end
+
+        S_IF_THEN_89: begin
+
+            // LIR block: if_then_89
+
+            // line 169: f32_3 = neg_comb(v=f32_2)
+
+
+
+
+            next_f32_3 = neg_comb(f32_2);
+
+
+            accumJ_i = u8_n1;
+
+            accumJ_delta = neg_comb(f32_2);
+
+            accumJ_start = 1'b1;
+
+
+            next_state = S_IF_THEN_89_WAIT;
+
+        end
+
+        S_IF_THEN_89_WAIT: begin
+
+            // LIR block: if_then_89
+
+            // line 169: f32_3 = neg_comb(v=f32_2)
+
+            // wait for blocking primitive: accumJ
+
+
+
+
+
+
+            if (accumJ_done) begin
+
+                next_state = S_AFTER_CALL_91;
+            end else begin
+                next_state = S_IF_THEN_89_WAIT;
+            end
+
+        end
+
+        S_IF_END_90: begin
+
+            // LIR block: if_end_90
+
+            // line 148: if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u8_n0 != 255:                 f32_7 = fetch_prevX(i=u8_n0)             if u8_n1 != 255:                 f32_2 = fetch_prevX(i=u8_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u8_n0 != 255:                 accumJ(i=u8_n0, delta=f32_2)             if u8_n1 != 255:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u8_n1, delta=f32_3)
+
+
+
+
+
+
+            next_state = S_IF_END_66;
 
         end
 
@@ -4071,18 +4111,14 @@ always_comb begin
 
             // LIR block: after_call_91
 
-            // line 176: if u16_n0 != 65535:                 accumJ(i=u16_n0, delta=f32_2)
+            // line 168: if u8_n1 != 255:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u8_n1, delta=f32_3)
 
 
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_92;
-            end else begin
-                next_state = S_IF_END_93;
-            end
+            next_state = S_IF_END_90;
 
         end
 
@@ -4090,17 +4126,21 @@ always_comb begin
 
             // LIR block: if_then_92
 
-            // line 177: accumJ(i=u16_n0, delta=f32_2)
+            // line 174: u8_aux = u8_next_aux
 
 
 
 
+            next_u8_aux = u8_next_aux;
 
-            accumJ_i = u16_n0;
+            next_u8_next_aux = (u8_next_aux + 8'd1);
 
-            accumJ_delta = f32_2;
 
-            accumJ_start = 1'b1;
+            div_a = f32_1;
+
+            div_b = par_dt;
+
+            div_start = 1'b1;
 
 
             next_state = S_IF_THEN_92_WAIT;
@@ -4111,163 +4151,7 @@ always_comb begin
 
             // LIR block: if_then_92
 
-            // line 177: accumJ(i=u16_n0, delta=f32_2)
-
-            // wait for blocking primitive: accumJ
-
-
-
-
-
-
-            if (accumJ_done) begin
-
-                next_state = S_AFTER_CALL_94;
-            end else begin
-                next_state = S_IF_THEN_92_WAIT;
-            end
-
-        end
-
-        S_IF_END_93: begin
-
-            // LIR block: if_end_93
-
-            // line 178: if u16_n1 != 65535:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u16_n1, delta=f32_3)
-
-
-
-
-
-
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_95;
-            end else begin
-                next_state = S_IF_END_96;
-            end
-
-        end
-
-        S_AFTER_CALL_94: begin
-
-            // LIR block: after_call_94
-
-            // line 176: if u16_n0 != 65535:                 accumJ(i=u16_n0, delta=f32_2)
-
-
-
-
-
-
-            next_state = S_IF_END_93;
-
-        end
-
-        S_IF_THEN_95: begin
-
-            // LIR block: if_then_95
-
-            // line 179: f32_3 = neg_comb(v=f32_2)
-
-
-
-
-            next_f32_3 = neg_comb(f32_2);
-
-
-            accumJ_i = u16_n1;
-
-            accumJ_delta = neg_comb(f32_2);
-
-            accumJ_start = 1'b1;
-
-
-            next_state = S_IF_THEN_95_WAIT;
-
-        end
-
-        S_IF_THEN_95_WAIT: begin
-
-            // LIR block: if_then_95
-
-            // line 179: f32_3 = neg_comb(v=f32_2)
-
-            // wait for blocking primitive: accumJ
-
-
-
-
-
-
-            if (accumJ_done) begin
-
-                next_state = S_AFTER_CALL_97;
-            end else begin
-                next_state = S_IF_THEN_95_WAIT;
-            end
-
-        end
-
-        S_IF_END_96: begin
-
-            // LIR block: if_end_96
-
-            // line 158: if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u16_n0 != 65535:                 f32_7 = fetch_prevX(i=u16_n0)             if u16_n1 != 65535:                 f32_2 = fetch_prevX(i=u16_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u16_n0 != 65535:                 accumJ(i=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u16_n1, delta=f32_3)
-
-
-
-
-
-
-            next_state = S_IF_END_72;
-
-        end
-
-        S_AFTER_CALL_97: begin
-
-            // LIR block: after_call_97
-
-            // line 178: if u16_n1 != 65535:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u16_n1, delta=f32_3)
-
-
-
-
-
-
-            next_state = S_IF_END_96;
-
-        end
-
-        S_IF_THEN_98: begin
-
-            // LIR block: if_then_98
-
-            // line 184: u16_aux = u16_next_aux
-
-
-
-
-            next_u16_aux = u16_next_aux;
-
-            next_u16_next_aux = (u16_next_aux + 16'd1);
-
-
-            div_a = f32_1;
-
-            div_b = par_dt;
-
-            div_start = 1'b1;
-
-
-            next_state = S_IF_THEN_98_WAIT;
-
-        end
-
-        S_IF_THEN_98_WAIT: begin
-
-            // LIR block: if_then_98
-
-            // line 184: u16_aux = u16_next_aux
+            // line 174: u8_aux = u8_next_aux
 
             // wait for blocking primitive: div
 
@@ -4280,18 +4164,18 @@ always_comb begin
 
                 next_f32_6 = div_result;
 
-                next_state = S_AFTER_CALL_100;
+                next_state = S_AFTER_CALL_94;
             end else begin
-                next_state = S_IF_THEN_98_WAIT;
+                next_state = S_IF_THEN_92_WAIT;
             end
 
         end
 
-        S_IF_END_99: begin
+        S_IF_END_93: begin
 
-            // LIR block: if_end_99
+            // LIR block: if_end_93
 
-            // line 202: if u8_kind == 6:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)
+            // line 192: if u8_kind == 6:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)
 
 
 
@@ -4299,37 +4183,37 @@ always_comb begin
 
 
             if ((u8_kind == 32'd6)) begin
-                next_state = S_IF_THEN_113;
+                next_state = S_IF_THEN_107;
             end else begin
-                next_state = S_IF_END_114;
+                next_state = S_IF_END_108;
             end
 
         end
 
-        S_AFTER_CALL_100: begin
+        S_AFTER_CALL_94: begin
 
-            // LIR block: after_call_100
+            // LIR block: after_call_94
 
-            // line 187: f32_7 = fetch_prevX(i=u16_aux)
-
-
+            // line 177: f32_7 = fetch_prevX(i=u8_aux)
 
 
 
-            fetch_prevX_i = u16_aux;
+
+
+            fetch_prevX_i = u8_aux;
 
             fetch_prevX_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_100_WAIT;
+            next_state = S_AFTER_CALL_94_WAIT;
 
         end
 
-        S_AFTER_CALL_100_WAIT: begin
+        S_AFTER_CALL_94_WAIT: begin
 
-            // LIR block: after_call_100
+            // LIR block: after_call_94
 
-            // line 187: f32_7 = fetch_prevX(i=u16_aux)
+            // line 177: f32_7 = fetch_prevX(i=u8_aux)
 
             // wait for blocking primitive: fetch_prevX
 
@@ -4342,60 +4226,235 @@ always_comb begin
 
                 next_f32_7 = fetch_prevX_result;
 
-                next_state = S_AFTER_CALL_101;
+                next_state = S_AFTER_CALL_95;
             end else begin
-                next_state = S_AFTER_CALL_100_WAIT;
+                next_state = S_AFTER_CALL_94_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_101: begin
+        S_AFTER_CALL_95: begin
 
-            // LIR block: after_call_101
+            // LIR block: after_call_95
 
-            // line 188: if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_2)
-
-
+            // line 178: if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_2)
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_102;
+
+
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_96;
             end else begin
-                next_state = S_IF_END_103;
+                next_state = S_IF_END_97;
             end
 
         end
 
-        S_IF_THEN_102: begin
+        S_IF_THEN_96: begin
 
-            // LIR block: if_then_102
+            // LIR block: if_then_96
 
-            // line 189: accumA(i=u16_aux, j=u16_n0, delta=f32_5)
-
-
+            // line 179: accumA(i=u8_aux, j=u8_n0, delta=f32_5)
 
 
 
-            accumA_i = u16_aux;
 
-            accumA_j = u16_n0;
+
+            accumA_i = u8_aux;
+
+            accumA_j = u8_n0;
 
             accumA_delta = f32_5;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_102_WAIT;
+            next_state = S_IF_THEN_96_WAIT;
 
         end
 
-        S_IF_THEN_102_WAIT: begin
+        S_IF_THEN_96_WAIT: begin
 
-            // LIR block: if_then_102
+            // LIR block: if_then_96
 
-            // line 189: accumA(i=u16_aux, j=u16_n0, delta=f32_5)
+            // line 179: accumA(i=u8_aux, j=u8_n0, delta=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_98;
+            end else begin
+                next_state = S_IF_THEN_96_WAIT;
+            end
+
+        end
+
+        S_IF_END_97: begin
+
+            // LIR block: if_end_97
+
+            // line 182: if u8_n1 != 255:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_2)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)
+
+
+
+
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_100;
+            end else begin
+                next_state = S_IF_END_101;
+            end
+
+        end
+
+        S_AFTER_CALL_98: begin
+
+            // LIR block: after_call_98
+
+            // line 180: f32_2 = neg_comb(v=f32_5)
+
+
+
+
+            next_f32_2 = neg_comb(f32_5);
+
+
+            accumA_i = u8_n0;
+
+            accumA_j = u8_aux;
+
+            accumA_delta = neg_comb(f32_5);
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_AFTER_CALL_98_WAIT;
+
+        end
+
+        S_AFTER_CALL_98_WAIT: begin
+
+            // LIR block: after_call_98
+
+            // line 180: f32_2 = neg_comb(v=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_99;
+            end else begin
+                next_state = S_AFTER_CALL_98_WAIT;
+            end
+
+        end
+
+        S_AFTER_CALL_99: begin
+
+            // LIR block: after_call_99
+
+            // line 178: if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_2)
+
+
+
+
+
+
+            next_state = S_IF_END_97;
+
+        end
+
+        S_IF_THEN_100: begin
+
+            // LIR block: if_then_100
+
+            // line 183: f32_2 = neg_comb(v=f32_5)
+
+
+
+
+            next_f32_2 = neg_comb(f32_5);
+
+
+            accumA_i = u8_aux;
+
+            accumA_j = u8_n1;
+
+            accumA_delta = neg_comb(f32_5);
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_IF_THEN_100_WAIT;
+
+        end
+
+        S_IF_THEN_100_WAIT: begin
+
+            // LIR block: if_then_100
+
+            // line 183: f32_2 = neg_comb(v=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_102;
+            end else begin
+                next_state = S_IF_THEN_100_WAIT;
+            end
+
+        end
+
+        S_IF_END_101: begin
+
+            // LIR block: if_end_101
+
+            // line 186: f32_2 = neg_comb(v=f32_6)
+
+
+
+
+            next_f32_2 = neg_comb(f32_6);
+
+
+            accumA_i = u8_aux;
+
+            accumA_j = u8_aux;
+
+            accumA_delta = neg_comb(f32_6);
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_IF_END_101_WAIT;
+
+        end
+
+        S_IF_END_101_WAIT: begin
+
+            // LIR block: if_end_101
+
+            // line 186: f32_2 = neg_comb(v=f32_6)
 
             // wait for blocking primitive: accumA
 
@@ -4408,27 +4467,68 @@ always_comb begin
 
                 next_state = S_AFTER_CALL_104;
             end else begin
-                next_state = S_IF_THEN_102_WAIT;
+                next_state = S_IF_END_101_WAIT;
             end
 
         end
 
-        S_IF_END_103: begin
+        S_AFTER_CALL_102: begin
 
-            // LIR block: if_end_103
+            // LIR block: after_call_102
 
-            // line 192: if u16_n1 != 65535:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_2)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
+            // line 185: accumA(i=u8_n1, j=u8_aux, delta=f32_5)
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_106;
+
+            accumA_i = u8_n1;
+
+            accumA_j = u8_aux;
+
+            accumA_delta = f32_5;
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_AFTER_CALL_102_WAIT;
+
+        end
+
+        S_AFTER_CALL_102_WAIT: begin
+
+            // LIR block: after_call_102
+
+            // line 185: accumA(i=u8_n1, j=u8_aux, delta=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_103;
             end else begin
-                next_state = S_IF_END_107;
+                next_state = S_AFTER_CALL_102_WAIT;
             end
+
+        end
+
+        S_AFTER_CALL_103: begin
+
+            // LIR block: after_call_103
+
+            // line 182: if u8_n1 != 255:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_2)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)
+
+
+
+
+
+
+            next_state = S_IF_END_101;
 
         end
 
@@ -4436,223 +4536,7 @@ always_comb begin
 
             // LIR block: after_call_104
 
-            // line 190: f32_2 = neg_comb(v=f32_5)
-
-
-
-
-            next_f32_2 = neg_comb(f32_5);
-
-
-            accumA_i = u16_n0;
-
-            accumA_j = u16_aux;
-
-            accumA_delta = neg_comb(f32_5);
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_104_WAIT;
-
-        end
-
-        S_AFTER_CALL_104_WAIT: begin
-
-            // LIR block: after_call_104
-
-            // line 190: f32_2 = neg_comb(v=f32_5)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_105;
-            end else begin
-                next_state = S_AFTER_CALL_104_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_105: begin
-
-            // LIR block: after_call_105
-
-            // line 188: if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_2)
-
-
-
-
-
-
-            next_state = S_IF_END_103;
-
-        end
-
-        S_IF_THEN_106: begin
-
-            // LIR block: if_then_106
-
-            // line 193: f32_2 = neg_comb(v=f32_5)
-
-
-
-
-            next_f32_2 = neg_comb(f32_5);
-
-
-            accumA_i = u16_aux;
-
-            accumA_j = u16_n1;
-
-            accumA_delta = neg_comb(f32_5);
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_IF_THEN_106_WAIT;
-
-        end
-
-        S_IF_THEN_106_WAIT: begin
-
-            // LIR block: if_then_106
-
-            // line 193: f32_2 = neg_comb(v=f32_5)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_108;
-            end else begin
-                next_state = S_IF_THEN_106_WAIT;
-            end
-
-        end
-
-        S_IF_END_107: begin
-
-            // LIR block: if_end_107
-
-            // line 196: f32_2 = neg_comb(v=f32_6)
-
-
-
-
-            next_f32_2 = neg_comb(f32_6);
-
-
-            accumA_i = u16_aux;
-
-            accumA_j = u16_aux;
-
-            accumA_delta = neg_comb(f32_6);
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_IF_END_107_WAIT;
-
-        end
-
-        S_IF_END_107_WAIT: begin
-
-            // LIR block: if_end_107
-
-            // line 196: f32_2 = neg_comb(v=f32_6)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_110;
-            end else begin
-                next_state = S_IF_END_107_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_108: begin
-
-            // LIR block: after_call_108
-
-            // line 195: accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
-
-
-
-            accumA_i = u16_n1;
-
-            accumA_j = u16_aux;
-
-            accumA_delta = f32_5;
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_108_WAIT;
-
-        end
-
-        S_AFTER_CALL_108_WAIT: begin
-
-            // LIR block: after_call_108
-
-            // line 195: accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_109;
-            end else begin
-                next_state = S_AFTER_CALL_108_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_109: begin
-
-            // LIR block: after_call_109
-
-            // line 192: if u16_n1 != 65535:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_2)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
-
-
-
-
-            next_state = S_IF_END_107;
-
-        end
-
-        S_AFTER_CALL_110: begin
-
-            // LIR block: after_call_110
-
-            // line 198: f32_7 = neg_comb(v=f32_7)
+            // line 188: f32_7 = neg_comb(v=f32_7)
 
 
 
@@ -4669,15 +4553,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_110_WAIT;
+            next_state = S_AFTER_CALL_104_WAIT;
 
         end
 
-        S_AFTER_CALL_110_WAIT: begin
+        S_AFTER_CALL_104_WAIT: begin
 
-            // LIR block: after_call_110
+            // LIR block: after_call_104
 
-            // line 198: f32_7 = neg_comb(v=f32_7)
+            // line 188: f32_7 = neg_comb(v=f32_7)
 
             // wait for blocking primitive: fma
 
@@ -4690,39 +4574,39 @@ always_comb begin
 
                 next_f32_2 = fma_result;
 
-                next_state = S_AFTER_CALL_111;
+                next_state = S_AFTER_CALL_105;
             end else begin
-                next_state = S_AFTER_CALL_110_WAIT;
+                next_state = S_AFTER_CALL_104_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_111: begin
+        S_AFTER_CALL_105: begin
 
-            // LIR block: after_call_111
+            // LIR block: after_call_105
 
-            // line 200: accumJ(i=u16_aux, delta=f32_2)
-
-
+            // line 190: accumJ(i=u8_aux, delta=f32_2)
 
 
 
-            accumJ_i = u16_aux;
+
+
+            accumJ_i = u8_aux;
 
             accumJ_delta = f32_2;
 
             accumJ_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_111_WAIT;
+            next_state = S_AFTER_CALL_105_WAIT;
 
         end
 
-        S_AFTER_CALL_111_WAIT: begin
+        S_AFTER_CALL_105_WAIT: begin
 
-            // LIR block: after_call_111
+            // LIR block: after_call_105
 
-            // line 200: accumJ(i=u16_aux, delta=f32_2)
+            // line 190: accumJ(i=u8_aux, delta=f32_2)
 
             // wait for blocking primitive: accumJ
 
@@ -4733,40 +4617,40 @@ always_comb begin
 
             if (accumJ_done) begin
 
-                next_state = S_AFTER_CALL_112;
+                next_state = S_AFTER_CALL_106;
             end else begin
-                next_state = S_AFTER_CALL_111_WAIT;
+                next_state = S_AFTER_CALL_105_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_112: begin
+        S_AFTER_CALL_106: begin
 
-            // LIR block: after_call_112
+            // LIR block: after_call_106
 
-            // line 183: if u8_kind == 5:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u16_aux)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_2)             if u16_n1 != 65535:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_2)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u16_aux, j=u16_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u16_aux, delta=f32_2)
-
-
+            // line 173: if u8_kind == 5:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u8_aux)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_2)             if u8_n1 != 255:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_2)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u8_aux, j=u8_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u8_aux, delta=f32_2)
 
 
 
 
-            next_state = S_IF_END_99;
+
+
+            next_state = S_IF_END_93;
 
         end
 
-        S_IF_THEN_113: begin
+        S_IF_THEN_107: begin
 
-            // LIR block: if_then_113
+            // LIR block: if_then_107
 
-            // line 203: u16_aux = u16_next_aux
-
-
+            // line 193: u8_aux = u8_next_aux
 
 
-            next_u16_aux = u16_next_aux;
 
-            next_u16_next_aux = (u16_next_aux + 16'd1);
+
+            next_u8_aux = u8_next_aux;
+
+            next_u8_next_aux = (u8_next_aux + 8'd1);
 
 
             fma_a = f32_3;
@@ -4778,15 +4662,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_IF_THEN_113_WAIT;
+            next_state = S_IF_THEN_107_WAIT;
 
         end
 
-        S_IF_THEN_113_WAIT: begin
+        S_IF_THEN_107_WAIT: begin
 
-            // LIR block: if_then_113
+            // LIR block: if_then_107
 
-            // line 203: u16_aux = u16_next_aux
+            // line 193: u8_aux = u8_next_aux
 
             // wait for blocking primitive: fma
 
@@ -4799,18 +4683,18 @@ always_comb begin
 
                 next_f32_6 = fma_result;
 
-                next_state = S_AFTER_CALL_115;
+                next_state = S_AFTER_CALL_109;
             end else begin
-                next_state = S_IF_THEN_113_WAIT;
+                next_state = S_IF_THEN_107_WAIT;
             end
 
         end
 
-        S_IF_END_114: begin
+        S_IF_END_108: begin
 
-            // LIR block: if_end_114
+            // LIR block: if_end_108
 
-            // line 218: if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_6)
+            // line 208: if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_6)
 
 
 
@@ -4818,18 +4702,18 @@ always_comb begin
 
 
             if ((u8_kind == 32'd7)) begin
-                next_state = S_IF_THEN_126;
+                next_state = S_IF_THEN_120;
             end else begin
-                next_state = S_IF_END_127;
+                next_state = S_IF_END_121;
             end
 
         end
 
-        S_AFTER_CALL_115: begin
+        S_AFTER_CALL_109: begin
 
-            // LIR block: after_call_115
+            // LIR block: after_call_109
 
-            // line 206: f32_6 = sin_comb(v=f32_6)
+            // line 196: f32_6 = sin_comb(v=f32_6)
 
 
 
@@ -4846,15 +4730,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_115_WAIT;
+            next_state = S_AFTER_CALL_109_WAIT;
 
         end
 
-        S_AFTER_CALL_115_WAIT: begin
+        S_AFTER_CALL_109_WAIT: begin
 
-            // LIR block: after_call_115
+            // LIR block: after_call_109
 
-            // line 206: f32_6 = sin_comb(v=f32_6)
+            // line 196: f32_6 = sin_comb(v=f32_6)
 
             // wait for blocking primitive: fma
 
@@ -4867,60 +4751,60 @@ always_comb begin
 
                 next_f32_6 = fma_result;
 
-                next_state = S_AFTER_CALL_116;
+                next_state = S_AFTER_CALL_110;
             end else begin
-                next_state = S_AFTER_CALL_115_WAIT;
+                next_state = S_AFTER_CALL_109_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_116: begin
+        S_AFTER_CALL_110: begin
 
-            // LIR block: after_call_116
+            // LIR block: after_call_110
 
-            // line 208: if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)
-
-
+            // line 198: if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_117;
+
+
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_111;
             end else begin
-                next_state = S_IF_END_118;
+                next_state = S_IF_END_112;
             end
 
         end
 
-        S_IF_THEN_117: begin
+        S_IF_THEN_111: begin
 
-            // LIR block: if_then_117
+            // LIR block: if_then_111
 
-            // line 209: accumA(i=u16_aux, j=u16_n0, delta=f32_5)
-
-
+            // line 199: accumA(i=u8_aux, j=u8_n0, delta=f32_5)
 
 
 
-            accumA_i = u16_aux;
 
-            accumA_j = u16_n0;
+
+            accumA_i = u8_aux;
+
+            accumA_j = u8_n0;
 
             accumA_delta = f32_5;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_117_WAIT;
+            next_state = S_IF_THEN_111_WAIT;
 
         end
 
-        S_IF_THEN_117_WAIT: begin
+        S_IF_THEN_111_WAIT: begin
 
-            // LIR block: if_then_117
+            // LIR block: if_then_111
 
-            // line 209: accumA(i=u16_aux, j=u16_n0, delta=f32_5)
+            // line 199: accumA(i=u8_aux, j=u8_n0, delta=f32_5)
 
             // wait for blocking primitive: accumA
 
@@ -4931,37 +4815,37 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_119;
+                next_state = S_AFTER_CALL_113;
             end else begin
-                next_state = S_IF_THEN_117_WAIT;
+                next_state = S_IF_THEN_111_WAIT;
             end
 
         end
 
-        S_IF_END_118: begin
+        S_IF_END_112: begin
 
-            // LIR block: if_end_118
+            // LIR block: if_end_112
 
-            // line 212: if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
+            // line 202: if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_121;
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_115;
             end else begin
-                next_state = S_IF_END_122;
+                next_state = S_IF_END_116;
             end
 
         end
 
-        S_AFTER_CALL_119: begin
+        S_AFTER_CALL_113: begin
 
-            // LIR block: after_call_119
+            // LIR block: after_call_113
 
-            // line 210: f32_7 = neg_comb(v=f32_5)
+            // line 200: f32_7 = neg_comb(v=f32_5)
 
 
 
@@ -4969,24 +4853,24 @@ always_comb begin
             next_f32_7 = neg_comb(f32_5);
 
 
-            accumA_i = u16_n0;
+            accumA_i = u8_n0;
 
-            accumA_j = u16_aux;
+            accumA_j = u8_aux;
 
             accumA_delta = neg_comb(f32_5);
 
             accumA_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_119_WAIT;
+            next_state = S_AFTER_CALL_113_WAIT;
 
         end
 
-        S_AFTER_CALL_119_WAIT: begin
+        S_AFTER_CALL_113_WAIT: begin
 
-            // LIR block: after_call_119
+            // LIR block: after_call_113
 
-            // line 210: f32_7 = neg_comb(v=f32_5)
+            // line 200: f32_7 = neg_comb(v=f32_5)
 
             // wait for blocking primitive: accumA
 
@@ -4997,33 +4881,33 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_120;
+                next_state = S_AFTER_CALL_114;
             end else begin
-                next_state = S_AFTER_CALL_119_WAIT;
+                next_state = S_AFTER_CALL_113_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_120: begin
+        S_AFTER_CALL_114: begin
 
-            // LIR block: after_call_120
+            // LIR block: after_call_114
 
-            // line 208: if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)
-
-
+            // line 198: if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)
 
 
 
 
-            next_state = S_IF_END_118;
+
+
+            next_state = S_IF_END_112;
 
         end
 
-        S_IF_THEN_121: begin
+        S_IF_THEN_115: begin
 
-            // LIR block: if_then_121
+            // LIR block: if_then_115
 
-            // line 213: f32_7 = neg_comb(v=f32_5)
+            // line 203: f32_7 = neg_comb(v=f32_5)
 
 
 
@@ -5031,24 +4915,24 @@ always_comb begin
             next_f32_7 = neg_comb(f32_5);
 
 
-            accumA_i = u16_aux;
+            accumA_i = u8_aux;
 
-            accumA_j = u16_n1;
+            accumA_j = u8_n1;
 
             accumA_delta = neg_comb(f32_5);
 
             accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_121_WAIT;
+            next_state = S_IF_THEN_115_WAIT;
 
         end
 
-        S_IF_THEN_121_WAIT: begin
+        S_IF_THEN_115_WAIT: begin
 
-            // LIR block: if_then_121
+            // LIR block: if_then_115
 
-            // line 213: f32_7 = neg_comb(v=f32_5)
+            // line 203: f32_7 = neg_comb(v=f32_5)
 
             // wait for blocking primitive: accumA
 
@@ -5059,39 +4943,39 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_123;
+                next_state = S_AFTER_CALL_117;
             end else begin
-                next_state = S_IF_THEN_121_WAIT;
+                next_state = S_IF_THEN_115_WAIT;
             end
 
         end
 
-        S_IF_END_122: begin
+        S_IF_END_116: begin
 
-            // LIR block: if_end_122
+            // LIR block: if_end_116
 
-            // line 216: accumJ(i=u16_aux, delta=f32_6)
-
-
+            // line 206: accumJ(i=u8_aux, delta=f32_6)
 
 
 
-            accumJ_i = u16_aux;
+
+
+            accumJ_i = u8_aux;
 
             accumJ_delta = f32_6;
 
             accumJ_start = 1'b1;
 
 
-            next_state = S_IF_END_122_WAIT;
+            next_state = S_IF_END_116_WAIT;
 
         end
 
-        S_IF_END_122_WAIT: begin
+        S_IF_END_116_WAIT: begin
 
-            // LIR block: if_end_122
+            // LIR block: if_end_116
 
-            // line 216: accumJ(i=u16_aux, delta=f32_6)
+            // line 206: accumJ(i=u8_aux, delta=f32_6)
 
             // wait for blocking primitive: accumJ
 
@@ -5102,9 +4986,199 @@ always_comb begin
 
             if (accumJ_done) begin
 
-                next_state = S_AFTER_CALL_125;
+                next_state = S_AFTER_CALL_119;
             end else begin
-                next_state = S_IF_END_122_WAIT;
+                next_state = S_IF_END_116_WAIT;
+            end
+
+        end
+
+        S_AFTER_CALL_117: begin
+
+            // LIR block: after_call_117
+
+            // line 205: accumA(i=u8_n1, j=u8_aux, delta=f32_5)
+
+
+
+
+
+            accumA_i = u8_n1;
+
+            accumA_j = u8_aux;
+
+            accumA_delta = f32_5;
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_AFTER_CALL_117_WAIT;
+
+        end
+
+        S_AFTER_CALL_117_WAIT: begin
+
+            // LIR block: after_call_117
+
+            // line 205: accumA(i=u8_n1, j=u8_aux, delta=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_118;
+            end else begin
+                next_state = S_AFTER_CALL_117_WAIT;
+            end
+
+        end
+
+        S_AFTER_CALL_118: begin
+
+            // LIR block: after_call_118
+
+            // line 202: if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)
+
+
+
+
+
+
+            next_state = S_IF_END_116;
+
+        end
+
+        S_AFTER_CALL_119: begin
+
+            // LIR block: after_call_119
+
+            // line 192: if u8_kind == 6:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)
+
+
+
+
+
+
+            next_state = S_IF_END_108;
+
+        end
+
+        S_IF_THEN_120: begin
+
+            // LIR block: if_then_120
+
+            // line 209: f32_6 = fma(a=f32_3, b=par_time, c=f32_4)
+
+
+
+
+
+            fma_a = f32_3;
+
+            fma_b = par_time;
+
+            fma_c = f32_4;
+
+            fma_start = 1'b1;
+
+
+            next_state = S_IF_THEN_120_WAIT;
+
+        end
+
+        S_IF_THEN_120_WAIT: begin
+
+            // LIR block: if_then_120
+
+            // line 209: f32_6 = fma(a=f32_3, b=par_time, c=f32_4)
+
+            // wait for blocking primitive: fma
+
+
+
+
+
+
+            if (fma_done) begin
+
+                next_f32_6 = fma_result;
+
+                next_state = S_AFTER_CALL_122;
+            end else begin
+                next_state = S_IF_THEN_120_WAIT;
+            end
+
+        end
+
+        S_IF_END_121: begin
+
+            // LIR block: if_end_121
+
+            // line 220: if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
+
+
+
+
+
+
+            if ((u8_kind == 32'd8)) begin
+                next_state = S_IF_THEN_130;
+            end else begin
+                next_state = S_IF_END_131;
+            end
+
+        end
+
+        S_AFTER_CALL_122: begin
+
+            // LIR block: after_call_122
+
+            // line 210: f32_6 = sin_comb(v=f32_6)
+
+
+
+
+            next_f32_6 = sin_comb(f32_6);
+
+
+            fma_a = f32_2;
+
+            fma_b = sin_comb(f32_6);
+
+            fma_c = f32_1;
+
+            fma_start = 1'b1;
+
+
+            next_state = S_AFTER_CALL_122_WAIT;
+
+        end
+
+        S_AFTER_CALL_122_WAIT: begin
+
+            // LIR block: after_call_122
+
+            // line 210: f32_6 = sin_comb(v=f32_6)
+
+            // wait for blocking primitive: fma
+
+
+
+
+
+
+            if (fma_done) begin
+
+                next_f32_6 = fma_result;
+
+                next_state = S_AFTER_CALL_123;
+            end else begin
+                next_state = S_AFTER_CALL_122_WAIT;
             end
 
         end
@@ -5113,216 +5187,26 @@ always_comb begin
 
             // LIR block: after_call_123
 
-            // line 215: accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
-
-
-
-            accumA_i = u16_n1;
-
-            accumA_j = u16_aux;
-
-            accumA_delta = f32_5;
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_123_WAIT;
-
-        end
-
-        S_AFTER_CALL_123_WAIT: begin
-
-            // LIR block: after_call_123
-
-            // line 215: accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-            // wait for blocking primitive: accumA
+            // line 212: if u8_n0 != 255:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u8_n0, delta=f32_7)
 
 
 
 
 
 
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_124;
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_124;
             end else begin
-                next_state = S_AFTER_CALL_123_WAIT;
+                next_state = S_IF_END_125;
             end
 
         end
 
-        S_AFTER_CALL_124: begin
+        S_IF_THEN_124: begin
 
-            // LIR block: after_call_124
+            // LIR block: if_then_124
 
-            // line 212: if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
-
-
-
-
-            next_state = S_IF_END_122;
-
-        end
-
-        S_AFTER_CALL_125: begin
-
-            // LIR block: after_call_125
-
-            // line 202: if u8_kind == 6:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)
-
-
-
-
-
-
-            next_state = S_IF_END_114;
-
-        end
-
-        S_IF_THEN_126: begin
-
-            // LIR block: if_then_126
-
-            // line 219: f32_6 = fma(a=f32_3, b=par_time, c=f32_4)
-
-
-
-
-
-            fma_a = f32_3;
-
-            fma_b = par_time;
-
-            fma_c = f32_4;
-
-            fma_start = 1'b1;
-
-
-            next_state = S_IF_THEN_126_WAIT;
-
-        end
-
-        S_IF_THEN_126_WAIT: begin
-
-            // LIR block: if_then_126
-
-            // line 219: f32_6 = fma(a=f32_3, b=par_time, c=f32_4)
-
-            // wait for blocking primitive: fma
-
-
-
-
-
-
-            if (fma_done) begin
-
-                next_f32_6 = fma_result;
-
-                next_state = S_AFTER_CALL_128;
-            end else begin
-                next_state = S_IF_THEN_126_WAIT;
-            end
-
-        end
-
-        S_IF_END_127: begin
-
-            // LIR block: if_end_127
-
-            // line 230: if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
-
-
-
-
-            if ((u8_kind == 32'd8)) begin
-                next_state = S_IF_THEN_136;
-            end else begin
-                next_state = S_IF_END_137;
-            end
-
-        end
-
-        S_AFTER_CALL_128: begin
-
-            // LIR block: after_call_128
-
-            // line 220: f32_6 = sin_comb(v=f32_6)
-
-
-
-
-            next_f32_6 = sin_comb(f32_6);
-
-
-            fma_a = f32_2;
-
-            fma_b = sin_comb(f32_6);
-
-            fma_c = f32_1;
-
-            fma_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_128_WAIT;
-
-        end
-
-        S_AFTER_CALL_128_WAIT: begin
-
-            // LIR block: after_call_128
-
-            // line 220: f32_6 = sin_comb(v=f32_6)
-
-            // wait for blocking primitive: fma
-
-
-
-
-
-
-            if (fma_done) begin
-
-                next_f32_6 = fma_result;
-
-                next_state = S_AFTER_CALL_129;
-            end else begin
-                next_state = S_AFTER_CALL_128_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_129: begin
-
-            // LIR block: after_call_129
-
-            // line 222: if u16_n0 != 65535:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u16_n0, delta=f32_7)
-
-
-
-
-
-
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_130;
-            end else begin
-                next_state = S_IF_END_131;
-            end
-
-        end
-
-        S_IF_THEN_130: begin
-
-            // LIR block: if_then_130
-
-            // line 223: f32_7 = neg_comb(v=f32_6)
+            // line 213: f32_7 = neg_comb(v=f32_6)
 
 
 
@@ -5330,22 +5214,22 @@ always_comb begin
             next_f32_7 = neg_comb(f32_6);
 
 
-            accumJ_i = u16_n0;
+            accumJ_i = u8_n0;
 
             accumJ_delta = neg_comb(f32_6);
 
             accumJ_start = 1'b1;
 
 
-            next_state = S_IF_THEN_130_WAIT;
+            next_state = S_IF_THEN_124_WAIT;
 
         end
 
-        S_IF_THEN_130_WAIT: begin
+        S_IF_THEN_124_WAIT: begin
 
-            // LIR block: if_then_130
+            // LIR block: if_then_124
 
-            // line 223: f32_7 = neg_comb(v=f32_6)
+            // line 213: f32_7 = neg_comb(v=f32_6)
 
             // wait for blocking primitive: accumJ
 
@@ -5356,73 +5240,73 @@ always_comb begin
 
             if (accumJ_done) begin
 
-                next_state = S_AFTER_CALL_132;
+                next_state = S_AFTER_CALL_126;
             end else begin
-                next_state = S_IF_THEN_130_WAIT;
+                next_state = S_IF_THEN_124_WAIT;
             end
 
         end
 
-        S_IF_END_131: begin
+        S_IF_END_125: begin
 
-            // LIR block: if_end_131
+            // LIR block: if_end_125
 
-            // line 225: if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_6)
-
-
+            // line 215: if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_6)
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_133;
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_127;
             end else begin
-                next_state = S_IF_END_134;
+                next_state = S_IF_END_128;
             end
 
         end
 
-        S_AFTER_CALL_132: begin
+        S_AFTER_CALL_126: begin
 
-            // LIR block: after_call_132
+            // LIR block: after_call_126
 
-            // line 222: if u16_n0 != 65535:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u16_n0, delta=f32_7)
-
-
+            // line 212: if u8_n0 != 255:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u8_n0, delta=f32_7)
 
 
 
 
-            next_state = S_IF_END_131;
+
+
+            next_state = S_IF_END_125;
 
         end
 
-        S_IF_THEN_133: begin
+        S_IF_THEN_127: begin
 
-            // LIR block: if_then_133
+            // LIR block: if_then_127
 
-            // line 226: accumJ(i=u16_n1, delta=f32_6)
-
-
+            // line 216: accumJ(i=u8_n1, delta=f32_6)
 
 
 
-            accumJ_i = u16_n1;
+
+
+            accumJ_i = u8_n1;
 
             accumJ_delta = f32_6;
 
             accumJ_start = 1'b1;
 
 
-            next_state = S_IF_THEN_133_WAIT;
+            next_state = S_IF_THEN_127_WAIT;
 
         end
 
-        S_IF_THEN_133_WAIT: begin
+        S_IF_THEN_127_WAIT: begin
 
-            // LIR block: if_then_133
+            // LIR block: if_then_127
 
-            // line 226: accumJ(i=u16_n1, delta=f32_6)
+            // line 216: accumJ(i=u8_n1, delta=f32_6)
 
             // wait for blocking primitive: accumJ
 
@@ -5433,48 +5317,48 @@ always_comb begin
 
             if (accumJ_done) begin
 
-                next_state = S_AFTER_CALL_135;
+                next_state = S_AFTER_CALL_129;
             end else begin
-                next_state = S_IF_THEN_133_WAIT;
+                next_state = S_IF_THEN_127_WAIT;
             end
 
         end
 
-        S_IF_END_134: begin
+        S_IF_END_128: begin
 
-            // LIR block: if_end_134
+            // LIR block: if_end_128
 
-            // line 218: if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_6)
-
-
-
-
-
-
-            next_state = S_IF_END_127;
-
-        end
-
-        S_AFTER_CALL_135: begin
-
-            // LIR block: after_call_135
-
-            // line 225: if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_6)
+            // line 208: if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_6)
 
 
 
 
 
 
-            next_state = S_IF_END_134;
+            next_state = S_IF_END_121;
 
         end
 
-        S_IF_THEN_136: begin
+        S_AFTER_CALL_129: begin
 
-            // LIR block: if_then_136
+            // LIR block: after_call_129
 
-            // line 231: u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)
+            // line 215: if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_6)
+
+
+
+
+
+
+            next_state = S_IF_END_128;
+
+        end
+
+        S_IF_THEN_130: begin
+
+            // LIR block: if_then_130
+
+            // line 221: u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)
 
 
 
@@ -5486,18 +5370,18 @@ always_comb begin
 
 
             if ((pwm_gate_comb(par_time, f32_3, f32_4) != 32'd0)) begin
-                next_state = S_IF_THEN_138;
+                next_state = S_IF_THEN_132;
             end else begin
-                next_state = S_IF_END_139;
+                next_state = S_IF_END_133;
             end
 
         end
 
-        S_IF_END_137: begin
+        S_IF_END_131: begin
 
-            // LIR block: if_end_137
+            // LIR block: if_end_131
 
-            // line 248: if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)
+            // line 238: if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)
 
 
 
@@ -5505,18 +5389,18 @@ always_comb begin
 
 
             if ((u8_kind == 32'd9)) begin
-                next_state = S_IF_THEN_151;
+                next_state = S_IF_THEN_145;
             end else begin
-                next_state = S_IF_END_152;
+                next_state = S_IF_END_146;
             end
 
         end
 
-        S_IF_THEN_138: begin
+        S_IF_THEN_132: begin
 
-            // LIR block: if_then_138
+            // LIR block: if_then_132
 
-            // line 234: f32_6 = f32_1
+            // line 224: f32_6 = f32_1
 
 
 
@@ -5525,15 +5409,15 @@ always_comb begin
 
 
 
-            next_state = S_IF_END_139;
+            next_state = S_IF_END_133;
 
         end
 
-        S_IF_END_139: begin
+        S_IF_END_133: begin
 
-            // LIR block: if_end_139
+            // LIR block: if_end_133
 
-            // line 235: f32_6 = div(a=f32_5, b=f32_6)
+            // line 225: f32_6 = div(a=f32_5, b=f32_6)
 
 
 
@@ -5546,15 +5430,15 @@ always_comb begin
             div_start = 1'b1;
 
 
-            next_state = S_IF_END_139_WAIT;
+            next_state = S_IF_END_133_WAIT;
 
         end
 
-        S_IF_END_139_WAIT: begin
+        S_IF_END_133_WAIT: begin
 
-            // LIR block: if_end_139
+            // LIR block: if_end_133
 
-            // line 235: f32_6 = div(a=f32_5, b=f32_6)
+            // line 225: f32_6 = div(a=f32_5, b=f32_6)
 
             // wait for blocking primitive: div
 
@@ -5567,60 +5451,60 @@ always_comb begin
 
                 next_f32_6 = div_result;
 
-                next_state = S_AFTER_CALL_140;
+                next_state = S_AFTER_CALL_134;
             end else begin
-                next_state = S_IF_END_139_WAIT;
+                next_state = S_IF_END_133_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_140: begin
+        S_AFTER_CALL_134: begin
 
-            // LIR block: after_call_140
+            // LIR block: after_call_134
 
-            // line 236: if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)
-
-
+            // line 226: if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_141;
+
+
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_135;
             end else begin
-                next_state = S_IF_END_142;
+                next_state = S_IF_END_136;
             end
 
         end
 
-        S_IF_THEN_141: begin
+        S_IF_THEN_135: begin
 
-            // LIR block: if_then_141
+            // LIR block: if_then_135
 
-            // line 237: accumA(i=u16_n0, j=u16_n0, delta=f32_6)
-
-
+            // line 227: accumA(i=u8_n0, j=u8_n0, delta=f32_6)
 
 
 
-            accumA_i = u16_n0;
 
-            accumA_j = u16_n0;
+
+            accumA_i = u8_n0;
+
+            accumA_j = u8_n0;
 
             accumA_delta = f32_6;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_141_WAIT;
+            next_state = S_IF_THEN_135_WAIT;
 
         end
 
-        S_IF_THEN_141_WAIT: begin
+        S_IF_THEN_135_WAIT: begin
 
-            // LIR block: if_then_141
+            // LIR block: if_then_135
 
-            // line 237: accumA(i=u16_n0, j=u16_n0, delta=f32_6)
+            // line 227: accumA(i=u8_n0, j=u8_n0, delta=f32_6)
 
             // wait for blocking primitive: accumA
 
@@ -5631,56 +5515,56 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_143;
+                next_state = S_AFTER_CALL_137;
             end else begin
-                next_state = S_IF_THEN_141_WAIT;
+                next_state = S_IF_THEN_135_WAIT;
             end
 
         end
 
-        S_IF_END_142: begin
+        S_IF_END_136: begin
 
-            // LIR block: if_end_142
+            // LIR block: if_end_136
 
-            // line 242: if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
+            // line 232: if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_148;
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_142;
             end else begin
-                next_state = S_IF_END_149;
+                next_state = S_IF_END_143;
             end
 
         end
 
-        S_AFTER_CALL_143: begin
+        S_AFTER_CALL_137: begin
 
-            // LIR block: after_call_143
+            // LIR block: after_call_137
 
-            // line 238: if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)
-
-
+            // line 228: if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_144;
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_138;
             end else begin
-                next_state = S_IF_END_145;
+                next_state = S_IF_END_139;
             end
 
         end
 
-        S_IF_THEN_144: begin
+        S_IF_THEN_138: begin
 
-            // LIR block: if_then_144
+            // LIR block: if_then_138
 
-            // line 239: f32_7 = neg_comb(v=f32_6)
+            // line 229: f32_7 = neg_comb(v=f32_6)
 
 
 
@@ -5688,24 +5572,24 @@ always_comb begin
             next_f32_7 = neg_comb(f32_6);
 
 
-            accumA_i = u16_n0;
+            accumA_i = u8_n0;
 
-            accumA_j = u16_n1;
+            accumA_j = u8_n1;
 
             accumA_delta = neg_comb(f32_6);
 
             accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_144_WAIT;
+            next_state = S_IF_THEN_138_WAIT;
 
         end
 
-        S_IF_THEN_144_WAIT: begin
+        S_IF_THEN_138_WAIT: begin
 
-            // LIR block: if_then_144
+            // LIR block: if_then_138
 
-            // line 239: f32_7 = neg_comb(v=f32_6)
+            // line 229: f32_7 = neg_comb(v=f32_6)
 
             // wait for blocking primitive: accumA
 
@@ -5716,56 +5600,56 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_146;
+                next_state = S_AFTER_CALL_140;
             end else begin
-                next_state = S_IF_THEN_144_WAIT;
+                next_state = S_IF_THEN_138_WAIT;
             end
 
         end
 
-        S_IF_END_145: begin
+        S_IF_END_139: begin
 
-            // LIR block: if_end_145
+            // LIR block: if_end_139
 
-            // line 236: if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)
-
-
+            // line 226: if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
 
 
 
-            next_state = S_IF_END_142;
+
+
+            next_state = S_IF_END_136;
 
         end
 
-        S_AFTER_CALL_146: begin
+        S_AFTER_CALL_140: begin
 
-            // LIR block: after_call_146
+            // LIR block: after_call_140
 
-            // line 241: accumA(i=u16_n1, j=u16_n0, delta=f32_7)
-
-
+            // line 231: accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
 
 
-            accumA_i = u16_n1;
 
-            accumA_j = u16_n0;
+
+            accumA_i = u8_n1;
+
+            accumA_j = u8_n0;
 
             accumA_delta = f32_7;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_146_WAIT;
+            next_state = S_AFTER_CALL_140_WAIT;
 
         end
 
-        S_AFTER_CALL_146_WAIT: begin
+        S_AFTER_CALL_140_WAIT: begin
 
-            // LIR block: after_call_146
+            // LIR block: after_call_140
 
-            // line 241: accumA(i=u16_n1, j=u16_n0, delta=f32_7)
+            // line 231: accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
             // wait for blocking primitive: accumA
 
@@ -5776,56 +5660,56 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_147;
+                next_state = S_AFTER_CALL_141;
             end else begin
-                next_state = S_AFTER_CALL_146_WAIT;
+                next_state = S_AFTER_CALL_140_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_147: begin
+        S_AFTER_CALL_141: begin
 
-            // LIR block: after_call_147
+            // LIR block: after_call_141
 
-            // line 238: if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)
-
-
+            // line 228: if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)
 
 
 
 
-            next_state = S_IF_END_145;
+
+
+            next_state = S_IF_END_139;
 
         end
 
-        S_IF_THEN_148: begin
+        S_IF_THEN_142: begin
 
-            // LIR block: if_then_148
+            // LIR block: if_then_142
 
-            // line 243: accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
+            // line 233: accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
 
 
-            accumA_i = u16_n1;
 
-            accumA_j = u16_n1;
+
+            accumA_i = u8_n1;
+
+            accumA_j = u8_n1;
 
             accumA_delta = f32_6;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_IF_THEN_148_WAIT;
+            next_state = S_IF_THEN_142_WAIT;
 
         end
 
-        S_IF_THEN_148_WAIT: begin
+        S_IF_THEN_142_WAIT: begin
 
-            // LIR block: if_then_148
+            // LIR block: if_then_142
 
-            // line 243: accumA(i=u16_n1, j=u16_n1, delta=f32_6)
+            // line 233: accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
             // wait for blocking primitive: accumA
 
@@ -5836,48 +5720,48 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_150;
+                next_state = S_AFTER_CALL_144;
             end else begin
-                next_state = S_IF_THEN_148_WAIT;
+                next_state = S_IF_THEN_142_WAIT;
             end
 
         end
 
-        S_IF_END_149: begin
+        S_IF_END_143: begin
 
-            // LIR block: if_end_149
+            // LIR block: if_end_143
 
-            // line 230: if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
-
-
-
-
-
-
-            next_state = S_IF_END_137;
-
-        end
-
-        S_AFTER_CALL_150: begin
-
-            // LIR block: after_call_150
-
-            // line 242: if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)
+            // line 220: if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
 
 
 
 
 
 
-            next_state = S_IF_END_149;
+            next_state = S_IF_END_131;
 
         end
 
-        S_IF_THEN_151: begin
+        S_AFTER_CALL_144: begin
 
-            // LIR block: if_then_151
+            // LIR block: after_call_144
 
-            // line 249: u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)
+            // line 232: if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)
+
+
+
+
+
+
+            next_state = S_IF_END_143;
+
+        end
+
+        S_IF_THEN_145: begin
+
+            // LIR block: if_then_145
+
+            // line 239: u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)
 
 
 
@@ -5889,18 +5773,18 @@ always_comb begin
 
 
             if ((pwm_gate_comb(par_time, f32_3, f32_4) != 32'd0)) begin
-                next_state = S_IF_THEN_153;
+                next_state = S_IF_THEN_147;
             end else begin
-                next_state = S_IF_END_154;
+                next_state = S_IF_END_148;
             end
 
         end
 
-        S_IF_END_152: begin
+        S_IF_END_146: begin
 
-            // LIR block: if_end_152
+            // LIR block: if_end_146
 
-            // line 104: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u16_n0 = fetchElemN0(idx=u16_e)         u16_n1 = fetchElemN1(idx=u16_e)         f32_1 = fetchElemVal0(idx=u16_e)         f32_2 = fetchElemVal1(idx=u16_e)         f32_3 = fetchElemVal2(idx=u16_e)         f32_4 = fetchElemVal3(idx=u16_e)          if u16_n0 != 0:             u16_n0 = u16_n0 - 1         else:             u16_n0 = 65535          if u16_n1 != 0:             u16_n1 = u16_n1 - 1         else:             u16_n1 = 65535          if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)          if u8_kind == 2:             if u16_n0 != 65535:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u16_n0, delta=f32_6)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_1)          if u8_kind == 3:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_6)             if u16_n1 != 65535:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_6)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_1)          # Capacitor backward-Euler companion:         #   g = C / dt         #   i_hist = g * v_prev         # which becomes a resistor-like stamp plus an equivalent RHS term.         if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u16_n0 != 65535:                 f32_7 = fetch_prevX(i=u16_n0)             if u16_n1 != 65535:                 f32_2 = fetch_prevX(i=u16_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_2)                     accumA(i=u16_n1, j=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u16_n0 != 65535:                 accumJ(i=u16_n0, delta=f32_2)             if u16_n1 != 65535:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u16_n1, delta=f32_3)          # Inductor backward-Euler companion with a branch-current unknown.         if u8_kind == 5:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u16_aux)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_2)             if u16_n1 != 65535:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_2)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u16_aux, j=u16_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u16_aux, delta=f32_2)          if u8_kind == 6:             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)          if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u16_n0 != 65535:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_6)          # PWM-gated ideal switch. This is stamped as a resistor whose value         # toggles between ron and roff according to the current PWM phase.         if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_6)                 if u16_n1 != 65535:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u16_n0, j=u16_n1, delta=f32_7)                     accumA(i=u16_n1, j=u16_n0, delta=f32_7)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_6)          # PWM square-wave voltage source. The branch-variable structure matches         # the ordinary V / VSIN source, but the source value is piecewise         # constant over each PWM period.         if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)
+            // line 104: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u8_n0 = fetchElemN0(idx=u16_e)         u8_n1 = fetchElemN1(idx=u16_e)         f32_1 = fetchElemVal0(idx=u16_e)         f32_2 = fetchElemVal1(idx=u16_e)         f32_3 = fetchElemVal2(idx=u16_e)         f32_4 = fetchElemVal3(idx=u16_e)          if u8_kind == 1:             f32_6 = div(a=f32_5, b=f32_1)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)          if u8_kind == 2:             if u8_n0 != 255:                 f32_6 = neg_comb(v=f32_1)                 accumJ(i=u8_n0, delta=f32_6)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_1)          if u8_kind == 3:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_6)             if u8_n1 != 255:                 f32_6 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_6)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_1)          # Capacitor backward-Euler companion:         #   g = C / dt         #   i_hist = g * v_prev         # which becomes a resistor-like stamp plus an equivalent RHS term.         if u8_kind == 4:             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = f32_0             if u8_n0 != 255:                 f32_7 = fetch_prevX(i=u8_n0)             if u8_n1 != 255:                 f32_2 = fetch_prevX(i=u8_n1)                 f32_2 = neg_comb(v=f32_2)                 f32_7 = fma(a=f32_5, b=f32_2, c=f32_7)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_2 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_2)                     accumA(i=u8_n1, j=u8_n0, delta=f32_2)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             if u8_n0 != 255:                 accumJ(i=u8_n0, delta=f32_2)             if u8_n1 != 255:                 f32_3 = neg_comb(v=f32_2)                 accumJ(i=u8_n1, delta=f32_3)          # Inductor backward-Euler companion with a branch-current unknown.         if u8_kind == 5:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = div(a=f32_1, b=par_dt)             f32_7 = fetch_prevX(i=u8_aux)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_2)             if u8_n1 != 255:                 f32_2 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_2)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             f32_2 = neg_comb(v=f32_6)             accumA(i=u8_aux, j=u8_aux, delta=f32_2)             f32_7 = neg_comb(v=f32_7)             f32_2 = fma(a=f32_6, b=f32_7, c=f32_0)             accumJ(i=u8_aux, delta=f32_2)          if u8_kind == 6:             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)          if u8_kind == 7:             f32_6 = fma(a=f32_3, b=par_time, c=f32_4)             f32_6 = sin_comb(v=f32_6)             f32_6 = fma(a=f32_2, b=f32_6, c=f32_1)             if u8_n0 != 255:                 f32_7 = neg_comb(v=f32_6)                 accumJ(i=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_6)          # PWM-gated ideal switch. This is stamped as a resistor whose value         # toggles between ron and roff according to the current PWM phase.         if u8_kind == 8:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_2             if u8_gate != 0:                 f32_6 = f32_1             f32_6 = div(a=f32_5, b=f32_6)             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_6)                 if u8_n1 != 255:                     f32_7 = neg_comb(v=f32_6)                     accumA(i=u8_n0, j=u8_n1, delta=f32_7)                     accumA(i=u8_n1, j=u8_n0, delta=f32_7)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_6)          # PWM square-wave voltage source. The branch-variable structure matches         # the ordinary V / VSIN source, but the source value is piecewise         # constant over each PWM period.         if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)
 
 
 
@@ -5913,11 +5797,11 @@ always_comb begin
 
         end
 
-        S_IF_THEN_153: begin
+        S_IF_THEN_147: begin
 
-            // LIR block: if_then_153
+            // LIR block: if_then_147
 
-            // line 252: f32_6 = f32_2
+            // line 242: f32_6 = f32_2
 
 
 
@@ -5926,7 +5810,203 @@ always_comb begin
 
 
 
-            next_state = S_IF_END_154;
+            next_state = S_IF_END_148;
+
+        end
+
+        S_IF_END_148: begin
+
+            // LIR block: if_end_148
+
+            // line 243: u8_aux = u8_next_aux
+
+
+
+
+            next_u8_aux = u8_next_aux;
+
+            next_u8_next_aux = (u8_next_aux + 8'd1);
+
+
+
+            if ((u8_n0 != 32'd255)) begin
+                next_state = S_IF_THEN_149;
+            end else begin
+                next_state = S_IF_END_150;
+            end
+
+        end
+
+        S_IF_THEN_149: begin
+
+            // LIR block: if_then_149
+
+            // line 246: accumA(i=u8_aux, j=u8_n0, delta=f32_5)
+
+
+
+
+
+            accumA_i = u8_aux;
+
+            accumA_j = u8_n0;
+
+            accumA_delta = f32_5;
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_IF_THEN_149_WAIT;
+
+        end
+
+        S_IF_THEN_149_WAIT: begin
+
+            // LIR block: if_then_149
+
+            // line 246: accumA(i=u8_aux, j=u8_n0, delta=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_151;
+            end else begin
+                next_state = S_IF_THEN_149_WAIT;
+            end
+
+        end
+
+        S_IF_END_150: begin
+
+            // LIR block: if_end_150
+
+            // line 249: if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)
+
+
+
+
+
+
+            if ((u8_n1 != 32'd255)) begin
+                next_state = S_IF_THEN_153;
+            end else begin
+                next_state = S_IF_END_154;
+            end
+
+        end
+
+        S_AFTER_CALL_151: begin
+
+            // LIR block: after_call_151
+
+            // line 247: f32_7 = neg_comb(v=f32_5)
+
+
+
+
+            next_f32_7 = neg_comb(f32_5);
+
+
+            accumA_i = u8_n0;
+
+            accumA_j = u8_aux;
+
+            accumA_delta = neg_comb(f32_5);
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_AFTER_CALL_151_WAIT;
+
+        end
+
+        S_AFTER_CALL_151_WAIT: begin
+
+            // LIR block: after_call_151
+
+            // line 247: f32_7 = neg_comb(v=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_152;
+            end else begin
+                next_state = S_AFTER_CALL_151_WAIT;
+            end
+
+        end
+
+        S_AFTER_CALL_152: begin
+
+            // LIR block: after_call_152
+
+            // line 245: if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)
+
+
+
+
+
+
+            next_state = S_IF_END_150;
+
+        end
+
+        S_IF_THEN_153: begin
+
+            // LIR block: if_then_153
+
+            // line 250: f32_7 = neg_comb(v=f32_5)
+
+
+
+
+            next_f32_7 = neg_comb(f32_5);
+
+
+            accumA_i = u8_aux;
+
+            accumA_j = u8_n1;
+
+            accumA_delta = neg_comb(f32_5);
+
+            accumA_start = 1'b1;
+
+
+            next_state = S_IF_THEN_153_WAIT;
+
+        end
+
+        S_IF_THEN_153_WAIT: begin
+
+            // LIR block: if_then_153
+
+            // line 250: f32_7 = neg_comb(v=f32_5)
+
+            // wait for blocking primitive: accumA
+
+
+
+
+
+
+            if (accumA_done) begin
+
+                next_state = S_AFTER_CALL_155;
+            end else begin
+                next_state = S_IF_THEN_153_WAIT;
+            end
 
         end
 
@@ -5934,224 +6014,28 @@ always_comb begin
 
             // LIR block: if_end_154
 
-            // line 253: u16_aux = u16_next_aux
+            // line 253: accumJ(i=u8_aux, delta=f32_6)
 
 
 
 
-            next_u16_aux = u16_next_aux;
 
-            next_u16_next_aux = (u16_next_aux + 16'd1);
-
-
-
-            if ((u16_n0 != 32'd65535)) begin
-                next_state = S_IF_THEN_155;
-            end else begin
-                next_state = S_IF_END_156;
-            end
-
-        end
-
-        S_IF_THEN_155: begin
-
-            // LIR block: if_then_155
-
-            // line 256: accumA(i=u16_aux, j=u16_n0, delta=f32_5)
-
-
-
-
-
-            accumA_i = u16_aux;
-
-            accumA_j = u16_n0;
-
-            accumA_delta = f32_5;
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_IF_THEN_155_WAIT;
-
-        end
-
-        S_IF_THEN_155_WAIT: begin
-
-            // LIR block: if_then_155
-
-            // line 256: accumA(i=u16_aux, j=u16_n0, delta=f32_5)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_157;
-            end else begin
-                next_state = S_IF_THEN_155_WAIT;
-            end
-
-        end
-
-        S_IF_END_156: begin
-
-            // LIR block: if_end_156
-
-            // line 259: if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
-
-
-
-
-            if ((u16_n1 != 32'd65535)) begin
-                next_state = S_IF_THEN_159;
-            end else begin
-                next_state = S_IF_END_160;
-            end
-
-        end
-
-        S_AFTER_CALL_157: begin
-
-            // LIR block: after_call_157
-
-            // line 257: f32_7 = neg_comb(v=f32_5)
-
-
-
-
-            next_f32_7 = neg_comb(f32_5);
-
-
-            accumA_i = u16_n0;
-
-            accumA_j = u16_aux;
-
-            accumA_delta = neg_comb(f32_5);
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_157_WAIT;
-
-        end
-
-        S_AFTER_CALL_157_WAIT: begin
-
-            // LIR block: after_call_157
-
-            // line 257: f32_7 = neg_comb(v=f32_5)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_158;
-            end else begin
-                next_state = S_AFTER_CALL_157_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_158: begin
-
-            // LIR block: after_call_158
-
-            // line 255: if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)
-
-
-
-
-
-
-            next_state = S_IF_END_156;
-
-        end
-
-        S_IF_THEN_159: begin
-
-            // LIR block: if_then_159
-
-            // line 260: f32_7 = neg_comb(v=f32_5)
-
-
-
-
-            next_f32_7 = neg_comb(f32_5);
-
-
-            accumA_i = u16_aux;
-
-            accumA_j = u16_n1;
-
-            accumA_delta = neg_comb(f32_5);
-
-            accumA_start = 1'b1;
-
-
-            next_state = S_IF_THEN_159_WAIT;
-
-        end
-
-        S_IF_THEN_159_WAIT: begin
-
-            // LIR block: if_then_159
-
-            // line 260: f32_7 = neg_comb(v=f32_5)
-
-            // wait for blocking primitive: accumA
-
-
-
-
-
-
-            if (accumA_done) begin
-
-                next_state = S_AFTER_CALL_161;
-            end else begin
-                next_state = S_IF_THEN_159_WAIT;
-            end
-
-        end
-
-        S_IF_END_160: begin
-
-            // LIR block: if_end_160
-
-            // line 263: accumJ(i=u16_aux, delta=f32_6)
-
-
-
-
-
-            accumJ_i = u16_aux;
+            accumJ_i = u8_aux;
 
             accumJ_delta = f32_6;
 
             accumJ_start = 1'b1;
 
 
-            next_state = S_IF_END_160_WAIT;
+            next_state = S_IF_END_154_WAIT;
 
         end
 
-        S_IF_END_160_WAIT: begin
+        S_IF_END_154_WAIT: begin
 
-            // LIR block: if_end_160
+            // LIR block: if_end_154
 
-            // line 263: accumJ(i=u16_aux, delta=f32_6)
+            // line 253: accumJ(i=u8_aux, delta=f32_6)
 
             // wait for blocking primitive: accumJ
 
@@ -6162,41 +6046,41 @@ always_comb begin
 
             if (accumJ_done) begin
 
-                next_state = S_AFTER_CALL_163;
+                next_state = S_AFTER_CALL_157;
             end else begin
-                next_state = S_IF_END_160_WAIT;
+                next_state = S_IF_END_154_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_161: begin
+        S_AFTER_CALL_155: begin
 
-            // LIR block: after_call_161
+            // LIR block: after_call_155
 
-            // line 262: accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
+            // line 252: accumA(i=u8_n1, j=u8_aux, delta=f32_5)
 
 
 
-            accumA_i = u16_n1;
 
-            accumA_j = u16_aux;
+
+            accumA_i = u8_n1;
+
+            accumA_j = u8_aux;
 
             accumA_delta = f32_5;
 
             accumA_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_161_WAIT;
+            next_state = S_AFTER_CALL_155_WAIT;
 
         end
 
-        S_AFTER_CALL_161_WAIT: begin
+        S_AFTER_CALL_155_WAIT: begin
 
-            // LIR block: after_call_161
+            // LIR block: after_call_155
 
-            // line 262: accumA(i=u16_n1, j=u16_aux, delta=f32_5)
+            // line 252: accumA(i=u8_n1, j=u8_aux, delta=f32_5)
 
             // wait for blocking primitive: accumA
 
@@ -6207,48 +6091,48 @@ always_comb begin
 
             if (accumA_done) begin
 
-                next_state = S_AFTER_CALL_162;
+                next_state = S_AFTER_CALL_156;
             end else begin
-                next_state = S_AFTER_CALL_161_WAIT;
+                next_state = S_AFTER_CALL_155_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_162: begin
+        S_AFTER_CALL_156: begin
 
-            // LIR block: after_call_162
+            // LIR block: after_call_156
 
-            // line 259: if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)
-
-
-
-
-
-
-            next_state = S_IF_END_160;
-
-        end
-
-        S_AFTER_CALL_163: begin
-
-            // LIR block: after_call_163
-
-            // line 248: if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u16_aux = u16_next_aux             u16_next_aux = u16_next_aux + 1             if u16_n0 != 65535:                 accumA(i=u16_aux, j=u16_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_n0, j=u16_aux, delta=f32_7)             if u16_n1 != 65535:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u16_aux, j=u16_n1, delta=f32_7)                 accumA(i=u16_n1, j=u16_aux, delta=f32_5)             accumJ(i=u16_aux, delta=f32_6)
+            // line 249: if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)
 
 
 
 
 
 
-            next_state = S_IF_END_152;
+            next_state = S_IF_END_154;
 
         end
 
-        S_FOR_HEADER_164: begin
+        S_AFTER_CALL_157: begin
 
-            // LIR block: for_header_164
+            // LIR block: after_call_157
 
-            // line 266: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 238: if u8_kind == 9:             u8_gate = pwm_gate_comb(time=par_time, period=f32_3, duty=f32_4)             f32_6 = f32_1             if u8_gate != 0:                 f32_6 = f32_2             u8_aux = u8_next_aux             u8_next_aux = u8_next_aux + 1             if u8_n0 != 255:                 accumA(i=u8_aux, j=u8_n0, delta=f32_5)                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_n0, j=u8_aux, delta=f32_7)             if u8_n1 != 255:                 f32_7 = neg_comb(v=f32_5)                 accumA(i=u8_aux, j=u8_n1, delta=f32_7)                 accumA(i=u8_n1, j=u8_aux, delta=f32_5)             accumJ(i=u8_aux, delta=f32_6)
+
+
+
+
+
+
+            next_state = S_IF_END_146;
+
+        end
+
+        S_FOR_HEADER_158: begin
+
+            // LIR block: for_header_158
+
+            // line 256: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
 
 
@@ -6256,18 +6140,18 @@ always_comb begin
 
 
             if ((__for_idx_4 < u16_dim)) begin
-                next_state = S_FOR_BODY_165;
+                next_state = S_FOR_BODY_159;
             end else begin
-                next_state = S_FOR_END_166;
+                next_state = S_FOR_END_160;
             end
 
         end
 
-        S_FOR_BODY_165: begin
+        S_FOR_BODY_159: begin
 
-            // LIR block: for_body_165
+            // LIR block: for_body_159
 
-            // line 266: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 256: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
 
 
@@ -6284,15 +6168,15 @@ always_comb begin
             fetch_A_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_165_WAIT;
+            next_state = S_FOR_BODY_159_WAIT;
 
         end
 
-        S_FOR_BODY_165_WAIT: begin
+        S_FOR_BODY_159_WAIT: begin
 
-            // LIR block: for_body_165
+            // LIR block: for_body_159
 
-            // line 266: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 256: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
             // wait for blocking primitive: fetch_A
 
@@ -6305,18 +6189,18 @@ always_comb begin
 
                 next_f32_1 = fetch_A_result;
 
-                next_state = S_AFTER_CALL_167;
+                next_state = S_AFTER_CALL_161;
             end else begin
-                next_state = S_FOR_BODY_165_WAIT;
+                next_state = S_FOR_BODY_159_WAIT;
             end
 
         end
 
-        S_FOR_END_166: begin
+        S_FOR_END_160: begin
 
-            // LIR block: for_end_166
+            // LIR block: for_end_160
 
-            // line 322: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
+            // line 312: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
 
 
 
@@ -6325,15 +6209,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_221;
+            next_state = S_FOR_HEADER_215;
 
         end
 
-        S_AFTER_CALL_167: begin
+        S_AFTER_CALL_161: begin
 
-            // LIR block: after_call_167
+            // LIR block: after_call_161
 
-            // line 269: f32_1 = neg_comb(v=f32_1)
+            // line 259: f32_1 = neg_comb(v=f32_1)
 
 
 
@@ -6344,15 +6228,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_168;
+            next_state = S_FOR_HEADER_162;
 
         end
 
-        S_FOR_HEADER_168: begin
+        S_FOR_HEADER_162: begin
 
-            // LIR block: for_header_168
+            // LIR block: for_header_162
 
-            // line 270: for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 260: for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -6360,18 +6244,18 @@ always_comb begin
 
 
             if ((__for_idx_5 < u16_j)) begin
-                next_state = S_FOR_BODY_169;
+                next_state = S_FOR_BODY_163;
             end else begin
-                next_state = S_FOR_END_170;
+                next_state = S_FOR_END_164;
             end
 
         end
 
-        S_FOR_BODY_169: begin
+        S_FOR_BODY_163: begin
 
-            // LIR block: for_body_169
+            // LIR block: for_body_163
 
-            // line 270: for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 260: for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -6386,15 +6270,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_169_WAIT;
+            next_state = S_FOR_BODY_163_WAIT;
 
         end
 
-        S_FOR_BODY_169_WAIT: begin
+        S_FOR_BODY_163_WAIT: begin
 
-            // LIR block: for_body_169
+            // LIR block: for_body_163
 
-            // line 270: for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 260: for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
             // wait for blocking primitive: fetch_LU
 
@@ -6407,18 +6291,18 @@ always_comb begin
 
                 next_f32_2 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_171;
+                next_state = S_AFTER_CALL_165;
             end else begin
-                next_state = S_FOR_BODY_169_WAIT;
+                next_state = S_FOR_BODY_163_WAIT;
             end
 
         end
 
-        S_FOR_END_170: begin
+        S_FOR_END_164: begin
 
-            // LIR block: for_end_170
+            // LIR block: for_end_164
 
-            // line 274: f32_1 = neg_comb(v=f32_1)
+            // line 264: f32_1 = neg_comb(v=f32_1)
 
 
 
@@ -6431,15 +6315,15 @@ always_comb begin
 
 
 
-            next_state = S_WHILE_HEADER_174;
+            next_state = S_WHILE_HEADER_168;
 
         end
 
-        S_AFTER_CALL_171: begin
+        S_AFTER_CALL_165: begin
 
-            // LIR block: after_call_171
+            // LIR block: after_call_165
 
-            // line 272: f32_3 = fetch_LU(i=u16_k, j=u16_j)
+            // line 262: f32_3 = fetch_LU(i=u16_k, j=u16_j)
 
 
 
@@ -6452,15 +6336,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_171_WAIT;
+            next_state = S_AFTER_CALL_165_WAIT;
 
         end
 
-        S_AFTER_CALL_171_WAIT: begin
+        S_AFTER_CALL_165_WAIT: begin
 
-            // LIR block: after_call_171
+            // LIR block: after_call_165
 
-            // line 272: f32_3 = fetch_LU(i=u16_k, j=u16_j)
+            // line 262: f32_3 = fetch_LU(i=u16_k, j=u16_j)
 
             // wait for blocking primitive: fetch_LU
 
@@ -6473,18 +6357,18 @@ always_comb begin
 
                 next_f32_3 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_172;
+                next_state = S_AFTER_CALL_166;
             end else begin
-                next_state = S_AFTER_CALL_171_WAIT;
+                next_state = S_AFTER_CALL_165_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_172: begin
+        S_AFTER_CALL_166: begin
 
-            // LIR block: after_call_172
+            // LIR block: after_call_166
 
-            // line 273: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 263: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -6499,15 +6383,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_172_WAIT;
+            next_state = S_AFTER_CALL_166_WAIT;
 
         end
 
-        S_AFTER_CALL_172_WAIT: begin
+        S_AFTER_CALL_166_WAIT: begin
 
-            // LIR block: after_call_172
+            // LIR block: after_call_166
 
-            // line 273: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 263: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
             // wait for blocking primitive: fma
 
@@ -6520,18 +6404,18 @@ always_comb begin
 
                 next_f32_1 = fma_result;
 
-                next_state = S_AFTER_CALL_173;
+                next_state = S_AFTER_CALL_167;
             end else begin
-                next_state = S_AFTER_CALL_172_WAIT;
+                next_state = S_AFTER_CALL_166_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_173: begin
+        S_AFTER_CALL_167: begin
 
-            // LIR block: after_call_173
+            // LIR block: after_call_167
 
-            // line 270: for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 260: for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -6540,15 +6424,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_168;
+            next_state = S_FOR_HEADER_162;
 
         end
 
-        S_WHILE_HEADER_174: begin
+        S_WHILE_HEADER_168: begin
 
-            // LIR block: while_header_174
+            // LIR block: while_header_168
 
-            // line 277: while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1
+            // line 267: while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1
 
 
 
@@ -6556,18 +6440,18 @@ always_comb begin
 
 
             if ((u16_i < u16_dim)) begin
-                next_state = S_WHILE_BODY_175;
+                next_state = S_WHILE_BODY_169;
             end else begin
-                next_state = S_WHILE_END_176;
+                next_state = S_WHILE_END_170;
             end
 
         end
 
-        S_WHILE_BODY_175: begin
+        S_WHILE_BODY_169: begin
 
-            // LIR block: while_body_175
+            // LIR block: while_body_169
 
-            // line 278: f32_1 = fetch_A(i=u16_i, j=u16_j)
+            // line 268: f32_1 = fetch_A(i=u16_i, j=u16_j)
 
 
 
@@ -6580,15 +6464,15 @@ always_comb begin
             fetch_A_start = 1'b1;
 
 
-            next_state = S_WHILE_BODY_175_WAIT;
+            next_state = S_WHILE_BODY_169_WAIT;
 
         end
 
-        S_WHILE_BODY_175_WAIT: begin
+        S_WHILE_BODY_169_WAIT: begin
 
-            // LIR block: while_body_175
+            // LIR block: while_body_169
 
-            // line 278: f32_1 = fetch_A(i=u16_i, j=u16_j)
+            // line 268: f32_1 = fetch_A(i=u16_i, j=u16_j)
 
             // wait for blocking primitive: fetch_A
 
@@ -6601,18 +6485,18 @@ always_comb begin
 
                 next_f32_1 = fetch_A_result;
 
-                next_state = S_AFTER_CALL_177;
+                next_state = S_AFTER_CALL_171;
             end else begin
-                next_state = S_WHILE_BODY_175_WAIT;
+                next_state = S_WHILE_BODY_169_WAIT;
             end
 
         end
 
-        S_WHILE_END_176: begin
+        S_WHILE_END_170: begin
 
-            // LIR block: while_end_176
+            // LIR block: while_end_170
 
-            // line 291: if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)
+            // line 281: if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)
 
 
 
@@ -6620,18 +6504,18 @@ always_comb begin
 
 
             if ((u16_pivot != u16_j)) begin
-                next_state = S_IF_THEN_186;
+                next_state = S_IF_THEN_180;
             end else begin
-                next_state = S_IF_END_187;
+                next_state = S_IF_END_181;
             end
 
         end
 
-        S_AFTER_CALL_177: begin
+        S_AFTER_CALL_171: begin
 
-            // LIR block: after_call_177
+            // LIR block: after_call_171
 
-            // line 279: f32_1 = neg_comb(v=f32_1)
+            // line 269: f32_1 = neg_comb(v=f32_1)
 
 
 
@@ -6642,15 +6526,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_178;
+            next_state = S_FOR_HEADER_172;
 
         end
 
-        S_FOR_HEADER_178: begin
+        S_FOR_HEADER_172: begin
 
-            // LIR block: for_header_178
+            // LIR block: for_header_172
 
-            // line 280: for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 270: for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -6658,18 +6542,18 @@ always_comb begin
 
 
             if ((__for_idx_6 < u16_j)) begin
-                next_state = S_FOR_BODY_179;
+                next_state = S_FOR_BODY_173;
             end else begin
-                next_state = S_FOR_END_180;
+                next_state = S_FOR_END_174;
             end
 
         end
 
-        S_FOR_BODY_179: begin
+        S_FOR_BODY_173: begin
 
-            // LIR block: for_body_179
+            // LIR block: for_body_173
 
-            // line 280: for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 270: for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -6684,15 +6568,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_179_WAIT;
+            next_state = S_FOR_BODY_173_WAIT;
 
         end
 
-        S_FOR_BODY_179_WAIT: begin
+        S_FOR_BODY_173_WAIT: begin
 
-            // LIR block: for_body_179
+            // LIR block: for_body_173
 
-            // line 280: for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 270: for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
             // wait for blocking primitive: fetch_LU
 
@@ -6705,18 +6589,18 @@ always_comb begin
 
                 next_f32_2 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_181;
+                next_state = S_AFTER_CALL_175;
             end else begin
-                next_state = S_FOR_BODY_179_WAIT;
+                next_state = S_FOR_BODY_173_WAIT;
             end
 
         end
 
-        S_FOR_END_180: begin
+        S_FOR_END_174: begin
 
-            // LIR block: for_end_180
+            // LIR block: for_end_174
 
-            // line 284: f32_1 = neg_comb(v=f32_1)
+            // line 274: f32_1 = neg_comb(v=f32_1)
 
 
 
@@ -6728,18 +6612,18 @@ always_comb begin
 
 
             if (gt_comb(abs_comb(neg_comb(f32_1)), f32_4)) begin
-                next_state = S_IF_THEN_184;
+                next_state = S_IF_THEN_178;
             end else begin
-                next_state = S_IF_END_185;
+                next_state = S_IF_END_179;
             end
 
         end
 
-        S_AFTER_CALL_181: begin
+        S_AFTER_CALL_175: begin
 
-            // LIR block: after_call_181
+            // LIR block: after_call_175
 
-            // line 282: f32_3 = fetch_LU(i=u16_k, j=u16_j)
+            // line 272: f32_3 = fetch_LU(i=u16_k, j=u16_j)
 
 
 
@@ -6752,15 +6636,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_181_WAIT;
+            next_state = S_AFTER_CALL_175_WAIT;
 
         end
 
-        S_AFTER_CALL_181_WAIT: begin
+        S_AFTER_CALL_175_WAIT: begin
 
-            // LIR block: after_call_181
+            // LIR block: after_call_175
 
-            // line 282: f32_3 = fetch_LU(i=u16_k, j=u16_j)
+            // line 272: f32_3 = fetch_LU(i=u16_k, j=u16_j)
 
             // wait for blocking primitive: fetch_LU
 
@@ -6773,18 +6657,18 @@ always_comb begin
 
                 next_f32_3 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_182;
+                next_state = S_AFTER_CALL_176;
             end else begin
-                next_state = S_AFTER_CALL_181_WAIT;
+                next_state = S_AFTER_CALL_175_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_182: begin
+        S_AFTER_CALL_176: begin
 
-            // LIR block: after_call_182
+            // LIR block: after_call_176
 
-            // line 283: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 273: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -6799,15 +6683,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_182_WAIT;
+            next_state = S_AFTER_CALL_176_WAIT;
 
         end
 
-        S_AFTER_CALL_182_WAIT: begin
+        S_AFTER_CALL_176_WAIT: begin
 
-            // LIR block: after_call_182
+            // LIR block: after_call_176
 
-            // line 283: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 273: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
             // wait for blocking primitive: fma
 
@@ -6820,18 +6704,18 @@ always_comb begin
 
                 next_f32_1 = fma_result;
 
-                next_state = S_AFTER_CALL_183;
+                next_state = S_AFTER_CALL_177;
             end else begin
-                next_state = S_AFTER_CALL_182_WAIT;
+                next_state = S_AFTER_CALL_176_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_183: begin
+        S_AFTER_CALL_177: begin
 
-            // LIR block: after_call_183
+            // LIR block: after_call_177
 
-            // line 280: for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 270: for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -6840,15 +6724,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_178;
+            next_state = S_FOR_HEADER_172;
 
         end
 
-        S_IF_THEN_184: begin
+        S_IF_THEN_178: begin
 
-            // LIR block: if_then_184
+            // LIR block: if_then_178
 
-            // line 287: f32_4 = f32_1
+            // line 277: f32_4 = f32_1
 
 
 
@@ -6859,15 +6743,15 @@ always_comb begin
 
 
 
-            next_state = S_IF_END_185;
+            next_state = S_IF_END_179;
 
         end
 
-        S_IF_END_185: begin
+        S_IF_END_179: begin
 
-            // LIR block: if_end_185
+            // LIR block: if_end_179
 
-            // line 289: u16_i = u16_i + 1
+            // line 279: u16_i = u16_i + 1
 
 
 
@@ -6876,15 +6760,15 @@ always_comb begin
 
 
 
-            next_state = S_WHILE_HEADER_174;
+            next_state = S_WHILE_HEADER_168;
 
         end
 
-        S_IF_THEN_186: begin
+        S_IF_THEN_180: begin
 
-            // LIR block: if_then_186
+            // LIR block: if_then_180
 
-            // line 292: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 282: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -6893,15 +6777,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_188;
+            next_state = S_FOR_HEADER_182;
 
         end
 
-        S_IF_END_187: begin
+        S_IF_END_181: begin
 
-            // LIR block: if_end_187
+            // LIR block: if_end_181
 
-            // line 307: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 297: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
 
 
@@ -6910,15 +6794,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_206;
+            next_state = S_FOR_HEADER_200;
 
         end
 
-        S_FOR_HEADER_188: begin
+        S_FOR_HEADER_182: begin
 
-            // LIR block: for_header_188
+            // LIR block: for_header_182
 
-            // line 292: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 282: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -6926,18 +6810,18 @@ always_comb begin
 
 
             if ((__for_idx_7 < u16_dim)) begin
-                next_state = S_FOR_BODY_189;
+                next_state = S_FOR_BODY_183;
             end else begin
-                next_state = S_FOR_END_190;
+                next_state = S_FOR_END_184;
             end
 
         end
 
-        S_FOR_BODY_189: begin
+        S_FOR_BODY_183: begin
 
-            // LIR block: for_body_189
+            // LIR block: for_body_183
 
-            // line 292: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 282: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -6952,15 +6836,15 @@ always_comb begin
             fetch_A_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_189_WAIT;
+            next_state = S_FOR_BODY_183_WAIT;
 
         end
 
-        S_FOR_BODY_189_WAIT: begin
+        S_FOR_BODY_183_WAIT: begin
 
-            // LIR block: for_body_189
+            // LIR block: for_body_183
 
-            // line 292: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 282: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
 
             // wait for blocking primitive: fetch_A
 
@@ -6973,18 +6857,18 @@ always_comb begin
 
                 next_f32_1 = fetch_A_result;
 
-                next_state = S_AFTER_CALL_191;
+                next_state = S_AFTER_CALL_185;
             end else begin
-                next_state = S_FOR_BODY_189_WAIT;
+                next_state = S_FOR_BODY_183_WAIT;
             end
 
         end
 
-        S_FOR_END_190: begin
+        S_FOR_END_184: begin
 
-            // LIR block: for_end_190
+            // LIR block: for_end_184
 
-            // line 297: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 287: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -6993,15 +6877,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_195;
+            next_state = S_FOR_HEADER_189;
 
         end
 
-        S_AFTER_CALL_191: begin
+        S_AFTER_CALL_185: begin
 
-            // LIR block: after_call_191
+            // LIR block: after_call_185
 
-            // line 294: f32_2 = fetch_A(i=u16_pivot, j=u16_k)
+            // line 284: f32_2 = fetch_A(i=u16_pivot, j=u16_k)
 
 
 
@@ -7014,15 +6898,15 @@ always_comb begin
             fetch_A_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_191_WAIT;
+            next_state = S_AFTER_CALL_185_WAIT;
 
         end
 
-        S_AFTER_CALL_191_WAIT: begin
+        S_AFTER_CALL_185_WAIT: begin
 
-            // LIR block: after_call_191
+            // LIR block: after_call_185
 
-            // line 294: f32_2 = fetch_A(i=u16_pivot, j=u16_k)
+            // line 284: f32_2 = fetch_A(i=u16_pivot, j=u16_k)
 
             // wait for blocking primitive: fetch_A
 
@@ -7035,18 +6919,18 @@ always_comb begin
 
                 next_f32_2 = fetch_A_result;
 
-                next_state = S_AFTER_CALL_192;
+                next_state = S_AFTER_CALL_186;
             end else begin
-                next_state = S_AFTER_CALL_191_WAIT;
+                next_state = S_AFTER_CALL_185_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_192: begin
+        S_AFTER_CALL_186: begin
 
-            // LIR block: after_call_192
+            // LIR block: after_call_186
 
-            // line 295: store_A(i=u16_j, j=u16_k, v=f32_2)
+            // line 285: store_A(i=u16_j, j=u16_k, v=f32_2)
 
 
 
@@ -7061,15 +6945,15 @@ always_comb begin
             store_A_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_192_WAIT;
+            next_state = S_AFTER_CALL_186_WAIT;
 
         end
 
-        S_AFTER_CALL_192_WAIT: begin
+        S_AFTER_CALL_186_WAIT: begin
 
-            // LIR block: after_call_192
+            // LIR block: after_call_186
 
-            // line 295: store_A(i=u16_j, j=u16_k, v=f32_2)
+            // line 285: store_A(i=u16_j, j=u16_k, v=f32_2)
 
             // wait for blocking primitive: store_A
 
@@ -7080,18 +6964,18 @@ always_comb begin
 
             if (store_A_done) begin
 
-                next_state = S_AFTER_CALL_193;
+                next_state = S_AFTER_CALL_187;
             end else begin
-                next_state = S_AFTER_CALL_192_WAIT;
+                next_state = S_AFTER_CALL_186_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_193: begin
+        S_AFTER_CALL_187: begin
 
-            // LIR block: after_call_193
+            // LIR block: after_call_187
 
-            // line 296: store_A(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 286: store_A(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -7106,15 +6990,15 @@ always_comb begin
             store_A_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_193_WAIT;
+            next_state = S_AFTER_CALL_187_WAIT;
 
         end
 
-        S_AFTER_CALL_193_WAIT: begin
+        S_AFTER_CALL_187_WAIT: begin
 
-            // LIR block: after_call_193
+            // LIR block: after_call_187
 
-            // line 296: store_A(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 286: store_A(i=u16_pivot, j=u16_k, v=f32_1)
 
             // wait for blocking primitive: store_A
 
@@ -7125,18 +7009,18 @@ always_comb begin
 
             if (store_A_done) begin
 
-                next_state = S_AFTER_CALL_194;
+                next_state = S_AFTER_CALL_188;
             end else begin
-                next_state = S_AFTER_CALL_193_WAIT;
+                next_state = S_AFTER_CALL_187_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_194: begin
+        S_AFTER_CALL_188: begin
 
-            // LIR block: after_call_194
+            // LIR block: after_call_188
 
-            // line 292: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 282: for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -7145,15 +7029,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_188;
+            next_state = S_FOR_HEADER_182;
 
         end
 
-        S_FOR_HEADER_195: begin
+        S_FOR_HEADER_189: begin
 
-            // LIR block: for_header_195
+            // LIR block: for_header_189
 
-            // line 297: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 287: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -7161,18 +7045,18 @@ always_comb begin
 
 
             if ((__for_idx_8 < u16_j)) begin
-                next_state = S_FOR_BODY_196;
+                next_state = S_FOR_BODY_190;
             end else begin
-                next_state = S_FOR_END_197;
+                next_state = S_FOR_END_191;
             end
 
         end
 
-        S_FOR_BODY_196: begin
+        S_FOR_BODY_190: begin
 
-            // LIR block: for_body_196
+            // LIR block: for_body_190
 
-            // line 297: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 287: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -7187,15 +7071,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_196_WAIT;
+            next_state = S_FOR_BODY_190_WAIT;
 
         end
 
-        S_FOR_BODY_196_WAIT: begin
+        S_FOR_BODY_190_WAIT: begin
 
-            // LIR block: for_body_196
+            // LIR block: for_body_190
 
-            // line 297: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 287: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
 
             // wait for blocking primitive: fetch_LU
 
@@ -7208,18 +7092,18 @@ always_comb begin
 
                 next_f32_1 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_198;
+                next_state = S_AFTER_CALL_192;
             end else begin
-                next_state = S_FOR_BODY_196_WAIT;
+                next_state = S_FOR_BODY_190_WAIT;
             end
 
         end
 
-        S_FOR_END_197: begin
+        S_FOR_END_191: begin
 
-            // LIR block: for_end_197
+            // LIR block: for_end_191
 
-            // line 302: f32_1 = fetch_J(i=u16_j)
+            // line 292: f32_1 = fetch_J(i=u16_j)
 
 
 
@@ -7230,15 +7114,15 @@ always_comb begin
             fetch_J_start = 1'b1;
 
 
-            next_state = S_FOR_END_197_WAIT;
+            next_state = S_FOR_END_191_WAIT;
 
         end
 
-        S_FOR_END_197_WAIT: begin
+        S_FOR_END_191_WAIT: begin
 
-            // LIR block: for_end_197
+            // LIR block: for_end_191
 
-            // line 302: f32_1 = fetch_J(i=u16_j)
+            // line 292: f32_1 = fetch_J(i=u16_j)
 
             // wait for blocking primitive: fetch_J
 
@@ -7251,18 +7135,18 @@ always_comb begin
 
                 next_f32_1 = fetch_J_result;
 
-                next_state = S_AFTER_CALL_202;
+                next_state = S_AFTER_CALL_196;
             end else begin
-                next_state = S_FOR_END_197_WAIT;
+                next_state = S_FOR_END_191_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_198: begin
+        S_AFTER_CALL_192: begin
 
-            // LIR block: after_call_198
+            // LIR block: after_call_192
 
-            // line 299: f32_2 = fetch_LU(i=u16_pivot, j=u16_k)
+            // line 289: f32_2 = fetch_LU(i=u16_pivot, j=u16_k)
 
 
 
@@ -7275,15 +7159,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_198_WAIT;
+            next_state = S_AFTER_CALL_192_WAIT;
 
         end
 
-        S_AFTER_CALL_198_WAIT: begin
+        S_AFTER_CALL_192_WAIT: begin
 
-            // LIR block: after_call_198
+            // LIR block: after_call_192
 
-            // line 299: f32_2 = fetch_LU(i=u16_pivot, j=u16_k)
+            // line 289: f32_2 = fetch_LU(i=u16_pivot, j=u16_k)
 
             // wait for blocking primitive: fetch_LU
 
@@ -7296,18 +7180,18 @@ always_comb begin
 
                 next_f32_2 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_199;
+                next_state = S_AFTER_CALL_193;
             end else begin
-                next_state = S_AFTER_CALL_198_WAIT;
+                next_state = S_AFTER_CALL_192_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_199: begin
+        S_AFTER_CALL_193: begin
 
-            // LIR block: after_call_199
+            // LIR block: after_call_193
 
-            // line 300: store_LU(i=u16_j, j=u16_k, v=f32_2)
+            // line 290: store_LU(i=u16_j, j=u16_k, v=f32_2)
 
 
 
@@ -7322,15 +7206,15 @@ always_comb begin
             store_LU_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_199_WAIT;
+            next_state = S_AFTER_CALL_193_WAIT;
 
         end
 
-        S_AFTER_CALL_199_WAIT: begin
+        S_AFTER_CALL_193_WAIT: begin
 
-            // LIR block: after_call_199
+            // LIR block: after_call_193
 
-            // line 300: store_LU(i=u16_j, j=u16_k, v=f32_2)
+            // line 290: store_LU(i=u16_j, j=u16_k, v=f32_2)
 
             // wait for blocking primitive: store_LU
 
@@ -7341,18 +7225,18 @@ always_comb begin
 
             if (store_LU_done) begin
 
-                next_state = S_AFTER_CALL_200;
+                next_state = S_AFTER_CALL_194;
             end else begin
-                next_state = S_AFTER_CALL_199_WAIT;
+                next_state = S_AFTER_CALL_193_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_200: begin
+        S_AFTER_CALL_194: begin
 
-            // LIR block: after_call_200
+            // LIR block: after_call_194
 
-            // line 301: store_LU(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 291: store_LU(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -7367,15 +7251,15 @@ always_comb begin
             store_LU_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_200_WAIT;
+            next_state = S_AFTER_CALL_194_WAIT;
 
         end
 
-        S_AFTER_CALL_200_WAIT: begin
+        S_AFTER_CALL_194_WAIT: begin
 
-            // LIR block: after_call_200
+            // LIR block: after_call_194
 
-            // line 301: store_LU(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 291: store_LU(i=u16_pivot, j=u16_k, v=f32_1)
 
             // wait for blocking primitive: store_LU
 
@@ -7386,18 +7270,18 @@ always_comb begin
 
             if (store_LU_done) begin
 
-                next_state = S_AFTER_CALL_201;
+                next_state = S_AFTER_CALL_195;
             end else begin
-                next_state = S_AFTER_CALL_200_WAIT;
+                next_state = S_AFTER_CALL_194_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_201: begin
+        S_AFTER_CALL_195: begin
 
-            // LIR block: after_call_201
+            // LIR block: after_call_195
 
-            // line 297: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
+            // line 287: for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)
 
 
 
@@ -7406,15 +7290,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_195;
+            next_state = S_FOR_HEADER_189;
 
         end
 
-        S_AFTER_CALL_202: begin
+        S_AFTER_CALL_196: begin
 
-            // LIR block: after_call_202
+            // LIR block: after_call_196
 
-            // line 303: f32_2 = fetch_J(i=u16_pivot)
+            // line 293: f32_2 = fetch_J(i=u16_pivot)
 
 
 
@@ -7425,15 +7309,15 @@ always_comb begin
             fetch_J_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_202_WAIT;
+            next_state = S_AFTER_CALL_196_WAIT;
 
         end
 
-        S_AFTER_CALL_202_WAIT: begin
+        S_AFTER_CALL_196_WAIT: begin
 
-            // LIR block: after_call_202
+            // LIR block: after_call_196
 
-            // line 303: f32_2 = fetch_J(i=u16_pivot)
+            // line 293: f32_2 = fetch_J(i=u16_pivot)
 
             // wait for blocking primitive: fetch_J
 
@@ -7446,18 +7330,18 @@ always_comb begin
 
                 next_f32_2 = fetch_J_result;
 
-                next_state = S_AFTER_CALL_203;
+                next_state = S_AFTER_CALL_197;
             end else begin
-                next_state = S_AFTER_CALL_202_WAIT;
+                next_state = S_AFTER_CALL_196_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_203: begin
+        S_AFTER_CALL_197: begin
 
-            // LIR block: after_call_203
+            // LIR block: after_call_197
 
-            // line 304: store_J(i=u16_j, v=f32_2)
+            // line 294: store_J(i=u16_j, v=f32_2)
 
 
 
@@ -7470,15 +7354,15 @@ always_comb begin
             store_J_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_203_WAIT;
+            next_state = S_AFTER_CALL_197_WAIT;
 
         end
 
-        S_AFTER_CALL_203_WAIT: begin
+        S_AFTER_CALL_197_WAIT: begin
 
-            // LIR block: after_call_203
+            // LIR block: after_call_197
 
-            // line 304: store_J(i=u16_j, v=f32_2)
+            // line 294: store_J(i=u16_j, v=f32_2)
 
             // wait for blocking primitive: store_J
 
@@ -7489,18 +7373,18 @@ always_comb begin
 
             if (store_J_done) begin
 
-                next_state = S_AFTER_CALL_204;
+                next_state = S_AFTER_CALL_198;
             end else begin
-                next_state = S_AFTER_CALL_203_WAIT;
+                next_state = S_AFTER_CALL_197_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_204: begin
+        S_AFTER_CALL_198: begin
 
-            // LIR block: after_call_204
+            // LIR block: after_call_198
 
-            // line 305: store_J(i=u16_pivot, v=f32_1)
+            // line 295: store_J(i=u16_pivot, v=f32_1)
 
 
 
@@ -7513,15 +7397,15 @@ always_comb begin
             store_J_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_204_WAIT;
+            next_state = S_AFTER_CALL_198_WAIT;
 
         end
 
-        S_AFTER_CALL_204_WAIT: begin
+        S_AFTER_CALL_198_WAIT: begin
 
-            // LIR block: after_call_204
+            // LIR block: after_call_198
 
-            // line 305: store_J(i=u16_pivot, v=f32_1)
+            // line 295: store_J(i=u16_pivot, v=f32_1)
 
             // wait for blocking primitive: store_J
 
@@ -7532,33 +7416,33 @@ always_comb begin
 
             if (store_J_done) begin
 
-                next_state = S_AFTER_CALL_205;
+                next_state = S_AFTER_CALL_199;
             end else begin
-                next_state = S_AFTER_CALL_204_WAIT;
+                next_state = S_AFTER_CALL_198_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_205: begin
+        S_AFTER_CALL_199: begin
 
-            // LIR block: after_call_205
+            // LIR block: after_call_199
 
-            // line 291: if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)
-
-
+            // line 281: if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)
 
 
 
 
-            next_state = S_IF_END_187;
+
+
+            next_state = S_IF_END_181;
 
         end
 
-        S_FOR_HEADER_206: begin
+        S_FOR_HEADER_200: begin
 
-            // LIR block: for_header_206
+            // LIR block: for_header_200
 
-            // line 307: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 297: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
 
 
@@ -7566,18 +7450,18 @@ always_comb begin
 
 
             if ((__for_idx_9 < u16_dim)) begin
-                next_state = S_FOR_BODY_207;
+                next_state = S_FOR_BODY_201;
             end else begin
-                next_state = S_FOR_END_208;
+                next_state = S_FOR_END_202;
             end
 
         end
 
-        S_FOR_BODY_207: begin
+        S_FOR_BODY_201: begin
 
-            // LIR block: for_body_207
+            // LIR block: for_body_201
 
-            // line 307: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 297: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
 
 
@@ -7592,15 +7476,15 @@ always_comb begin
             fetch_A_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_207_WAIT;
+            next_state = S_FOR_BODY_201_WAIT;
 
         end
 
-        S_FOR_BODY_207_WAIT: begin
+        S_FOR_BODY_201_WAIT: begin
 
-            // LIR block: for_body_207
+            // LIR block: for_body_201
 
-            // line 307: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 297: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
             // wait for blocking primitive: fetch_A
 
@@ -7613,18 +7497,18 @@ always_comb begin
 
                 next_f32_1 = fetch_A_result;
 
-                next_state = S_AFTER_CALL_209;
+                next_state = S_AFTER_CALL_203;
             end else begin
-                next_state = S_FOR_BODY_207_WAIT;
+                next_state = S_FOR_BODY_201_WAIT;
             end
 
         end
 
-        S_FOR_END_208: begin
+        S_FOR_END_202: begin
 
-            // LIR block: for_end_208
+            // LIR block: for_end_202
 
-            // line 266: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 256: for u16_j in range(u16_dim):         u16_pivot = u16_j         f32_1 = fetch_A(i=u16_j, j=u16_j)         f32_1 = neg_comb(v=f32_1)         for u16_k in range(u16_j):             f32_2 = fetch_LU(i=u16_j, j=u16_k)             f32_3 = fetch_LU(i=u16_k, j=u16_j)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         f32_1 = neg_comb(v=f32_1)         f32_4 = abs_comb(v=f32_1)         u16_i = u16_j + 1         while u16_i < u16_dim:             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             for u16_k in range(u16_j):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             f32_1 = neg_comb(v=f32_1)             f32_1 = abs_comb(v=f32_1)             if gt_comb(a=f32_1, b=f32_4):                 f32_4 = f32_1                 u16_pivot = u16_i             u16_i = u16_i + 1          if u16_pivot != u16_j:             for u16_k in range(u16_dim):                 f32_1 = fetch_A(i=u16_j, j=u16_k)                 f32_2 = fetch_A(i=u16_pivot, j=u16_k)                 store_A(i=u16_j, j=u16_k, v=f32_2)                 store_A(i=u16_pivot, j=u16_k, v=f32_1)             for u16_k in range(u16_j):                 f32_1 = fetch_LU(i=u16_j, j=u16_k)                 f32_2 = fetch_LU(i=u16_pivot, j=u16_k)                 store_LU(i=u16_j, j=u16_k, v=f32_2)                 store_LU(i=u16_pivot, j=u16_k, v=f32_1)             f32_1 = fetch_J(i=u16_j)             f32_2 = fetch_J(i=u16_pivot)             store_J(i=u16_j, v=f32_2)             store_J(i=u16_pivot, v=f32_1)          for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
 
 
@@ -7633,15 +7517,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_164;
+            next_state = S_FOR_HEADER_158;
 
         end
 
-        S_AFTER_CALL_209: begin
+        S_AFTER_CALL_203: begin
 
-            // LIR block: after_call_209
+            // LIR block: after_call_203
 
-            // line 309: f32_1 = neg_comb(v=f32_1)
+            // line 299: f32_1 = neg_comb(v=f32_1)
 
 
 
@@ -7654,15 +7538,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_210;
+            next_state = S_FOR_HEADER_204;
 
         end
 
-        S_FOR_HEADER_210: begin
+        S_FOR_HEADER_204: begin
 
-            // LIR block: for_header_210
+            // LIR block: for_header_204
 
-            // line 311: for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 301: for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -7670,18 +7554,18 @@ always_comb begin
 
 
             if ((__for_idx_10 < u16_m)) begin
-                next_state = S_FOR_BODY_211;
+                next_state = S_FOR_BODY_205;
             end else begin
-                next_state = S_FOR_END_212;
+                next_state = S_FOR_END_206;
             end
 
         end
 
-        S_FOR_BODY_211: begin
+        S_FOR_BODY_205: begin
 
-            // LIR block: for_body_211
+            // LIR block: for_body_205
 
-            // line 311: for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 301: for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -7696,15 +7580,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_211_WAIT;
+            next_state = S_FOR_BODY_205_WAIT;
 
         end
 
-        S_FOR_BODY_211_WAIT: begin
+        S_FOR_BODY_205_WAIT: begin
 
-            // LIR block: for_body_211
+            // LIR block: for_body_205
 
-            // line 311: for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 301: for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
             // wait for blocking primitive: fetch_LU
 
@@ -7717,18 +7601,18 @@ always_comb begin
 
                 next_f32_2 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_213;
+                next_state = S_AFTER_CALL_207;
             end else begin
-                next_state = S_FOR_BODY_211_WAIT;
+                next_state = S_FOR_BODY_205_WAIT;
             end
 
         end
 
-        S_FOR_END_212: begin
+        S_FOR_END_206: begin
 
-            // LIR block: for_end_212
+            // LIR block: for_end_206
 
-            // line 315: if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)
+            // line 305: if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)
 
 
 
@@ -7736,18 +7620,18 @@ always_comb begin
 
 
             if ((u16_i > u16_j)) begin
-                next_state = S_IF_THEN_216;
+                next_state = S_IF_THEN_210;
             end else begin
-                next_state = S_IF_END_217;
+                next_state = S_IF_END_211;
             end
 
         end
 
-        S_AFTER_CALL_213: begin
+        S_AFTER_CALL_207: begin
 
-            // LIR block: after_call_213
+            // LIR block: after_call_207
 
-            // line 313: f32_3 = fetch_LU(i=u16_k, j=u16_j)
+            // line 303: f32_3 = fetch_LU(i=u16_k, j=u16_j)
 
 
 
@@ -7760,15 +7644,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_213_WAIT;
+            next_state = S_AFTER_CALL_207_WAIT;
 
         end
 
-        S_AFTER_CALL_213_WAIT: begin
+        S_AFTER_CALL_207_WAIT: begin
 
-            // LIR block: after_call_213
+            // LIR block: after_call_207
 
-            // line 313: f32_3 = fetch_LU(i=u16_k, j=u16_j)
+            // line 303: f32_3 = fetch_LU(i=u16_k, j=u16_j)
 
             // wait for blocking primitive: fetch_LU
 
@@ -7781,18 +7665,18 @@ always_comb begin
 
                 next_f32_3 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_214;
+                next_state = S_AFTER_CALL_208;
             end else begin
-                next_state = S_AFTER_CALL_213_WAIT;
+                next_state = S_AFTER_CALL_207_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_214: begin
+        S_AFTER_CALL_208: begin
 
-            // LIR block: after_call_214
+            // LIR block: after_call_208
 
-            // line 314: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 304: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -7807,15 +7691,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_214_WAIT;
+            next_state = S_AFTER_CALL_208_WAIT;
 
         end
 
-        S_AFTER_CALL_214_WAIT: begin
+        S_AFTER_CALL_208_WAIT: begin
 
-            // LIR block: after_call_214
+            // LIR block: after_call_208
 
-            // line 314: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 304: f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
             // wait for blocking primitive: fma
 
@@ -7828,18 +7712,18 @@ always_comb begin
 
                 next_f32_1 = fma_result;
 
-                next_state = S_AFTER_CALL_215;
+                next_state = S_AFTER_CALL_209;
             end else begin
-                next_state = S_AFTER_CALL_214_WAIT;
+                next_state = S_AFTER_CALL_208_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_215: begin
+        S_AFTER_CALL_209: begin
 
-            // LIR block: after_call_215
+            // LIR block: after_call_209
 
-            // line 311: for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 301: for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -7848,15 +7732,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_210;
+            next_state = S_FOR_HEADER_204;
 
         end
 
-        S_IF_THEN_216: begin
+        S_IF_THEN_210: begin
 
-            // LIR block: if_then_216
+            // LIR block: if_then_210
 
-            // line 316: f32_2 = fetch_LU(i=u16_j, j=u16_j)
+            // line 306: f32_2 = fetch_LU(i=u16_j, j=u16_j)
 
 
 
@@ -7869,15 +7753,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_IF_THEN_216_WAIT;
+            next_state = S_IF_THEN_210_WAIT;
 
         end
 
-        S_IF_THEN_216_WAIT: begin
+        S_IF_THEN_210_WAIT: begin
 
-            // LIR block: if_then_216
+            // LIR block: if_then_210
 
-            // line 316: f32_2 = fetch_LU(i=u16_j, j=u16_j)
+            // line 306: f32_2 = fetch_LU(i=u16_j, j=u16_j)
 
             // wait for blocking primitive: fetch_LU
 
@@ -7890,18 +7774,18 @@ always_comb begin
 
                 next_f32_2 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_218;
+                next_state = S_AFTER_CALL_212;
             end else begin
-                next_state = S_IF_THEN_216_WAIT;
+                next_state = S_IF_THEN_210_WAIT;
             end
 
         end
 
-        S_IF_END_217: begin
+        S_IF_END_211: begin
 
-            // LIR block: if_end_217
+            // LIR block: if_end_211
 
-            // line 318: f32_1 = neg_comb(v=f32_1)
+            // line 308: f32_1 = neg_comb(v=f32_1)
 
 
 
@@ -7918,15 +7802,15 @@ always_comb begin
             store_LU_start = 1'b1;
 
 
-            next_state = S_IF_END_217_WAIT;
+            next_state = S_IF_END_211_WAIT;
 
         end
 
-        S_IF_END_217_WAIT: begin
+        S_IF_END_211_WAIT: begin
 
-            // LIR block: if_end_217
+            // LIR block: if_end_211
 
-            // line 318: f32_1 = neg_comb(v=f32_1)
+            // line 308: f32_1 = neg_comb(v=f32_1)
 
             // wait for blocking primitive: store_LU
 
@@ -7937,18 +7821,18 @@ always_comb begin
 
             if (store_LU_done) begin
 
-                next_state = S_AFTER_CALL_220;
+                next_state = S_AFTER_CALL_214;
             end else begin
-                next_state = S_IF_END_217_WAIT;
+                next_state = S_IF_END_211_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_218: begin
+        S_AFTER_CALL_212: begin
 
-            // LIR block: after_call_218
+            // LIR block: after_call_212
 
-            // line 317: f32_1 = div(a=f32_1, b=f32_2)
+            // line 307: f32_1 = div(a=f32_1, b=f32_2)
 
 
 
@@ -7961,15 +7845,15 @@ always_comb begin
             div_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_218_WAIT;
+            next_state = S_AFTER_CALL_212_WAIT;
 
         end
 
-        S_AFTER_CALL_218_WAIT: begin
+        S_AFTER_CALL_212_WAIT: begin
 
-            // LIR block: after_call_218
+            // LIR block: after_call_212
 
-            // line 317: f32_1 = div(a=f32_1, b=f32_2)
+            // line 307: f32_1 = div(a=f32_1, b=f32_2)
 
             // wait for blocking primitive: div
 
@@ -7982,33 +7866,33 @@ always_comb begin
 
                 next_f32_1 = div_result;
 
-                next_state = S_AFTER_CALL_219;
+                next_state = S_AFTER_CALL_213;
             end else begin
-                next_state = S_AFTER_CALL_218_WAIT;
+                next_state = S_AFTER_CALL_212_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_219: begin
+        S_AFTER_CALL_213: begin
 
-            // LIR block: after_call_219
+            // LIR block: after_call_213
 
-            // line 315: if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)
-
-
+            // line 305: if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)
 
 
 
 
-            next_state = S_IF_END_217;
+
+
+            next_state = S_IF_END_211;
 
         end
 
-        S_AFTER_CALL_220: begin
+        S_AFTER_CALL_214: begin
 
-            // LIR block: after_call_220
+            // LIR block: after_call_214
 
-            // line 307: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
+            // line 297: for u16_i in range(u16_dim):             f32_1 = fetch_A(i=u16_i, j=u16_j)             f32_1 = neg_comb(v=f32_1)             u16_m = u16_j if u16_i > u16_j else u16_i             for u16_k in range(u16_m):                 f32_2 = fetch_LU(i=u16_i, j=u16_k)                 f32_3 = fetch_LU(i=u16_k, j=u16_j)                 f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             if u16_i > u16_j:                 f32_2 = fetch_LU(i=u16_j, j=u16_j)                 f32_1 = div(a=f32_1, b=f32_2)             f32_1 = neg_comb(v=f32_1)             store_LU(i=u16_i, j=u16_j, v=f32_1)
 
 
 
@@ -8017,15 +7901,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_206;
+            next_state = S_FOR_HEADER_200;
 
         end
 
-        S_FOR_HEADER_221: begin
+        S_FOR_HEADER_215: begin
 
-            // LIR block: for_header_221
+            // LIR block: for_header_215
 
-            // line 322: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
+            // line 312: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
 
 
 
@@ -8033,18 +7917,18 @@ always_comb begin
 
 
             if ((__for_idx_11 < u16_dim)) begin
-                next_state = S_FOR_BODY_222;
+                next_state = S_FOR_BODY_216;
             end else begin
-                next_state = S_FOR_END_223;
+                next_state = S_FOR_END_217;
             end
 
         end
 
-        S_FOR_BODY_222: begin
+        S_FOR_BODY_216: begin
 
-            // LIR block: for_body_222
+            // LIR block: for_body_216
 
-            // line 322: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
+            // line 312: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
 
 
 
@@ -8057,15 +7941,15 @@ always_comb begin
             fetch_J_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_222_WAIT;
+            next_state = S_FOR_BODY_216_WAIT;
 
         end
 
-        S_FOR_BODY_222_WAIT: begin
+        S_FOR_BODY_216_WAIT: begin
 
-            // LIR block: for_body_222
+            // LIR block: for_body_216
 
-            // line 322: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
+            // line 312: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
 
             // wait for blocking primitive: fetch_J
 
@@ -8078,18 +7962,18 @@ always_comb begin
 
                 next_f32_1 = fetch_J_result;
 
-                next_state = S_AFTER_CALL_224;
+                next_state = S_AFTER_CALL_218;
             end else begin
-                next_state = S_FOR_BODY_222_WAIT;
+                next_state = S_FOR_BODY_216_WAIT;
             end
 
         end
 
-        S_FOR_END_223: begin
+        S_FOR_END_217: begin
 
-            // LIR block: for_end_223
+            // LIR block: for_end_217
 
-            // line 332: u16_i = u16_dim
+            // line 322: u16_i = u16_dim
 
 
 
@@ -8098,15 +7982,15 @@ always_comb begin
 
 
 
-            next_state = S_WHILE_HEADER_232;
+            next_state = S_WHILE_HEADER_226;
 
         end
 
-        S_AFTER_CALL_224: begin
+        S_AFTER_CALL_218: begin
 
-            // LIR block: after_call_224
+            // LIR block: after_call_218
 
-            // line 324: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 314: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -8115,15 +7999,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_225;
+            next_state = S_FOR_HEADER_219;
 
         end
 
-        S_FOR_HEADER_225: begin
+        S_FOR_HEADER_219: begin
 
-            // LIR block: for_header_225
+            // LIR block: for_header_219
 
-            // line 324: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 314: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -8131,18 +8015,18 @@ always_comb begin
 
 
             if ((__for_idx_12 < u16_i)) begin
-                next_state = S_FOR_BODY_226;
+                next_state = S_FOR_BODY_220;
             end else begin
-                next_state = S_FOR_END_227;
+                next_state = S_FOR_END_221;
             end
 
         end
 
-        S_FOR_BODY_226: begin
+        S_FOR_BODY_220: begin
 
-            // LIR block: for_body_226
+            // LIR block: for_body_220
 
-            // line 324: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 314: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -8157,15 +8041,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_226_WAIT;
+            next_state = S_FOR_BODY_220_WAIT;
 
         end
 
-        S_FOR_BODY_226_WAIT: begin
+        S_FOR_BODY_220_WAIT: begin
 
-            // LIR block: for_body_226
+            // LIR block: for_body_220
 
-            // line 324: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 314: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
             // wait for blocking primitive: fetch_LU
 
@@ -8178,18 +8062,18 @@ always_comb begin
 
                 next_f32_2 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_228;
+                next_state = S_AFTER_CALL_222;
             end else begin
-                next_state = S_FOR_BODY_226_WAIT;
+                next_state = S_FOR_BODY_220_WAIT;
             end
 
         end
 
-        S_FOR_END_227: begin
+        S_FOR_END_221: begin
 
-            // LIR block: for_end_227
+            // LIR block: for_end_221
 
-            // line 329: store_Y(i=u16_i, v=f32_1)
+            // line 319: store_Y(i=u16_i, v=f32_1)
 
 
 
@@ -8202,15 +8086,15 @@ always_comb begin
             store_Y_start = 1'b1;
 
 
-            next_state = S_FOR_END_227_WAIT;
+            next_state = S_FOR_END_221_WAIT;
 
         end
 
-        S_FOR_END_227_WAIT: begin
+        S_FOR_END_221_WAIT: begin
 
-            // LIR block: for_end_227
+            // LIR block: for_end_221
 
-            // line 329: store_Y(i=u16_i, v=f32_1)
+            // line 319: store_Y(i=u16_i, v=f32_1)
 
             // wait for blocking primitive: store_Y
 
@@ -8221,18 +8105,18 @@ always_comb begin
 
             if (store_Y_done) begin
 
-                next_state = S_AFTER_CALL_231;
+                next_state = S_AFTER_CALL_225;
             end else begin
-                next_state = S_FOR_END_227_WAIT;
+                next_state = S_FOR_END_221_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_228: begin
+        S_AFTER_CALL_222: begin
 
-            // LIR block: after_call_228
+            // LIR block: after_call_222
 
-            // line 326: f32_3 = fetch_Y(i=u16_k)
+            // line 316: f32_3 = fetch_Y(i=u16_k)
 
 
 
@@ -8243,15 +8127,15 @@ always_comb begin
             fetch_Y_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_228_WAIT;
+            next_state = S_AFTER_CALL_222_WAIT;
 
         end
 
-        S_AFTER_CALL_228_WAIT: begin
+        S_AFTER_CALL_222_WAIT: begin
 
-            // LIR block: after_call_228
+            // LIR block: after_call_222
 
-            // line 326: f32_3 = fetch_Y(i=u16_k)
+            // line 316: f32_3 = fetch_Y(i=u16_k)
 
             // wait for blocking primitive: fetch_Y
 
@@ -8264,18 +8148,18 @@ always_comb begin
 
                 next_f32_3 = fetch_Y_result;
 
-                next_state = S_AFTER_CALL_229;
+                next_state = S_AFTER_CALL_223;
             end else begin
-                next_state = S_AFTER_CALL_228_WAIT;
+                next_state = S_AFTER_CALL_222_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_229: begin
+        S_AFTER_CALL_223: begin
 
-            // LIR block: after_call_229
+            // LIR block: after_call_223
 
-            // line 327: f32_3 = neg_comb(v=f32_3)
+            // line 317: f32_3 = neg_comb(v=f32_3)
 
 
 
@@ -8292,15 +8176,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_229_WAIT;
+            next_state = S_AFTER_CALL_223_WAIT;
 
         end
 
-        S_AFTER_CALL_229_WAIT: begin
+        S_AFTER_CALL_223_WAIT: begin
 
-            // LIR block: after_call_229
+            // LIR block: after_call_223
 
-            // line 327: f32_3 = neg_comb(v=f32_3)
+            // line 317: f32_3 = neg_comb(v=f32_3)
 
             // wait for blocking primitive: fma
 
@@ -8313,18 +8197,18 @@ always_comb begin
 
                 next_f32_1 = fma_result;
 
-                next_state = S_AFTER_CALL_230;
+                next_state = S_AFTER_CALL_224;
             end else begin
-                next_state = S_AFTER_CALL_229_WAIT;
+                next_state = S_AFTER_CALL_223_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_230: begin
+        S_AFTER_CALL_224: begin
 
-            // LIR block: after_call_230
+            // LIR block: after_call_224
 
-            // line 324: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
+            // line 314: for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)
 
 
 
@@ -8333,15 +8217,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_225;
+            next_state = S_FOR_HEADER_219;
 
         end
 
-        S_AFTER_CALL_231: begin
+        S_AFTER_CALL_225: begin
 
-            // LIR block: after_call_231
+            // LIR block: after_call_225
 
-            // line 322: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
+            // line 312: for u16_i in range(u16_dim):         f32_1 = fetch_J(i=u16_i)         for u16_k in range(u16_i):             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_Y(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)         store_Y(i=u16_i, v=f32_1)
 
 
 
@@ -8350,15 +8234,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_221;
+            next_state = S_FOR_HEADER_215;
 
         end
 
-        S_WHILE_HEADER_232: begin
+        S_WHILE_HEADER_226: begin
 
-            // LIR block: while_header_232
+            // LIR block: while_header_226
 
-            // line 333: while u16_i > 0:         u16_i = u16_i - 1         f32_1 = fetch_Y(i=u16_i)         u16_k = u16_i + 1         while u16_k < u16_dim:             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_X(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             u16_k = u16_k + 1         f32_2 = fetch_LU(i=u16_i, j=u16_i)         f32_1 = div(a=f32_1, b=f32_2)         store_X(i=u16_i, v=f32_1)
+            // line 323: while u16_i > 0:         u16_i = u16_i - 1         f32_1 = fetch_Y(i=u16_i)         u16_k = u16_i + 1         while u16_k < u16_dim:             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_X(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             u16_k = u16_k + 1         f32_2 = fetch_LU(i=u16_i, j=u16_i)         f32_1 = div(a=f32_1, b=f32_2)         store_X(i=u16_i, v=f32_1)
 
 
 
@@ -8366,18 +8250,18 @@ always_comb begin
 
 
             if ((u16_i > 32'd0)) begin
-                next_state = S_WHILE_BODY_233;
+                next_state = S_WHILE_BODY_227;
             end else begin
-                next_state = S_WHILE_END_234;
+                next_state = S_WHILE_END_228;
             end
 
         end
 
-        S_WHILE_BODY_233: begin
+        S_WHILE_BODY_227: begin
 
-            // LIR block: while_body_233
+            // LIR block: while_body_227
 
-            // line 334: u16_i = u16_i - 1
+            // line 324: u16_i = u16_i - 1
 
 
 
@@ -8390,15 +8274,15 @@ always_comb begin
             fetch_Y_start = 1'b1;
 
 
-            next_state = S_WHILE_BODY_233_WAIT;
+            next_state = S_WHILE_BODY_227_WAIT;
 
         end
 
-        S_WHILE_BODY_233_WAIT: begin
+        S_WHILE_BODY_227_WAIT: begin
 
-            // LIR block: while_body_233
+            // LIR block: while_body_227
 
-            // line 334: u16_i = u16_i - 1
+            // line 324: u16_i = u16_i - 1
 
             // wait for blocking primitive: fetch_Y
 
@@ -8411,18 +8295,18 @@ always_comb begin
 
                 next_f32_1 = fetch_Y_result;
 
-                next_state = S_AFTER_CALL_235;
+                next_state = S_AFTER_CALL_229;
             end else begin
-                next_state = S_WHILE_BODY_233_WAIT;
+                next_state = S_WHILE_BODY_227_WAIT;
             end
 
         end
 
-        S_WHILE_END_234: begin
+        S_WHILE_END_228: begin
 
-            // LIR block: while_end_234
+            // LIR block: while_end_228
 
-            // line 348: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
+            // line 338: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
 
 
 
@@ -8431,15 +8315,15 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_245;
+            next_state = S_FOR_HEADER_239;
 
         end
 
-        S_AFTER_CALL_235: begin
+        S_AFTER_CALL_229: begin
 
-            // LIR block: after_call_235
+            // LIR block: after_call_229
 
-            // line 336: u16_k = u16_i + 1
+            // line 326: u16_k = u16_i + 1
 
 
 
@@ -8448,15 +8332,15 @@ always_comb begin
 
 
 
-            next_state = S_WHILE_HEADER_236;
+            next_state = S_WHILE_HEADER_230;
 
         end
 
-        S_WHILE_HEADER_236: begin
+        S_WHILE_HEADER_230: begin
 
-            // LIR block: while_header_236
+            // LIR block: while_header_230
 
-            // line 337: while u16_k < u16_dim:             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_X(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             u16_k = u16_k + 1
+            // line 327: while u16_k < u16_dim:             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_X(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             u16_k = u16_k + 1
 
 
 
@@ -8464,18 +8348,18 @@ always_comb begin
 
 
             if ((u16_k < u16_dim)) begin
-                next_state = S_WHILE_BODY_237;
+                next_state = S_WHILE_BODY_231;
             end else begin
-                next_state = S_WHILE_END_238;
+                next_state = S_WHILE_END_232;
             end
 
         end
 
-        S_WHILE_BODY_237: begin
+        S_WHILE_BODY_231: begin
 
-            // LIR block: while_body_237
+            // LIR block: while_body_231
 
-            // line 338: f32_2 = fetch_LU(i=u16_i, j=u16_k)
+            // line 328: f32_2 = fetch_LU(i=u16_i, j=u16_k)
 
 
 
@@ -8488,15 +8372,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_WHILE_BODY_237_WAIT;
+            next_state = S_WHILE_BODY_231_WAIT;
 
         end
 
-        S_WHILE_BODY_237_WAIT: begin
+        S_WHILE_BODY_231_WAIT: begin
 
-            // LIR block: while_body_237
+            // LIR block: while_body_231
 
-            // line 338: f32_2 = fetch_LU(i=u16_i, j=u16_k)
+            // line 328: f32_2 = fetch_LU(i=u16_i, j=u16_k)
 
             // wait for blocking primitive: fetch_LU
 
@@ -8509,18 +8393,18 @@ always_comb begin
 
                 next_f32_2 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_239;
+                next_state = S_AFTER_CALL_233;
             end else begin
-                next_state = S_WHILE_BODY_237_WAIT;
+                next_state = S_WHILE_BODY_231_WAIT;
             end
 
         end
 
-        S_WHILE_END_238: begin
+        S_WHILE_END_232: begin
 
-            // LIR block: while_end_238
+            // LIR block: while_end_232
 
-            // line 343: f32_2 = fetch_LU(i=u16_i, j=u16_i)
+            // line 333: f32_2 = fetch_LU(i=u16_i, j=u16_i)
 
 
 
@@ -8533,15 +8417,15 @@ always_comb begin
             fetch_LU_start = 1'b1;
 
 
-            next_state = S_WHILE_END_238_WAIT;
+            next_state = S_WHILE_END_232_WAIT;
 
         end
 
-        S_WHILE_END_238_WAIT: begin
+        S_WHILE_END_232_WAIT: begin
 
-            // LIR block: while_end_238
+            // LIR block: while_end_232
 
-            // line 343: f32_2 = fetch_LU(i=u16_i, j=u16_i)
+            // line 333: f32_2 = fetch_LU(i=u16_i, j=u16_i)
 
             // wait for blocking primitive: fetch_LU
 
@@ -8554,18 +8438,18 @@ always_comb begin
 
                 next_f32_2 = fetch_LU_result;
 
-                next_state = S_AFTER_CALL_242;
+                next_state = S_AFTER_CALL_236;
             end else begin
-                next_state = S_WHILE_END_238_WAIT;
+                next_state = S_WHILE_END_232_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_239: begin
+        S_AFTER_CALL_233: begin
 
-            // LIR block: after_call_239
+            // LIR block: after_call_233
 
-            // line 339: f32_3 = fetch_X(i=u16_k)
+            // line 329: f32_3 = fetch_X(i=u16_k)
 
 
 
@@ -8576,15 +8460,15 @@ always_comb begin
             fetch_X_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_239_WAIT;
+            next_state = S_AFTER_CALL_233_WAIT;
 
         end
 
-        S_AFTER_CALL_239_WAIT: begin
+        S_AFTER_CALL_233_WAIT: begin
 
-            // LIR block: after_call_239
+            // LIR block: after_call_233
 
-            // line 339: f32_3 = fetch_X(i=u16_k)
+            // line 329: f32_3 = fetch_X(i=u16_k)
 
             // wait for blocking primitive: fetch_X
 
@@ -8597,18 +8481,18 @@ always_comb begin
 
                 next_f32_3 = fetch_X_result;
 
-                next_state = S_AFTER_CALL_240;
+                next_state = S_AFTER_CALL_234;
             end else begin
-                next_state = S_AFTER_CALL_239_WAIT;
+                next_state = S_AFTER_CALL_233_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_240: begin
+        S_AFTER_CALL_234: begin
 
-            // LIR block: after_call_240
+            // LIR block: after_call_234
 
-            // line 340: f32_3 = neg_comb(v=f32_3)
+            // line 330: f32_3 = neg_comb(v=f32_3)
 
 
 
@@ -8625,15 +8509,15 @@ always_comb begin
             fma_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_240_WAIT;
+            next_state = S_AFTER_CALL_234_WAIT;
 
         end
 
-        S_AFTER_CALL_240_WAIT: begin
+        S_AFTER_CALL_234_WAIT: begin
 
-            // LIR block: after_call_240
+            // LIR block: after_call_234
 
-            // line 340: f32_3 = neg_comb(v=f32_3)
+            // line 330: f32_3 = neg_comb(v=f32_3)
 
             // wait for blocking primitive: fma
 
@@ -8646,18 +8530,18 @@ always_comb begin
 
                 next_f32_1 = fma_result;
 
-                next_state = S_AFTER_CALL_241;
+                next_state = S_AFTER_CALL_235;
             end else begin
-                next_state = S_AFTER_CALL_240_WAIT;
+                next_state = S_AFTER_CALL_234_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_241: begin
+        S_AFTER_CALL_235: begin
 
-            // LIR block: after_call_241
+            // LIR block: after_call_235
 
-            // line 342: u16_k = u16_k + 1
+            // line 332: u16_k = u16_k + 1
 
 
 
@@ -8666,15 +8550,15 @@ always_comb begin
 
 
 
-            next_state = S_WHILE_HEADER_236;
+            next_state = S_WHILE_HEADER_230;
 
         end
 
-        S_AFTER_CALL_242: begin
+        S_AFTER_CALL_236: begin
 
-            // LIR block: after_call_242
+            // LIR block: after_call_236
 
-            // line 344: f32_1 = div(a=f32_1, b=f32_2)
+            // line 334: f32_1 = div(a=f32_1, b=f32_2)
 
 
 
@@ -8687,15 +8571,15 @@ always_comb begin
             div_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_242_WAIT;
+            next_state = S_AFTER_CALL_236_WAIT;
 
         end
 
-        S_AFTER_CALL_242_WAIT: begin
+        S_AFTER_CALL_236_WAIT: begin
 
-            // LIR block: after_call_242
+            // LIR block: after_call_236
 
-            // line 344: f32_1 = div(a=f32_1, b=f32_2)
+            // line 334: f32_1 = div(a=f32_1, b=f32_2)
 
             // wait for blocking primitive: div
 
@@ -8708,18 +8592,18 @@ always_comb begin
 
                 next_f32_1 = div_result;
 
-                next_state = S_AFTER_CALL_243;
+                next_state = S_AFTER_CALL_237;
             end else begin
-                next_state = S_AFTER_CALL_242_WAIT;
+                next_state = S_AFTER_CALL_236_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_243: begin
+        S_AFTER_CALL_237: begin
 
-            // LIR block: after_call_243
+            // LIR block: after_call_237
 
-            // line 345: store_X(i=u16_i, v=f32_1)
+            // line 335: store_X(i=u16_i, v=f32_1)
 
 
 
@@ -8732,15 +8616,15 @@ always_comb begin
             store_X_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_243_WAIT;
+            next_state = S_AFTER_CALL_237_WAIT;
 
         end
 
-        S_AFTER_CALL_243_WAIT: begin
+        S_AFTER_CALL_237_WAIT: begin
 
-            // LIR block: after_call_243
+            // LIR block: after_call_237
 
-            // line 345: store_X(i=u16_i, v=f32_1)
+            // line 335: store_X(i=u16_i, v=f32_1)
 
             // wait for blocking primitive: store_X
 
@@ -8751,33 +8635,33 @@ always_comb begin
 
             if (store_X_done) begin
 
-                next_state = S_AFTER_CALL_244;
+                next_state = S_AFTER_CALL_238;
             end else begin
-                next_state = S_AFTER_CALL_243_WAIT;
+                next_state = S_AFTER_CALL_237_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_244: begin
+        S_AFTER_CALL_238: begin
 
-            // LIR block: after_call_244
+            // LIR block: after_call_238
 
-            // line 333: while u16_i > 0:         u16_i = u16_i - 1         f32_1 = fetch_Y(i=u16_i)         u16_k = u16_i + 1         while u16_k < u16_dim:             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_X(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             u16_k = u16_k + 1         f32_2 = fetch_LU(i=u16_i, j=u16_i)         f32_1 = div(a=f32_1, b=f32_2)         store_X(i=u16_i, v=f32_1)
-
-
+            // line 323: while u16_i > 0:         u16_i = u16_i - 1         f32_1 = fetch_Y(i=u16_i)         u16_k = u16_i + 1         while u16_k < u16_dim:             f32_2 = fetch_LU(i=u16_i, j=u16_k)             f32_3 = fetch_X(i=u16_k)             f32_3 = neg_comb(v=f32_3)             f32_1 = fma(a=f32_2, b=f32_3, c=f32_1)             u16_k = u16_k + 1         f32_2 = fetch_LU(i=u16_i, j=u16_i)         f32_1 = div(a=f32_1, b=f32_2)         store_X(i=u16_i, v=f32_1)
 
 
 
 
-            next_state = S_WHILE_HEADER_232;
+
+
+            next_state = S_WHILE_HEADER_226;
 
         end
 
-        S_FOR_HEADER_245: begin
+        S_FOR_HEADER_239: begin
 
-            // LIR block: for_header_245
+            // LIR block: for_header_239
 
-            // line 348: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
+            // line 338: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
 
 
 
@@ -8785,18 +8669,18 @@ always_comb begin
 
 
             if ((__for_idx_13 < u16_dim)) begin
-                next_state = S_FOR_BODY_246;
+                next_state = S_FOR_BODY_240;
             end else begin
-                next_state = S_FOR_END_247;
+                next_state = S_FOR_END_241;
             end
 
         end
 
-        S_FOR_BODY_246: begin
+        S_FOR_BODY_240: begin
 
-            // LIR block: for_body_246
+            // LIR block: for_body_240
 
-            // line 348: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
+            // line 338: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
 
 
 
@@ -8809,15 +8693,15 @@ always_comb begin
             fetch_X_start = 1'b1;
 
 
-            next_state = S_FOR_BODY_246_WAIT;
+            next_state = S_FOR_BODY_240_WAIT;
 
         end
 
-        S_FOR_BODY_246_WAIT: begin
+        S_FOR_BODY_240_WAIT: begin
 
-            // LIR block: for_body_246
+            // LIR block: for_body_240
 
-            // line 348: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
+            // line 338: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
 
             // wait for blocking primitive: fetch_X
 
@@ -8830,16 +8714,16 @@ always_comb begin
 
                 next_f32_1 = fetch_X_result;
 
-                next_state = S_AFTER_CALL_248;
+                next_state = S_AFTER_CALL_242;
             end else begin
-                next_state = S_FOR_BODY_246_WAIT;
+                next_state = S_FOR_BODY_240_WAIT;
             end
 
         end
 
-        S_FOR_END_247: begin
+        S_FOR_END_241: begin
 
-            // LIR block: for_end_247
+            // LIR block: for_end_241
 
 
 
@@ -8851,11 +8735,11 @@ always_comb begin
 
         end
 
-        S_AFTER_CALL_248: begin
+        S_AFTER_CALL_242: begin
 
-            // LIR block: after_call_248
+            // LIR block: after_call_242
 
-            // line 350: store_prevX(i=u16_i, v=f32_1)
+            // line 340: store_prevX(i=u16_i, v=f32_1)
 
 
 
@@ -8868,15 +8752,15 @@ always_comb begin
             store_prevX_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_248_WAIT;
+            next_state = S_AFTER_CALL_242_WAIT;
 
         end
 
-        S_AFTER_CALL_248_WAIT: begin
+        S_AFTER_CALL_242_WAIT: begin
 
-            // LIR block: after_call_248
+            // LIR block: after_call_242
 
-            // line 350: store_prevX(i=u16_i, v=f32_1)
+            // line 340: store_prevX(i=u16_i, v=f32_1)
 
             // wait for blocking primitive: store_prevX
 
@@ -8887,18 +8771,18 @@ always_comb begin
 
             if (store_prevX_done) begin
 
-                next_state = S_AFTER_CALL_249;
+                next_state = S_AFTER_CALL_243;
             end else begin
-                next_state = S_AFTER_CALL_248_WAIT;
+                next_state = S_AFTER_CALL_242_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_249: begin
+        S_AFTER_CALL_243: begin
 
-            // LIR block: after_call_249
+            // LIR block: after_call_243
 
-            // line 348: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
+            // line 338: for u16_i in range(u16_dim):         f32_1 = fetch_X(i=u16_i)         store_prevX(i=u16_i, v=f32_1)
 
 
 
@@ -8907,7 +8791,7 @@ always_comb begin
 
 
 
-            next_state = S_FOR_HEADER_245;
+            next_state = S_FOR_HEADER_239;
 
         end
 

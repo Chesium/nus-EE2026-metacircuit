@@ -102,10 +102,10 @@ module fetchP (
                     6'd3, 6'd4: decode_p_from_cell = 4'b1111;
                     6'd15: begin
                         case (rotation)
-                            2'd0: decode_p_from_cell = 4'b0010;
-                            2'd1: decode_p_from_cell = 4'b0100;
-                            2'd2: decode_p_from_cell = 4'b1000;
-                            default: decode_p_from_cell = 4'b0001;
+                            2'd0: decode_p_from_cell = 4'b0001;
+                            2'd1: decode_p_from_cell = 4'b0010;
+                            2'd2: decode_p_from_cell = 4'b0100;
+                            default: decode_p_from_cell = 4'b1000;
                         endcase
                     end
                     default: decode_p_from_cell = 4'b0000;

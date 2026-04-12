@@ -14,27 +14,27 @@ module StampingNetlistStore #(
     input  wire        fetchElemN0_start,
     input  wire [15:0] fetchElemN0_idx,
     output reg         fetchElemN0_done,
-    output reg  [15:0] fetchElemN0_result,
+    output reg  [7:0]  fetchElemN0_result,
 
     input  wire        fetchElemN1_start,
     input  wire [15:0] fetchElemN1_idx,
     output reg         fetchElemN1_done,
-    output reg  [15:0] fetchElemN1_result,
+    output reg  [7:0]  fetchElemN1_result,
 
     input  wire        fetchElemN2_start,
     input  wire [15:0] fetchElemN2_idx,
     output reg         fetchElemN2_done,
-    output reg  [15:0] fetchElemN2_result,
+    output reg  [7:0]  fetchElemN2_result,
 
     input  wire        fetchElemN3_start,
     input  wire [15:0] fetchElemN3_idx,
     output reg         fetchElemN3_done,
-    output reg  [15:0] fetchElemN3_result,
+    output reg  [7:0]  fetchElemN3_result,
 
     input  wire        fetchElemAux_start,
     input  wire [15:0] fetchElemAux_idx,
     output reg         fetchElemAux_done,
-    output reg  [15:0] fetchElemAux_result,
+    output reg  [7:0]  fetchElemAux_result,
 
     input  wire        fetchElemVal0_start,
     input  wire [15:0] fetchElemVal0_idx,
@@ -58,11 +58,11 @@ module StampingNetlistStore #(
 );
 
   (* ram_style = "block" *) reg [7:0] kind_mem[0:ELEM_COUNT-1];
-  (* ram_style = "block" *) reg [15:0] n0_mem[0:ELEM_COUNT-1];
-  (* ram_style = "block" *) reg [15:0] n1_mem[0:ELEM_COUNT-1];
-  (* ram_style = "block" *) reg [15:0] n2_mem[0:ELEM_COUNT-1];
-  (* ram_style = "block" *) reg [15:0] n3_mem[0:ELEM_COUNT-1];
-  (* ram_style = "block" *) reg [15:0] aux_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [7:0] n0_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [7:0] n1_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [7:0] n2_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [7:0] n3_mem[0:ELEM_COUNT-1];
+  (* ram_style = "block" *) reg [7:0] aux_mem[0:ELEM_COUNT-1];
   (* ram_style = "block" *) reg [31:0] v0_mem[0:ELEM_COUNT-1];
   (* ram_style = "block" *) reg [31:0] v1_mem[0:ELEM_COUNT-1];
   (* ram_style = "block" *) reg [31:0] v2_mem[0:ELEM_COUNT-1];

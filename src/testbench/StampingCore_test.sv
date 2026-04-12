@@ -21,27 +21,27 @@ module StampingCore_test;
   wire fetchElemN0_start;
   wire [15:0] fetchElemN0_idx;
   wire fetchElemN0_done;
-  wire [15:0] fetchElemN0_result;
+  wire [7:0] fetchElemN0_result;
 
   wire fetchElemN1_start;
   wire [15:0] fetchElemN1_idx;
   wire fetchElemN1_done;
-  wire [15:0] fetchElemN1_result;
+  wire [7:0] fetchElemN1_result;
 
   wire fetchElemN2_start;
   wire [15:0] fetchElemN2_idx;
   wire fetchElemN2_done;
-  wire [15:0] fetchElemN2_result;
+  wire [7:0] fetchElemN2_result;
 
   wire fetchElemN3_start;
   wire [15:0] fetchElemN3_idx;
   wire fetchElemN3_done;
-  wire [15:0] fetchElemN3_result;
+  wire [7:0] fetchElemN3_result;
 
   wire fetchElemAux_start;
   wire [15:0] fetchElemAux_idx;
   wire fetchElemAux_done;
-  wire [15:0] fetchElemAux_result;
+  wire [7:0] fetchElemAux_result;
 
   wire fetchElemVal0_start;
   wire [15:0] fetchElemVal0_idx;

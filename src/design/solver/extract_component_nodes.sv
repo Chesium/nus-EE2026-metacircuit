@@ -3,7 +3,7 @@
 
 // Entry block: entry
 
-// Blocking primitives: fetchComponentType(latency=1), fetchAnchorPositionX(latency=1), storeNode0(latency=1), fetchAnchorPositionY(latency=1), fetchComponentRotation(latency=1), fetchR(latency=1), storeNode1(latency=1)
+// Blocking primitives: fetchComponentType(latency=1), fetchAnchorPositionX(latency=1), storeNode0(latency=1), fetchAnchorPositionY(latency=1), fetchComponentRotation(latency=1), fetchR(latency=1), fetchCell(latency=1), storeNode1(latency=1)
 
 module extract_component_nodes (
 
@@ -73,6 +73,16 @@ module extract_component_nodes (
 
     input logic [7:0] fetchR_result,
 
+    output logic fetchCell_start,
+
+    output logic [7:0] fetchCell_i,
+
+    output logic [7:0] fetchCell_j,
+
+    input logic fetchCell_done,
+
+    input logic [15:0] fetchCell_result,
+
     output logic storeNode1_start,
 
     output logic [15:0] storeNode1_idx,
@@ -84,8 +94,6 @@ module extract_component_nodes (
 );
 
 import ExtractComponentNodesCombPkg::*;
-
-
 
 typedef enum logic [6:0] {
 
@@ -145,27 +153,21 @@ typedef enum logic [6:0] {
 
     S_FOR_BODY_18,
 
-    S_FOR_BODY_18_WAIT,
-
     S_FOR_END_19,
 
-    S_AFTER_CALL_20,
+    S_FOR_HEADER_20,
 
-    S_IF_THEN_21,
+    S_FOR_BODY_21,
 
-    S_IF_THEN_21_WAIT,
+    S_FOR_BODY_21_WAIT,
 
-    S_IF_END_22,
+    S_FOR_END_22,
 
     S_AFTER_CALL_23,
 
-    S_AFTER_CALL_23_WAIT,
+    S_IF_THEN_24,
 
-    S_AFTER_CALL_24,
-
-    S_AFTER_CALL_24_WAIT,
-
-    S_AFTER_CALL_25,
+    S_IF_END_25,
 
     S_IF_THEN_26,
 
@@ -193,27 +195,21 @@ typedef enum logic [6:0] {
 
     S_FOR_BODY_37,
 
-    S_FOR_BODY_37_WAIT,
-
     S_FOR_END_38,
 
-    S_AFTER_CALL_39,
+    S_FOR_HEADER_39,
 
-    S_IF_THEN_40,
+    S_FOR_BODY_40,
 
-    S_IF_THEN_40_WAIT,
+    S_FOR_BODY_40_WAIT,
 
-    S_IF_END_41,
+    S_FOR_END_41,
 
     S_AFTER_CALL_42,
 
-    S_AFTER_CALL_42_WAIT,
+    S_IF_THEN_43,
 
-    S_AFTER_CALL_43,
-
-    S_AFTER_CALL_43_WAIT,
-
-    S_AFTER_CALL_44,
+    S_IF_END_44,
 
     S_IF_THEN_45,
 
@@ -261,27 +257,21 @@ typedef enum logic [6:0] {
 
     S_FOR_BODY_65,
 
-    S_FOR_BODY_65_WAIT,
-
     S_FOR_END_66,
 
-    S_AFTER_CALL_67,
+    S_FOR_HEADER_67,
 
-    S_IF_THEN_68,
+    S_FOR_BODY_68,
 
-    S_IF_THEN_68_WAIT,
+    S_FOR_BODY_68_WAIT,
 
-    S_IF_END_69,
+    S_FOR_END_69,
 
     S_AFTER_CALL_70,
 
-    S_AFTER_CALL_70_WAIT,
+    S_IF_THEN_71,
 
-    S_AFTER_CALL_71,
-
-    S_AFTER_CALL_71_WAIT,
-
-    S_AFTER_CALL_72,
+    S_IF_END_72,
 
     S_IF_THEN_73,
 
@@ -351,27 +341,15 @@ state_t next_state;
 
 logic [15:0] u16_idx;
 
-logic [15:0] u16_ground_idx;
-
 logic [7:0] u8_type;
-
-logic [7:0] u8_ground_type;
 
 logic [7:0] u8_anchor_x;
 
 logic [7:0] u8_anchor_y;
 
-logic [7:0] u8_ground_anchor_x;
-
-logic [7:0] u8_ground_anchor_y;
-
 logic [1:0] u2_rot;
 
 logic [1:0] u2_dir0;
-
-logic [1:0] u2_ground_rot;
-
-logic [1:0] u2_ground_dir0;
 
 logic [7:0] u8_term0_x;
 
@@ -381,19 +359,9 @@ logic [7:0] u8_term1_x;
 
 logic [7:0] u8_term1_y;
 
-logic [7:0] u8_ground_term_x;
-
-logic [7:0] u8_ground_term_y;
-
 logic [7:0] u8_raw0;
 
 logic [7:0] u8_raw1;
-
-logic [7:0] u8_ground_region;
-
-logic [7:0] u8_region;
-
-logic [7:0] u8_prev_region;
 
 logic [7:0] u8_node0;
 
@@ -408,6 +376,20 @@ logic [7:0] u8_scan_y;
 logic [7:0] u8_prev_x;
 
 logic [7:0] u8_prev_y;
+
+logic [7:0] u8_region;
+
+logic [7:0] u8_prev_region;
+
+logic [15:0] u16_ground_cell;
+
+logic [1:0] u2_ground_rot;
+
+logic [7:0] u8_ground_term_x;
+
+logic [7:0] u8_ground_term_y;
+
+logic [7:0] u8_ground_region;
 
 logic u1_need0;
 
@@ -424,45 +406,39 @@ logic u1_region_is_ground;
 
 logic [15:0] __for_idx_0;
 
-logic [15:0] __for_idx_1;
+logic [7:0] __for_idx_1;
 
-logic [15:0] __for_idx_2;
+logic [7:0] __for_idx_2;
 
 logic [7:0] __for_idx_3;
 
 logic [7:0] __for_idx_4;
 
-logic [15:0] __for_idx_5;
+logic [7:0] __for_idx_5;
 
 logic [7:0] __for_idx_6;
 
 logic [7:0] __for_idx_7;
 
+logic [7:0] __for_idx_8;
+
+logic [7:0] __for_idx_9;
+
+logic [7:0] __for_idx_10;
+
 
 
 logic [15:0] next_u16_idx;
 
-logic [15:0] next_u16_ground_idx;
-
 logic [7:0] next_u8_type;
-
-logic [7:0] next_u8_ground_type;
 
 logic [7:0] next_u8_anchor_x;
 
 logic [7:0] next_u8_anchor_y;
 
-logic [7:0] next_u8_ground_anchor_x;
-
-logic [7:0] next_u8_ground_anchor_y;
-
 logic [1:0] next_u2_rot;
 
 logic [1:0] next_u2_dir0;
-
-logic [1:0] next_u2_ground_rot;
-
-logic [1:0] next_u2_ground_dir0;
 
 logic [7:0] next_u8_term0_x;
 
@@ -472,19 +448,9 @@ logic [7:0] next_u8_term1_x;
 
 logic [7:0] next_u8_term1_y;
 
-logic [7:0] next_u8_ground_term_x;
-
-logic [7:0] next_u8_ground_term_y;
-
 logic [7:0] next_u8_raw0;
 
 logic [7:0] next_u8_raw1;
-
-logic [7:0] next_u8_ground_region;
-
-logic [7:0] next_u8_region;
-
-logic [7:0] next_u8_prev_region;
 
 logic [7:0] next_u8_node0;
 
@@ -500,6 +466,20 @@ logic [7:0] next_u8_prev_x;
 
 logic [7:0] next_u8_prev_y;
 
+logic [7:0] next_u8_region;
+
+logic [7:0] next_u8_prev_region;
+
+logic [15:0] next_u16_ground_cell;
+
+logic [1:0] next_u2_ground_rot;
+
+logic [7:0] next_u8_ground_term_x;
+
+logic [7:0] next_u8_ground_term_y;
+
+logic [7:0] next_u8_ground_region;
+
 logic next_u1_need0;
 
 logic next_u1_need1;
@@ -514,19 +494,25 @@ logic next_u1_region_is_ground;
 
 logic [15:0] next___for_idx_0;
 
-logic [15:0] next___for_idx_1;
+logic [7:0] next___for_idx_1;
 
-logic [15:0] next___for_idx_2;
+logic [7:0] next___for_idx_2;
 
 logic [7:0] next___for_idx_3;
 
 logic [7:0] next___for_idx_4;
 
-logic [15:0] next___for_idx_5;
+logic [7:0] next___for_idx_5;
 
 logic [7:0] next___for_idx_6;
 
 logic [7:0] next___for_idx_7;
+
+logic [7:0] next___for_idx_8;
+
+logic [7:0] next___for_idx_9;
+
+logic [7:0] next___for_idx_10;
 
 
 always_ff @(posedge clk or negedge rst_n) begin
@@ -535,27 +521,15 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u16_idx <=0;
 
-        u16_ground_idx <=0;
-
         u8_type <=0;
-
-        u8_ground_type <=0;
 
         u8_anchor_x <=0;
 
         u8_anchor_y <=0;
 
-        u8_ground_anchor_x <=0;
-
-        u8_ground_anchor_y <=0;
-
         u2_rot <=0;
 
         u2_dir0 <=0;
-
-        u2_ground_rot <=0;
-
-        u2_ground_dir0 <=0;
 
         u8_term0_x <=0;
 
@@ -565,19 +539,9 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u8_term1_y <=0;
 
-        u8_ground_term_x <=0;
-
-        u8_ground_term_y <=0;
-
         u8_raw0 <=0;
 
         u8_raw1 <=0;
-
-        u8_ground_region <=0;
-
-        u8_region <=0;
-
-        u8_prev_region <=0;
 
         u8_node0 <=0;
 
@@ -592,6 +556,20 @@ always_ff @(posedge clk or negedge rst_n) begin
         u8_prev_x <=0;
 
         u8_prev_y <=0;
+
+        u8_region <=0;
+
+        u8_prev_region <=0;
+
+        u16_ground_cell <=0;
+
+        u2_ground_rot <=0;
+
+        u8_ground_term_x <=0;
+
+        u8_ground_term_y <=0;
+
+        u8_ground_region <=0;
 
         u1_need0 <=0;
 
@@ -622,33 +600,27 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         __for_idx_7 <=0;
 
+        __for_idx_8 <=0;
+
+        __for_idx_9 <=0;
+
+        __for_idx_10 <=0;
+
 
     end else begin
         state <= next_state;
 
         u16_idx <= next_u16_idx;
 
-        u16_ground_idx <= next_u16_ground_idx;
-
         u8_type <= next_u8_type;
-
-        u8_ground_type <= next_u8_ground_type;
 
         u8_anchor_x <= next_u8_anchor_x;
 
         u8_anchor_y <= next_u8_anchor_y;
 
-        u8_ground_anchor_x <= next_u8_ground_anchor_x;
-
-        u8_ground_anchor_y <= next_u8_ground_anchor_y;
-
         u2_rot <= next_u2_rot;
 
         u2_dir0 <= next_u2_dir0;
-
-        u2_ground_rot <= next_u2_ground_rot;
-
-        u2_ground_dir0 <= next_u2_ground_dir0;
 
         u8_term0_x <= next_u8_term0_x;
 
@@ -658,19 +630,9 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u8_term1_y <= next_u8_term1_y;
 
-        u8_ground_term_x <= next_u8_ground_term_x;
-
-        u8_ground_term_y <= next_u8_ground_term_y;
-
         u8_raw0 <= next_u8_raw0;
 
         u8_raw1 <= next_u8_raw1;
-
-        u8_ground_region <= next_u8_ground_region;
-
-        u8_region <= next_u8_region;
-
-        u8_prev_region <= next_u8_prev_region;
 
         u8_node0 <= next_u8_node0;
 
@@ -685,6 +647,20 @@ always_ff @(posedge clk or negedge rst_n) begin
         u8_prev_x <= next_u8_prev_x;
 
         u8_prev_y <= next_u8_prev_y;
+
+        u8_region <= next_u8_region;
+
+        u8_prev_region <= next_u8_prev_region;
+
+        u16_ground_cell <= next_u16_ground_cell;
+
+        u2_ground_rot <= next_u2_ground_rot;
+
+        u8_ground_term_x <= next_u8_ground_term_x;
+
+        u8_ground_term_y <= next_u8_ground_term_y;
+
+        u8_ground_region <= next_u8_ground_region;
 
         u1_need0 <= next_u1_need0;
 
@@ -715,6 +691,12 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         __for_idx_7 <= next___for_idx_7;
 
+        __for_idx_8 <= next___for_idx_8;
+
+        __for_idx_9 <= next___for_idx_9;
+
+        __for_idx_10 <= next___for_idx_10;
+
 
     end
 end
@@ -726,27 +708,15 @@ always_comb begin
 
     next_u16_idx = u16_idx;
 
-    next_u16_ground_idx = u16_ground_idx;
-
     next_u8_type = u8_type;
-
-    next_u8_ground_type = u8_ground_type;
 
     next_u8_anchor_x = u8_anchor_x;
 
     next_u8_anchor_y = u8_anchor_y;
 
-    next_u8_ground_anchor_x = u8_ground_anchor_x;
-
-    next_u8_ground_anchor_y = u8_ground_anchor_y;
-
     next_u2_rot = u2_rot;
 
     next_u2_dir0 = u2_dir0;
-
-    next_u2_ground_rot = u2_ground_rot;
-
-    next_u2_ground_dir0 = u2_ground_dir0;
 
     next_u8_term0_x = u8_term0_x;
 
@@ -756,19 +726,9 @@ always_comb begin
 
     next_u8_term1_y = u8_term1_y;
 
-    next_u8_ground_term_x = u8_ground_term_x;
-
-    next_u8_ground_term_y = u8_ground_term_y;
-
     next_u8_raw0 = u8_raw0;
 
     next_u8_raw1 = u8_raw1;
-
-    next_u8_ground_region = u8_ground_region;
-
-    next_u8_region = u8_region;
-
-    next_u8_prev_region = u8_prev_region;
 
     next_u8_node0 = u8_node0;
 
@@ -783,6 +743,20 @@ always_comb begin
     next_u8_prev_x = u8_prev_x;
 
     next_u8_prev_y = u8_prev_y;
+
+    next_u8_region = u8_region;
+
+    next_u8_prev_region = u8_prev_region;
+
+    next_u16_ground_cell = u16_ground_cell;
+
+    next_u2_ground_rot = u2_ground_rot;
+
+    next_u8_ground_term_x = u8_ground_term_x;
+
+    next_u8_ground_term_y = u8_ground_term_y;
+
+    next_u8_ground_region = u8_ground_region;
 
     next_u1_need0 = u1_need0;
 
@@ -813,6 +787,12 @@ always_comb begin
 
     next___for_idx_7 = __for_idx_7;
 
+    next___for_idx_8 = __for_idx_8;
+
+    next___for_idx_9 = __for_idx_9;
+
+    next___for_idx_10 = __for_idx_10;
+
 
 
     fetchComponentType_start =0;
@@ -842,6 +822,12 @@ always_comb begin
     fetchR_i =0;
 
     fetchR_j =0;
+
+    fetchCell_start =0;
+
+    fetchCell_i =0;
+
+    fetchCell_j =0;
 
     storeNode1_start =0;
 
@@ -877,34 +863,22 @@ always_comb begin
 
             // LIR block: entry
 
-            // line 30: u16_idx = 0
+            // line 22: u16_idx = 0
 
 
 
 
             next_u16_idx = 16'd0;
 
-            next_u16_ground_idx = 16'd0;
-
             next_u8_type = 8'd0;
-
-            next_u8_ground_type = 8'd0;
 
             next_u8_anchor_x = 8'd0;
 
             next_u8_anchor_y = 8'd0;
 
-            next_u8_ground_anchor_x = 8'd0;
-
-            next_u8_ground_anchor_y = 8'd0;
-
             next_u2_rot = 2'd0;
 
             next_u2_dir0 = 2'd0;
-
-            next_u2_ground_rot = 2'd0;
-
-            next_u2_ground_dir0 = 2'd0;
 
             next_u8_term0_x = 8'd0;
 
@@ -914,23 +888,13 @@ always_comb begin
 
             next_u8_term1_y = 8'd0;
 
-            next_u8_ground_term_x = 8'd0;
-
-            next_u8_ground_term_y = 8'd0;
-
             next_u8_raw0 = 8'd0;
 
             next_u8_raw1 = 8'd0;
 
-            next_u8_ground_region = 8'd0;
+            next_u8_node0 = 8'd255;
 
-            next_u8_region = 8'd0;
-
-            next_u8_prev_region = 8'd0;
-
-            next_u8_node0 = 8'd0;
-
-            next_u8_node1 = 8'd0;
+            next_u8_node1 = 8'd255;
 
             next_u8_next_node = 8'd0;
 
@@ -941,6 +905,20 @@ always_comb begin
             next_u8_prev_x = 8'd0;
 
             next_u8_prev_y = 8'd0;
+
+            next_u8_region = 8'd0;
+
+            next_u8_prev_region = 8'd0;
+
+            next_u16_ground_cell = 16'd0;
+
+            next_u2_ground_rot = 2'd0;
+
+            next_u8_ground_term_x = 8'd0;
+
+            next_u8_ground_term_y = 8'd0;
+
+            next_u8_ground_region = 8'd0;
 
             next_u1_need0 = 1'd0;
 
@@ -966,7 +944,7 @@ always_comb begin
 
             // LIR block: for_header_0
 
-            // line 69: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)         u8_node0 = 0         u8_node1 = 0         u8_raw0 = 0         u8_raw1 = 0         u1_need0 = 0         u1_need1 = 0         u1_raw0_is_ground = 0         u1_raw1_is_ground = 0          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              # Terminal 0 is on the side opposite the component growth direction.             u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              # Terminal 1 is beyond the far end of the two-cell component.             u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 0                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 0                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 1                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1          storeNode0(idx=u16_idx, node_i=u8_node0)         storeNode1(idx=u16_idx, node_i=u8_node1)
+            // line 55: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)         u8_node0 = 255         u8_node1 = 255         u8_raw0 = 0         u8_raw1 = 0         u1_need0 = 0         u1_need1 = 0         u1_raw0_is_ground = 0         u1_raw1_is_ground = 0          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 255                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 255                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 0                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1          storeNode0(idx=u16_idx, node_i=u8_node0)         storeNode1(idx=u16_idx, node_i=u8_node1)
 
 
 
@@ -985,7 +963,7 @@ always_comb begin
 
             // LIR block: for_body_1
 
-            // line 69: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)         u8_node0 = 0         u8_node1 = 0         u8_raw0 = 0         u8_raw1 = 0         u1_need0 = 0         u1_need1 = 0         u1_raw0_is_ground = 0         u1_raw1_is_ground = 0          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              # Terminal 0 is on the side opposite the component growth direction.             u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              # Terminal 1 is beyond the far end of the two-cell component.             u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 0                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 0                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 1                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1          storeNode0(idx=u16_idx, node_i=u8_node0)         storeNode1(idx=u16_idx, node_i=u8_node1)
+            // line 55: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)         u8_node0 = 255         u8_node1 = 255         u8_raw0 = 0         u8_raw1 = 0         u1_need0 = 0         u1_need1 = 0         u1_raw0_is_ground = 0         u1_raw1_is_ground = 0          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 255                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 255                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 0                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1          storeNode0(idx=u16_idx, node_i=u8_node0)         storeNode1(idx=u16_idx, node_i=u8_node1)
 
 
 
@@ -1006,7 +984,7 @@ always_comb begin
 
             // LIR block: for_body_1
 
-            // line 69: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)         u8_node0 = 0         u8_node1 = 0         u8_raw0 = 0         u8_raw1 = 0         u1_need0 = 0         u1_need1 = 0         u1_raw0_is_ground = 0         u1_raw1_is_ground = 0          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              # Terminal 0 is on the side opposite the component growth direction.             u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              # Terminal 1 is beyond the far end of the two-cell component.             u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 0                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 0                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 1                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1          storeNode0(idx=u16_idx, node_i=u8_node0)         storeNode1(idx=u16_idx, node_i=u8_node1)
+            // line 55: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)         u8_node0 = 255         u8_node1 = 255         u8_raw0 = 0         u8_raw1 = 0         u1_need0 = 0         u1_need1 = 0         u1_raw0_is_ground = 0         u1_raw1_is_ground = 0          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 255                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 255                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 0                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1          storeNode0(idx=u16_idx, node_i=u8_node0)         storeNode1(idx=u16_idx, node_i=u8_node1)
 
             // wait for blocking primitive: fetchComponentType
 
@@ -1044,14 +1022,14 @@ always_comb begin
 
             // LIR block: after_call_3
 
-            // line 71: u8_node0 = 0
+            // line 57: u8_node0 = 255
 
 
 
 
-            next_u8_node0 = 8'd0;
+            next_u8_node0 = 8'd255;
 
-            next_u8_node1 = 8'd0;
+            next_u8_node1 = 8'd255;
 
             next_u8_raw0 = 8'd0;
 
@@ -1079,7 +1057,7 @@ always_comb begin
 
             // LIR block: if_then_4
 
-            // line 81: u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)
+            // line 67: u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)
 
 
 
@@ -1098,7 +1076,7 @@ always_comb begin
 
             // LIR block: if_then_4
 
-            // line 81: u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)
+            // line 67: u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)
 
             // wait for blocking primitive: fetchAnchorPositionX
 
@@ -1122,7 +1100,7 @@ always_comb begin
 
             // LIR block: if_end_5
 
-            // line 221: storeNode0(idx=u16_idx, node_i=u8_node0)
+            // line 159: storeNode0(idx=u16_idx, node_i=u8_node0)
 
 
 
@@ -1143,7 +1121,7 @@ always_comb begin
 
             // LIR block: if_end_5
 
-            // line 221: storeNode0(idx=u16_idx, node_i=u8_node0)
+            // line 159: storeNode0(idx=u16_idx, node_i=u8_node0)
 
             // wait for blocking primitive: storeNode0
 
@@ -1165,7 +1143,7 @@ always_comb begin
 
             // LIR block: after_call_6
 
-            // line 82: u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)
+            // line 68: u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)
 
 
 
@@ -1184,7 +1162,7 @@ always_comb begin
 
             // LIR block: after_call_6
 
-            // line 82: u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)
+            // line 68: u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)
 
             // wait for blocking primitive: fetchAnchorPositionY
 
@@ -1208,7 +1186,7 @@ always_comb begin
 
             // LIR block: after_call_7
 
-            // line 83: u2_rot = fetchComponentRotation(idx=u16_idx)
+            // line 69: u2_rot = fetchComponentRotation(idx=u16_idx)
 
 
 
@@ -1227,7 +1205,7 @@ always_comb begin
 
             // LIR block: after_call_7
 
-            // line 83: u2_rot = fetchComponentRotation(idx=u16_idx)
+            // line 69: u2_rot = fetchComponentRotation(idx=u16_idx)
 
             // wait for blocking primitive: fetchComponentRotation
 
@@ -1251,7 +1229,7 @@ always_comb begin
 
             // LIR block: after_call_8
 
-            // line 86: u2_dir0 = get_opp_dir_comb(d=u2_rot)
+            // line 71: u2_dir0 = get_opp_dir_comb(d=u2_rot)
 
 
 
@@ -1276,7 +1254,7 @@ always_comb begin
 
             // LIR block: if_then_9
 
-            // line 90: u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)
+            // line 75: u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)
 
 
 
@@ -1297,7 +1275,7 @@ always_comb begin
 
             // LIR block: if_then_9
 
-            // line 90: u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)
+            // line 75: u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)
 
             // wait for blocking primitive: fetchR
 
@@ -1321,7 +1299,7 @@ always_comb begin
 
             // LIR block: if_end_10
 
-            // line 93: u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)
+            // line 77: u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)
 
 
 
@@ -1348,7 +1326,7 @@ always_comb begin
 
             // LIR block: after_call_11
 
-            // line 89: if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)
+            // line 74: if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)
 
 
 
@@ -1363,7 +1341,7 @@ always_comb begin
 
             // LIR block: if_then_12
 
-            // line 98: u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)
+            // line 82: u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)
 
 
 
@@ -1384,7 +1362,7 @@ always_comb begin
 
             // LIR block: if_then_12
 
-            // line 98: u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)
+            // line 82: u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)
 
             // wait for blocking primitive: fetchR
 
@@ -1408,7 +1386,7 @@ always_comb begin
 
             // LIR block: if_end_13
 
-            // line 100: if u8_raw0 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 0                 else:                     u1_need0 = 1
+            // line 84: if u8_raw0 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 255                 else:                     u1_need0 = 1
 
 
 
@@ -1427,7 +1405,7 @@ always_comb begin
 
             // LIR block: after_call_14
 
-            // line 97: if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)
+            // line 81: if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)
 
 
 
@@ -1442,12 +1420,12 @@ always_comb begin
 
             // LIR block: if_then_15
 
-            // line 101: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1
+            // line 85: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
 
 
-            next___for_idx_1 = 16'd0;
+            next___for_idx_1 = 8'd0;
 
 
 
@@ -1459,7 +1437,7 @@ always_comb begin
 
             // LIR block: if_end_16
 
-            // line 128: if u8_raw1 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 0                 else:                     u1_need1 = 1
+            // line 101: if u8_raw1 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 255                 else:                     u1_need1 = 1
 
 
 
@@ -1478,14 +1456,14 @@ always_comb begin
 
             // LIR block: for_header_17
 
-            // line 101: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1
+            // line 85: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
 
 
 
 
-            if ((__for_idx_1 < par_elem_n)) begin
+            if ((__for_idx_1 < grid_height)) begin
                 next_state = S_FOR_BODY_18;
             end else begin
                 next_state = S_FOR_END_19;
@@ -1497,44 +1475,18 @@ always_comb begin
 
             // LIR block: for_body_18
 
-            // line 101: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1
+            // line 85: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
 
 
-            next_u16_ground_idx = __for_idx_1;
+            next_u8_scan_y = __for_idx_1;
 
-
-            fetchComponentType_idx = __for_idx_1;
-
-            fetchComponentType_start = 1'b1;
-
-
-            next_state = S_FOR_BODY_18_WAIT;
-
-        end
-
-        S_FOR_BODY_18_WAIT: begin
-
-            // LIR block: for_body_18
-
-            // line 101: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1
-
-            // wait for blocking primitive: fetchComponentType
+            next___for_idx_2 = 8'd0;
 
 
 
-
-
-
-            if (fetchComponentType_done) begin
-
-                next_u8_ground_type = fetchComponentType_result;
-
-                next_state = S_AFTER_CALL_20;
-            end else begin
-                next_state = S_FOR_BODY_18_WAIT;
-            end
+            next_state = S_FOR_HEADER_20;
 
         end
 
@@ -1542,7 +1494,7 @@ always_comb begin
 
             // LIR block: for_end_19
 
-            // line 123: if u1_raw0_is_ground:                     u8_node0 = 0                 else:                     u1_need0 = 1
+            // line 96: if u1_raw0_is_ground:                     u8_node0 = 255                 else:                     u1_need0 = 1
 
 
 
@@ -1557,78 +1509,82 @@ always_comb begin
 
         end
 
-        S_AFTER_CALL_20: begin
+        S_FOR_HEADER_20: begin
 
-            // LIR block: after_call_20
+            // LIR block: for_header_20
 
-            // line 103: if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1
-
-
+            // line 86: for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
 
 
-            if (is_ground_component_comb(u8_ground_type)) begin
-                next_state = S_IF_THEN_21;
+
+
+            if ((__for_idx_2 < grid_width)) begin
+                next_state = S_FOR_BODY_21;
             end else begin
-                next_state = S_IF_END_22;
+                next_state = S_FOR_END_22;
             end
 
         end
 
-        S_IF_THEN_21: begin
+        S_FOR_BODY_21: begin
 
-            // LIR block: if_then_21
+            // LIR block: for_body_21
 
-            // line 104: u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)
-
-
+            // line 86: for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
 
-            fetchAnchorPositionX_idx = u16_ground_idx;
 
-            fetchAnchorPositionX_start = 1'b1;
+            next_u8_scan_x = __for_idx_2;
 
 
-            next_state = S_IF_THEN_21_WAIT;
+            fetchCell_i = __for_idx_2;
+
+            fetchCell_j = u8_scan_y;
+
+            fetchCell_start = 1'b1;
+
+
+            next_state = S_FOR_BODY_21_WAIT;
 
         end
 
-        S_IF_THEN_21_WAIT: begin
+        S_FOR_BODY_21_WAIT: begin
 
-            // LIR block: if_then_21
+            // LIR block: for_body_21
 
-            // line 104: u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)
+            // line 86: for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
-            // wait for blocking primitive: fetchAnchorPositionX
-
-
+            // wait for blocking primitive: fetchCell
 
 
 
 
-            if (fetchAnchorPositionX_done) begin
 
-                next_u8_ground_anchor_x = fetchAnchorPositionX_result;
+
+            if (fetchCell_done) begin
+
+                next_u16_ground_cell = fetchCell_result;
 
                 next_state = S_AFTER_CALL_23;
             end else begin
-                next_state = S_IF_THEN_21_WAIT;
+                next_state = S_FOR_BODY_21_WAIT;
             end
 
         end
 
-        S_IF_END_22: begin
+        S_FOR_END_22: begin
 
-            // LIR block: if_end_22
+            // LIR block: for_end_22
 
-            // line 101: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1
-
-
+            // line 85: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
-            next___for_idx_1 = (__for_idx_1 + 16'd1);
+
+
+            next___for_idx_1 = (__for_idx_1 + 8'd1);
 
 
 
@@ -1640,106 +1596,39 @@ always_comb begin
 
             // LIR block: after_call_23
 
-            // line 105: u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)
-
-
-
-
-
-            fetchAnchorPositionY_idx = u16_ground_idx;
-
-            fetchAnchorPositionY_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_23_WAIT;
-
-        end
-
-        S_AFTER_CALL_23_WAIT: begin
-
-            // LIR block: after_call_23
-
-            // line 105: u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)
-
-            // wait for blocking primitive: fetchAnchorPositionY
+            // line 88: if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
 
 
 
 
-            if (fetchAnchorPositionY_done) begin
-
-                next_u8_ground_anchor_y = fetchAnchorPositionY_result;
-
-                next_state = S_AFTER_CALL_24;
+            if (is_ground_cell_comb(u16_ground_cell)) begin
+                next_state = S_IF_THEN_24;
             end else begin
-                next_state = S_AFTER_CALL_23_WAIT;
+                next_state = S_IF_END_25;
             end
 
         end
 
-        S_AFTER_CALL_24: begin
+        S_IF_THEN_24: begin
 
-            // LIR block: after_call_24
+            // LIR block: if_then_24
 
-            // line 106: u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)
-
-
-
-
-
-            fetchComponentRotation_idx = u16_ground_idx;
-
-            fetchComponentRotation_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_24_WAIT;
-
-        end
-
-        S_AFTER_CALL_24_WAIT: begin
-
-            // LIR block: after_call_24
-
-            // line 106: u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)
-
-            // wait for blocking primitive: fetchComponentRotation
+            // line 89: u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)
 
 
 
 
+            next_u2_ground_rot = get_cell_rotation_comb(u16_ground_cell);
 
+            next_u8_ground_term_x = get_nxt_i_comb(u8_scan_x, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell)));
 
-            if (fetchComponentRotation_done) begin
-
-                next_u2_ground_rot = fetchComponentRotation_result;
-
-                next_state = S_AFTER_CALL_25;
-            end else begin
-                next_state = S_AFTER_CALL_24_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_25: begin
-
-            // LIR block: after_call_25
-
-            // line 107: u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)
+            next_u8_ground_term_y = get_nxt_j_comb(u8_scan_y, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell)));
 
 
 
-
-            next_u2_ground_dir0 = get_opp_dir_comb(u2_ground_rot);
-
-            next_u8_ground_term_x = get_nxt_i_comb(u8_ground_anchor_x, get_opp_dir_comb(u2_ground_rot));
-
-            next_u8_ground_term_y = get_nxt_j_comb(u8_ground_anchor_y, get_opp_dir_comb(u2_ground_rot));
-
-
-
-            if (((get_nxt_i_comb(u8_ground_anchor_x, get_opp_dir_comb(u2_ground_rot)) < grid_width) && (get_nxt_j_comb(u8_ground_anchor_y, get_opp_dir_comb(u2_ground_rot)) < grid_height))) begin
+            if (((get_nxt_i_comb(u8_scan_x, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell))) < grid_width) && (get_nxt_j_comb(u8_scan_y, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell))) < grid_height))) begin
                 next_state = S_IF_THEN_26;
             end else begin
                 next_state = S_IF_END_27;
@@ -1747,11 +1636,28 @@ always_comb begin
 
         end
 
+        S_IF_END_25: begin
+
+            // LIR block: if_end_25
+
+            // line 86: for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
+
+
+
+
+            next___for_idx_2 = (__for_idx_2 + 8'd1);
+
+
+
+            next_state = S_FOR_HEADER_20;
+
+        end
+
         S_IF_THEN_26: begin
 
             // LIR block: if_then_26
 
-            // line 118: u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )
+            // line 93: u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)
 
 
 
@@ -1772,7 +1678,7 @@ always_comb begin
 
             // LIR block: if_then_26
 
-            // line 118: u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )
+            // line 93: u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)
 
             // wait for blocking primitive: fetchR
 
@@ -1796,14 +1702,14 @@ always_comb begin
 
             // LIR block: if_end_27
 
-            // line 103: if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1
+            // line 88: if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
 
 
 
 
-            next_state = S_IF_END_22;
+            next_state = S_IF_END_25;
 
         end
 
@@ -1811,7 +1717,7 @@ always_comb begin
 
             // LIR block: after_call_28
 
-            // line 121: if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1
+            // line 94: if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
 
@@ -1830,7 +1736,7 @@ always_comb begin
 
             // LIR block: if_then_29
 
-            // line 122: u1_raw0_is_ground = 1
+            // line 95: u1_raw0_is_ground = 1
 
 
 
@@ -1847,7 +1753,7 @@ always_comb begin
 
             // LIR block: if_end_30
 
-            // line 114: if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1
+            // line 92: if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1
 
 
 
@@ -1862,12 +1768,12 @@ always_comb begin
 
             // LIR block: if_then_31
 
-            // line 124: u8_node0 = 0
+            // line 97: u8_node0 = 255
 
 
 
 
-            next_u8_node0 = 8'd0;
+            next_u8_node0 = 8'd255;
 
 
 
@@ -1879,7 +1785,7 @@ always_comb begin
 
             // LIR block: if_end_32
 
-            // line 100: if u8_raw0 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 0                 else:                     u1_need0 = 1
+            // line 84: if u8_raw0 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 255                 else:                     u1_need0 = 1
 
 
 
@@ -1894,7 +1800,7 @@ always_comb begin
 
             // LIR block: if_else_33
 
-            // line 126: u1_need0 = 1
+            // line 99: u1_need0 = 1
 
 
 
@@ -1911,12 +1817,12 @@ always_comb begin
 
             // LIR block: if_then_34
 
-            // line 129: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1
+            // line 102: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
 
 
-            next___for_idx_2 = 16'd0;
+            next___for_idx_3 = 8'd0;
 
 
 
@@ -1928,7 +1834,7 @@ always_comb begin
 
             // LIR block: if_end_35
 
-            // line 156: if u1_need0 or u1_need1:                 u8_next_node = 1                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 118: if u1_need0 or u1_need1:                 u8_next_node = 0                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
@@ -1947,14 +1853,14 @@ always_comb begin
 
             // LIR block: for_header_36
 
-            // line 129: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1
+            // line 102: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
 
 
 
 
-            if ((__for_idx_2 < par_elem_n)) begin
+            if ((__for_idx_3 < grid_height)) begin
                 next_state = S_FOR_BODY_37;
             end else begin
                 next_state = S_FOR_END_38;
@@ -1966,44 +1872,18 @@ always_comb begin
 
             // LIR block: for_body_37
 
-            // line 129: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1
+            // line 102: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
 
 
-            next_u16_ground_idx = __for_idx_2;
+            next_u8_scan_y = __for_idx_3;
 
-
-            fetchComponentType_idx = __for_idx_2;
-
-            fetchComponentType_start = 1'b1;
-
-
-            next_state = S_FOR_BODY_37_WAIT;
-
-        end
-
-        S_FOR_BODY_37_WAIT: begin
-
-            // LIR block: for_body_37
-
-            // line 129: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1
-
-            // wait for blocking primitive: fetchComponentType
+            next___for_idx_4 = 8'd0;
 
 
 
-
-
-
-            if (fetchComponentType_done) begin
-
-                next_u8_ground_type = fetchComponentType_result;
-
-                next_state = S_AFTER_CALL_39;
-            end else begin
-                next_state = S_FOR_BODY_37_WAIT;
-            end
+            next_state = S_FOR_HEADER_39;
 
         end
 
@@ -2011,7 +1891,7 @@ always_comb begin
 
             // LIR block: for_end_38
 
-            // line 151: if u1_raw1_is_ground:                     u8_node1 = 0                 else:                     u1_need1 = 1
+            // line 113: if u1_raw1_is_ground:                     u8_node1 = 255                 else:                     u1_need1 = 1
 
 
 
@@ -2026,78 +1906,82 @@ always_comb begin
 
         end
 
-        S_AFTER_CALL_39: begin
+        S_FOR_HEADER_39: begin
 
-            // LIR block: after_call_39
+            // LIR block: for_header_39
 
-            // line 131: if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1
-
-
+            // line 103: for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
 
 
-            if (is_ground_component_comb(u8_ground_type)) begin
-                next_state = S_IF_THEN_40;
+
+
+            if ((__for_idx_4 < grid_width)) begin
+                next_state = S_FOR_BODY_40;
             end else begin
-                next_state = S_IF_END_41;
+                next_state = S_FOR_END_41;
             end
 
         end
 
-        S_IF_THEN_40: begin
+        S_FOR_BODY_40: begin
 
-            // LIR block: if_then_40
+            // LIR block: for_body_40
 
-            // line 132: u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)
-
-
+            // line 103: for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
 
-            fetchAnchorPositionX_idx = u16_ground_idx;
 
-            fetchAnchorPositionX_start = 1'b1;
+            next_u8_scan_x = __for_idx_4;
 
 
-            next_state = S_IF_THEN_40_WAIT;
+            fetchCell_i = __for_idx_4;
+
+            fetchCell_j = u8_scan_y;
+
+            fetchCell_start = 1'b1;
+
+
+            next_state = S_FOR_BODY_40_WAIT;
 
         end
 
-        S_IF_THEN_40_WAIT: begin
+        S_FOR_BODY_40_WAIT: begin
 
-            // LIR block: if_then_40
+            // LIR block: for_body_40
 
-            // line 132: u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)
+            // line 103: for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
-            // wait for blocking primitive: fetchAnchorPositionX
-
-
+            // wait for blocking primitive: fetchCell
 
 
 
 
-            if (fetchAnchorPositionX_done) begin
 
-                next_u8_ground_anchor_x = fetchAnchorPositionX_result;
+
+            if (fetchCell_done) begin
+
+                next_u16_ground_cell = fetchCell_result;
 
                 next_state = S_AFTER_CALL_42;
             end else begin
-                next_state = S_IF_THEN_40_WAIT;
+                next_state = S_FOR_BODY_40_WAIT;
             end
 
         end
 
-        S_IF_END_41: begin
+        S_FOR_END_41: begin
 
-            // LIR block: if_end_41
+            // LIR block: for_end_41
 
-            // line 129: for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1
-
-
+            // line 102: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
-            next___for_idx_2 = (__for_idx_2 + 16'd1);
+
+
+            next___for_idx_3 = (__for_idx_3 + 8'd1);
 
 
 
@@ -2109,106 +1993,39 @@ always_comb begin
 
             // LIR block: after_call_42
 
-            // line 133: u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)
-
-
-
-
-
-            fetchAnchorPositionY_idx = u16_ground_idx;
-
-            fetchAnchorPositionY_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_42_WAIT;
-
-        end
-
-        S_AFTER_CALL_42_WAIT: begin
-
-            // LIR block: after_call_42
-
-            // line 133: u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)
-
-            // wait for blocking primitive: fetchAnchorPositionY
+            // line 105: if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
 
 
 
 
-            if (fetchAnchorPositionY_done) begin
-
-                next_u8_ground_anchor_y = fetchAnchorPositionY_result;
-
-                next_state = S_AFTER_CALL_43;
+            if (is_ground_cell_comb(u16_ground_cell)) begin
+                next_state = S_IF_THEN_43;
             end else begin
-                next_state = S_AFTER_CALL_42_WAIT;
+                next_state = S_IF_END_44;
             end
 
         end
 
-        S_AFTER_CALL_43: begin
+        S_IF_THEN_43: begin
 
-            // LIR block: after_call_43
+            // LIR block: if_then_43
 
-            // line 134: u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)
-
-
-
-
-
-            fetchComponentRotation_idx = u16_ground_idx;
-
-            fetchComponentRotation_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_43_WAIT;
-
-        end
-
-        S_AFTER_CALL_43_WAIT: begin
-
-            // LIR block: after_call_43
-
-            // line 134: u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)
-
-            // wait for blocking primitive: fetchComponentRotation
+            // line 106: u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)
 
 
 
 
+            next_u2_ground_rot = get_cell_rotation_comb(u16_ground_cell);
 
+            next_u8_ground_term_x = get_nxt_i_comb(u8_scan_x, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell)));
 
-            if (fetchComponentRotation_done) begin
-
-                next_u2_ground_rot = fetchComponentRotation_result;
-
-                next_state = S_AFTER_CALL_44;
-            end else begin
-                next_state = S_AFTER_CALL_43_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_44: begin
-
-            // LIR block: after_call_44
-
-            // line 135: u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)
+            next_u8_ground_term_y = get_nxt_j_comb(u8_scan_y, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell)));
 
 
 
-
-            next_u2_ground_dir0 = get_opp_dir_comb(u2_ground_rot);
-
-            next_u8_ground_term_x = get_nxt_i_comb(u8_ground_anchor_x, get_opp_dir_comb(u2_ground_rot));
-
-            next_u8_ground_term_y = get_nxt_j_comb(u8_ground_anchor_y, get_opp_dir_comb(u2_ground_rot));
-
-
-
-            if (((get_nxt_i_comb(u8_ground_anchor_x, get_opp_dir_comb(u2_ground_rot)) < grid_width) && (get_nxt_j_comb(u8_ground_anchor_y, get_opp_dir_comb(u2_ground_rot)) < grid_height))) begin
+            if (((get_nxt_i_comb(u8_scan_x, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell))) < grid_width) && (get_nxt_j_comb(u8_scan_y, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell))) < grid_height))) begin
                 next_state = S_IF_THEN_45;
             end else begin
                 next_state = S_IF_END_46;
@@ -2216,11 +2033,28 @@ always_comb begin
 
         end
 
+        S_IF_END_44: begin
+
+            // LIR block: if_end_44
+
+            // line 103: for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
+
+
+
+
+            next___for_idx_4 = (__for_idx_4 + 8'd1);
+
+
+
+            next_state = S_FOR_HEADER_39;
+
+        end
+
         S_IF_THEN_45: begin
 
             // LIR block: if_then_45
 
-            // line 146: u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )
+            // line 110: u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)
 
 
 
@@ -2241,7 +2075,7 @@ always_comb begin
 
             // LIR block: if_then_45
 
-            // line 146: u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )
+            // line 110: u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)
 
             // wait for blocking primitive: fetchR
 
@@ -2265,14 +2099,14 @@ always_comb begin
 
             // LIR block: if_end_46
 
-            // line 131: if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1
+            // line 105: if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
 
 
 
 
-            next_state = S_IF_END_41;
+            next_state = S_IF_END_44;
 
         end
 
@@ -2280,7 +2114,7 @@ always_comb begin
 
             // LIR block: after_call_47
 
-            // line 149: if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1
+            // line 111: if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
 
@@ -2299,7 +2133,7 @@ always_comb begin
 
             // LIR block: if_then_48
 
-            // line 150: u1_raw1_is_ground = 1
+            // line 112: u1_raw1_is_ground = 1
 
 
 
@@ -2316,7 +2150,7 @@ always_comb begin
 
             // LIR block: if_end_49
 
-            // line 142: if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1
+            // line 109: if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1
 
 
 
@@ -2331,12 +2165,12 @@ always_comb begin
 
             // LIR block: if_then_50
 
-            // line 152: u8_node1 = 0
+            // line 114: u8_node1 = 255
 
 
 
 
-            next_u8_node1 = 8'd0;
+            next_u8_node1 = 8'd255;
 
 
 
@@ -2348,7 +2182,7 @@ always_comb begin
 
             // LIR block: if_end_51
 
-            // line 128: if u8_raw1 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 0                 else:                     u1_need1 = 1
+            // line 101: if u8_raw1 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 255                 else:                     u1_need1 = 1
 
 
 
@@ -2363,7 +2197,7 @@ always_comb begin
 
             // LIR block: if_else_52
 
-            // line 154: u1_need1 = 1
+            // line 116: u1_need1 = 1
 
 
 
@@ -2380,14 +2214,14 @@ always_comb begin
 
             // LIR block: if_then_53
 
-            // line 157: u8_next_node = 1
+            // line 119: u8_next_node = 0
 
 
 
 
-            next_u8_next_node = 8'd1;
+            next_u8_next_node = 8'd0;
 
-            next___for_idx_3 = 8'd0;
+            next___for_idx_5 = 8'd0;
 
 
 
@@ -2399,7 +2233,7 @@ always_comb begin
 
             // LIR block: if_end_54
 
-            // line 80: if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              # Terminal 0 is on the side opposite the component growth direction.             u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              # Terminal 1 is beyond the far end of the two-cell component.             u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 0                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 0                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 1                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 66: if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 255                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 255                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 0                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
@@ -2414,14 +2248,14 @@ always_comb begin
 
             // LIR block: for_header_55
 
-            // line 158: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 120: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
 
 
 
-            if ((__for_idx_3 < grid_height)) begin
+            if ((__for_idx_5 < grid_height)) begin
                 next_state = S_FOR_BODY_56;
             end else begin
                 next_state = S_FOR_END_57;
@@ -2433,14 +2267,14 @@ always_comb begin
 
             // LIR block: for_body_56
 
-            // line 158: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 120: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
 
-            next_u8_scan_y = __for_idx_3;
+            next_u8_scan_y = __for_idx_5;
 
-            next___for_idx_4 = 8'd0;
+            next___for_idx_6 = 8'd0;
 
 
 
@@ -2452,7 +2286,7 @@ always_comb begin
 
             // LIR block: for_end_57
 
-            // line 156: if u1_need0 or u1_need1:                 u8_next_node = 1                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 118: if u1_need0 or u1_need1:                 u8_next_node = 0                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
@@ -2467,14 +2301,14 @@ always_comb begin
 
             // LIR block: for_header_58
 
-            // line 159: for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 121: for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
 
 
 
-            if ((__for_idx_4 < grid_width)) begin
+            if ((__for_idx_6 < grid_width)) begin
                 next_state = S_FOR_BODY_59;
             end else begin
                 next_state = S_FOR_END_60;
@@ -2486,15 +2320,15 @@ always_comb begin
 
             // LIR block: for_body_59
 
-            // line 159: for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 121: for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
 
-            next_u8_scan_x = __for_idx_4;
+            next_u8_scan_x = __for_idx_6;
 
 
-            fetchR_i = __for_idx_4;
+            fetchR_i = __for_idx_6;
 
             fetchR_j = u8_scan_y;
 
@@ -2509,7 +2343,7 @@ always_comb begin
 
             // LIR block: for_body_59
 
-            // line 159: for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 121: for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
             // wait for blocking primitive: fetchR
 
@@ -2533,12 +2367,12 @@ always_comb begin
 
             // LIR block: for_end_60
 
-            // line 158: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 120: for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
 
-            next___for_idx_3 = (__for_idx_3 + 8'd1);
+            next___for_idx_5 = (__for_idx_5 + 8'd1);
 
 
 
@@ -2550,7 +2384,7 @@ always_comb begin
 
             // LIR block: after_call_61
 
-            // line 161: u1_region_is_ground = 0
+            // line 123: u1_region_is_ground = 0
 
 
 
@@ -2571,12 +2405,12 @@ always_comb begin
 
             // LIR block: if_then_62
 
-            // line 163: for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
+            // line 125: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
 
-            next___for_idx_5 = 16'd0;
+            next___for_idx_7 = 8'd0;
 
 
 
@@ -2588,7 +2422,7 @@ always_comb begin
 
             // LIR block: if_end_63
 
-            // line 196: if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 136: if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
@@ -2607,14 +2441,14 @@ always_comb begin
 
             // LIR block: for_header_64
 
-            // line 163: for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
+            // line 125: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
 
 
 
-            if ((__for_idx_5 < par_elem_n)) begin
+            if ((__for_idx_7 < grid_height)) begin
                 next_state = S_FOR_BODY_65;
             end else begin
                 next_state = S_FOR_END_66;
@@ -2626,44 +2460,18 @@ always_comb begin
 
             // LIR block: for_body_65
 
-            // line 163: for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
+            // line 125: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
 
-            next_u16_ground_idx = __for_idx_5;
+            next_u8_prev_y = __for_idx_7;
 
-
-            fetchComponentType_idx = __for_idx_5;
-
-            fetchComponentType_start = 1'b1;
-
-
-            next_state = S_FOR_BODY_65_WAIT;
-
-        end
-
-        S_FOR_BODY_65_WAIT: begin
-
-            // LIR block: for_body_65
-
-            // line 163: for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
-
-            // wait for blocking primitive: fetchComponentType
+            next___for_idx_8 = 8'd0;
 
 
 
-
-
-
-            if (fetchComponentType_done) begin
-
-                next_u8_ground_type = fetchComponentType_result;
-
-                next_state = S_AFTER_CALL_67;
-            end else begin
-                next_state = S_FOR_BODY_65_WAIT;
-            end
+            next_state = S_FOR_HEADER_67;
 
         end
 
@@ -2671,7 +2479,7 @@ always_comb begin
 
             // LIR block: for_end_66
 
-            // line 162: if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
+            // line 124: if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
@@ -2682,78 +2490,82 @@ always_comb begin
 
         end
 
-        S_AFTER_CALL_67: begin
+        S_FOR_HEADER_67: begin
 
-            // LIR block: after_call_67
+            // LIR block: for_header_67
 
-            // line 167: if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
-
-
+            // line 126: for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
 
-            if (is_ground_component_comb(u8_ground_type)) begin
-                next_state = S_IF_THEN_68;
+
+
+            if ((__for_idx_8 < grid_width)) begin
+                next_state = S_FOR_BODY_68;
             end else begin
-                next_state = S_IF_END_69;
+                next_state = S_FOR_END_69;
             end
 
         end
 
-        S_IF_THEN_68: begin
+        S_FOR_BODY_68: begin
 
-            // LIR block: if_then_68
+            // LIR block: for_body_68
 
-            // line 168: u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )
-
-
+            // line 126: for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
-            fetchAnchorPositionX_idx = u16_ground_idx;
 
-            fetchAnchorPositionX_start = 1'b1;
+            next_u8_prev_x = __for_idx_8;
 
 
-            next_state = S_IF_THEN_68_WAIT;
+            fetchCell_i = __for_idx_8;
+
+            fetchCell_j = u8_prev_y;
+
+            fetchCell_start = 1'b1;
+
+
+            next_state = S_FOR_BODY_68_WAIT;
 
         end
 
-        S_IF_THEN_68_WAIT: begin
+        S_FOR_BODY_68_WAIT: begin
 
-            // LIR block: if_then_68
+            // LIR block: for_body_68
 
-            // line 168: u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )
+            // line 126: for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
-            // wait for blocking primitive: fetchAnchorPositionX
-
-
+            // wait for blocking primitive: fetchCell
 
 
 
 
-            if (fetchAnchorPositionX_done) begin
 
-                next_u8_ground_anchor_x = fetchAnchorPositionX_result;
+
+            if (fetchCell_done) begin
+
+                next_u16_ground_cell = fetchCell_result;
 
                 next_state = S_AFTER_CALL_70;
             end else begin
-                next_state = S_IF_THEN_68_WAIT;
+                next_state = S_FOR_BODY_68_WAIT;
             end
 
         end
 
-        S_IF_END_69: begin
+        S_FOR_END_69: begin
 
-            // LIR block: if_end_69
+            // LIR block: for_end_69
 
-            // line 163: for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
-
-
+            // line 125: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
-            next___for_idx_5 = (__for_idx_5 + 16'd1);
+
+
+            next___for_idx_7 = (__for_idx_7 + 8'd1);
 
 
 
@@ -2765,106 +2577,39 @@ always_comb begin
 
             // LIR block: after_call_70
 
-            // line 171: u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )
-
-
-
-
-
-            fetchAnchorPositionY_idx = u16_ground_idx;
-
-            fetchAnchorPositionY_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_70_WAIT;
-
-        end
-
-        S_AFTER_CALL_70_WAIT: begin
-
-            // LIR block: after_call_70
-
-            // line 171: u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )
-
-            // wait for blocking primitive: fetchAnchorPositionY
+            // line 128: if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
 
 
 
-            if (fetchAnchorPositionY_done) begin
-
-                next_u8_ground_anchor_y = fetchAnchorPositionY_result;
-
-                next_state = S_AFTER_CALL_71;
+            if (is_ground_cell_comb(u16_ground_cell)) begin
+                next_state = S_IF_THEN_71;
             end else begin
-                next_state = S_AFTER_CALL_70_WAIT;
+                next_state = S_IF_END_72;
             end
 
         end
 
-        S_AFTER_CALL_71: begin
+        S_IF_THEN_71: begin
 
-            // LIR block: after_call_71
+            // LIR block: if_then_71
 
-            // line 174: u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )
-
-
-
-
-
-            fetchComponentRotation_idx = u16_ground_idx;
-
-            fetchComponentRotation_start = 1'b1;
-
-
-            next_state = S_AFTER_CALL_71_WAIT;
-
-        end
-
-        S_AFTER_CALL_71_WAIT: begin
-
-            // LIR block: after_call_71
-
-            // line 174: u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )
-
-            // wait for blocking primitive: fetchComponentRotation
+            // line 129: u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)
 
 
 
 
+            next_u2_ground_rot = get_cell_rotation_comb(u16_ground_cell);
 
+            next_u8_ground_term_x = get_nxt_i_comb(u8_prev_x, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell)));
 
-            if (fetchComponentRotation_done) begin
-
-                next_u2_ground_rot = fetchComponentRotation_result;
-
-                next_state = S_AFTER_CALL_72;
-            end else begin
-                next_state = S_AFTER_CALL_71_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_72: begin
-
-            // LIR block: after_call_72
-
-            // line 177: u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )
+            next_u8_ground_term_y = get_nxt_j_comb(u8_prev_y, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell)));
 
 
 
-
-            next_u2_ground_dir0 = get_opp_dir_comb(u2_ground_rot);
-
-            next_u8_ground_term_x = get_nxt_i_comb(u8_ground_anchor_x, get_opp_dir_comb(u2_ground_rot));
-
-            next_u8_ground_term_y = get_nxt_j_comb(u8_ground_anchor_y, get_opp_dir_comb(u2_ground_rot));
-
-
-
-            if (((get_nxt_i_comb(u8_ground_anchor_x, get_opp_dir_comb(u2_ground_rot)) < grid_width) && (get_nxt_j_comb(u8_ground_anchor_y, get_opp_dir_comb(u2_ground_rot)) < grid_height))) begin
+            if (((get_nxt_i_comb(u8_prev_x, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell))) < grid_width) && (get_nxt_j_comb(u8_prev_y, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell))) < grid_height))) begin
                 next_state = S_IF_THEN_73;
             end else begin
                 next_state = S_IF_END_74;
@@ -2872,11 +2617,28 @@ always_comb begin
 
         end
 
+        S_IF_END_72: begin
+
+            // LIR block: if_end_72
+
+            // line 126: for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
+
+
+
+
+            next___for_idx_8 = (__for_idx_8 + 8'd1);
+
+
+
+            next_state = S_FOR_HEADER_67;
+
+        end
+
         S_IF_THEN_73: begin
 
             // LIR block: if_then_73
 
-            // line 190: u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )
+            // line 133: u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)
 
 
 
@@ -2897,7 +2659,7 @@ always_comb begin
 
             // LIR block: if_then_73
 
-            // line 190: u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )
+            // line 133: u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)
 
             // wait for blocking primitive: fetchR
 
@@ -2921,14 +2683,14 @@ always_comb begin
 
             // LIR block: if_end_74
 
-            // line 167: if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
+            // line 128: if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
 
 
 
-            next_state = S_IF_END_69;
+            next_state = S_IF_END_72;
 
         end
 
@@ -2936,7 +2698,7 @@ always_comb begin
 
             // LIR block: after_call_75
 
-            // line 194: if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
+            // line 134: if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
@@ -2955,7 +2717,7 @@ always_comb begin
 
             // LIR block: if_then_76
 
-            // line 195: u1_region_is_ground = 1
+            // line 135: u1_region_is_ground = 1
 
 
 
@@ -2972,7 +2734,7 @@ always_comb begin
 
             // LIR block: if_end_77
 
-            // line 186: if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1
+            // line 132: if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1
 
 
 
@@ -2987,14 +2749,14 @@ always_comb begin
 
             // LIR block: if_then_78
 
-            // line 197: u1_seen = 0
+            // line 137: u1_seen = 0
 
 
 
 
             next_u1_seen = 1'd0;
 
-            next___for_idx_6 = 8'd0;
+            next___for_idx_9 = 8'd0;
 
 
 
@@ -3006,12 +2768,12 @@ always_comb begin
 
             // LIR block: if_end_79
 
-            // line 159: for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 121: for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
 
-            next___for_idx_4 = (__for_idx_4 + 8'd1);
+            next___for_idx_6 = (__for_idx_6 + 8'd1);
 
 
 
@@ -3023,14 +2785,14 @@ always_comb begin
 
             // LIR block: for_header_80
 
-            // line 198: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1
+            // line 138: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1
 
 
 
 
 
 
-            if ((__for_idx_6 < grid_height)) begin
+            if ((__for_idx_9 < grid_height)) begin
                 next_state = S_FOR_BODY_81;
             end else begin
                 next_state = S_FOR_END_82;
@@ -3042,14 +2804,14 @@ always_comb begin
 
             // LIR block: for_body_81
 
-            // line 198: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1
+            // line 138: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1
 
 
 
 
-            next_u8_prev_y = __for_idx_6;
+            next_u8_prev_y = __for_idx_9;
 
-            next___for_idx_7 = 8'd0;
+            next___for_idx_10 = 8'd0;
 
 
 
@@ -3061,7 +2823,7 @@ always_comb begin
 
             // LIR block: for_end_82
 
-            // line 212: if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 150: if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
@@ -3080,14 +2842,14 @@ always_comb begin
 
             // LIR block: for_header_83
 
-            // line 199: for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1
+            // line 139: for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1
 
 
 
 
 
 
-            if ((__for_idx_7 < grid_width)) begin
+            if ((__for_idx_10 < grid_width)) begin
                 next_state = S_FOR_BODY_84;
             end else begin
                 next_state = S_FOR_END_85;
@@ -3099,16 +2861,16 @@ always_comb begin
 
             // LIR block: for_body_84
 
-            // line 199: for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1
+            // line 139: for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1
 
 
 
 
-            next_u8_prev_x = __for_idx_7;
+            next_u8_prev_x = __for_idx_10;
 
 
 
-            if (((u8_prev_y < u8_scan_y) || ((u8_prev_y == u8_scan_y) && (__for_idx_7 < u8_scan_x)))) begin
+            if (((u8_prev_y < u8_scan_y) || ((u8_prev_y == u8_scan_y) && (__for_idx_10 < u8_scan_x)))) begin
                 next_state = S_IF_THEN_86;
             end else begin
                 next_state = S_IF_END_87;
@@ -3120,12 +2882,12 @@ always_comb begin
 
             // LIR block: for_end_85
 
-            // line 198: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1
+            // line 138: for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1
 
 
 
 
-            next___for_idx_6 = (__for_idx_6 + 8'd1);
+            next___for_idx_9 = (__for_idx_9 + 8'd1);
 
 
 
@@ -3137,7 +2899,7 @@ always_comb begin
 
             // LIR block: if_then_86
 
-            // line 207: u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )
+            // line 147: u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)
 
 
 
@@ -3158,7 +2920,7 @@ always_comb begin
 
             // LIR block: if_then_86
 
-            // line 207: u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )
+            // line 147: u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)
 
             // wait for blocking primitive: fetchR
 
@@ -3182,12 +2944,12 @@ always_comb begin
 
             // LIR block: if_end_87
 
-            // line 199: for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1
+            // line 139: for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1
 
 
 
 
-            next___for_idx_7 = (__for_idx_7 + 8'd1);
+            next___for_idx_10 = (__for_idx_10 + 8'd1);
 
 
 
@@ -3199,7 +2961,7 @@ always_comb begin
 
             // LIR block: after_call_88
 
-            // line 210: if u8_prev_region == u8_region:                                             u1_seen = 1
+            // line 148: if u8_prev_region == u8_region:                                             u1_seen = 1
 
 
 
@@ -3218,7 +2980,7 @@ always_comb begin
 
             // LIR block: if_then_89
 
-            // line 211: u1_seen = 1
+            // line 149: u1_seen = 1
 
 
 
@@ -3235,7 +2997,7 @@ always_comb begin
 
             // LIR block: if_end_90
 
-            // line 200: if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1
+            // line 140: if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1
 
 
 
@@ -3250,7 +3012,7 @@ always_comb begin
 
             // LIR block: if_then_91
 
-            // line 213: if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0
+            // line 151: if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0
 
 
 
@@ -3269,7 +3031,7 @@ always_comb begin
 
             // LIR block: if_end_92
 
-            // line 196: if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
+            // line 136: if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1
 
 
 
@@ -3284,7 +3046,7 @@ always_comb begin
 
             // LIR block: if_then_93
 
-            // line 214: u8_node0 = u8_next_node
+            // line 152: u8_node0 = u8_next_node
 
 
 
@@ -3303,7 +3065,7 @@ always_comb begin
 
             // LIR block: if_end_94
 
-            // line 216: if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0
+            // line 154: if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0
 
 
 
@@ -3322,7 +3084,7 @@ always_comb begin
 
             // LIR block: if_then_95
 
-            // line 217: u8_node1 = u8_next_node
+            // line 155: u8_node1 = u8_next_node
 
 
 
@@ -3341,7 +3103,7 @@ always_comb begin
 
             // LIR block: if_end_96
 
-            // line 219: u8_next_node = u8_next_node + 1
+            // line 157: u8_next_node = u8_next_node + 1
 
 
 
@@ -3358,7 +3120,7 @@ always_comb begin
 
             // LIR block: after_call_97
 
-            // line 222: storeNode1(idx=u16_idx, node_i=u8_node1)
+            // line 160: storeNode1(idx=u16_idx, node_i=u8_node1)
 
 
 
@@ -3379,7 +3141,7 @@ always_comb begin
 
             // LIR block: after_call_97
 
-            // line 222: storeNode1(idx=u16_idx, node_i=u8_node1)
+            // line 160: storeNode1(idx=u16_idx, node_i=u8_node1)
 
             // wait for blocking primitive: storeNode1
 
@@ -3401,7 +3163,7 @@ always_comb begin
 
             // LIR block: after_call_98
 
-            // line 69: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)         u8_node0 = 0         u8_node1 = 0         u8_raw0 = 0         u8_raw1 = 0         u1_need0 = 0         u1_need1 = 0         u1_raw0_is_ground = 0         u1_raw1_is_ground = 0          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              # Terminal 0 is on the side opposite the component growth direction.             u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              # Terminal 1 is beyond the far end of the two-cell component.             u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw0:                                 u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 0                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u16_ground_idx in range(par_elem_n):                     u8_ground_type = fetchComponentType(idx=u16_ground_idx)                     if is_ground_component_comb(t=u8_ground_type):                         u8_ground_anchor_x = fetchAnchorPositionX(idx=u16_ground_idx)                         u8_ground_anchor_y = fetchAnchorPositionY(idx=u16_ground_idx)                         u2_ground_rot = fetchComponentRotation(idx=u16_ground_idx)                         u2_ground_dir0 = get_opp_dir_comb(d=u2_ground_rot)                         u8_ground_term_x = get_nxt_i_comb(                             i=u8_ground_anchor_x, d=u2_ground_dir0                         )                         u8_ground_term_y = get_nxt_j_comb(                             j=u8_ground_anchor_y, d=u2_ground_dir0                         )                         if (                             u8_ground_term_x < grid_width                             and u8_ground_term_y < grid_height                         ):                             u8_ground_region = fetchR(                                 i=u8_ground_term_x, j=u8_ground_term_y                             )                             if u8_ground_region == u8_raw1:                                 u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 0                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 1                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u16_ground_idx in range(par_elem_n):                                 u8_ground_type = fetchComponentType(                                     idx=u16_ground_idx                                 )                                 if is_ground_component_comb(t=u8_ground_type):                                     u8_ground_anchor_x = fetchAnchorPositionX(                                         idx=u16_ground_idx                                     )                                     u8_ground_anchor_y = fetchAnchorPositionY(                                         idx=u16_ground_idx                                     )                                     u2_ground_rot = fetchComponentRotation(                                         idx=u16_ground_idx                                     )                                     u2_ground_dir0 = get_opp_dir_comb(                                         d=u2_ground_rot                                     )                                     u8_ground_term_x = get_nxt_i_comb(                                         i=u8_ground_anchor_x, d=u2_ground_dir0                                     )                                     u8_ground_term_y = get_nxt_j_comb(                                         j=u8_ground_anchor_y, d=u2_ground_dir0                                     )                                     if (                                         u8_ground_term_x < grid_width                                         and u8_ground_term_y < grid_height                                     ):                                         u8_ground_region = fetchR(                                             i=u8_ground_term_x,                                             j=u8_ground_term_y,                                         )                                         if u8_ground_region == u8_region:                                             u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(                                             i=u8_prev_x, j=u8_prev_y                                         )                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1          storeNode0(idx=u16_idx, node_i=u8_node0)         storeNode1(idx=u16_idx, node_i=u8_node1)
+            // line 55: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)         u8_node0 = 255         u8_node1 = 255         u8_raw0 = 0         u8_raw1 = 0         u1_need0 = 0         u1_need1 = 0         u1_raw0_is_ground = 0         u1_raw1_is_ground = 0          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_rot = fetchComponentRotation(idx=u16_idx)              u2_dir0 = get_opp_dir_comb(d=u2_rot)             u8_term0_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir0)             u8_term0_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir0)             if u8_term0_x < grid_width and u8_term0_y < grid_height:                 u8_raw0 = fetchR(i=u8_term0_x, j=u8_term0_y)              u8_term1_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_rot)             u8_term1_x = get_nxt_i_comb(i=u8_term1_x, d=u2_rot)             u8_term1_y = get_nxt_j_comb(j=u8_term1_y, d=u2_rot)             if u8_term1_x < grid_width and u8_term1_y < grid_height:                 u8_raw1 = fetchR(i=u8_term1_x, j=u8_term1_y)              if u8_raw0 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw0:                                     u1_raw0_is_ground = 1                 if u1_raw0_is_ground:                     u8_node0 = 255                 else:                     u1_need0 = 1              if u8_raw1 != 0:                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u16_ground_cell = fetchCell(i=u8_scan_x, j=u8_scan_y)                         if is_ground_cell_comb(cell=u16_ground_cell):                             u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                             u8_ground_term_x = get_nxt_i_comb(i=u8_scan_x, d=get_opp_dir_comb(d=u2_ground_rot))                             u8_ground_term_y = get_nxt_j_comb(j=u8_scan_y, d=get_opp_dir_comb(d=u2_ground_rot))                             if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                 u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                 if u8_ground_region == u8_raw1:                                     u1_raw1_is_ground = 1                 if u1_raw1_is_ground:                     u8_node1 = 255                 else:                     u1_need1 = 1              if u1_need0 or u1_need1:                 u8_next_node = 0                 for u8_scan_y in range(grid_height):                     for u8_scan_x in range(grid_width):                         u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                         u1_region_is_ground = 0                         if u8_region != 0:                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     u16_ground_cell = fetchCell(i=u8_prev_x, j=u8_prev_y)                                     if is_ground_cell_comb(cell=u16_ground_cell):                                         u2_ground_rot = get_cell_rotation_comb(cell=u16_ground_cell)                                         u8_ground_term_x = get_nxt_i_comb(i=u8_prev_x, d=get_opp_dir_comb(d=u2_ground_rot))                                         u8_ground_term_y = get_nxt_j_comb(j=u8_prev_y, d=get_opp_dir_comb(d=u2_ground_rot))                                         if u8_ground_term_x < grid_width and u8_ground_term_y < grid_height:                                             u8_ground_region = fetchR(i=u8_ground_term_x, j=u8_ground_term_y)                                             if u8_ground_region == u8_region:                                                 u1_region_is_ground = 1                         if u8_region != 0 and not u1_region_is_ground:                             u1_seen = 0                             for u8_prev_y in range(grid_height):                                 for u8_prev_x in range(grid_width):                                     if (                                         u8_prev_y < u8_scan_y                                         or (                                             u8_prev_y == u8_scan_y                                             and u8_prev_x < u8_scan_x                                         )                                     ):                                         u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                         if u8_prev_region == u8_region:                                             u1_seen = 1                             if not u1_seen:                                 if u1_need0 and u8_region == u8_raw0:                                     u8_node0 = u8_next_node                                     u1_need0 = 0                                 if u1_need1 and u8_region == u8_raw1:                                     u8_node1 = u8_next_node                                     u1_need1 = 0                                 u8_next_node = u8_next_node + 1          storeNode0(idx=u16_idx, node_i=u8_node0)         storeNode1(idx=u16_idx, node_i=u8_node1)
 
 
 

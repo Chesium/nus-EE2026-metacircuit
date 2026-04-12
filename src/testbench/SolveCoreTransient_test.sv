@@ -35,12 +35,12 @@ module SolveCoreTransient_test;
   wire        fetchElemN0_start;
   wire [15:0] fetchElemN0_idx;
   wire        fetchElemN0_done;
-  wire [15:0] fetchElemN0_result;
+  wire [7:0] fetchElemN0_result;
 
   wire        fetchElemN1_start;
   wire [15:0] fetchElemN1_idx;
   wire        fetchElemN1_done;
-  wire [15:0] fetchElemN1_result;
+  wire [7:0] fetchElemN1_result;
 
   wire        fetchElemVal0_start;
   wire [15:0] fetchElemVal0_idx;
@@ -164,11 +164,11 @@ module SolveCoreTransient_test;
   wire prevx_clear_done;
 
   wire unused_fetchElemN2_done;
-  wire [15:0] unused_fetchElemN2_result;
+  wire [7:0] unused_fetchElemN2_result;
   wire unused_fetchElemN3_done;
-  wire [15:0] unused_fetchElemN3_result;
+  wire [7:0] unused_fetchElemN3_result;
   wire unused_fetchElemAux_done;
-  wire [15:0] unused_fetchElemAux_result;
+  wire [7:0] unused_fetchElemAux_result;
 
   wire fma_busy_unused;
   wire fma_underflow_unused;
@@ -628,8 +628,8 @@ module SolveCoreTransient_test;
   );
     begin
       netlist_store.kind_mem[elem_idx] = kind;
-      netlist_store.n0_mem[elem_idx] = n0[15:0];
-      netlist_store.n1_mem[elem_idx] = n1[15:0];
+      netlist_store.n0_mem[elem_idx] = (n0 == 0) ? 8'hFF : (n0 - 1);
+      netlist_store.n1_mem[elem_idx] = (n1 == 0) ? 8'hFF : (n1 - 1);
       netlist_store.v0_mem[elem_idx] = real_to_bits(v0);
       netlist_store.v1_mem[elem_idx] = real_to_bits(v1);
       netlist_store.v2_mem[elem_idx] = real_to_bits(v2);

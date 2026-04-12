@@ -5,6 +5,8 @@
 
 // Blocking primitives: fetchElemKind(latency=1), fetchElemN0(latency=1), fetchElemN1(latency=1), fetchElemN2(latency=1), fetchElemN3(latency=1), fetchElemAux(latency=1), fetchElemVal0(latency=1), fetchElemVal1(latency=1), fetchElemVal2(latency=1), accumA(latency=1), accumJ(latency=1)
 
+import StampingCombPkg::*;
+
 module stamping_core (
 
     input logic clk,
@@ -33,7 +35,7 @@ module stamping_core (
 
     input logic fetchElemN0_done,
 
-    input logic [15:0] fetchElemN0_result,
+    input logic [7:0] fetchElemN0_result,
 
     output logic fetchElemN1_start,
 
@@ -41,7 +43,7 @@ module stamping_core (
 
     input logic fetchElemN1_done,
 
-    input logic [15:0] fetchElemN1_result,
+    input logic [7:0] fetchElemN1_result,
 
     output logic fetchElemN2_start,
 
@@ -49,7 +51,7 @@ module stamping_core (
 
     input logic fetchElemN2_done,
 
-    input logic [15:0] fetchElemN2_result,
+    input logic [7:0] fetchElemN2_result,
 
     output logic fetchElemN3_start,
 
@@ -57,7 +59,7 @@ module stamping_core (
 
     input logic fetchElemN3_done,
 
-    input logic [15:0] fetchElemN3_result,
+    input logic [7:0] fetchElemN3_result,
 
     output logic fetchElemAux_start,
 
@@ -65,7 +67,7 @@ module stamping_core (
 
     input logic fetchElemAux_done,
 
-    input logic [15:0] fetchElemAux_result,
+    input logic [7:0] fetchElemAux_result,
 
     output logic fetchElemVal0_start,
 
@@ -93,9 +95,9 @@ module stamping_core (
 
     output logic accumA_start,
 
-    output logic [15:0] accumA_i,
+    output logic [7:0] accumA_i,
 
-    output logic [15:0] accumA_j,
+    output logic [7:0] accumA_j,
 
     output logic [31:0] accumA_delta,
 
@@ -103,7 +105,7 @@ module stamping_core (
 
     output logic accumJ_start,
 
-    output logic [15:0] accumJ_i,
+    output logic [7:0] accumJ_i,
 
     output logic [31:0] accumJ_delta,
 
@@ -112,8 +114,8 @@ module stamping_core (
 );
 
 
-import StampingCombPkg::*;
 
+import StampingCombPkg::*;
 
 typedef enum logic [6:0] {
 
@@ -359,15 +361,15 @@ logic [15:0] u16_e;
 
 logic [7:0] u8_kind;
 
-logic [15:0] u16_n0;
+logic [7:0] u8_n0;
 
-logic [15:0] u16_n1;
+logic [7:0] u8_n1;
 
-logic [15:0] u16_n2;
+logic [7:0] u8_n2;
 
-logic [15:0] u16_n3;
+logic [7:0] u8_n3;
 
-logic [15:0] u16_aux;
+logic [7:0] u8_aux;
 
 logic [31:0] f32_v0;
 
@@ -386,15 +388,15 @@ logic [15:0] next_u16_e;
 
 logic [7:0] next_u8_kind;
 
-logic [15:0] next_u16_n0;
+logic [7:0] next_u8_n0;
 
-logic [15:0] next_u16_n1;
+logic [7:0] next_u8_n1;
 
-logic [15:0] next_u16_n2;
+logic [7:0] next_u8_n2;
 
-logic [15:0] next_u16_n3;
+logic [7:0] next_u8_n3;
 
-logic [15:0] next_u16_aux;
+logic [7:0] next_u8_aux;
 
 logic [31:0] next_f32_v0;
 
@@ -415,15 +417,15 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u8_kind <=0;
 
-        u16_n0 <=0;
+        u8_n0 <=0;
 
-        u16_n1 <=0;
+        u8_n1 <=0;
 
-        u16_n2 <=0;
+        u8_n2 <=0;
 
-        u16_n3 <=0;
+        u8_n3 <=0;
 
-        u16_aux <=0;
+        u8_aux <=0;
 
         f32_v0 <=0;
 
@@ -444,15 +446,15 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u8_kind <= next_u8_kind;
 
-        u16_n0 <= next_u16_n0;
+        u8_n0 <= next_u8_n0;
 
-        u16_n1 <= next_u16_n1;
+        u8_n1 <= next_u8_n1;
 
-        u16_n2 <= next_u16_n2;
+        u8_n2 <= next_u8_n2;
 
-        u16_n3 <= next_u16_n3;
+        u8_n3 <= next_u8_n3;
 
-        u16_aux <= next_u16_aux;
+        u8_aux <= next_u8_aux;
 
         f32_v0 <= next_f32_v0;
 
@@ -478,15 +480,15 @@ always_comb begin
 
     next_u8_kind = u8_kind;
 
-    next_u16_n0 = u16_n0;
+    next_u8_n0 = u8_n0;
 
-    next_u16_n1 = u16_n1;
+    next_u8_n1 = u8_n1;
 
-    next_u16_n2 = u16_n2;
+    next_u8_n2 = u8_n2;
 
-    next_u16_n3 = u16_n3;
+    next_u8_n3 = u8_n3;
 
-    next_u16_aux = u16_aux;
+    next_u8_aux = u8_aux;
 
     next_f32_v0 = f32_v0;
 
@@ -588,23 +590,23 @@ always_comb begin
 
             next_u8_kind = 8'd0;
 
-            next_u16_n0 = 16'd0;
+            next_u8_n0 = 8'd0;
 
-            next_u16_n1 = 16'd0;
+            next_u8_n1 = 8'd0;
 
-            next_u16_n2 = 16'd0;
+            next_u8_n2 = 8'd0;
 
-            next_u16_n3 = 16'd0;
+            next_u8_n3 = 8'd0;
 
-            next_u16_aux = 16'd0;
+            next_u8_aux = 8'd0;
 
-            next_f32_v0 = 32'd0;
+            next_f32_v0 = 32'h00000000;
 
-            next_f32_v1 = 32'd0;
+            next_f32_v1 = 32'h00000000;
 
-            next_f32_v2 = 32'd0;
+            next_f32_v2 = 32'h00000000;
 
-            next_f32_neg = 32'd0;
+            next_f32_neg = 32'h00000000;
 
             next___for_idx_0 = 16'd0;
 
@@ -618,7 +620,7 @@ always_comb begin
 
             // LIR block: for_header_0
 
-            // line 13: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u16_n0 = fetchElemN0(idx=u16_e)         u16_n1 = fetchElemN1(idx=u16_e)         u16_n2 = fetchElemN2(idx=u16_e)         u16_n3 = fetchElemN3(idx=u16_e)         u16_aux = fetchElemAux(idx=u16_e)         f32_v0 = fetchElemVal0(idx=u16_e)         f32_v1 = fetchElemVal1(idx=u16_e)         f32_v2 = fetchElemVal2(idx=u16_e)          if u8_kind == 1:             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_v0)          if u8_kind == 2:             if u16_n0 != 65535:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_v0)          if u8_kind == 3:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)                 accumJ(i=u16_aux, delta=f32_v0)          if u8_kind == 4:             if u16_aux != 65535:                 if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)                 if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)                 if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)                 if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)          if u8_kind == 5:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)                 accumJ(i=u16_aux, delta=f32_v1)
+            // line 13: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u8_n0 = fetchElemN0(idx=u16_e)         u8_n1 = fetchElemN1(idx=u16_e)         u8_n2 = fetchElemN2(idx=u16_e)         u8_n3 = fetchElemN3(idx=u16_e)         u8_aux = fetchElemAux(idx=u16_e)         f32_v0 = fetchElemVal0(idx=u16_e)         f32_v1 = fetchElemVal1(idx=u16_e)         f32_v2 = fetchElemVal2(idx=u16_e)          if u8_kind == 1:             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_v0)          if u8_kind == 2:             if u8_n0 != 255:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_v0)          if u8_kind == 3:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)                 accumJ(i=u8_aux, delta=f32_v0)          if u8_kind == 4:             if u8_aux != 255:                 if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)                 if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)                 if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)                 if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)          if u8_kind == 5:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)                 accumJ(i=u8_aux, delta=f32_v1)
 
 
 
@@ -637,7 +639,7 @@ always_comb begin
 
             // LIR block: for_body_1
 
-            // line 13: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u16_n0 = fetchElemN0(idx=u16_e)         u16_n1 = fetchElemN1(idx=u16_e)         u16_n2 = fetchElemN2(idx=u16_e)         u16_n3 = fetchElemN3(idx=u16_e)         u16_aux = fetchElemAux(idx=u16_e)         f32_v0 = fetchElemVal0(idx=u16_e)         f32_v1 = fetchElemVal1(idx=u16_e)         f32_v2 = fetchElemVal2(idx=u16_e)          if u8_kind == 1:             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_v0)          if u8_kind == 2:             if u16_n0 != 65535:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_v0)          if u8_kind == 3:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)                 accumJ(i=u16_aux, delta=f32_v0)          if u8_kind == 4:             if u16_aux != 65535:                 if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)                 if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)                 if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)                 if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)          if u8_kind == 5:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)                 accumJ(i=u16_aux, delta=f32_v1)
+            // line 13: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u8_n0 = fetchElemN0(idx=u16_e)         u8_n1 = fetchElemN1(idx=u16_e)         u8_n2 = fetchElemN2(idx=u16_e)         u8_n3 = fetchElemN3(idx=u16_e)         u8_aux = fetchElemAux(idx=u16_e)         f32_v0 = fetchElemVal0(idx=u16_e)         f32_v1 = fetchElemVal1(idx=u16_e)         f32_v2 = fetchElemVal2(idx=u16_e)          if u8_kind == 1:             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_v0)          if u8_kind == 2:             if u8_n0 != 255:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_v0)          if u8_kind == 3:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)                 accumJ(i=u8_aux, delta=f32_v0)          if u8_kind == 4:             if u8_aux != 255:                 if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)                 if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)                 if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)                 if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)          if u8_kind == 5:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)                 accumJ(i=u8_aux, delta=f32_v1)
 
 
 
@@ -658,7 +660,7 @@ always_comb begin
 
             // LIR block: for_body_1
 
-            // line 13: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u16_n0 = fetchElemN0(idx=u16_e)         u16_n1 = fetchElemN1(idx=u16_e)         u16_n2 = fetchElemN2(idx=u16_e)         u16_n3 = fetchElemN3(idx=u16_e)         u16_aux = fetchElemAux(idx=u16_e)         f32_v0 = fetchElemVal0(idx=u16_e)         f32_v1 = fetchElemVal1(idx=u16_e)         f32_v2 = fetchElemVal2(idx=u16_e)          if u8_kind == 1:             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_v0)          if u8_kind == 2:             if u16_n0 != 65535:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_v0)          if u8_kind == 3:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)                 accumJ(i=u16_aux, delta=f32_v0)          if u8_kind == 4:             if u16_aux != 65535:                 if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)                 if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)                 if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)                 if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)          if u8_kind == 5:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)                 accumJ(i=u16_aux, delta=f32_v1)
+            // line 13: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u8_n0 = fetchElemN0(idx=u16_e)         u8_n1 = fetchElemN1(idx=u16_e)         u8_n2 = fetchElemN2(idx=u16_e)         u8_n3 = fetchElemN3(idx=u16_e)         u8_aux = fetchElemAux(idx=u16_e)         f32_v0 = fetchElemVal0(idx=u16_e)         f32_v1 = fetchElemVal1(idx=u16_e)         f32_v2 = fetchElemVal2(idx=u16_e)          if u8_kind == 1:             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_v0)          if u8_kind == 2:             if u8_n0 != 255:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_v0)          if u8_kind == 3:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)                 accumJ(i=u8_aux, delta=f32_v0)          if u8_kind == 4:             if u8_aux != 255:                 if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)                 if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)                 if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)                 if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)          if u8_kind == 5:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)                 accumJ(i=u8_aux, delta=f32_v1)
 
             // wait for blocking primitive: fetchElemKind
 
@@ -696,7 +698,7 @@ always_comb begin
 
             // LIR block: after_call_3
 
-            // line 15: u16_n0 = fetchElemN0(idx=u16_e)
+            // line 15: u8_n0 = fetchElemN0(idx=u16_e)
 
 
 
@@ -715,7 +717,7 @@ always_comb begin
 
             // LIR block: after_call_3
 
-            // line 15: u16_n0 = fetchElemN0(idx=u16_e)
+            // line 15: u8_n0 = fetchElemN0(idx=u16_e)
 
             // wait for blocking primitive: fetchElemN0
 
@@ -726,7 +728,7 @@ always_comb begin
 
             if (fetchElemN0_done) begin
 
-                next_u16_n0 = fetchElemN0_result;
+                next_u8_n0 = fetchElemN0_result;
 
                 next_state = S_AFTER_CALL_4;
             end else begin
@@ -739,7 +741,7 @@ always_comb begin
 
             // LIR block: after_call_4
 
-            // line 16: u16_n1 = fetchElemN1(idx=u16_e)
+            // line 16: u8_n1 = fetchElemN1(idx=u16_e)
 
 
 
@@ -758,7 +760,7 @@ always_comb begin
 
             // LIR block: after_call_4
 
-            // line 16: u16_n1 = fetchElemN1(idx=u16_e)
+            // line 16: u8_n1 = fetchElemN1(idx=u16_e)
 
             // wait for blocking primitive: fetchElemN1
 
@@ -769,7 +771,7 @@ always_comb begin
 
             if (fetchElemN1_done) begin
 
-                next_u16_n1 = fetchElemN1_result;
+                next_u8_n1 = fetchElemN1_result;
 
                 next_state = S_AFTER_CALL_5;
             end else begin
@@ -782,7 +784,7 @@ always_comb begin
 
             // LIR block: after_call_5
 
-            // line 17: u16_n2 = fetchElemN2(idx=u16_e)
+            // line 17: u8_n2 = fetchElemN2(idx=u16_e)
 
 
 
@@ -801,7 +803,7 @@ always_comb begin
 
             // LIR block: after_call_5
 
-            // line 17: u16_n2 = fetchElemN2(idx=u16_e)
+            // line 17: u8_n2 = fetchElemN2(idx=u16_e)
 
             // wait for blocking primitive: fetchElemN2
 
@@ -812,7 +814,7 @@ always_comb begin
 
             if (fetchElemN2_done) begin
 
-                next_u16_n2 = fetchElemN2_result;
+                next_u8_n2 = fetchElemN2_result;
 
                 next_state = S_AFTER_CALL_6;
             end else begin
@@ -825,7 +827,7 @@ always_comb begin
 
             // LIR block: after_call_6
 
-            // line 18: u16_n3 = fetchElemN3(idx=u16_e)
+            // line 18: u8_n3 = fetchElemN3(idx=u16_e)
 
 
 
@@ -844,7 +846,7 @@ always_comb begin
 
             // LIR block: after_call_6
 
-            // line 18: u16_n3 = fetchElemN3(idx=u16_e)
+            // line 18: u8_n3 = fetchElemN3(idx=u16_e)
 
             // wait for blocking primitive: fetchElemN3
 
@@ -855,7 +857,7 @@ always_comb begin
 
             if (fetchElemN3_done) begin
 
-                next_u16_n3 = fetchElemN3_result;
+                next_u8_n3 = fetchElemN3_result;
 
                 next_state = S_AFTER_CALL_7;
             end else begin
@@ -868,7 +870,7 @@ always_comb begin
 
             // LIR block: after_call_7
 
-            // line 19: u16_aux = fetchElemAux(idx=u16_e)
+            // line 19: u8_aux = fetchElemAux(idx=u16_e)
 
 
 
@@ -887,7 +889,7 @@ always_comb begin
 
             // LIR block: after_call_7
 
-            // line 19: u16_aux = fetchElemAux(idx=u16_e)
+            // line 19: u8_aux = fetchElemAux(idx=u16_e)
 
             // wait for blocking primitive: fetchElemAux
 
@@ -898,7 +900,7 @@ always_comb begin
 
             if (fetchElemAux_done) begin
 
-                next_u16_aux = fetchElemAux_result;
+                next_u8_aux = fetchElemAux_result;
 
                 next_state = S_AFTER_CALL_8;
             end else begin
@@ -1040,7 +1042,7 @@ always_comb begin
 
             // LIR block: after_call_11
 
-            // line 24: if u8_kind == 1:             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_v0)
+            // line 24: if u8_kind == 1:             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_v0)
 
 
 
@@ -1059,14 +1061,14 @@ always_comb begin
 
             // LIR block: if_then_12
 
-            // line 25: if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)
+            // line 25: if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)
 
 
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
+            if ((u8_n0 != 32'd255)) begin
                 next_state = S_IF_THEN_14;
             end else begin
                 next_state = S_IF_END_15;
@@ -1078,7 +1080,7 @@ always_comb begin
 
             // LIR block: if_end_13
 
-            // line 34: if u8_kind == 2:             if u16_n0 != 65535:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_v0)
+            // line 34: if u8_kind == 2:             if u8_n0 != 255:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_v0)
 
 
 
@@ -1097,15 +1099,15 @@ always_comb begin
 
             // LIR block: if_then_14
 
-            // line 26: accumA(i=u16_n0, j=u16_n0, delta=f32_v0)
+            // line 26: accumA(i=u8_n0, j=u8_n0, delta=f32_v0)
 
 
 
 
 
-            accumA_i = u16_n0;
+            accumA_i = u8_n0;
 
-            accumA_j = u16_n0;
+            accumA_j = u8_n0;
 
             accumA_delta = f32_v0;
 
@@ -1120,7 +1122,7 @@ always_comb begin
 
             // LIR block: if_then_14
 
-            // line 26: accumA(i=u16_n0, j=u16_n0, delta=f32_v0)
+            // line 26: accumA(i=u8_n0, j=u8_n0, delta=f32_v0)
 
             // wait for blocking primitive: accumA
 
@@ -1142,14 +1144,14 @@ always_comb begin
 
             // LIR block: if_end_15
 
-            // line 31: if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_v0)
+            // line 31: if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_v0)
 
 
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
+            if ((u8_n1 != 32'd255)) begin
                 next_state = S_IF_THEN_21;
             end else begin
                 next_state = S_IF_END_22;
@@ -1161,14 +1163,14 @@ always_comb begin
 
             // LIR block: after_call_16
 
-            // line 27: if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)
+            // line 27: if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)
 
 
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
+            if ((u8_n1 != 32'd255)) begin
                 next_state = S_IF_THEN_17;
             end else begin
                 next_state = S_IF_END_18;
@@ -1188,9 +1190,9 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v0);
 
 
-            accumA_i = u16_n0;
+            accumA_i = u8_n0;
 
-            accumA_j = u16_n1;
+            accumA_j = u8_n1;
 
             accumA_delta = neg_comb(f32_v0);
 
@@ -1227,7 +1229,7 @@ always_comb begin
 
             // LIR block: if_end_18
 
-            // line 25: if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)
+            // line 25: if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)
 
 
 
@@ -1242,15 +1244,15 @@ always_comb begin
 
             // LIR block: after_call_19
 
-            // line 30: accumA(i=u16_n1, j=u16_n0, delta=f32_neg)
+            // line 30: accumA(i=u8_n1, j=u8_n0, delta=f32_neg)
 
 
 
 
 
-            accumA_i = u16_n1;
+            accumA_i = u8_n1;
 
-            accumA_j = u16_n0;
+            accumA_j = u8_n0;
 
             accumA_delta = f32_neg;
 
@@ -1265,7 +1267,7 @@ always_comb begin
 
             // LIR block: after_call_19
 
-            // line 30: accumA(i=u16_n1, j=u16_n0, delta=f32_neg)
+            // line 30: accumA(i=u8_n1, j=u8_n0, delta=f32_neg)
 
             // wait for blocking primitive: accumA
 
@@ -1287,7 +1289,7 @@ always_comb begin
 
             // LIR block: after_call_20
 
-            // line 27: if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)
+            // line 27: if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)
 
 
 
@@ -1302,15 +1304,15 @@ always_comb begin
 
             // LIR block: if_then_21
 
-            // line 32: accumA(i=u16_n1, j=u16_n1, delta=f32_v0)
+            // line 32: accumA(i=u8_n1, j=u8_n1, delta=f32_v0)
 
 
 
 
 
-            accumA_i = u16_n1;
+            accumA_i = u8_n1;
 
-            accumA_j = u16_n1;
+            accumA_j = u8_n1;
 
             accumA_delta = f32_v0;
 
@@ -1325,7 +1327,7 @@ always_comb begin
 
             // LIR block: if_then_21
 
-            // line 32: accumA(i=u16_n1, j=u16_n1, delta=f32_v0)
+            // line 32: accumA(i=u8_n1, j=u8_n1, delta=f32_v0)
 
             // wait for blocking primitive: accumA
 
@@ -1347,7 +1349,7 @@ always_comb begin
 
             // LIR block: if_end_22
 
-            // line 24: if u8_kind == 1:             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_v0)
+            // line 24: if u8_kind == 1:             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_v0)
 
 
 
@@ -1362,7 +1364,7 @@ always_comb begin
 
             // LIR block: after_call_23
 
-            // line 31: if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_v0)
+            // line 31: if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_v0)
 
 
 
@@ -1377,14 +1379,14 @@ always_comb begin
 
             // LIR block: if_then_24
 
-            // line 35: if u16_n0 != 65535:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u16_n0, delta=f32_neg)
+            // line 35: if u8_n0 != 255:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u8_n0, delta=f32_neg)
 
 
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
+            if ((u8_n0 != 32'd255)) begin
                 next_state = S_IF_THEN_26;
             end else begin
                 next_state = S_IF_END_27;
@@ -1396,7 +1398,7 @@ always_comb begin
 
             // LIR block: if_end_25
 
-            // line 41: if u8_kind == 3:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)                 accumJ(i=u16_aux, delta=f32_v0)
+            // line 41: if u8_kind == 3:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)                 accumJ(i=u8_aux, delta=f32_v0)
 
 
 
@@ -1423,7 +1425,7 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v0);
 
 
-            accumJ_i = u16_n0;
+            accumJ_i = u8_n0;
 
             accumJ_delta = neg_comb(f32_v0);
 
@@ -1460,14 +1462,14 @@ always_comb begin
 
             // LIR block: if_end_27
 
-            // line 38: if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_v0)
+            // line 38: if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_v0)
 
 
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
+            if ((u8_n1 != 32'd255)) begin
                 next_state = S_IF_THEN_29;
             end else begin
                 next_state = S_IF_END_30;
@@ -1479,7 +1481,7 @@ always_comb begin
 
             // LIR block: after_call_28
 
-            // line 35: if u16_n0 != 65535:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u16_n0, delta=f32_neg)
+            // line 35: if u8_n0 != 255:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u8_n0, delta=f32_neg)
 
 
 
@@ -1494,13 +1496,13 @@ always_comb begin
 
             // LIR block: if_then_29
 
-            // line 39: accumJ(i=u16_n1, delta=f32_v0)
+            // line 39: accumJ(i=u8_n1, delta=f32_v0)
 
 
 
 
 
-            accumJ_i = u16_n1;
+            accumJ_i = u8_n1;
 
             accumJ_delta = f32_v0;
 
@@ -1515,7 +1517,7 @@ always_comb begin
 
             // LIR block: if_then_29
 
-            // line 39: accumJ(i=u16_n1, delta=f32_v0)
+            // line 39: accumJ(i=u8_n1, delta=f32_v0)
 
             // wait for blocking primitive: accumJ
 
@@ -1537,7 +1539,7 @@ always_comb begin
 
             // LIR block: if_end_30
 
-            // line 34: if u8_kind == 2:             if u16_n0 != 65535:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_v0)
+            // line 34: if u8_kind == 2:             if u8_n0 != 255:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_v0)
 
 
 
@@ -1552,7 +1554,7 @@ always_comb begin
 
             // LIR block: after_call_31
 
-            // line 38: if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_v0)
+            // line 38: if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_v0)
 
 
 
@@ -1567,14 +1569,14 @@ always_comb begin
 
             // LIR block: if_then_32
 
-            // line 42: if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)                 accumJ(i=u16_aux, delta=f32_v0)
+            // line 42: if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)                 accumJ(i=u8_aux, delta=f32_v0)
 
 
 
 
 
 
-            if ((u16_aux != 32'd65535)) begin
+            if ((u8_aux != 32'd255)) begin
                 next_state = S_IF_THEN_34;
             end else begin
                 next_state = S_IF_END_35;
@@ -1586,7 +1588,7 @@ always_comb begin
 
             // LIR block: if_end_33
 
-            // line 53: if u8_kind == 4:             if u16_aux != 65535:                 if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)                 if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)                 if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)                 if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)
+            // line 53: if u8_kind == 4:             if u8_aux != 255:                 if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)                 if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)                 if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)                 if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)
 
 
 
@@ -1605,14 +1607,14 @@ always_comb begin
 
             // LIR block: if_then_34
 
-            // line 43: if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)
+            // line 43: if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)
 
 
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
+            if ((u8_n0 != 32'd255)) begin
                 next_state = S_IF_THEN_36;
             end else begin
                 next_state = S_IF_END_37;
@@ -1624,7 +1626,7 @@ always_comb begin
 
             // LIR block: if_end_35
 
-            // line 41: if u8_kind == 3:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)                 accumJ(i=u16_aux, delta=f32_v0)
+            // line 41: if u8_kind == 3:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)                 accumJ(i=u8_aux, delta=f32_v0)
 
 
 
@@ -1639,15 +1641,15 @@ always_comb begin
 
             // LIR block: if_then_36
 
-            // line 44: accumA(i=u16_aux, j=u16_n0, delta=f32_v2)
+            // line 44: accumA(i=u8_aux, j=u8_n0, delta=f32_v2)
 
 
 
 
 
-            accumA_i = u16_aux;
+            accumA_i = u8_aux;
 
-            accumA_j = u16_n0;
+            accumA_j = u8_n0;
 
             accumA_delta = f32_v2;
 
@@ -1662,7 +1664,7 @@ always_comb begin
 
             // LIR block: if_then_36
 
-            // line 44: accumA(i=u16_aux, j=u16_n0, delta=f32_v2)
+            // line 44: accumA(i=u8_aux, j=u8_n0, delta=f32_v2)
 
             // wait for blocking primitive: accumA
 
@@ -1684,14 +1686,14 @@ always_comb begin
 
             // LIR block: if_end_37
 
-            // line 47: if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)
+            // line 47: if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)
 
 
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
+            if ((u8_n1 != 32'd255)) begin
                 next_state = S_IF_THEN_40;
             end else begin
                 next_state = S_IF_END_41;
@@ -1711,9 +1713,9 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v2);
 
 
-            accumA_i = u16_n0;
+            accumA_i = u8_n0;
 
-            accumA_j = u16_aux;
+            accumA_j = u8_aux;
 
             accumA_delta = neg_comb(f32_v2);
 
@@ -1750,7 +1752,7 @@ always_comb begin
 
             // LIR block: after_call_39
 
-            // line 43: if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)
+            // line 43: if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)
 
 
 
@@ -1773,9 +1775,9 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v2);
 
 
-            accumA_i = u16_aux;
+            accumA_i = u8_aux;
 
-            accumA_j = u16_n1;
+            accumA_j = u8_n1;
 
             accumA_delta = neg_comb(f32_v2);
 
@@ -1812,13 +1814,13 @@ always_comb begin
 
             // LIR block: if_end_41
 
-            // line 51: accumJ(i=u16_aux, delta=f32_v0)
+            // line 51: accumJ(i=u8_aux, delta=f32_v0)
 
 
 
 
 
-            accumJ_i = u16_aux;
+            accumJ_i = u8_aux;
 
             accumJ_delta = f32_v0;
 
@@ -1833,7 +1835,7 @@ always_comb begin
 
             // LIR block: if_end_41
 
-            // line 51: accumJ(i=u16_aux, delta=f32_v0)
+            // line 51: accumJ(i=u8_aux, delta=f32_v0)
 
             // wait for blocking primitive: accumJ
 
@@ -1855,15 +1857,15 @@ always_comb begin
 
             // LIR block: after_call_42
 
-            // line 50: accumA(i=u16_n1, j=u16_aux, delta=f32_v2)
+            // line 50: accumA(i=u8_n1, j=u8_aux, delta=f32_v2)
 
 
 
 
 
-            accumA_i = u16_n1;
+            accumA_i = u8_n1;
 
-            accumA_j = u16_aux;
+            accumA_j = u8_aux;
 
             accumA_delta = f32_v2;
 
@@ -1878,7 +1880,7 @@ always_comb begin
 
             // LIR block: after_call_42
 
-            // line 50: accumA(i=u16_n1, j=u16_aux, delta=f32_v2)
+            // line 50: accumA(i=u8_n1, j=u8_aux, delta=f32_v2)
 
             // wait for blocking primitive: accumA
 
@@ -1900,7 +1902,7 @@ always_comb begin
 
             // LIR block: after_call_43
 
-            // line 47: if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)
+            // line 47: if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)
 
 
 
@@ -1915,7 +1917,7 @@ always_comb begin
 
             // LIR block: after_call_44
 
-            // line 42: if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)                 accumJ(i=u16_aux, delta=f32_v0)
+            // line 42: if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)                 accumJ(i=u8_aux, delta=f32_v0)
 
 
 
@@ -1930,14 +1932,14 @@ always_comb begin
 
             // LIR block: if_then_45
 
-            // line 54: if u16_aux != 65535:                 if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)                 if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)                 if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)                 if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)
+            // line 54: if u8_aux != 255:                 if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)                 if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)                 if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)                 if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)
 
 
 
 
 
 
-            if ((u16_aux != 32'd65535)) begin
+            if ((u8_aux != 32'd255)) begin
                 next_state = S_IF_THEN_47;
             end else begin
                 next_state = S_IF_END_48;
@@ -1949,7 +1951,7 @@ always_comb begin
 
             // LIR block: if_end_46
 
-            // line 69: if u8_kind == 5:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)                 accumJ(i=u16_aux, delta=f32_v1)
+            // line 69: if u8_kind == 5:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)                 accumJ(i=u8_aux, delta=f32_v1)
 
 
 
@@ -1968,14 +1970,14 @@ always_comb begin
 
             // LIR block: if_then_47
 
-            // line 55: if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)
+            // line 55: if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)
 
 
 
 
 
 
-            if ((u16_n2 != 32'd65535)) begin
+            if ((u8_n2 != 32'd255)) begin
                 next_state = S_IF_THEN_49;
             end else begin
                 next_state = S_IF_END_50;
@@ -1987,7 +1989,7 @@ always_comb begin
 
             // LIR block: if_end_48
 
-            // line 53: if u8_kind == 4:             if u16_aux != 65535:                 if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)                 if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)                 if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)                 if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)
+            // line 53: if u8_kind == 4:             if u8_aux != 255:                 if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)                 if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)                 if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)                 if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)
 
 
 
@@ -2002,15 +2004,15 @@ always_comb begin
 
             // LIR block: if_then_49
 
-            // line 56: accumA(i=u16_aux, j=u16_n2, delta=f32_v2)
+            // line 56: accumA(i=u8_aux, j=u8_n2, delta=f32_v2)
 
 
 
 
 
-            accumA_i = u16_aux;
+            accumA_i = u8_aux;
 
-            accumA_j = u16_n2;
+            accumA_j = u8_n2;
 
             accumA_delta = f32_v2;
 
@@ -2025,7 +2027,7 @@ always_comb begin
 
             // LIR block: if_then_49
 
-            // line 56: accumA(i=u16_aux, j=u16_n2, delta=f32_v2)
+            // line 56: accumA(i=u8_aux, j=u8_n2, delta=f32_v2)
 
             // wait for blocking primitive: accumA
 
@@ -2047,14 +2049,14 @@ always_comb begin
 
             // LIR block: if_end_50
 
-            // line 59: if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)
+            // line 59: if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)
 
 
 
 
 
 
-            if ((u16_n3 != 32'd65535)) begin
+            if ((u8_n3 != 32'd255)) begin
                 next_state = S_IF_THEN_53;
             end else begin
                 next_state = S_IF_END_54;
@@ -2074,9 +2076,9 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v2);
 
 
-            accumA_i = u16_n2;
+            accumA_i = u8_n2;
 
-            accumA_j = u16_aux;
+            accumA_j = u8_aux;
 
             accumA_delta = neg_comb(f32_v2);
 
@@ -2113,7 +2115,7 @@ always_comb begin
 
             // LIR block: after_call_52
 
-            // line 55: if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)
+            // line 55: if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)
 
 
 
@@ -2136,9 +2138,9 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v2);
 
 
-            accumA_i = u16_aux;
+            accumA_i = u8_aux;
 
-            accumA_j = u16_n3;
+            accumA_j = u8_n3;
 
             accumA_delta = neg_comb(f32_v2);
 
@@ -2175,14 +2177,14 @@ always_comb begin
 
             // LIR block: if_end_54
 
-            // line 63: if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)
+            // line 63: if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)
 
 
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
+            if ((u8_n0 != 32'd255)) begin
                 next_state = S_IF_THEN_57;
             end else begin
                 next_state = S_IF_END_58;
@@ -2194,15 +2196,15 @@ always_comb begin
 
             // LIR block: after_call_55
 
-            // line 62: accumA(i=u16_n3, j=u16_aux, delta=f32_v2)
+            // line 62: accumA(i=u8_n3, j=u8_aux, delta=f32_v2)
 
 
 
 
 
-            accumA_i = u16_n3;
+            accumA_i = u8_n3;
 
-            accumA_j = u16_aux;
+            accumA_j = u8_aux;
 
             accumA_delta = f32_v2;
 
@@ -2217,7 +2219,7 @@ always_comb begin
 
             // LIR block: after_call_55
 
-            // line 62: accumA(i=u16_n3, j=u16_aux, delta=f32_v2)
+            // line 62: accumA(i=u8_n3, j=u8_aux, delta=f32_v2)
 
             // wait for blocking primitive: accumA
 
@@ -2239,7 +2241,7 @@ always_comb begin
 
             // LIR block: after_call_56
 
-            // line 59: if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)
+            // line 59: if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)
 
 
 
@@ -2262,9 +2264,9 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v0);
 
 
-            accumA_i = u16_aux;
+            accumA_i = u8_aux;
 
-            accumA_j = u16_n0;
+            accumA_j = u8_n0;
 
             accumA_delta = neg_comb(f32_v0);
 
@@ -2301,14 +2303,14 @@ always_comb begin
 
             // LIR block: if_end_58
 
-            // line 66: if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)
+            // line 66: if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)
 
 
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
+            if ((u8_n1 != 32'd255)) begin
                 next_state = S_IF_THEN_60;
             end else begin
                 next_state = S_IF_END_61;
@@ -2320,7 +2322,7 @@ always_comb begin
 
             // LIR block: after_call_59
 
-            // line 63: if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)
+            // line 63: if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)
 
 
 
@@ -2335,15 +2337,15 @@ always_comb begin
 
             // LIR block: if_then_60
 
-            // line 67: accumA(i=u16_aux, j=u16_n1, delta=f32_v0)
+            // line 67: accumA(i=u8_aux, j=u8_n1, delta=f32_v0)
 
 
 
 
 
-            accumA_i = u16_aux;
+            accumA_i = u8_aux;
 
-            accumA_j = u16_n1;
+            accumA_j = u8_n1;
 
             accumA_delta = f32_v0;
 
@@ -2358,7 +2360,7 @@ always_comb begin
 
             // LIR block: if_then_60
 
-            // line 67: accumA(i=u16_aux, j=u16_n1, delta=f32_v0)
+            // line 67: accumA(i=u8_aux, j=u8_n1, delta=f32_v0)
 
             // wait for blocking primitive: accumA
 
@@ -2380,7 +2382,7 @@ always_comb begin
 
             // LIR block: if_end_61
 
-            // line 54: if u16_aux != 65535:                 if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)                 if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)                 if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)                 if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)
+            // line 54: if u8_aux != 255:                 if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)                 if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)                 if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)                 if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)
 
 
 
@@ -2395,7 +2397,7 @@ always_comb begin
 
             // LIR block: after_call_62
 
-            // line 66: if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)
+            // line 66: if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)
 
 
 
@@ -2410,14 +2412,14 @@ always_comb begin
 
             // LIR block: if_then_63
 
-            // line 70: if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)                 accumJ(i=u16_aux, delta=f32_v1)
+            // line 70: if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)                 accumJ(i=u8_aux, delta=f32_v1)
 
 
 
 
 
 
-            if ((u16_aux != 32'd65535)) begin
+            if ((u8_aux != 32'd255)) begin
                 next_state = S_IF_THEN_65;
             end else begin
                 next_state = S_IF_END_66;
@@ -2429,7 +2431,7 @@ always_comb begin
 
             // LIR block: if_end_64
 
-            // line 13: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u16_n0 = fetchElemN0(idx=u16_e)         u16_n1 = fetchElemN1(idx=u16_e)         u16_n2 = fetchElemN2(idx=u16_e)         u16_n3 = fetchElemN3(idx=u16_e)         u16_aux = fetchElemAux(idx=u16_e)         f32_v0 = fetchElemVal0(idx=u16_e)         f32_v1 = fetchElemVal1(idx=u16_e)         f32_v2 = fetchElemVal2(idx=u16_e)          if u8_kind == 1:             if u16_n0 != 65535:                 accumA(i=u16_n0, j=u16_n0, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n0, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumA(i=u16_n1, j=u16_n1, delta=f32_v0)          if u8_kind == 2:             if u16_n0 != 65535:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u16_n0, delta=f32_neg)             if u16_n1 != 65535:                 accumJ(i=u16_n1, delta=f32_v0)          if u8_kind == 3:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n1, delta=f32_neg)                     accumA(i=u16_n1, j=u16_aux, delta=f32_v2)                 accumJ(i=u16_aux, delta=f32_v0)          if u8_kind == 4:             if u16_aux != 65535:                 if u16_n2 != 65535:                     accumA(i=u16_aux, j=u16_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_neg)                 if u16_n3 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n3, delta=f32_neg)                     accumA(i=u16_n3, j=u16_aux, delta=f32_v2)                 if u16_n0 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_aux, j=u16_n0, delta=f32_neg)                 if u16_n1 != 65535:                     accumA(i=u16_aux, j=u16_n1, delta=f32_v0)          if u8_kind == 5:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)                 accumJ(i=u16_aux, delta=f32_v1)
+            // line 13: for u16_e in range(par_elem_n):         u8_kind = fetchElemKind(idx=u16_e)         u8_n0 = fetchElemN0(idx=u16_e)         u8_n1 = fetchElemN1(idx=u16_e)         u8_n2 = fetchElemN2(idx=u16_e)         u8_n3 = fetchElemN3(idx=u16_e)         u8_aux = fetchElemAux(idx=u16_e)         f32_v0 = fetchElemVal0(idx=u16_e)         f32_v1 = fetchElemVal1(idx=u16_e)         f32_v2 = fetchElemVal2(idx=u16_e)          if u8_kind == 1:             if u8_n0 != 255:                 accumA(i=u8_n0, j=u8_n0, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n0, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumA(i=u8_n1, j=u8_n1, delta=f32_v0)          if u8_kind == 2:             if u8_n0 != 255:                 f32_neg = neg_comb(v=f32_v0)                 accumJ(i=u8_n0, delta=f32_neg)             if u8_n1 != 255:                 accumJ(i=u8_n1, delta=f32_v0)          if u8_kind == 3:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n1, delta=f32_neg)                     accumA(i=u8_n1, j=u8_aux, delta=f32_v2)                 accumJ(i=u8_aux, delta=f32_v0)          if u8_kind == 4:             if u8_aux != 255:                 if u8_n2 != 255:                     accumA(i=u8_aux, j=u8_n2, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_neg)                 if u8_n3 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n3, delta=f32_neg)                     accumA(i=u8_n3, j=u8_aux, delta=f32_v2)                 if u8_n0 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_aux, j=u8_n0, delta=f32_neg)                 if u8_n1 != 255:                     accumA(i=u8_aux, j=u8_n1, delta=f32_v0)          if u8_kind == 5:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)                 accumJ(i=u8_aux, delta=f32_v1)
 
 
 
@@ -2446,14 +2448,14 @@ always_comb begin
 
             // LIR block: if_then_65
 
-            // line 71: if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)
+            // line 71: if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)
 
 
 
 
 
 
-            if ((u16_n0 != 32'd65535)) begin
+            if ((u8_n0 != 32'd255)) begin
                 next_state = S_IF_THEN_67;
             end else begin
                 next_state = S_IF_END_68;
@@ -2465,7 +2467,7 @@ always_comb begin
 
             // LIR block: if_end_66
 
-            // line 69: if u8_kind == 5:             if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)                 accumJ(i=u16_aux, delta=f32_v1)
+            // line 69: if u8_kind == 5:             if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)                 accumJ(i=u8_aux, delta=f32_v1)
 
 
 
@@ -2480,15 +2482,15 @@ always_comb begin
 
             // LIR block: if_then_67
 
-            // line 72: accumA(i=u16_aux, j=u16_n0, delta=f32_v2)
+            // line 72: accumA(i=u8_aux, j=u8_n0, delta=f32_v2)
 
 
 
 
 
-            accumA_i = u16_aux;
+            accumA_i = u8_aux;
 
-            accumA_j = u16_n0;
+            accumA_j = u8_n0;
 
             accumA_delta = f32_v2;
 
@@ -2503,7 +2505,7 @@ always_comb begin
 
             // LIR block: if_then_67
 
-            // line 72: accumA(i=u16_aux, j=u16_n0, delta=f32_v2)
+            // line 72: accumA(i=u8_aux, j=u8_n0, delta=f32_v2)
 
             // wait for blocking primitive: accumA
 
@@ -2525,14 +2527,14 @@ always_comb begin
 
             // LIR block: if_end_68
 
-            // line 75: if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)
+            // line 75: if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)
 
 
 
 
 
 
-            if ((u16_n2 != 32'd65535)) begin
+            if ((u8_n2 != 32'd255)) begin
                 next_state = S_IF_THEN_71;
             end else begin
                 next_state = S_IF_END_72;
@@ -2552,9 +2554,9 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v2);
 
 
-            accumA_i = u16_n0;
+            accumA_i = u8_n0;
 
-            accumA_j = u16_aux;
+            accumA_j = u8_aux;
 
             accumA_delta = neg_comb(f32_v2);
 
@@ -2591,7 +2593,7 @@ always_comb begin
 
             // LIR block: after_call_70
 
-            // line 71: if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)
+            // line 71: if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)
 
 
 
@@ -2614,9 +2616,9 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v2);
 
 
-            accumA_i = u16_aux;
+            accumA_i = u8_aux;
 
-            accumA_j = u16_n2;
+            accumA_j = u8_n2;
 
             accumA_delta = neg_comb(f32_v2);
 
@@ -2653,14 +2655,14 @@ always_comb begin
 
             // LIR block: if_end_72
 
-            // line 80: if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)
+            // line 80: if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)
 
 
 
 
 
 
-            if ((u16_n1 != 32'd65535)) begin
+            if ((u8_n1 != 32'd255)) begin
                 next_state = S_IF_THEN_76;
             end else begin
                 next_state = S_IF_END_77;
@@ -2672,15 +2674,15 @@ always_comb begin
 
             // LIR block: after_call_73
 
-            // line 78: accumA(i=u16_n2, j=u16_aux, delta=f32_v2)
+            // line 78: accumA(i=u8_n2, j=u8_aux, delta=f32_v2)
 
 
 
 
 
-            accumA_i = u16_n2;
+            accumA_i = u8_n2;
 
-            accumA_j = u16_aux;
+            accumA_j = u8_aux;
 
             accumA_delta = f32_v2;
 
@@ -2695,7 +2697,7 @@ always_comb begin
 
             // LIR block: after_call_73
 
-            // line 78: accumA(i=u16_n2, j=u16_aux, delta=f32_v2)
+            // line 78: accumA(i=u8_n2, j=u8_aux, delta=f32_v2)
 
             // wait for blocking primitive: accumA
 
@@ -2717,15 +2719,15 @@ always_comb begin
 
             // LIR block: after_call_74
 
-            // line 79: accumA(i=u16_n2, j=u16_aux, delta=f32_v0)
+            // line 79: accumA(i=u8_n2, j=u8_aux, delta=f32_v0)
 
 
 
 
 
-            accumA_i = u16_n2;
+            accumA_i = u8_n2;
 
-            accumA_j = u16_aux;
+            accumA_j = u8_aux;
 
             accumA_delta = f32_v0;
 
@@ -2740,7 +2742,7 @@ always_comb begin
 
             // LIR block: after_call_74
 
-            // line 79: accumA(i=u16_n2, j=u16_aux, delta=f32_v0)
+            // line 79: accumA(i=u8_n2, j=u8_aux, delta=f32_v0)
 
             // wait for blocking primitive: accumA
 
@@ -2762,7 +2764,7 @@ always_comb begin
 
             // LIR block: after_call_75
 
-            // line 75: if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)
+            // line 75: if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)
 
 
 
@@ -2785,9 +2787,9 @@ always_comb begin
             next_f32_neg = neg_comb(f32_v0);
 
 
-            accumA_i = u16_n1;
+            accumA_i = u8_n1;
 
-            accumA_j = u16_aux;
+            accumA_j = u8_aux;
 
             accumA_delta = neg_comb(f32_v0);
 
@@ -2824,13 +2826,13 @@ always_comb begin
 
             // LIR block: if_end_77
 
-            // line 83: accumJ(i=u16_aux, delta=f32_v1)
+            // line 83: accumJ(i=u8_aux, delta=f32_v1)
 
 
 
 
 
-            accumJ_i = u16_aux;
+            accumJ_i = u8_aux;
 
             accumJ_delta = f32_v1;
 
@@ -2845,7 +2847,7 @@ always_comb begin
 
             // LIR block: if_end_77
 
-            // line 83: accumJ(i=u16_aux, delta=f32_v1)
+            // line 83: accumJ(i=u8_aux, delta=f32_v1)
 
             // wait for blocking primitive: accumJ
 
@@ -2867,7 +2869,7 @@ always_comb begin
 
             // LIR block: after_call_78
 
-            // line 80: if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)
+            // line 80: if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)
 
 
 
@@ -2882,7 +2884,7 @@ always_comb begin
 
             // LIR block: after_call_79
 
-            // line 70: if u16_aux != 65535:                 if u16_n0 != 65535:                     accumA(i=u16_aux, j=u16_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_n0, j=u16_aux, delta=f32_neg)                 if u16_n2 != 65535:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u16_aux, j=u16_n2, delta=f32_neg)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v2)                     accumA(i=u16_n2, j=u16_aux, delta=f32_v0)                 if u16_n1 != 65535:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u16_n1, j=u16_aux, delta=f32_neg)                 accumJ(i=u16_aux, delta=f32_v1)
+            // line 70: if u8_aux != 255:                 if u8_n0 != 255:                     accumA(i=u8_aux, j=u8_n0, delta=f32_v2)                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_n0, j=u8_aux, delta=f32_neg)                 if u8_n2 != 255:                     f32_neg = neg_comb(v=f32_v2)                     accumA(i=u8_aux, j=u8_n2, delta=f32_neg)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v2)                     accumA(i=u8_n2, j=u8_aux, delta=f32_v0)                 if u8_n1 != 255:                     f32_neg = neg_comb(v=f32_v0)                     accumA(i=u8_n1, j=u8_aux, delta=f32_neg)                 accumJ(i=u8_aux, delta=f32_v1)
 
 
 

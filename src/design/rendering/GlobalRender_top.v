@@ -296,18 +296,6 @@ module GlobalRender_top (
         end
     endfunction
 
-    function [7:0] normalize_extracted_node_id;
-        input [7:0] raw_node_id;
-        input       has_ground_component;
-        begin
-            if (!has_ground_component && (raw_node_id != 8'd0)) begin
-                normalize_extracted_node_id = raw_node_id - 8'd1;
-            end else begin
-                normalize_extracted_node_id = raw_node_id;
-            end
-        end
-    endfunction
-
     function [7:0] uart_cell_packet_char;
         input [4:0] char_index;
         input [4:0] cell_i;
@@ -799,7 +787,8 @@ module GlobalRender_top (
         input [3:0] component_type;
         begin
             case (component_type)
-                COMPONENT_TYPE_WIRE: component_type_needs_index = 1'b0;
+                COMPONENT_TYPE_WIRE,
+                COMPONENT_TYPE_GROUND: component_type_needs_index = 1'b0;
                 default: component_type_needs_index = 1'b1;
             endcase
         end
@@ -1367,7 +1356,6 @@ module GlobalRender_top (
     reg  [CANVAS_ADDR_W-1:0] component_store_ram_r_addr = {CANVAS_ADDR_W{1'b0}};
     wire [COMPONENT_STORE_ENTRY_W-1:0] component_store_ram_r_data;
     reg  [CANVAS_ADDR_W-1:0] component_store_count = {CANVAS_ADDR_W{1'b0}};
-    reg         component_store_has_ground = 1'b0;
     reg         component_store_dirty = 1'b1;
     reg         component_store_read_busy = 1'b0;
     reg         component_store_read_snapshot_pending = 1'b0;
@@ -1569,6 +1557,14 @@ module GlobalRender_top (
     wire [7:0]  netlist_extract_fetchR_j;
     wire        netlist_extract_fetchR_done;
     wire [7:0]  netlist_extract_fetchR_result;
+    wire        netlist_extract_fetchCell_start;
+    wire [7:0]  netlist_extract_fetchCell_i;
+    wire [7:0]  netlist_extract_fetchCell_j;
+    wire        netlist_extract_fetchCell_done;
+    wire [15:0] netlist_extract_fetchCell_result;
+    wire        netlist_extract_fetchCell_ram_ren;
+    wire [8:0]  netlist_extract_fetchCell_ram_addr;
+    reg  [15:0] netlist_extract_fetchCell_ram_rdata = 16'd0;
     wire        netlist_extract_storeNode0_start;
     wire [15:0] netlist_extract_storeNode0_idx;
     wire [7:0]  netlist_extract_storeNode0_node_i;
@@ -1624,10 +1620,8 @@ module GlobalRender_top (
     reg  [7:0]  netlist_uart_data = 8'h00;
     wire        netlist_uart_busy;
     wire        netlist_uart_tx;
-    wire [7:0]  netlist_extract_storeNode0_node_i_norm =
-        normalize_extracted_node_id(netlist_extract_storeNode0_node_i, component_store_has_ground);
-    wire [7:0]  netlist_extract_storeNode1_node_i_norm =
-        normalize_extracted_node_id(netlist_extract_storeNode1_node_i, component_store_has_ground);
+    wire [7:0]  netlist_extract_storeNode0_node_i_norm = netlist_extract_storeNode0_node_i;
+    wire [7:0]  netlist_extract_storeNode1_node_i_norm = netlist_extract_storeNode1_node_i;
     wire        flood_feature_enable = !clear_canvas_active && (init_cycles >= INIT_DELAY_CYCLES);
     wire        flood_wrapper_fetchR_start;
     wire [7:0]  flood_wrapper_fetchR_i;
@@ -1810,6 +1804,18 @@ module GlobalRender_top (
         .comp_addr(netlist_extract_rot_comp_addr),
         .comp_rdata(component_store_ram_r_data)
     );
+    fetchCell netlist_extract_fetch_cell_inst (
+        .clk(CLK100MHZ),
+        .start(netlist_extract_fetchCell_start),
+        .busy(),
+        .done(netlist_extract_fetchCell_done),
+        .i(netlist_extract_fetchCell_i[4:0]),
+        .j(netlist_extract_fetchCell_j[3:0]),
+        .result(netlist_extract_fetchCell_result),
+        .ram_ren(netlist_extract_fetchCell_ram_ren),
+        .ram_addr(netlist_extract_fetchCell_ram_addr),
+        .ram_rdata(netlist_extract_fetchCell_ram_rdata)
+    );
     storeNode0 netlist_extract_store_node0_inst (
         .clk(CLK100MHZ),
         .start(netlist_extract_storeNode0_start),
@@ -1878,6 +1884,11 @@ module GlobalRender_top (
         .fetchR_j(netlist_extract_fetchR_j),
         .fetchR_done(netlist_extract_fetchR_done),
         .fetchR_result(netlist_extract_fetchR_result),
+        .fetchCell_start(netlist_extract_fetchCell_start),
+        .fetchCell_i(netlist_extract_fetchCell_i),
+        .fetchCell_j(netlist_extract_fetchCell_j),
+        .fetchCell_done(netlist_extract_fetchCell_done),
+        .fetchCell_result(netlist_extract_fetchCell_result),
         .storeNode0_start(netlist_extract_storeNode0_start),
         .storeNode0_idx(netlist_extract_storeNode0_idx),
         .storeNode0_node_i(netlist_extract_storeNode0_node_i),
@@ -2008,6 +2019,12 @@ module GlobalRender_top (
     always @(posedge CLK100MHZ) begin
         if (flood_p_fetch_ram_ren) begin
             flood_p_fetch_ram_rdata <= canvas_shadow_data[flood_p_fetch_ram_addr];
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
+        if (netlist_extract_fetchCell_ram_ren) begin
+            netlist_extract_fetchCell_ram_rdata <= canvas_shadow_data[netlist_extract_fetchCell_ram_addr];
         end
     end
 
@@ -4090,8 +4107,8 @@ module GlobalRender_top (
         end else if (init_cycles == CANVAS_CELL_COUNT + 12) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd110;
-            circuit_canvas_ram_w_data <= 16'h0003;
-            canvas_shadow_data[9'd110] <= 16'h0003;
+            circuit_canvas_ram_w_data <= 16'h0085;
+            canvas_shadow_data[9'd110] <= 16'h0085;
             value_shadow_data[9'd110] <= 12'd0;
             value_unit_shadow_data[9'd110] <= COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
@@ -4130,6 +4147,14 @@ module GlobalRender_top (
             canvas_shadow_data[9'd113] <= 16'h0183;
             value_shadow_data[9'd113] <= 12'd0;
             value_unit_shadow_data[9'd113] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 16) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd128;
+            circuit_canvas_ram_w_data <= 16'h009F;
+            canvas_shadow_data[9'd128] <= 16'h009F;
+            value_shadow_data[9'd128] <= 12'd0;
+            value_unit_shadow_data[9'd128] <= COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (pending_pair_value_write) begin
             value_ram_w_en <= 1'b1;
@@ -4209,7 +4234,6 @@ module GlobalRender_top (
                 component_store_scan_addr <= {CANVAS_ADDR_W{1'b0}};
                 component_store_next_index <= {CANVAS_ADDR_W{1'b0}};
                 component_store_count <= {CANVAS_ADDR_W{1'b0}};
-                component_store_has_ground <= 1'b0;
             end else begin
                 component_index_map_clear_addr <= component_index_map_clear_addr + 1'b1;
             end
@@ -4229,9 +4253,6 @@ module GlobalRender_top (
                 component_index_map_w_en <= 1'b1;
                 component_index_map_w_addr <= component_store_scan_addr;
                 component_index_map_w_data <= component_store_next_index;
-                if (component_store_scan_store_type == SPRITE_GROUND[3:0]) begin
-                    component_store_has_ground <= 1'b1;
-                end
                 if (component_store_scan_is_two_cell &&
                     (component_store_scan_pair_addr != component_store_scan_addr)) begin
                     component_index_map_pending_pair_write <= 1'b1;

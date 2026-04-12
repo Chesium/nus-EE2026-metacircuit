@@ -1,5 +1,55 @@
 `timescale 1ns / 1ps
 
+module FetchCellTb #(
+    parameter integer GRID_WIDTH = 18
+) (
+    input  wire        clk,
+    input  wire        start,
+    output wire        busy,
+    output reg         done,
+    input  wire [4:0]  i,
+    input  wire [3:0]  j,
+    output reg  [15:0] result,
+    output reg         ram_ren,
+    output reg  [8:0]  ram_addr,
+    input  wire [15:0] ram_rdata
+);
+  localparam [1:0] STATE_IDLE = 2'd0;
+  localparam [1:0] STATE_WAIT = 2'd1;
+  localparam [1:0] STATE_CAPTURE = 2'd2;
+  reg [1:0] state = STATE_IDLE;
+  assign busy = (state != STATE_IDLE) || start;
+  always @(posedge clk) begin
+    case (state)
+      STATE_IDLE: begin
+        done <= 1'b0;
+        ram_ren <= 1'b0;
+        if (start) begin
+          ram_ren <= 1'b1;
+          ram_addr <= i + (j * GRID_WIDTH);
+          state <= STATE_WAIT;
+        end
+      end
+      STATE_WAIT: begin
+        done <= 1'b0;
+        ram_ren <= 1'b0;
+        state <= STATE_CAPTURE;
+      end
+      STATE_CAPTURE: begin
+        result <= ram_rdata;
+        done <= 1'b1;
+        ram_ren <= 1'b0;
+        state <= STATE_IDLE;
+      end
+      default: begin
+        done <= 1'b0;
+        ram_ren <= 1'b0;
+        state <= STATE_IDLE;
+      end
+    endcase
+  end
+endmodule
+
 module NetlistUartPath_test;
   localparam integer CLK_HZ = 100_000_000;
   localparam integer BAUD = 115200;
@@ -74,6 +124,11 @@ module NetlistUartPath_test;
   wire [7:0]  fetchR_j;
   wire        fetchR_done;
   wire [7:0]  fetchR_result;
+  wire        fetchCell_start;
+  wire [7:0]  fetchCell_i;
+  wire [7:0]  fetchCell_j;
+  wire        fetchCell_done;
+  wire [15:0] fetchCell_result;
 
   wire        storeNode0_start;
   wire [15:0] storeNode0_idx;
@@ -94,6 +149,11 @@ module NetlistUartPath_test;
   reg [$clog2(COMPONENT_STORE_COUNT)-1:0] netlist_node_r_addr = '0;
   wire [7:0] netlist_node0_ram_r_data;
   wire [7:0] netlist_node1_ram_r_data;
+  reg [15:0] cell_mem [0:CELL_COUNT-1];
+  wire       fetch_cell_busy_unused;
+  wire       fetch_cell_ram_ren;
+  wire [8:0] fetch_cell_ram_addr;
+  reg [15:0] fetch_cell_ram_rdata = 16'd0;
 
   reg component_store_read_busy = 1'b0;
   reg component_store_read_snapshot_pending = 1'b0;
@@ -147,6 +207,15 @@ module NetlistUartPath_test;
   );
     begin
       make_component_store_entry = {unit_value, idx_value, type_value, rotation_value, value_value, y_value, x_value};
+    end
+  endfunction
+
+  function automatic [15:0] make_cell_data(
+      input [1:0] rotation_value,
+      input [5:0] sprite_value
+  );
+    begin
+      make_cell_data = {7'd0, rotation_value, sprite_value, 1'b1};
     end
   endfunction
 
@@ -262,6 +331,20 @@ module NetlistUartPath_test;
       result_store_start <= 1'b1;
       @(negedge clk);
       result_store_start <= 1'b0;
+    end
+  endtask
+
+  task automatic place_cell(
+      input integer x_value,
+      input integer y_value,
+      input [15:0] cell_value
+  );
+    integer addr_value;
+    begin
+      addr_value = x_value + (y_value * GRID_WIDTH);
+      if (addr_value >= 0 && addr_value < CELL_COUNT) begin
+        cell_mem[addr_value] = cell_value;
+      end
     end
   endtask
 
@@ -456,7 +539,7 @@ module NetlistUartPath_test;
       .start(start_extract),
       .busy(extract_busy),
       .done(extract_done),
-      .par_elem_n(32'd3),
+      .par_elem_n(32'd2),
       .grid_height(GRID_HEIGHT),
       .grid_width(GRID_WIDTH),
       .fetchComponentType_start(fetchComponentType_start),
@@ -480,6 +563,11 @@ module NetlistUartPath_test;
       .fetchR_j(fetchR_j),
       .fetchR_done(fetchR_done),
       .fetchR_result(fetchR_result),
+      .fetchCell_start(fetchCell_start),
+      .fetchCell_i(fetchCell_i),
+      .fetchCell_j(fetchCell_j),
+      .fetchCell_done(fetchCell_done),
+      .fetchCell_result(fetchCell_result),
       .storeNode0_start(storeNode0_start),
       .storeNode0_idx(storeNode0_idx),
       .storeNode0_node_i(storeNode0_node_i),
@@ -488,6 +576,21 @@ module NetlistUartPath_test;
       .storeNode1_idx(storeNode1_idx),
       .storeNode1_node_i(storeNode1_node_i),
       .storeNode1_done(storeNode1_done)
+  );
+
+  FetchCellTb #(
+      .GRID_WIDTH(GRID_WIDTH)
+  ) fetch_cell_inst (
+      .clk(clk),
+      .start(fetchCell_start),
+      .busy(fetch_cell_busy_unused),
+      .done(fetchCell_done),
+      .i(fetchCell_i[4:0]),
+      .j(fetchCell_j[3:0]),
+      .result(fetchCell_result),
+      .ram_ren(fetch_cell_ram_ren),
+      .ram_addr(fetch_cell_ram_addr),
+      .ram_rdata(fetch_cell_ram_rdata)
   );
 
   UartTx #(
@@ -506,6 +609,9 @@ module NetlistUartPath_test;
   assign fetchAnchorPositionY_result = {4'd0, fetchAnchorPositionY_result_raw};
 
   always @(posedge clk) begin
+    if (fetch_cell_ram_ren) begin
+      fetch_cell_ram_rdata <= cell_mem[fetch_cell_ram_addr];
+    end
     if (component_store_read_snapshot_pending) begin
       component_store_read_snapshot_pending <= 1'b0;
       if (component_store_read_owner == COMPONENT_READ_OWNER_DUMP) begin
@@ -587,7 +693,7 @@ module NetlistUartPath_test;
         if (netlist_packet_last_char) begin
           netlist_packet_sending <= 1'b0;
           netlist_packet_last_char <= 1'b0;
-          if (dump_idx == 2) begin
+          if (dump_idx == 1) begin
             dump_active <= 1'b0;
             dump_done <= 1'b1;
           end else begin
@@ -616,18 +722,21 @@ module NetlistUartPath_test;
     result_clear = 1'b0;
     result_store_start = 1'b0;
     start_extract = 1'b0;
+    for (idx = 0; idx < CELL_COUNT; idx = idx + 1) begin
+      cell_mem[idx] = 16'd0;
+    end
 
     repeat (4) @(negedge clk);
     rst_n <= 1'b1;
 
     pulse_result_clear();
 
-    component_store_write(0, make_component_store_entry(9'd0, TYPE_GROUND[3:0], 2'd1, 12'h000, 4'd0, 5'd0, 4'd2));
-    component_store_write(1, make_component_store_entry(9'd1, TYPE_RL[3:0], 2'd2, 12'h123, 4'd1, 5'd2, 4'd1));
-    component_store_write(2, make_component_store_entry(9'd2, TYPE_CL[3:0], 2'd0, 12'h456, 4'd2, 5'd1, 4'd1));
+    component_store_write(0, make_component_store_entry(9'd0, TYPE_RL[3:0], 2'd2, 12'h123, 4'd1, 5'd2, 4'd1));
+    component_store_write(1, make_component_store_entry(9'd1, TYPE_CL[3:0], 2'd0, 12'h456, 4'd2, 5'd1, 4'd1));
 
     store_region(8'd0, 8'd1, 8'd7);
     store_region(8'd3, 8'd1, 8'd11);
+    place_cell(0, 2, make_cell_data(2'd1, 6'd15));
 
     @(negedge clk);
     start_extract <= 1'b1;
@@ -635,13 +744,10 @@ module NetlistUartPath_test;
     start_extract <= 1'b0;
 
     uart_recv_packet();
-    expect_packet_nodes("0", "0", "0", "0", "0");
+    expect_packet_nodes("0", "0", "0", "F", "F");
 
     uart_recv_packet();
-    expect_packet_nodes("1", "0", "1", "0", "0");
-
-    uart_recv_packet();
-    expect_packet_nodes("2", "0", "0", "0", "1");
+    expect_packet_nodes("1", "F", "F", "0", "0");
 
     wait (dump_done == 1'b1);
     $display("NetlistUartPath_test passed.");

@@ -18,6 +18,38 @@ package ExtractComponentNodesCombPkg;
     end
   endfunction
 
+  function automatic logic ExtractComponentNodesCombPkg__is_ground_cell_comb(
+      input logic [15:0] cell_data
+  );
+    begin
+      ExtractComponentNodesCombPkg__is_ground_cell_comb = cell_data[0] && (cell_data[6:1] == 6'd15);
+    end
+  endfunction
+
+  function automatic logic is_ground_cell_comb(
+      input logic [15:0] cell_data
+  );
+    begin
+      is_ground_cell_comb = ExtractComponentNodesCombPkg__is_ground_cell_comb(cell_data);
+    end
+  endfunction
+
+  function automatic logic [1:0] ExtractComponentNodesCombPkg__get_cell_rotation_comb(
+      input logic [15:0] cell_data
+  );
+    begin
+      ExtractComponentNodesCombPkg__get_cell_rotation_comb = cell_data[8:7];
+    end
+  endfunction
+
+  function automatic logic [1:0] get_cell_rotation_comb(
+      input logic [15:0] cell_data
+  );
+    begin
+      get_cell_rotation_comb = ExtractComponentNodesCombPkg__get_cell_rotation_comb(cell_data);
+    end
+  endfunction
+
   function automatic logic ExtractComponentNodesCombPkg__is_two_terminal_component_comb(
       input logic [7:0] t
   );

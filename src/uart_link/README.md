@@ -131,6 +131,7 @@ Used by the relay or by either board when a snapshot is rejected:
 - `protocol.py`: packet dataclasses, encoding/decoding, snapshot assembly
 - `relay.py`: serial relay and in-memory relay harness for testing
 - `solver_tester.py`: automatic hardware tester for board `S` on a single COM port
+- `frontend_tester.py`: laptop-side simulated board `S` that receives frontend netlists, runs the local simpyhls DC solver, and sends `VB/VN/VE` replies back
 - `tests/`: unit tests for protocol and relay behavior
 
 ## Solver Board Hardware Test
@@ -141,9 +142,35 @@ response:
 
 ```text
 python -m src.uart_link.solver_tester --list
-python -m src.uart_link.solver_tester --port COM7
-python -m src.uart_link.solver_tester --port COM7 --case voltage_divider_5v_3k_2k
+python -m src.uart_link.solver_tester --port COM16
+python -m src.uart_link.solver_tester --port COM16 --case voltage_divider_5v_3k_2k
 ```
 
 The current built-in cases are designed to match the existing solver-board
 UART protocol and the known-good hardware smoke tests.
+
+## Frontend Board Test Against Simulated Solver
+
+To test board `F` before wiring in the real solver board, the laptop can act as
+a simulated board `S`. The tester below listens on one COM port, assembles
+`NB/NC/NE`, runs the local `simpyhls/examples/solve_core_dc.dsl.py` flow, and
+sends `VB/VN/VE` back to the frontend:
+
+```text
+python -m src.uart_link.frontend_tester --port COM16
+python -m src.uart_link.frontend_tester --port COM16 --once
+```
+
+Notes:
+
+- The current host solver accepts only `R`, `I`, and `V` kind codes.
+- BCD + unit conversion follows the solver-board mapping:
+  - `00` base
+  - `01` milli
+  - `02` micro
+  - `03` nano
+  - `04` kilo
+  - `05` mega
+  - `06` giga
+- Unsupported kinds or invalid BCD/unit fields return an `ER` packet so the
+  frontend can show a receive-side error without needing board `S`.

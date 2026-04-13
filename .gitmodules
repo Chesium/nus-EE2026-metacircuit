@@ -1,0 +1,3 @@
+[submodule "simpyhls"]
+	path = simpyhls
+	url = git@github.com:Chesium/simpyhls.git

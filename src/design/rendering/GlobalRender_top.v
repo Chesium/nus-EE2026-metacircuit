@@ -116,7 +116,7 @@ module GlobalRender_top (
     wire [11:0] circuit_canvas_rgb;
     wire        circuit_canvas_rendered;
     reg  [11:0] ui_rgb;
-    wire [7:0]  seg_data;
+    wire [15:0] hex_display_value;
     wire [11:0] toolbar_rgb;
     wire        toolbar_rendered;
     wire [3:0]  selected_toolbar_idx;
@@ -705,6 +705,58 @@ module GlobalRender_top (
         end
     endfunction
 
+    function [7:0] frontend_protocol_kind_from_store_type;
+        input [3:0] store_type;
+        begin
+            case (store_type)
+                SPRITE_RES_LEFT[3:0], SPRITE_RES_RIGHT[3:0]:
+                    frontend_protocol_kind_from_store_type = 8'h01;
+                SPRITE_CURR_LEFT[3:0], SPRITE_CURR_RIGHT[3:0]:
+                    frontend_protocol_kind_from_store_type = 8'h02;
+                SPRITE_VOLT_LEFT[3:0], SPRITE_VOLT_RIGHT[3:0]:
+                    frontend_protocol_kind_from_store_type = 8'h03;
+                SPRITE_CAP_LEFT[3:0], SPRITE_CAP_RIGHT[3:0]:
+                    frontend_protocol_kind_from_store_type = 8'h04;
+                SPRITE_IND_LEFT[3:0], SPRITE_IND_RIGHT[3:0]:
+                    frontend_protocol_kind_from_store_type = 8'h05;
+                default:
+                    frontend_protocol_kind_from_store_type = 8'h00;
+            endcase
+        end
+    endfunction
+
+    function frontend_protocol_kind_supported;
+        input [7:0] protocol_kind;
+        begin
+            case (protocol_kind)
+                8'h01, 8'h02, 8'h03: frontend_protocol_kind_supported = 1'b1;
+                default: frontend_protocol_kind_supported = 1'b0;
+            endcase
+        end
+    endfunction
+
+    function [7:0] frontend_protocol_unit_from_component_unit;
+        input [3:0] unit_code;
+        begin
+            case (unit_code)
+                COMPONENT_UNIT_NONE: frontend_protocol_unit_from_component_unit = 8'h00;
+                COMPONENT_UNIT_m:    frontend_protocol_unit_from_component_unit = 8'h01;
+                COMPONENT_UNIT_U:    frontend_protocol_unit_from_component_unit = 8'h02;
+                COMPONENT_UNIT_N:    frontend_protocol_unit_from_component_unit = 8'h03;
+                COMPONENT_UNIT_K:    frontend_protocol_unit_from_component_unit = 8'h04;
+                COMPONENT_UNIT_M:    frontend_protocol_unit_from_component_unit = 8'h05;
+                default:             frontend_protocol_unit_from_component_unit = 8'hFF;
+            endcase
+        end
+    endfunction
+
+    function frontend_protocol_unit_supported;
+        input [7:0] protocol_unit;
+        begin
+            frontend_protocol_unit_supported = (protocol_unit != 8'hFF);
+        end
+    endfunction
+
     function [3:0] component_display_type_from_store_type;
         input [3:0] store_type;
         begin
@@ -918,9 +970,12 @@ module GlobalRender_top (
 
     // JC 绔彛鐢� OLED 妯″潡椹卞姩锛岀鐢� OLED 鏃朵繚鎸佹媺浣庛€�
     assign JC = ENABLE_OLED_CALC ? jc_oled : 8'h00;
-    assign SEG = seg_data;
-    assign AN = 4'hF;
-    assign LED = SW;
+    Hex7SegMux frontend_hex_mux_inst (
+        .clk(CLK100MHZ),
+        .hex_value(hex_display_value),
+        .SEG(SEG),
+        .AN(AN)
+    );
     ClockDivider #( .FREQ(25_000_000) ) clkdiv_pixel_inst ( .CLK100MHZ(CLK100MHZ), .clk_out(clk_pixel) );
     ClockDivider #( .FREQ(20) ) clkdiv_nav_inst ( .CLK100MHZ(CLK100MHZ), .clk_out(clk_nav) );
 
@@ -1203,9 +1258,31 @@ module GlobalRender_top (
     localparam integer BACKEND_FRAME_CYCLE_BUDGET = 10000;
     localparam integer UART_CELL_PACKET_LEN = 31;
     localparam integer UART_RESULT_PACKET_LEN = 34;
-    localparam integer UART_NETLIST_PACKET_LEN = 49;
     localparam [1:0] COMPONENT_READ_OWNER_BACKEND = 2'd0;
     localparam [1:0] COMPONENT_READ_OWNER_NETLIST = 2'd1;
+    localparam [1:0] FRONTEND_NETLIST_TX_MODE_NB = 2'd0;
+    localparam [1:0] FRONTEND_NETLIST_TX_MODE_NC = 2'd1;
+    localparam [1:0] FRONTEND_NETLIST_TX_MODE_NE = 2'd2;
+    localparam [1:0] FRONTEND_NETLIST_TX_MODE_ER = 2'd3;
+    localparam [3:0]
+        NETLIST_TX_IDLE = 4'd0,
+        NETLIST_TX_EXTRACT_WAIT = 4'd1,
+        NETLIST_TX_PRESCAN_REQ = 4'd2,
+        NETLIST_TX_PRESCAN_WAIT = 4'd3,
+        NETLIST_TX_BEGIN_START = 4'd4,
+        NETLIST_TX_BEGIN_WAIT = 4'd5,
+        NETLIST_TX_COMP_REQ = 4'd6,
+        NETLIST_TX_COMP_WAIT = 4'd7,
+        NETLIST_TX_COMP_START = 4'd8,
+        NETLIST_TX_COMP_WAIT_SEND = 4'd9,
+        NETLIST_TX_END_START = 4'd10,
+        NETLIST_TX_END_WAIT = 4'd11,
+        NETLIST_TX_ERR_START = 4'd12,
+        NETLIST_TX_ERR_WAIT = 4'd13;
+    localparam [7:0] FRONTEND_STATUS_OK = 8'h00;
+    localparam [7:0] FRONTEND_STATUS_UNSUPPORTED_KIND = 8'h81;
+    localparam [7:0] FRONTEND_STATUS_UNSUPPORTED_UNIT = 8'h82;
+    localparam [7:0] FRONTEND_STATUS_REPLY_PARSE = 8'h83;
     localparam [3:0] BACKEND_TEST_IDLE        = 4'd0;
     localparam [3:0] BACKEND_TEST_START_TYPE  = 4'd1;
     localparam [3:0] BACKEND_TEST_WAIT_TYPE   = 4'd2;
@@ -1457,7 +1534,6 @@ module GlobalRender_top (
     reg  [CANVAS_ADDR_W-1:0] netlist_node_r_addr = {CANVAS_ADDR_W{1'b0}};
     wire [7:0]  netlist_node0_ram_r_data;
     wire [7:0]  netlist_node1_ram_r_data;
-    reg         netlist_results_ready = 1'b0;
     reg         netlist_frame_pending = 1'b0;
     reg  [CANVAS_ADDR_W-1:0] netlist_dump_idx = {CANVAS_ADDR_W{1'b0}};
     reg  [CANVAS_ADDR_W-1:0] netlist_dump_count = {CANVAS_ADDR_W{1'b0}};
@@ -1468,15 +1544,104 @@ module GlobalRender_top (
     reg  [7:0]  netlist_component_node1_snap = 8'd0;
     reg         netlist_component_entry_toggle = 1'b0;
     reg         netlist_component_entry_toggle_seen = 1'b0;
-    reg         netlist_packet_pending = 1'b0;
-    reg         netlist_packet_sending = 1'b0;
-    reg         netlist_packet_last_char = 1'b0;
-    reg         netlist_uart_wait_busy = 1'b0;
-    reg  [5:0]  netlist_packet_index = 6'd0;
-    reg         netlist_uart_start = 1'b0;
-    reg  [7:0]  netlist_uart_data = 8'h00;
-    wire        netlist_uart_busy;
+    reg  [3:0]  netlist_tx_state = NETLIST_TX_IDLE;
+    reg         netlist_snapshot_ready = 1'b0;
+    reg  [7:0]  netlist_protocol_node_count = 8'd0;
+    reg  [7:0]  netlist_prescan_max_node = 8'd0;
+    reg         netlist_prescan_has_node = 1'b0;
+    reg  [7:0]  netlist_error_code = FRONTEND_STATUS_OK;
+    reg  [15:0] netlist_error_arg = 16'd0;
+    reg  [15:0] frontend_snapshot_frame = 16'd0;
+    reg  [15:0] frontend_tx_frame = 16'd0;
+    reg         frontend_tx_start = 1'b0;
+    reg  [1:0]  frontend_tx_mode = FRONTEND_NETLIST_TX_MODE_NB;
+    reg  [7:0]  frontend_tx_elem_count = 8'd0;
+    reg  [7:0]  frontend_tx_node_count = 8'd0;
+    reg  [7:0]  frontend_tx_component_idx = 8'd0;
+    reg  [7:0]  frontend_tx_component_kind = 8'd0;
+    reg  [7:0]  frontend_tx_component_n0 = 8'd0;
+    reg  [7:0]  frontend_tx_component_n1 = 8'd0;
+    reg  [11:0] frontend_tx_component_value_bcd = 12'd0;
+    reg  [7:0]  frontend_tx_component_unit = 8'd0;
+    reg  [7:0]  frontend_tx_error_code = 8'd0;
+    reg  [15:0] frontend_tx_error_arg = 16'd0;
+    wire        frontend_tx_busy;
+    wire        frontend_tx_done;
     wire        netlist_uart_tx;
+    wire        frontend_uart_client_enable;
+    wire [7:0]  netlist_snap_component_kind =
+        frontend_protocol_kind_from_store_type(netlist_component_entry_snap[26:23]);
+    wire [7:0]  netlist_snap_component_unit =
+        frontend_protocol_unit_from_component_unit(netlist_component_entry_snap[39:36]);
+    wire        netlist_snap_kind_supported =
+        frontend_protocol_kind_supported(netlist_snap_component_kind);
+    wire        netlist_snap_unit_supported =
+        frontend_protocol_unit_supported(netlist_snap_component_unit);
+    wire [7:0]  netlist_snap_max_node =
+        (netlist_component_node0_snap != 8'hFF && netlist_component_node1_snap != 8'hFF) ?
+            ((netlist_component_node0_snap >= netlist_component_node1_snap) ? netlist_component_node0_snap : netlist_component_node1_snap) :
+        (netlist_component_node0_snap != 8'hFF) ? netlist_component_node0_snap :
+        (netlist_component_node1_snap != 8'hFF) ? netlist_component_node1_snap :
+        8'd0;
+    wire        netlist_snap_has_node =
+        (netlist_component_node0_snap != 8'hFF) || (netlist_component_node1_snap != 8'hFF);
+    wire [7:0]  frontend_rx_byte;
+    wire        frontend_rx_byte_valid;
+    wire        frontend_rx_line_valid;
+    wire        frontend_rx_line_overflow;
+    wire [7:0]  frontend_rx_line_len;
+    wire [48*8-1:0] frontend_rx_line_data;
+    wire        frontend_voltage_begin_valid;
+    wire [15:0] frontend_voltage_begin_frame;
+    wire [7:0]  frontend_voltage_begin_node_count;
+    wire [7:0]  frontend_voltage_begin_status;
+    wire        frontend_voltage_node_valid;
+    wire [15:0] frontend_voltage_node_frame;
+    wire [7:0]  frontend_voltage_node_idx;
+    wire [31:0] frontend_voltage_node_value_bits;
+    wire        frontend_voltage_end_valid;
+    wire [15:0] frontend_voltage_end_frame;
+    wire [7:0]  frontend_voltage_end_node_count;
+    wire [7:0]  frontend_voltage_end_status;
+    wire        frontend_error_packet_valid;
+    wire [15:0] frontend_error_packet_frame;
+    wire [7:0]  frontend_error_packet_code;
+    wire [15:0] frontend_error_packet_arg;
+    wire        frontend_reply_parse_error;
+    wire [7:0]  frontend_reply_parse_error_code;
+    wire [15:0] frontend_reply_parse_error_arg;
+    reg         frontend_reply_stage_active = 1'b0;
+    reg         frontend_reply_stage_bank = 1'b0;
+    reg  [15:0] frontend_reply_stage_frame = 16'd0;
+    reg  [7:0]  frontend_reply_stage_node_count = 8'd0;
+    reg  [7:0]  frontend_reply_stage_status = 8'd0;
+    reg  [7:0]  frontend_reply_stage_received_count = 8'd0;
+    reg         frontend_reply_valid = 1'b0;
+    reg         frontend_reply_active_bank = 1'b0;
+    reg  [15:0] frontend_reply_frame = 16'd0;
+    reg  [7:0]  frontend_reply_node_count = 8'd0;
+    reg  [7:0]  frontend_reply_status = 8'd0;
+    reg         frontend_reply_ram0_w_en = 1'b0;
+    reg         frontend_reply_ram1_w_en = 1'b0;
+    reg  [4:0]  frontend_reply_ram_w_addr = 5'd0;
+    reg  [31:0] frontend_reply_ram_w_data = 32'd0;
+    reg  [4:0]  frontend_reply_view_addr = 5'd0;
+    wire [31:0] frontend_reply_ram0_r_data;
+    wire [31:0] frontend_reply_ram1_r_data;
+    wire [31:0] frontend_reply_view_value =
+        frontend_reply_active_bank ? frontend_reply_ram1_r_data : frontend_reply_ram0_r_data;
+    reg  [4:0]  frontend_reply_view_node = 5'd0;
+    reg         frontend_reply_view_upper = 1'b0;
+    reg         btnl_prev = 1'b0;
+    reg         btnr_prev = 1'b0;
+    reg         btnu_prev = 1'b0;
+    reg         btnd_prev = 1'b0;
+    reg  [19:0] frontend_rx_led_ctr = 20'd0;
+    reg  [19:0] frontend_tx_led_ctr = 20'd0;
+    wire        frontend_btnl_rise = BTNL && !btnl_prev;
+    wire        frontend_btnr_rise = BTNR && !btnr_prev;
+    wire        frontend_btnu_rise = BTNU && !btnu_prev;
+    wire        frontend_btnd_rise = BTND && !btnd_prev;
     wire [7:0]  netlist_extract_storeNode0_node_i_norm = netlist_extract_storeNode0_node_i;
     wire [7:0]  netlist_extract_storeNode1_node_i_norm = netlist_extract_storeNode1_node_i;
     wire        flood_feature_enable = !clear_canvas_active && (init_cycles >= INIT_DELAY_CYCLES);
@@ -1485,15 +1650,19 @@ module GlobalRender_top (
     wire [7:0]  flood_wrapper_fetchR_j;
     wire        flood_color_apply_fetch_done;
     wire        netlist_debug_holds_flood =
-        uart_netlist_debug_enable && (netlist_extract_busy || netlist_results_ready || netlist_component_read_pending);
+        frontend_uart_client_enable &&
+        (netlist_extract_busy || netlist_snapshot_ready || netlist_component_read_pending ||
+         (netlist_tx_state != NETLIST_TX_IDLE));
     wire        netlist_extract_port_active =
-        uart_netlist_debug_enable || netlist_extract_busy || netlist_component_read_pending ||
-        netlist_packet_pending || netlist_packet_sending;
+        frontend_uart_client_enable || netlist_extract_busy || netlist_component_read_pending ||
+        (netlist_tx_state != NETLIST_TX_IDLE);
     wire        netlist_extract_comp_ren_active = netlist_extract_port_active && netlist_extract_comp_ren;
     wire        netlist_extract_fetchR_start_active = netlist_extract_port_active && netlist_extract_fetchR_start;
-    assign seg_data = backend_fetch_test_enable ?
-        {4'hF, ~backend_test_active, ~backend_frame_pending, ~component_store_busy, ~component_store_read_busy} :
-        8'hFF;
+    assign hex_display_value = frontend_uart_client_enable ?
+        (frontend_reply_view_upper ? frontend_reply_view_value[31:16] : frontend_reply_view_value[15:0]) :
+        (backend_fetch_test_enable ?
+            {8'hF0, ~backend_test_active, ~backend_frame_pending, ~component_store_busy, ~component_store_read_busy, 4'h0} :
+            {8'h00, frontend_reply_status});
     assign circuit_canvas_fg_color_ram_w_en = circuit_canvas_ram_w_en || circuit_canvas_fg_color_override_w_en;
     assign circuit_canvas_fg_color_ram_w_addr = circuit_canvas_fg_color_override_w_en ?
         circuit_canvas_fg_color_override_w_addr : circuit_canvas_ram_w_addr;
@@ -1787,17 +1956,98 @@ module GlobalRender_top (
         .tx(flood_uart_tx),
         .busy(flood_uart_busy)
     );
-    UartTx #(
-        .ClkHz(100_000_000),
+    FrontendNetlistLineTransmitter #(
+        .CLK_FREQ_HZ(100_000_000),
         .BAUD(115200)
-    ) uart_netlist_debug_tx_inst (
+    ) frontend_netlist_tx_inst (
         .clk(CLK100MHZ),
-        .start(netlist_uart_start),
-        .data(netlist_uart_data),
+        .rst_n(~BTNC),
+        .start(frontend_tx_start),
+        .mode(frontend_tx_mode),
+        .frame(frontend_tx_frame),
+        .elem_count(frontend_tx_elem_count),
+        .node_count(frontend_tx_node_count),
+        .component_idx(frontend_tx_component_idx),
+        .component_kind(frontend_tx_component_kind),
+        .component_n0(frontend_tx_component_n0),
+        .component_n1(frontend_tx_component_n1),
+        .component_value_bcd(frontend_tx_component_value_bcd),
+        .component_unit(frontend_tx_component_unit),
+        .error_code(frontend_tx_error_code),
+        .error_arg(frontend_tx_error_arg),
         .tx(netlist_uart_tx),
-        .busy(netlist_uart_busy)
+        .busy(frontend_tx_busy),
+        .done(frontend_tx_done)
     );
-    assign RsTx = uart_netlist_debug_enable ? netlist_uart_tx :
+    UartRx #(
+        .CLK_FREQ_HZ(100_000_000),
+        .BAUD(115200)
+    ) frontend_uart_rx_inst (
+        .clk(CLK100MHZ),
+        .rst_n(~BTNC),
+        .rx(RsRx),
+        .data(frontend_rx_byte),
+        .data_valid(frontend_rx_byte_valid)
+    );
+    UartLineAssembler #(
+        .MAX_LINE_BYTES(48)
+    ) frontend_uart_line_assembler_inst (
+        .clk(CLK100MHZ),
+        .rst_n(~BTNC),
+        .byte_valid(frontend_rx_byte_valid),
+        .byte_data(frontend_rx_byte),
+        .line_valid(frontend_rx_line_valid),
+        .line_overflow(frontend_rx_line_overflow),
+        .line_len(frontend_rx_line_len),
+        .line_data(frontend_rx_line_data)
+    );
+    FrontendVoltagePacketParser #(
+        .MAX_LINE_BYTES(48),
+        .MAX_NODES(32)
+    ) frontend_voltage_parser_inst (
+        .clk(CLK100MHZ),
+        .rst_n(~BTNC),
+        .line_valid(frontend_rx_line_valid),
+        .line_overflow(frontend_rx_line_overflow),
+        .line_len(frontend_rx_line_len),
+        .line_data(frontend_rx_line_data),
+        .voltage_begin_valid(frontend_voltage_begin_valid),
+        .voltage_begin_frame(frontend_voltage_begin_frame),
+        .voltage_begin_node_count(frontend_voltage_begin_node_count),
+        .voltage_begin_status(frontend_voltage_begin_status),
+        .voltage_node_valid(frontend_voltage_node_valid),
+        .voltage_node_frame(frontend_voltage_node_frame),
+        .voltage_node_idx(frontend_voltage_node_idx),
+        .voltage_node_value_bits(frontend_voltage_node_value_bits),
+        .voltage_end_valid(frontend_voltage_end_valid),
+        .voltage_end_frame(frontend_voltage_end_frame),
+        .voltage_end_node_count(frontend_voltage_end_node_count),
+        .voltage_end_status(frontend_voltage_end_status),
+        .error_packet_valid(frontend_error_packet_valid),
+        .error_packet_frame(frontend_error_packet_frame),
+        .error_packet_code(frontend_error_packet_code),
+        .error_packet_arg(frontend_error_packet_arg),
+        .parse_error(frontend_reply_parse_error),
+        .parse_error_code(frontend_reply_parse_error_code),
+        .parse_error_arg(frontend_reply_parse_error_arg)
+    );
+    SimpleRam #( .WordWidth(32), .WordCount(32) ) frontend_reply_ram0_inst (
+        .clk(CLK100MHZ),
+        .w_en(frontend_reply_ram0_w_en),
+        .w_addr(frontend_reply_ram_w_addr),
+        .r_addr(frontend_reply_view_addr),
+        .d_in(frontend_reply_ram_w_data),
+        .d_out(frontend_reply_ram0_r_data)
+    );
+    SimpleRam #( .WordWidth(32), .WordCount(32) ) frontend_reply_ram1_inst (
+        .clk(CLK100MHZ),
+        .w_en(frontend_reply_ram1_w_en),
+        .w_addr(frontend_reply_ram_w_addr),
+        .r_addr(frontend_reply_view_addr),
+        .d_in(frontend_reply_ram_w_data),
+        .d_out(frontend_reply_ram1_r_data)
+    );
+    assign RsTx = frontend_uart_client_enable ? netlist_uart_tx :
         (uart_flood_debug_enable ? flood_uart_tx : uart_cell_uart_tx);
     SimpleRam #( .WordWidth(12), .WordCount(CANVAS_CELL_COUNT) ) component_value_ram_inst (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
@@ -2075,106 +2325,321 @@ module GlobalRender_top (
     always @(posedge CLK100MHZ) begin
         netlist_extract_start <= 1'b0;
         netlist_component_read_request <= 1'b0;
-        netlist_uart_start <= 1'b0;
+        frontend_tx_start <= 1'b0;
 
-        if (!uart_netlist_debug_enable || component_store_busy) begin
-            netlist_results_ready <= 1'b0;
+        if (!frontend_uart_client_enable || component_store_busy) begin
+            netlist_tx_state <= NETLIST_TX_IDLE;
+            netlist_snapshot_ready <= 1'b0;
             netlist_frame_pending <= 1'b0;
             netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
             netlist_dump_count <= {CANVAS_ADDR_W{1'b0}};
             netlist_component_read_pending <= 1'b0;
             netlist_component_entry_toggle_seen <= netlist_component_entry_toggle;
-            netlist_packet_pending <= 1'b0;
-            netlist_packet_sending <= 1'b0;
-            netlist_packet_last_char <= 1'b0;
-            netlist_uart_wait_busy <= 1'b0;
-            netlist_packet_index <= 6'd0;
             netlist_node_r_addr <= {CANVAS_ADDR_W{1'b0}};
+            netlist_protocol_node_count <= 8'd0;
+            netlist_prescan_max_node <= 8'd0;
+            netlist_prescan_has_node <= 1'b0;
+            netlist_error_code <= FRONTEND_STATUS_OK;
+            netlist_error_arg <= 16'd0;
         end else begin
             if (interaction_frame_tick) begin
                 netlist_frame_pending <= 1'b1;
             end
 
-            if (flood_results_ready && flood_colors_ready &&
-                !flood_wrapper_busy && !flood_color_apply_active && !flood_color_apply_fetch_busy &&
-                !netlist_extract_busy && !netlist_results_ready && !netlist_component_read_pending &&
-                !netlist_packet_pending && !netlist_packet_sending) begin
-                netlist_extract_start <= 1'b1;
-            end
-
             if (netlist_extract_done) begin
-                netlist_results_ready <= 1'b1;
+                netlist_snapshot_ready <= 1'b1;
                 netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
                 netlist_dump_count <= component_store_count;
-                netlist_frame_pending <= 1'b0;
+                netlist_prescan_max_node <= 8'd0;
+                netlist_prescan_has_node <= 1'b0;
+                netlist_error_code <= FRONTEND_STATUS_OK;
+                netlist_error_arg <= 16'd0;
+                if (component_store_count == {CANVAS_ADDR_W{1'b0}}) begin
+                    netlist_protocol_node_count <= 8'd0;
+                    netlist_tx_state <= NETLIST_TX_BEGIN_START;
+                end else begin
+                    netlist_tx_state <= NETLIST_TX_PRESCAN_REQ;
+                end
             end
 
             if ((netlist_component_entry_toggle != netlist_component_entry_toggle_seen)) begin
                 netlist_component_entry_toggle_seen <= netlist_component_entry_toggle;
                 netlist_component_read_pending <= 1'b0;
-                netlist_packet_pending <= 1'b1;
-            end
-
-            if (netlist_frame_pending && netlist_results_ready &&
-                (netlist_dump_count != {CANVAS_ADDR_W{1'b0}}) &&
-                !netlist_extract_busy && !netlist_component_read_pending &&
-                !netlist_packet_pending && !netlist_packet_sending &&
-                !component_store_read_busy && !flood_wrapper_busy &&
-                !flood_color_apply_active && !flood_color_apply_fetch_busy) begin
-                netlist_component_read_request <= 1'b1;
-                netlist_component_read_pending <= 1'b1;
-                netlist_node_r_addr <= netlist_dump_idx;
-                netlist_frame_pending <= 1'b0;
-            end
-
-            if (netlist_results_ready && (netlist_dump_count == {CANVAS_ADDR_W{1'b0}}) &&
-                !netlist_component_read_pending && !netlist_packet_pending && !netlist_packet_sending) begin
-                netlist_results_ready <= 1'b0;
-                netlist_frame_pending <= 1'b0;
-            end
-
-            if (!netlist_packet_sending) begin
-                netlist_packet_last_char <= 1'b0;
-                if (netlist_packet_pending && !netlist_uart_busy && !netlist_uart_wait_busy) begin
-                    netlist_uart_data <= uart_netlist_packet_char(
-                        6'd0,
-                        netlist_component_entry_snap,
-                        netlist_component_node0_snap,
-                        netlist_component_node1_snap
-                    );
-                    netlist_uart_start <= 1'b1;
-                    netlist_packet_pending <= 1'b0;
-                    netlist_packet_sending <= 1'b1;
-                    netlist_packet_index <= 6'd1;
-                    netlist_packet_last_char <= (UART_NETLIST_PACKET_LEN == 1);
-                    netlist_uart_wait_busy <= 1'b1;
-                end
-            end else if (netlist_uart_wait_busy) begin
-                if (netlist_uart_busy) begin
-                    netlist_uart_wait_busy <= 1'b0;
-                end
-            end else if (!netlist_uart_busy) begin
-                if (netlist_packet_last_char) begin
-                    netlist_packet_sending <= 1'b0;
-                    netlist_packet_last_char <= 1'b0;
-                    if ((netlist_dump_idx + 1'b1) >= netlist_dump_count) begin
-                        netlist_results_ready <= 1'b0;
-                        netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
-                    end else begin
-                        netlist_dump_idx <= netlist_dump_idx + 1'b1;
+                case (netlist_tx_state)
+                    NETLIST_TX_PRESCAN_WAIT: begin
+                        if (!netlist_snap_kind_supported) begin
+                            netlist_error_code <= FRONTEND_STATUS_UNSUPPORTED_KIND;
+                            netlist_error_arg <= {8'h00, netlist_dump_idx[7:0]};
+                            netlist_tx_state <= NETLIST_TX_ERR_START;
+                        end else if (!netlist_snap_unit_supported) begin
+                            netlist_error_code <= FRONTEND_STATUS_UNSUPPORTED_UNIT;
+                            netlist_error_arg <= {4'h0, netlist_component_entry_snap[39:36], netlist_dump_idx[7:0]};
+                            netlist_tx_state <= NETLIST_TX_ERR_START;
+                        end else begin
+                            if (netlist_snap_has_node) begin
+                                netlist_prescan_has_node <= 1'b1;
+                                if (!netlist_prescan_has_node || (netlist_snap_max_node > netlist_prescan_max_node)) begin
+                                    netlist_prescan_max_node <= netlist_snap_max_node;
+                                end
+                            end
+                            if ((netlist_dump_idx + 1'b1) >= netlist_dump_count) begin
+                                if (netlist_snap_has_node) begin
+                                    netlist_protocol_node_count <=
+                                        ((netlist_snap_max_node > netlist_prescan_max_node) || !netlist_prescan_has_node) ?
+                                            (netlist_snap_max_node + 1'b1) :
+                                            (netlist_prescan_max_node + 1'b1);
+                                end else begin
+                                    netlist_protocol_node_count <=
+                                        netlist_prescan_has_node ? (netlist_prescan_max_node + 1'b1) : 8'd0;
+                                end
+                                netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
+                                netlist_tx_state <= NETLIST_TX_BEGIN_START;
+                            end else begin
+                                netlist_dump_idx <= netlist_dump_idx + 1'b1;
+                                netlist_tx_state <= NETLIST_TX_PRESCAN_REQ;
+                            end
+                        end
                     end
-                end else begin
-                    netlist_uart_data <= uart_netlist_packet_char(
-                        netlist_packet_index,
-                        netlist_component_entry_snap,
-                        netlist_component_node0_snap,
-                        netlist_component_node1_snap
-                    );
-                    netlist_uart_start <= 1'b1;
-                    netlist_packet_last_char <= (netlist_packet_index == UART_NETLIST_PACKET_LEN - 1);
-                    netlist_packet_index <= netlist_packet_index + 1'b1;
-                    netlist_uart_wait_busy <= 1'b1;
+                    NETLIST_TX_COMP_WAIT: begin
+                        frontend_tx_component_idx <= netlist_dump_idx[7:0];
+                        frontend_tx_component_kind <= netlist_snap_component_kind;
+                        frontend_tx_component_n0 <= netlist_component_node0_snap;
+                        frontend_tx_component_n1 <= netlist_component_node1_snap;
+                        frontend_tx_component_value_bcd <= netlist_component_entry_snap[20:9];
+                        frontend_tx_component_unit <= netlist_snap_component_unit;
+                        netlist_tx_state <= NETLIST_TX_COMP_START;
+                    end
+                    default: begin end
+                endcase
+            end
+
+            case (netlist_tx_state)
+                NETLIST_TX_IDLE: begin
+                    if (netlist_frame_pending && flood_results_ready && flood_colors_ready &&
+                        !flood_wrapper_busy && !flood_color_apply_active && !flood_color_apply_fetch_busy &&
+                        !netlist_extract_busy && !netlist_component_read_pending && !component_store_read_busy) begin
+                        frontend_snapshot_frame <= frontend_snapshot_frame + 1'b1;
+                        netlist_extract_start <= 1'b1;
+                        netlist_frame_pending <= 1'b0;
+                        netlist_tx_state <= NETLIST_TX_EXTRACT_WAIT;
+                    end
                 end
+                NETLIST_TX_EXTRACT_WAIT: begin
+                    // wait for netlist_extract_done
+                end
+                NETLIST_TX_PRESCAN_REQ: begin
+                    if (!netlist_component_read_pending && !component_store_read_busy && !flood_wrapper_busy &&
+                        !flood_color_apply_active && !flood_color_apply_fetch_busy) begin
+                        netlist_component_read_request <= 1'b1;
+                        netlist_component_read_pending <= 1'b1;
+                        netlist_node_r_addr <= netlist_dump_idx;
+                        netlist_tx_state <= NETLIST_TX_PRESCAN_WAIT;
+                    end
+                end
+                NETLIST_TX_PRESCAN_WAIT: begin
+                    // wait for component-store snapshot toggle
+                end
+                NETLIST_TX_BEGIN_START: begin
+                    if (!frontend_tx_busy) begin
+                        frontend_tx_start <= 1'b1;
+                        frontend_tx_mode <= FRONTEND_NETLIST_TX_MODE_NB;
+                        frontend_tx_frame <= frontend_snapshot_frame;
+                        frontend_tx_elem_count <= component_store_count[7:0];
+                        frontend_tx_node_count <= netlist_protocol_node_count;
+                        frontend_tx_error_code <= FRONTEND_STATUS_OK;
+                        frontend_tx_error_arg <= 16'd0;
+                        netlist_tx_state <= NETLIST_TX_BEGIN_WAIT;
+                    end
+                end
+                NETLIST_TX_BEGIN_WAIT: begin
+                    if (frontend_tx_done) begin
+                        if (component_store_count == {CANVAS_ADDR_W{1'b0}}) begin
+                            netlist_tx_state <= NETLIST_TX_END_START;
+                        end else begin
+                            netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
+                            netlist_tx_state <= NETLIST_TX_COMP_REQ;
+                        end
+                    end
+                end
+                NETLIST_TX_COMP_REQ: begin
+                    if (!netlist_component_read_pending && !component_store_read_busy && !flood_wrapper_busy &&
+                        !flood_color_apply_active && !flood_color_apply_fetch_busy) begin
+                        netlist_component_read_request <= 1'b1;
+                        netlist_component_read_pending <= 1'b1;
+                        netlist_node_r_addr <= netlist_dump_idx;
+                        netlist_tx_state <= NETLIST_TX_COMP_WAIT;
+                    end
+                end
+                NETLIST_TX_COMP_WAIT: begin
+                    // wait for component-store snapshot toggle
+                end
+                NETLIST_TX_COMP_START: begin
+                    if (!frontend_tx_busy) begin
+                        frontend_tx_start <= 1'b1;
+                        frontend_tx_mode <= FRONTEND_NETLIST_TX_MODE_NC;
+                        frontend_tx_frame <= frontend_snapshot_frame;
+                        frontend_tx_elem_count <= component_store_count[7:0];
+                        frontend_tx_node_count <= netlist_protocol_node_count;
+                        netlist_tx_state <= NETLIST_TX_COMP_WAIT_SEND;
+                    end
+                end
+                NETLIST_TX_COMP_WAIT_SEND: begin
+                    if (frontend_tx_done) begin
+                        if ((netlist_dump_idx + 1'b1) >= netlist_dump_count) begin
+                            netlist_tx_state <= NETLIST_TX_END_START;
+                        end else begin
+                            netlist_dump_idx <= netlist_dump_idx + 1'b1;
+                            netlist_tx_state <= NETLIST_TX_COMP_REQ;
+                        end
+                    end
+                end
+                NETLIST_TX_END_START: begin
+                    if (!frontend_tx_busy) begin
+                        frontend_tx_start <= 1'b1;
+                        frontend_tx_mode <= FRONTEND_NETLIST_TX_MODE_NE;
+                        frontend_tx_frame <= frontend_snapshot_frame;
+                        frontend_tx_elem_count <= component_store_count[7:0];
+                        frontend_tx_node_count <= netlist_protocol_node_count;
+                        netlist_tx_state <= NETLIST_TX_END_WAIT;
+                    end
+                end
+                NETLIST_TX_END_WAIT: begin
+                    if (frontend_tx_done) begin
+                        netlist_snapshot_ready <= 1'b0;
+                        netlist_tx_state <= NETLIST_TX_IDLE;
+                    end
+                end
+                NETLIST_TX_ERR_START: begin
+                    if (!frontend_tx_busy) begin
+                        frontend_tx_start <= 1'b1;
+                        frontend_tx_mode <= FRONTEND_NETLIST_TX_MODE_ER;
+                        frontend_tx_frame <= frontend_snapshot_frame;
+                        frontend_tx_elem_count <= component_store_count[7:0];
+                        frontend_tx_node_count <= 8'd0;
+                        frontend_tx_error_code <= netlist_error_code;
+                        frontend_tx_error_arg <= netlist_error_arg;
+                        netlist_tx_state <= NETLIST_TX_ERR_WAIT;
+                    end
+                end
+                NETLIST_TX_ERR_WAIT: begin
+                    if (frontend_tx_done) begin
+                        netlist_snapshot_ready <= 1'b0;
+                        netlist_tx_state <= NETLIST_TX_IDLE;
+                    end
+                end
+                default: begin
+                    netlist_tx_state <= NETLIST_TX_IDLE;
+                end
+            endcase
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
+        frontend_reply_ram0_w_en <= 1'b0;
+        frontend_reply_ram1_w_en <= 1'b0;
+        frontend_reply_view_addr <= frontend_reply_view_node;
+
+        btnl_prev <= BTNL;
+        btnr_prev <= BTNR;
+        btnu_prev <= BTNU;
+        btnd_prev <= BTND;
+
+        if (frontend_rx_byte_valid) begin
+            frontend_rx_led_ctr <= 20'hFFFFF;
+        end else if (frontend_rx_led_ctr != 20'd0) begin
+            frontend_rx_led_ctr <= frontend_rx_led_ctr - 1'b1;
+        end
+
+        if (frontend_tx_busy || frontend_tx_start) begin
+            frontend_tx_led_ctr <= 20'hFFFFF;
+        end else if (frontend_tx_led_ctr != 20'd0) begin
+            frontend_tx_led_ctr <= frontend_tx_led_ctr - 1'b1;
+        end
+
+        if (!frontend_uart_client_enable) begin
+            frontend_reply_stage_active <= 1'b0;
+            frontend_reply_stage_bank <= 1'b0;
+            frontend_reply_stage_frame <= 16'd0;
+            frontend_reply_stage_node_count <= 8'd0;
+            frontend_reply_stage_status <= 8'd0;
+            frontend_reply_stage_received_count <= 8'd0;
+            frontend_reply_valid <= 1'b0;
+            frontend_reply_active_bank <= 1'b0;
+            frontend_reply_frame <= 16'd0;
+            frontend_reply_node_count <= 8'd0;
+            frontend_reply_status <= 8'd0;
+            frontend_reply_view_node <= 5'd0;
+            frontend_reply_view_upper <= 1'b0;
+        end else begin
+            if (frontend_btnl_rise) begin
+                if (frontend_reply_view_node != 5'd0) begin
+                    frontend_reply_view_node <= frontend_reply_view_node - 1'b1;
+                end
+            end
+            if (frontend_btnr_rise) begin
+                if (frontend_reply_view_node + 1'b1 < frontend_reply_node_count[4:0]) begin
+                    frontend_reply_view_node <= frontend_reply_view_node + 1'b1;
+                end
+            end
+            if (frontend_btnu_rise) begin
+                frontend_reply_view_upper <= 1'b1;
+            end
+            if (frontend_btnd_rise) begin
+                frontend_reply_view_upper <= 1'b0;
+            end
+
+            if (frontend_reply_parse_error) begin
+                frontend_reply_stage_active <= 1'b0;
+                frontend_reply_status <= FRONTEND_STATUS_REPLY_PARSE;
+            end
+
+            if (frontend_error_packet_valid) begin
+                frontend_reply_stage_active <= 1'b0;
+                frontend_reply_valid <= 1'b0;
+                frontend_reply_frame <= frontend_error_packet_frame;
+                frontend_reply_status <= frontend_error_packet_code;
+            end
+
+            if (frontend_voltage_begin_valid) begin
+                frontend_reply_stage_active <= 1'b1;
+                frontend_reply_stage_bank <= ~frontend_reply_active_bank;
+                frontend_reply_stage_frame <= frontend_voltage_begin_frame;
+                frontend_reply_stage_node_count <= frontend_voltage_begin_node_count;
+                frontend_reply_stage_status <= frontend_voltage_begin_status;
+                frontend_reply_stage_received_count <= 8'd0;
+            end
+
+            if (frontend_reply_stage_active && frontend_voltage_node_valid &&
+                (frontend_voltage_node_frame == frontend_reply_stage_frame) &&
+                (frontend_voltage_node_idx < 8'd32)) begin
+                frontend_reply_ram_w_addr <= frontend_voltage_node_idx[4:0];
+                frontend_reply_ram_w_data <= frontend_voltage_node_value_bits;
+                if (frontend_reply_stage_bank) begin
+                    frontend_reply_ram1_w_en <= 1'b1;
+                end else begin
+                    frontend_reply_ram0_w_en <= 1'b1;
+                end
+                frontend_reply_stage_received_count <= frontend_reply_stage_received_count + 1'b1;
+            end
+
+            if (frontend_reply_stage_active && frontend_voltage_end_valid &&
+                (frontend_voltage_end_frame == frontend_reply_stage_frame) &&
+                (frontend_voltage_end_node_count == frontend_reply_stage_node_count) &&
+                (frontend_voltage_end_status == frontend_reply_stage_status) &&
+                (frontend_reply_stage_received_count == frontend_reply_stage_node_count)) begin
+                frontend_reply_stage_active <= 1'b0;
+                frontend_reply_valid <= 1'b1;
+                frontend_reply_active_bank <= frontend_reply_stage_bank;
+                frontend_reply_frame <= frontend_reply_stage_frame;
+                frontend_reply_node_count <= frontend_reply_stage_node_count;
+                frontend_reply_status <= frontend_reply_stage_status;
+                if (frontend_reply_view_node >= frontend_reply_stage_node_count[4:0] &&
+                    frontend_reply_stage_node_count != 8'd0) begin
+                    frontend_reply_view_node <= 5'd0;
+                end
+            end else if (frontend_reply_stage_active && frontend_voltage_end_valid) begin
+                frontend_reply_stage_active <= 1'b0;
+                frontend_reply_status <= FRONTEND_STATUS_REPLY_PARSE;
             end
         end
     end
@@ -2686,10 +3151,24 @@ module GlobalRender_top (
         .frame_drop_flag(interaction_frame_drop_flag)
     );
 
-    assign backend_fetch_test_enable = ENABLE_BACKEND_FETCH_TEST && SW[2] && !uart_netlist_debug_enable;
-    assign uart_netlist_debug_enable = ENABLE_UART_NETLIST_DEBUG && SW[5];
-    assign uart_flood_debug_enable = ENABLE_UART_FLOOD_DEBUG && SW[4] && !uart_netlist_debug_enable;
-    assign uart_cell_debug_enable = ENABLE_UART_CELL_DEBUG && SW[3] && !uart_flood_debug_enable && !uart_netlist_debug_enable;
+    assign backend_fetch_test_enable = ENABLE_BACKEND_FETCH_TEST && SW[2] && !frontend_uart_client_enable;
+    assign frontend_uart_client_enable = ENABLE_UART_NETLIST_DEBUG && SW[5];
+    assign uart_netlist_debug_enable = frontend_uart_client_enable;
+    assign uart_flood_debug_enable = ENABLE_UART_FLOOD_DEBUG && SW[4] && !frontend_uart_client_enable;
+    assign uart_cell_debug_enable = ENABLE_UART_CELL_DEBUG && SW[3] && !uart_flood_debug_enable && !frontend_uart_client_enable;
+    assign LED =
+        frontend_uart_client_enable ?
+            {
+                frontend_reply_status,
+                frontend_reply_valid,
+                (frontend_reply_status != FRONTEND_STATUS_OK),
+                frontend_reply_view_upper,
+                (netlist_tx_state != NETLIST_TX_IDLE),
+                (frontend_tx_led_ctr != 20'd0),
+                (frontend_rx_led_ctr != 20'd0),
+                frontend_reply_view_node[1:0]
+            } :
+            SW;
 
     // =========================================================
     // 銆愰噸榛炲渚嬪寲锛氬偝鍏ユ洿鏂扮殑 KEY_W 鍜? KEY_H銆?
@@ -3091,30 +3570,30 @@ module GlobalRender_top (
         end else if (init_cycles == CANVAS_CELL_COUNT + 13) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd111;
-            circuit_canvas_ram_w_data <= 16'h021B;
+            circuit_canvas_ram_w_data <= 16'h020B;
             value_ram_w_en <= 1'b1;
             value_ram_w_addr <= 9'd111;
             value_ram_w_data <= 12'h100;
             value_digit_ram_w_data <= 2'd3;
-            value_text_ram_w_data <= {"1", "0", "0", "p", 32'd0};
-            value_text_len_ram_w_data <= 4'd4;
-            canvas_shadow_data[9'd111] <= 16'h021B;
+            value_text_ram_w_data <= {"1", "0", "0", 40'd0};
+            value_text_len_ram_w_data <= 4'd3;
+            canvas_shadow_data[9'd111] <= 16'h020B;
             value_shadow_data[9'd111] <= 12'h100;
-            value_unit_shadow_data[9'd111] <= COMPONENT_UNIT_P;
+            value_unit_shadow_data[9'd111] <= COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 14) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd112;
-            circuit_canvas_ram_w_data <= 16'h021D;
+            circuit_canvas_ram_w_data <= 16'h020D;
             value_ram_w_en <= 1'b1;
             value_ram_w_addr <= 9'd112;
             value_ram_w_data <= 12'h100;
             value_digit_ram_w_data <= 2'd3;
-            value_text_ram_w_data <= {"1", "0", "0", "p", 32'd0};
-            value_text_len_ram_w_data <= 4'd4;
-            canvas_shadow_data[9'd112] <= 16'h021D;
+            value_text_ram_w_data <= {"1", "0", "0", 40'd0};
+            value_text_len_ram_w_data <= 4'd3;
+            canvas_shadow_data[9'd112] <= 16'h020D;
             value_shadow_data[9'd112] <= 12'h100;
-            value_unit_shadow_data[9'd112] <= COMPONENT_UNIT_P;
+            value_unit_shadow_data[9'd112] <= COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 15) begin
             circuit_canvas_ram_w_en <= 1'b1;

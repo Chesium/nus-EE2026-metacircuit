@@ -47,6 +47,8 @@
 #    "C:/C/EE2026/metacircuit/src/design/common/SimpleRam.v"
 #    "C:/C/EE2026/metacircuit/src/design/rendering/ToolbarVGA.v"
 #    "C:/C/EE2026/metacircuit/src/design/uart/UartTx.v"
+#    "C:/C/EE2026/metacircuit/src/design/uart/FrontendNetlistLineTransmitter.sv"
+#    "C:/C/EE2026/metacircuit/src/design/uart/FrontendVoltagePacketParser.sv"
 #    "C:/C/EE2026/metacircuit/src/design/driver/VGAControl.v"
 #    "C:/C/EE2026/metacircuit/src/design/matrix/VisitedMatrixStore.v"
 #    "C:/C/EE2026/metacircuit/src/design/rendering/WaveformPlot.v"
@@ -263,6 +265,8 @@ set files [list \
  [file normalize "${origin_dir}/src/design/common/SimpleRam.v"] \
  [file normalize "${origin_dir}/src/design/rendering/ToolbarVGA.v"] \
  [file normalize "${origin_dir}/src/design/uart/UartTx.v"] \
+ [file normalize "${origin_dir}/src/design/uart/FrontendNetlistLineTransmitter.sv"] \
+ [file normalize "${origin_dir}/src/design/uart/FrontendVoltagePacketParser.sv"] \
  [file normalize "${origin_dir}/src/design/driver/VGAControl.v"] \
  [file normalize "${origin_dir}/src/design/matrix/VisitedMatrixStore.v"] \
  [file normalize "${origin_dir}/src/design/rendering/WaveformPlot.v"] \
@@ -389,6 +393,16 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 
 set file "$origin_dir/src/design/solver_board/SolverUartLineTransmitter.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/src/design/uart/FrontendNetlistLineTransmitter.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/src/design/uart/FrontendVoltagePacketParser.sv"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj

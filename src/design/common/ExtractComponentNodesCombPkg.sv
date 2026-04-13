@@ -50,6 +50,27 @@ package ExtractComponentNodesCombPkg;
     end
   endfunction
 
+  function automatic logic [1:0] ExtractComponentNodesCombPkg__rotation_to_dir_comb(
+      input logic [1:0] rot
+  );
+    begin
+      case (rot)
+        2'd0: ExtractComponentNodesCombPkg__rotation_to_dir_comb = 2'd1;
+        2'd1: ExtractComponentNodesCombPkg__rotation_to_dir_comb = 2'd0;
+        2'd2: ExtractComponentNodesCombPkg__rotation_to_dir_comb = 2'd3;
+        default: ExtractComponentNodesCombPkg__rotation_to_dir_comb = 2'd2;
+      endcase
+    end
+  endfunction
+
+  function automatic logic [1:0] rotation_to_dir_comb(
+      input logic [1:0] rot
+  );
+    begin
+      rotation_to_dir_comb = ExtractComponentNodesCombPkg__rotation_to_dir_comb(rot);
+    end
+  endfunction
+
   function automatic logic ExtractComponentNodesCombPkg__is_two_terminal_component_comb(
       input logic [7:0] t
   );
@@ -93,8 +114,8 @@ package ExtractComponentNodesCombPkg;
   );
     begin
       case (d)
-        2'd0: ExtractComponentNodesCombPkg__get_nxt_i_comb = i + 8'd1;
-        2'd2: ExtractComponentNodesCombPkg__get_nxt_i_comb = i - 8'd1;
+        2'd1: ExtractComponentNodesCombPkg__get_nxt_i_comb = i + 8'd1;
+        2'd3: ExtractComponentNodesCombPkg__get_nxt_i_comb = i - 8'd1;
         default: ExtractComponentNodesCombPkg__get_nxt_i_comb = i;
       endcase
     end
@@ -115,8 +136,8 @@ package ExtractComponentNodesCombPkg;
   );
     begin
       case (d)
-        2'd1: ExtractComponentNodesCombPkg__get_nxt_j_comb = j + 8'd1;
-        2'd3: ExtractComponentNodesCombPkg__get_nxt_j_comb = j - 8'd1;
+        2'd0: ExtractComponentNodesCombPkg__get_nxt_j_comb = j + 8'd1;
+        2'd2: ExtractComponentNodesCombPkg__get_nxt_j_comb = j - 8'd1;
         default: ExtractComponentNodesCombPkg__get_nxt_j_comb = j;
       endcase
     end

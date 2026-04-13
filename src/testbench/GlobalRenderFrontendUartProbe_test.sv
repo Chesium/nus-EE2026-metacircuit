@@ -182,6 +182,59 @@ module GlobalRenderFrontendUartProbe_test;
           dut.frontend_tx_component_n0, dut.frontend_tx_component_n1, dut.frontend_tx_component_value_bcd,
           dut.frontend_tx_component_unit, dut.frontend_tx_error_code, dut.frontend_tx_error_arg);
     end
+    if (dut.netlist_extract_storeNode0_start) begin
+      $display("[%0t] storeNode0 idx=%0d node=%h raw0=%h raw1=%h node0=%h node1=%h type=%h ax=%0d ay=%0d rot=%0d t0=(%0d,%0d) t1=(%0d,%0d)",
+          $time,
+          dut.netlist_extract_storeNode0_idx,
+          dut.netlist_extract_storeNode0_node_i,
+          dut.netlist_extract_inst.u8_raw0,
+          dut.netlist_extract_inst.u8_raw1,
+          dut.netlist_extract_inst.u8_node0,
+          dut.netlist_extract_inst.u8_node1,
+          dut.netlist_extract_inst.u8_type,
+          dut.netlist_extract_inst.u8_anchor_x,
+          dut.netlist_extract_inst.u8_anchor_y,
+          dut.netlist_extract_inst.u2_rot,
+          dut.netlist_extract_inst.u8_term0_x,
+          dut.netlist_extract_inst.u8_term0_y,
+          dut.netlist_extract_inst.u8_term1_x,
+          dut.netlist_extract_inst.u8_term1_y);
+    end
+    if (dut.netlist_extract_storeNode1_start) begin
+      $display("[%0t] storeNode1 idx=%0d node=%h raw0=%h raw1=%h node0=%h node1=%h type=%h ax=%0d ay=%0d rot=%0d t0=(%0d,%0d) t1=(%0d,%0d)",
+          $time,
+          dut.netlist_extract_storeNode1_idx,
+          dut.netlist_extract_storeNode1_node_i,
+          dut.netlist_extract_inst.u8_raw0,
+          dut.netlist_extract_inst.u8_raw1,
+          dut.netlist_extract_inst.u8_node0,
+          dut.netlist_extract_inst.u8_node1,
+          dut.netlist_extract_inst.u8_type,
+          dut.netlist_extract_inst.u8_anchor_x,
+          dut.netlist_extract_inst.u8_anchor_y,
+          dut.netlist_extract_inst.u2_rot,
+          dut.netlist_extract_inst.u8_term0_x,
+          dut.netlist_extract_inst.u8_term0_y,
+          dut.netlist_extract_inst.u8_term1_x,
+          dut.netlist_extract_inst.u8_term1_y);
+    end
+    if (dut.netlist_extract_fetchR_start) begin
+      $display("[%0t] extract fetchR_start i=%0d j=%0d pending=%0d issue=%0d",
+          $time, dut.netlist_extract_fetchR_i, dut.netlist_extract_fetchR_j,
+          dut.netlist_extract_fetchR_pending, dut.netlist_extract_fetchR_issue);
+    end
+    if (dut.netlist_extract_fetchR_issue) begin
+      $display("[%0t] extract fetchR_issue i=%0d j=%0d",
+          $time, dut.netlist_extract_fetchR_req_i, dut.netlist_extract_fetchR_req_j);
+    end
+    if (dut.flood_wrapper_fetchR_done) begin
+      $display("[%0t] wrapper fetchR_done result=%0d pending=%0d req=(%0d,%0d)",
+          $time, dut.flood_wrapper_fetchR_result, dut.netlist_extract_fetchR_pending,
+          dut.netlist_extract_fetchR_req_i, dut.netlist_extract_fetchR_req_j);
+    end
+    if (dut.netlist_extract_fetchR_done) begin
+      $display("[%0t] extract fetchR_done result=%0d", $time, dut.netlist_extract_fetchR_result);
+    end
     if (dut.netlist_snapshot_ready != last_snapshot_ready) begin
       $display("[%0t] snapshot_ready -> %0d", $time, dut.netlist_snapshot_ready);
       last_snapshot_ready <= dut.netlist_snapshot_ready;
@@ -233,6 +286,14 @@ module GlobalRenderFrontendUartProbe_test;
           dut.flood_color_apply_active, dut.flood_color_apply_fetch_busy);
       $fatal(1, "Flood color apply did not complete");
     end
+
+    $display("Flood mem probe: (2,2)=%0d (5,2)=%0d (2,4)=%0d (5,4)=%0d (2,6)=%0d (5,6)=%0d",
+        dut.flooding_backend_wrapper_inst.result_store_inst.mem[38],
+        dut.flooding_backend_wrapper_inst.result_store_inst.mem[41],
+        dut.flooding_backend_wrapper_inst.result_store_inst.mem[74],
+        dut.flooding_backend_wrapper_inst.result_store_inst.mem[77],
+        dut.flooding_backend_wrapper_inst.result_store_inst.mem[110],
+        dut.flooding_backend_wrapper_inst.result_store_inst.mem[113]);
 
     @(negedge CLK100MHZ);
     pulse_frame_tick();

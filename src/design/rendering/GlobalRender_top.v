@@ -1489,8 +1489,12 @@ module GlobalRender_top (
     wire        netlist_extract_fetchR_start;
     wire [7:0]  netlist_extract_fetchR_i;
     wire [7:0]  netlist_extract_fetchR_j;
-    wire        netlist_extract_fetchR_done;
-    wire [7:0]  netlist_extract_fetchR_result;
+    reg         netlist_extract_fetchR_done = 1'b0;
+    reg  [7:0]  netlist_extract_fetchR_result = 8'd0;
+    reg         netlist_extract_fetchR_pending = 1'b0;
+    reg         netlist_extract_fetchR_issue = 1'b0;
+    reg  [7:0]  netlist_extract_fetchR_req_i = 8'd0;
+    reg  [7:0]  netlist_extract_fetchR_req_j = 8'd0;
     wire        netlist_extract_fetchCell_start;
     wire [7:0]  netlist_extract_fetchCell_i;
     wire [7:0]  netlist_extract_fetchCell_j;
@@ -1651,13 +1655,13 @@ module GlobalRender_top (
     wire        flood_color_apply_fetch_done;
     wire        netlist_debug_holds_flood =
         frontend_uart_client_enable &&
-        (netlist_extract_busy || netlist_snapshot_ready || netlist_component_read_pending ||
+        (flood_results_ready || flood_colors_ready ||
+         netlist_extract_busy || netlist_snapshot_ready || netlist_component_read_pending ||
          (netlist_tx_state != NETLIST_TX_IDLE));
     wire        netlist_extract_port_active =
         frontend_uart_client_enable || netlist_extract_busy || netlist_component_read_pending ||
         (netlist_tx_state != NETLIST_TX_IDLE);
     wire        netlist_extract_comp_ren_active = netlist_extract_port_active && netlist_extract_comp_ren;
-    wire        netlist_extract_fetchR_start_active = netlist_extract_port_active && netlist_extract_fetchR_start;
     assign hex_display_value = frontend_uart_client_enable ?
         (frontend_reply_view_upper ? frontend_reply_view_value[31:16] : frontend_reply_view_value[15:0]) :
         (backend_fetch_test_enable ?
@@ -1674,18 +1678,16 @@ module GlobalRender_top (
     assign circuit_canvas_bg_color_ram_w_data = circuit_canvas_bg_color_override_w_en ?
         circuit_canvas_bg_color_override_w_data : CANVAS_BG_DEFAULT_COLOR_IDX;
     assign flood_wrapper_fetchR_start = flood_color_apply_start ? 1'b1 :
-        (netlist_extract_fetchR_start_active ? 1'b1 : flood_result_fetch_start);
+        (netlist_extract_fetchR_issue ? 1'b1 : flood_result_fetch_start);
     assign flood_wrapper_fetchR_i = flood_color_apply_start ?
         {3'd0, canvas_addr_to_i(flood_color_apply_addr)} :
-        (netlist_extract_fetchR_start_active ? netlist_extract_fetchR_i : {3'd0, flood_fetch_i});
+        (netlist_extract_fetchR_issue ? netlist_extract_fetchR_req_i : {3'd0, flood_fetch_i});
     assign flood_wrapper_fetchR_j = flood_color_apply_start ?
         {4'd0, canvas_addr_to_j(flood_color_apply_addr)} :
-        (netlist_extract_fetchR_start_active ? netlist_extract_fetchR_j : {4'd0, flood_fetch_j});
+        (netlist_extract_fetchR_issue ? netlist_extract_fetchR_req_j : {4'd0, flood_fetch_j});
     assign flood_result_fetch_done = flood_wrapper_fetchR_done && flood_result_fetch_busy;
     assign flood_result_fetch_result = flood_wrapper_fetchR_result;
     assign flood_color_apply_fetch_done = flood_wrapper_fetchR_done && flood_color_apply_fetch_busy;
-    assign netlist_extract_fetchR_done = flood_wrapper_fetchR_done;
-    assign netlist_extract_fetchR_result = flood_wrapper_fetchR_result;
     assign netlist_extract_fetch_type_result = {4'd0, netlist_extract_fetch_type_result_raw};
     assign netlist_extract_fetch_x_result = {3'd0, netlist_extract_fetch_x_result_raw};
     assign netlist_extract_fetch_y_result = {4'd0, netlist_extract_fetch_y_result_raw};
@@ -2116,6 +2118,31 @@ module GlobalRender_top (
     always @(posedge CLK100MHZ) begin
         if (netlist_extract_fetchCell_ram_ren) begin
             netlist_extract_fetchCell_ram_rdata <= canvas_shadow_data[netlist_extract_fetchCell_ram_addr];
+        end
+    end
+
+    always @(posedge CLK100MHZ) begin
+        netlist_extract_fetchR_issue <= 1'b0;
+        netlist_extract_fetchR_done <= 1'b0;
+
+        if (!frontend_uart_client_enable) begin
+            netlist_extract_fetchR_pending <= 1'b0;
+            netlist_extract_fetchR_result <= 8'd0;
+            netlist_extract_fetchR_req_i <= 8'd0;
+            netlist_extract_fetchR_req_j <= 8'd0;
+        end else begin
+            if (!netlist_extract_fetchR_pending && netlist_extract_fetchR_start) begin
+                netlist_extract_fetchR_req_i <= netlist_extract_fetchR_i;
+                netlist_extract_fetchR_req_j <= netlist_extract_fetchR_j;
+                netlist_extract_fetchR_pending <= 1'b1;
+                netlist_extract_fetchR_issue <= 1'b1;
+            end
+
+            if (netlist_extract_fetchR_pending && flood_wrapper_fetchR_done) begin
+                netlist_extract_fetchR_result <= flood_wrapper_fetchR_result;
+                netlist_extract_fetchR_done <= 1'b1;
+                netlist_extract_fetchR_pending <= 1'b0;
+            end
         end
     end
 

@@ -1216,7 +1216,7 @@ always_comb begin
 
             if (fetchComponentRotation_done) begin
 
-                next_u2_rot = fetchComponentRotation_result;
+                next_u2_rot = rotation_to_dir_comb(fetchComponentRotation_result);
 
                 next_state = S_AFTER_CALL_8;
             end else begin
@@ -2601,15 +2601,15 @@ always_comb begin
 
 
 
-            next_u2_ground_rot = get_cell_rotation_comb(u16_ground_cell);
+            next_u2_ground_rot = rotation_to_dir_comb(get_cell_rotation_comb(u16_ground_cell));
 
-            next_u8_ground_term_x = get_nxt_i_comb(u8_prev_x, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell)));
+            next_u8_ground_term_x = get_nxt_i_comb(u8_prev_x, get_opp_dir_comb(rotation_to_dir_comb(get_cell_rotation_comb(u16_ground_cell))));
 
-            next_u8_ground_term_y = get_nxt_j_comb(u8_prev_y, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell)));
+            next_u8_ground_term_y = get_nxt_j_comb(u8_prev_y, get_opp_dir_comb(rotation_to_dir_comb(get_cell_rotation_comb(u16_ground_cell))));
 
 
 
-            if (((get_nxt_i_comb(u8_prev_x, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell))) < grid_width) && (get_nxt_j_comb(u8_prev_y, get_opp_dir_comb(get_cell_rotation_comb(u16_ground_cell))) < grid_height))) begin
+            if (((get_nxt_i_comb(u8_prev_x, get_opp_dir_comb(rotation_to_dir_comb(get_cell_rotation_comb(u16_ground_cell)))) < grid_width) && (get_nxt_j_comb(u8_prev_y, get_opp_dir_comb(rotation_to_dir_comb(get_cell_rotation_comb(u16_ground_cell)))) < grid_height))) begin
                 next_state = S_IF_THEN_73;
             end else begin
                 next_state = S_IF_END_74;

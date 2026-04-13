@@ -130,4 +130,20 @@ Used by the relay or by either board when a snapshot is rejected:
 
 - `protocol.py`: packet dataclasses, encoding/decoding, snapshot assembly
 - `relay.py`: serial relay and in-memory relay harness for testing
+- `solver_tester.py`: automatic hardware tester for board `S` on a single COM port
 - `tests/`: unit tests for protocol and relay behavior
+
+## Solver Board Hardware Test
+
+For standalone board `S` bring-up, the automatic tester can send built-in
+snapshots directly to one COM port and validate the returned `VB/VN/VE`
+response:
+
+```text
+python -m src.uart_link.solver_tester --list
+python -m src.uart_link.solver_tester --port COM7
+python -m src.uart_link.solver_tester --port COM7 --case voltage_divider_5v_3k_2k
+```
+
+The current built-in cases are designed to match the existing solver-board
+UART protocol and the known-good hardware smoke tests.

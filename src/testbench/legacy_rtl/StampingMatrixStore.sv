@@ -20,7 +20,7 @@ module StampingMatrixStore #(
     output reg  [31:0] fetchA_result
 );
 
-  import StampingCombPkg::*;
+  import StampingLegacyCombPkg::*;
 
   reg [31:0] mem[0:CELL_COUNT-1];
 

@@ -5,7 +5,7 @@
 
 // Blocking primitives: fetchElemKind(latency=1), fetchElemN0(latency=1), fetchElemN1(latency=1), fetchElemN2(latency=1), fetchElemN3(latency=1), fetchElemAux(latency=1), fetchElemVal0(latency=1), fetchElemVal1(latency=1), fetchElemVal2(latency=1), accumA(latency=1), accumJ(latency=1)
 
-import StampingCombPkg::*;
+import StampingLegacyCombPkg::*;
 
 module stamping_core (
 
@@ -115,7 +115,7 @@ module stamping_core (
 
 
 
-import StampingCombPkg::*;
+import StampingLegacyCombPkg::*;
 
 typedef enum logic [6:0] {
 

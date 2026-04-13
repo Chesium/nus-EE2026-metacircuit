@@ -17,7 +17,7 @@ module StampingVectorStore #(
     output reg  [31:0] fetchJ_result
 );
 
-  import StampingCombPkg::*;
+  import StampingLegacyCombPkg::*;
 
   reg [31:0] mem[0:DIM-1];
 

@@ -299,12 +299,10 @@ set files [list \
  [file normalize "${origin_dir}/src/design/floating_point/fpo_div.v"] \
  [file normalize "${origin_dir}/src/design/Keyboard/Keyboard.v"] \
  [file normalize "${origin_dir}/src/design/matrix/SolverMatrixStore.sv"] \
- [file normalize "${origin_dir}/src/design/solver/stamping_core.sv"] \
  [file normalize "${origin_dir}/src/design/floating_point/fpo_tofixed.v"] \
  [file normalize "${origin_dir}/src/design/matrix/lu_core.sv"] \
  [file normalize "${origin_dir}/src/design/current_visualization/CurrentFlow_top.v"] \
  [file normalize "${origin_dir}/src/design/rendering/GlobalRender_Calc_OLED.v"] \
- [file normalize "${origin_dir}/src/design/solver/solve_core.sv"] \
  [file normalize "${origin_dir}/src/design/rendering/GlobalRender_Step1.v"] \
  [file normalize "${origin_dir}/src/design/common/ClockDividerMs.v"] \
  [file normalize "${origin_dir}/src/design/floating_point/fpo_fma.v"] \
@@ -318,15 +316,12 @@ set files [list \
  [file normalize "${origin_dir}/src/design/matrix/SolverVectorStore.sv"] \
  [file normalize "${origin_dir}/src/design/matrix/PortGridStore.v"] \
  [file normalize "${origin_dir}/src/design/common/StampingNetlistStore.sv"] \
- [file normalize "${origin_dir}/src/design/solver/solve_core_transient.sv"] \
  [file normalize "${origin_dir}/src/design/current_visualization/CurrentPhaseController.v"] \
  [file normalize "${origin_dir}/src/design/Keyboard/Calculator_OLED_top.v"] \
  [file normalize "${origin_dir}/src/design/rendering/CircuitCanvas_top.v"] \
  [file normalize "${origin_dir}/src/design/Keyboard/OLED_Test_top.v"] \
  [file normalize "${origin_dir}/src/design/rendering/KeyboardVGA_top.v"] \
- [file normalize "${origin_dir}/src/design/matrix/StampingMatrixStore.sv"] \
  [file normalize "${origin_dir}/src/design/common/StampingCombPkg.sv"] \
- [file normalize "${origin_dir}/src/design/matrix/StampingVectorStore.sv"] \
  [file normalize "${origin_dir}/src/design/common/CanvasBufferRam.v"] \
  [file normalize "${origin_dir}/src/design/matrix/matrixStore.v"] \
  [file normalize "${origin_dir}/src/design/Dashboard/DynamicTextDisplay.v"] \
@@ -407,17 +402,7 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 
-set file "$origin_dir/src/design/solver/stamping_core.sv"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
-
 set file "$origin_dir/src/design/matrix/lu_core.sv"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
-
-set file "$origin_dir/src/design/solver/solve_core.sv"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
@@ -437,22 +422,7 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 
-set file "$origin_dir/src/design/solver/solve_core_transient.sv"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
-
-set file "$origin_dir/src/design/matrix/StampingMatrixStore.sv"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
-
 set file "$origin_dir/src/design/common/StampingCombPkg.sv"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
-
-set file "$origin_dir/src/design/matrix/StampingVectorStore.sv"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
@@ -501,6 +471,12 @@ set files [list \
  [file normalize "${origin_dir}/src/testbench/FloodingCombPkg_test.sv"] \
  [file normalize "${origin_dir}/src/testbench/FloodQueueStore_test.sv"] \
  [file normalize "${origin_dir}/src/testbench/Canvas_test.v"] \
+ [file normalize "${origin_dir}/src/testbench/legacy_rtl/StampingLegacyCombPkg.sv"] \
+ [file normalize "${origin_dir}/src/testbench/legacy_rtl/stamping_core.sv"] \
+ [file normalize "${origin_dir}/src/testbench/legacy_rtl/solve_core.sv"] \
+ [file normalize "${origin_dir}/src/testbench/legacy_rtl/solve_core_transient.sv"] \
+ [file normalize "${origin_dir}/src/testbench/legacy_rtl/StampingMatrixStore.sv"] \
+ [file normalize "${origin_dir}/src/testbench/legacy_rtl/StampingVectorStore.sv"] \
  [file normalize "${origin_dir}/src/testbench/SolverVectorStore_test.sv"] \
  [file normalize "${origin_dir}/src/testbench/SolveCore_test.sv"] \
  [file normalize "${origin_dir}/src/testbench/misc/CounterQuiz_test.v"] \
@@ -515,6 +491,7 @@ set files [list \
  [file normalize "${origin_dir}/src/testbench/PortGridStore_test.sv"] \
  [file normalize "${origin_dir}/src/testbench/DynamicTextDisplay_tb.v"] \
  [file normalize "${origin_dir}/src/testbench/StampingMatrixStore_test.sv"] \
+ [file normalize "${origin_dir}/src/testbench/StampingLegacyCombPkg_test.sv"] \
  [file normalize "${origin_dir}/src/testbench/FP_test.v"] \
  [file normalize "${origin_dir}/src/testbench/LU_hls_test.sv"] \
  [file normalize "${origin_dir}/src/testbench/SolverMatrixStore_test.sv"] \
@@ -535,6 +512,36 @@ set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 
 set file "$origin_dir/src/testbench/StampingCombPkg_test.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/src/testbench/legacy_rtl/StampingLegacyCombPkg.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/src/testbench/legacy_rtl/stamping_core.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/src/testbench/legacy_rtl/solve_core.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/src/testbench/legacy_rtl/solve_core_transient.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/src/testbench/legacy_rtl/StampingMatrixStore.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/src/testbench/legacy_rtl/StampingVectorStore.sv"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
@@ -595,6 +602,11 @@ set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 
 set file "$origin_dir/src/testbench/StampingMatrixStore_test.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/src/testbench/StampingLegacyCombPkg_test.sv"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
 set_property -name "file_type" -value "SystemVerilog" -objects $file_obj

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module StampingVectorStore_test;
-  import StampingCombPkg::*;
+  import StampingLegacyCombPkg::*;
 
   localparam integer DIM = 4;
 

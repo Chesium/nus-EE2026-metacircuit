@@ -6,6 +6,23 @@ module StampingNetlistStore #(
     input  wire        clk,
     input  wire        rst_n,
 
+    input  wire        clear_start,
+    output reg         clear_done,
+
+    input  wire        load_start,
+    input  wire [15:0] load_idx,
+    input  wire [7:0]  load_kind,
+    input  wire [7:0]  load_n0,
+    input  wire [7:0]  load_n1,
+    input  wire [7:0]  load_n2,
+    input  wire [7:0]  load_n3,
+    input  wire [7:0]  load_aux,
+    input  wire [31:0] load_v0,
+    input  wire [31:0] load_v1,
+    input  wire [31:0] load_v2,
+    input  wire [31:0] load_v3,
+    output reg         load_done,
+
     input  wire        fetchElemKind_start,
     input  wire [15:0] fetchElemKind_idx,
     output reg         fetchElemKind_done,
@@ -69,6 +86,8 @@ module StampingNetlistStore #(
   (* ram_style = "block" *) reg [31:0] v3_mem[0:ELEM_COUNT-1];
 
   integer idx;
+  reg [15:0] clear_idx;
+  reg        clear_active;
 
   reg kind_pending;
   reg [15:0] kind_pending_idx;
@@ -110,6 +129,8 @@ module StampingNetlistStore #(
     if (!rst_n) begin
       kind_pending <= 1'b0;
       kind_pending_idx <= '0;
+      clear_active <= 1'b0;
+      clear_idx <= '0;
       n0_pending <= 1'b0;
       n0_pending_idx <= '0;
       n1_pending <= 1'b0;
@@ -129,6 +150,8 @@ module StampingNetlistStore #(
       v3_pending <= 1'b0;
       v3_pending_idx <= '0;
       fetchElemKind_done <= 1'b0;
+      clear_done <= 1'b0;
+      load_done <= 1'b0;
       fetchElemKind_result <= '0;
       fetchElemN0_done <= 1'b0;
       fetchElemN0_result <= '0;
@@ -149,6 +172,8 @@ module StampingNetlistStore #(
       fetchElemVal3_done <= 1'b0;
       fetchElemVal3_result <= '0;
     end else begin
+      clear_done <= 1'b0;
+      load_done <= 1'b0;
       fetchElemKind_done <= kind_pending;
       if (kind_pending) begin
         fetchElemKind_result <= (kind_pending_idx < ELEM_COUNT) ? kind_mem[kind_pending_idx] : '0;
@@ -199,54 +224,98 @@ module StampingNetlistStore #(
         fetchElemVal3_result <= (v3_pending_idx < ELEM_COUNT) ? v3_mem[v3_pending_idx] : '0;
       end
 
-      kind_pending <= fetchElemKind_start;
-      if (fetchElemKind_start) begin
-        kind_pending_idx <= fetchElemKind_idx;
-      end
+      if (clear_active) begin
+        if (clear_idx < ELEM_COUNT) begin
+          kind_mem[clear_idx] <= '0;
+          n0_mem[clear_idx] <= '0;
+          n1_mem[clear_idx] <= '0;
+          n2_mem[clear_idx] <= '0;
+          n3_mem[clear_idx] <= '0;
+          aux_mem[clear_idx] <= '0;
+          v0_mem[clear_idx] <= '0;
+          v1_mem[clear_idx] <= '0;
+          v2_mem[clear_idx] <= '0;
+          v3_mem[clear_idx] <= '0;
 
-      n0_pending <= fetchElemN0_start;
-      if (fetchElemN0_start) begin
-        n0_pending_idx <= fetchElemN0_idx;
-      end
+          if (clear_idx == ELEM_COUNT - 1) begin
+            clear_active <= 1'b0;
+            clear_done <= 1'b1;
+          end else begin
+            clear_idx <= clear_idx + 1'b1;
+          end
+        end else begin
+          clear_active <= 1'b0;
+          clear_done <= 1'b1;
+        end
+      end else begin
+        if (clear_start) begin
+          clear_active <= 1'b1;
+          clear_idx <= '0;
+        end else if (load_start) begin
+          if (load_idx < ELEM_COUNT) begin
+            kind_mem[load_idx] <= load_kind;
+            n0_mem[load_idx] <= load_n0;
+            n1_mem[load_idx] <= load_n1;
+            n2_mem[load_idx] <= load_n2;
+            n3_mem[load_idx] <= load_n3;
+            aux_mem[load_idx] <= load_aux;
+            v0_mem[load_idx] <= load_v0;
+            v1_mem[load_idx] <= load_v1;
+            v2_mem[load_idx] <= load_v2;
+            v3_mem[load_idx] <= load_v3;
+          end
+          load_done <= 1'b1;
+        end
 
-      n1_pending <= fetchElemN1_start;
-      if (fetchElemN1_start) begin
-        n1_pending_idx <= fetchElemN1_idx;
-      end
+        kind_pending <= fetchElemKind_start;
+        if (fetchElemKind_start) begin
+          kind_pending_idx <= fetchElemKind_idx;
+        end
 
-      n2_pending <= fetchElemN2_start;
-      if (fetchElemN2_start) begin
-        n2_pending_idx <= fetchElemN2_idx;
-      end
+        n0_pending <= fetchElemN0_start;
+        if (fetchElemN0_start) begin
+          n0_pending_idx <= fetchElemN0_idx;
+        end
 
-      n3_pending <= fetchElemN3_start;
-      if (fetchElemN3_start) begin
-        n3_pending_idx <= fetchElemN3_idx;
-      end
+        n1_pending <= fetchElemN1_start;
+        if (fetchElemN1_start) begin
+          n1_pending_idx <= fetchElemN1_idx;
+        end
 
-      aux_pending <= fetchElemAux_start;
-      if (fetchElemAux_start) begin
-        aux_pending_idx <= fetchElemAux_idx;
-      end
+        n2_pending <= fetchElemN2_start;
+        if (fetchElemN2_start) begin
+          n2_pending_idx <= fetchElemN2_idx;
+        end
 
-      v0_pending <= fetchElemVal0_start;
-      if (fetchElemVal0_start) begin
-        v0_pending_idx <= fetchElemVal0_idx;
-      end
+        n3_pending <= fetchElemN3_start;
+        if (fetchElemN3_start) begin
+          n3_pending_idx <= fetchElemN3_idx;
+        end
 
-      v1_pending <= fetchElemVal1_start;
-      if (fetchElemVal1_start) begin
-        v1_pending_idx <= fetchElemVal1_idx;
-      end
+        aux_pending <= fetchElemAux_start;
+        if (fetchElemAux_start) begin
+          aux_pending_idx <= fetchElemAux_idx;
+        end
 
-      v2_pending <= fetchElemVal2_start;
-      if (fetchElemVal2_start) begin
-        v2_pending_idx <= fetchElemVal2_idx;
-      end
+        v0_pending <= fetchElemVal0_start;
+        if (fetchElemVal0_start) begin
+          v0_pending_idx <= fetchElemVal0_idx;
+        end
 
-      v3_pending <= fetchElemVal3_start;
-      if (fetchElemVal3_start) begin
-        v3_pending_idx <= fetchElemVal3_idx;
+        v1_pending <= fetchElemVal1_start;
+        if (fetchElemVal1_start) begin
+          v1_pending_idx <= fetchElemVal1_idx;
+        end
+
+        v2_pending <= fetchElemVal2_start;
+        if (fetchElemVal2_start) begin
+          v2_pending_idx <= fetchElemVal2_idx;
+        end
+
+        v3_pending <= fetchElemVal3_start;
+        if (fetchElemVal3_start) begin
+          v3_pending_idx <= fetchElemVal3_idx;
+        end
       end
     end
   end

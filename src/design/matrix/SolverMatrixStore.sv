@@ -30,9 +30,6 @@ module SolverMatrixStore #(
     input  wire [31:0] accum_delta,
     output reg         accum_done
 );
-
-  import StampingCombPkg::*;
-
   localparam [2:0] S_IDLE = 3'd0;
   localparam [2:0] S_CLEAR = 3'd1;
   localparam [2:0] S_FETCH = 3'd2;
@@ -194,22 +191,12 @@ module SolverMatrixStore #(
 
         S_ACCUM_READ: begin
           accum_base_reg <= mem_d_out;
-`ifdef SYNTHESIS
           if (ENABLE_ACCUM != 0) begin
             state <= S_ACCUM_ADD_ISSUE;
           end else begin
             accum_done <= 1'b1;
             state <= S_IDLE;
           end
-`else
-          if (ENABLE_ACCUM != 0) begin
-            mem_w_en <= 1'b1;
-            mem_w_addr <= op_addr;
-            mem_d_in <= fp_add_comb(mem_d_out, accum_delta_reg);
-          end
-          accum_done <= 1'b1;
-          state <= S_IDLE;
-`endif
         end
 
         S_ACCUM_ADD_ISSUE: begin

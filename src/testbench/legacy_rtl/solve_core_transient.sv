@@ -5,7 +5,7 @@
 
 // Blocking primitives: fetchElemKind(latency=1), store_J(latency=1), store_Y(latency=1), store_X(latency=1), store_A(latency=1), store_LU(latency=1), fetchElemN0(latency=1), fetchElemN1(latency=1), fetchElemVal0(latency=1), fetchElemVal1(latency=1), fetchElemVal2(latency=1), fetchElemVal3(latency=1), div(latency=4), accumA(latency=1), accumJ(latency=1), fetch_prevX(latency=1), fma(latency=3), fetch_A(latency=1), fetch_LU(latency=1), fetch_J(latency=1), fetch_Y(latency=1), fetch_X(latency=1), store_prevX(latency=1)
 
-import StampingCombPkg::*;
+import StampingLegacyCombPkg::*;
 
 module solve_core_transient (
 
@@ -231,7 +231,7 @@ module solve_core_transient (
 
 
 
-import StampingCombPkg::*;
+import StampingLegacyCombPkg::*;
 
 typedef enum logic [8:0] {
 

@@ -30,6 +30,10 @@ module KeyboardVGA_top (
     wire [4:0]  keyboard_key_id;
     wire        keyboard_key_valid;
     wire [7:0]  keyboard_key_ascii;
+    wire [23:0] keyboard_key_rgb;
+    wire        keyboard_key_is_digit;
+    wire        keyboard_key_is_unit;
+    wire        keyboard_key_is_action;
 
     reg [7:0] last_ascii = 8'h00;
 
@@ -84,11 +88,6 @@ module KeyboardVGA_top (
         .KEYBOARD_Y0(KEYBOARD_Y)
     ) keyboard_vga_inst (
         .clk_nav(clk_nav),
-        .btnU(BTNU),
-        .btnD(BTND),
-        .btnL(BTNL),
-        .btnR(BTNR),
-        .btnC(BTNC),
         .mouse_x(12'd0),
         .mouse_y(12'd0),
         .mouse_left(1'b0),
@@ -97,7 +96,11 @@ module KeyboardVGA_top (
         .pixel_rgb(keyboard_rgb),
         .key_id(keyboard_key_id),
         .key_valid(keyboard_key_valid),
-        .key_ascii(keyboard_key_ascii)
+        .key_ascii(keyboard_key_ascii),
+        .key_rgb(keyboard_key_rgb),
+        .key_is_digit(keyboard_key_is_digit),
+        .key_is_unit(keyboard_key_is_unit),
+        .key_is_action(keyboard_key_is_action)
     );
 
     always @(posedge clk_nav) begin

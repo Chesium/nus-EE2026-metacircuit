@@ -245,8 +245,8 @@ module DynamicTextBox #(
     // ========================================================================
     // relative_x/y: 相对于文本起始点的坐标
     // 如果坐标在起始点之前，设为最大值 65535 作为无效值
-    wire [11:0] relative_x = (hcount >= start_x) ? (hcount - start_x) : 12'd65535;
-    wire [11:0] relative_y = (vcount >= start_y) ? (vcount - start_y) : 12'd65535;
+    wire [11:0] relative_x = (hcount >= start_x) ? (hcount - start_x) : 12'hFFF;
+    wire [11:0] relative_y = (vcount >= start_y) ? (vcount - start_y) : 12'hFFF;
 
     // ========================================================================
     // 边界检测
@@ -276,7 +276,7 @@ module DynamicTextBox #(
 
     // font_col/row: 字模内的行列索引 (0-7)
     wire [3:0] font_col = in_bounds ? ((relative_x & char_mask) >> shift_amt) : 4'd0;
-    wire [3:0] font_row = in_bounds ? ((relative_y & char_mask) >> shift_amt) : 4'd0;
+    wire [2:0] font_row = in_bounds ? ((relative_y & char_mask) >> shift_amt) : 3'd0;
 
     // ========================================================================
     // 字符提取

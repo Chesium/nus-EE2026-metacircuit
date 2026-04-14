@@ -35,9 +35,6 @@ module WaveformPlot_top (
     always @(posedge clk_pixel) vsync_d <= VSYNC;
     wire vsync_edge = (~VSYNC & vsync_d); 
 
-    // =========================================================
-    // 電壓 (Voltage) 管線
-    // =========================================================
     wire       v_wr_en;
     wire [7:0] v_wr_addr, v_wr_data;
     wire [7:0] v_rd_addr, v_rd_data;
@@ -54,7 +51,6 @@ module WaveformPlot_top (
         .rd_en(1'b1),    .rd_addr(v_rd_addr), .rd_data(v_rd_data)
     );
 
-    // 【修改點】帶入參數 IS_VOLTAGE = 1
     WaveformPlot #( .IS_VOLTAGE(1) ) v_plot (
         .clk(clk_pixel), .rst_n(rst_n),
         .local_x( (h_count >= 0 && h_count < 200) ? (h_count[7:0] + 8'd1) : 8'd0 ),
@@ -62,12 +58,9 @@ module WaveformPlot_top (
         .rd_addr(v_rd_addr), .rd_data(v_rd_data),
         .is_wave_pixel(is_v_wave),
         .is_axis_pixel(is_v_axis),
-        .is_text_pixel(is_v_text) // 【修改點】接出字體訊號
+        .is_text_pixel(is_v_text) 
     );
 
-    // =========================================================
-    // 電流 (Current) 管線
-    // =========================================================
     wire       i_wr_en;
     wire [7:0] i_wr_addr, i_wr_data;
     wire [7:0] i_rd_addr, i_rd_data;
@@ -84,7 +77,6 @@ module WaveformPlot_top (
         .rd_en(1'b1),    .rd_addr(i_rd_addr), .rd_data(i_rd_data)
     );
 
-    // 【修改點】帶入參數 IS_VOLTAGE = 0
     WaveformPlot #( .IS_VOLTAGE(0) ) i_plot (
         .clk(clk_pixel), .rst_n(rst_n),
         .local_x( (h_count >= 200 && h_count < 400) ? ((h_count[7:0] - 8'd200) + 8'd1) : 8'd0 ),
@@ -92,16 +84,12 @@ module WaveformPlot_top (
         .rd_addr(i_rd_addr), .rd_data(i_rd_data),
         .is_wave_pixel(is_i_wave),
         .is_axis_pixel(is_i_axis),
-        .is_text_pixel(is_i_text) // 【修改點】接出字體訊號
+        .is_text_pixel(is_i_text) 
     );
 
-    // =========================================================
-    // 終極影像多工混合器 (Video Mixing Multiplexer)
-    // =========================================================
     wire in_v_region = (h_count >= 0   && h_count < 200) && (v_count >= 300 && v_count < 480);
     wire in_i_region = (h_count >= 200 && h_count < 400) && (v_count >= 300 && v_count < 480);
 
-    // 【混合邏輯】：字體最上層 (白) -> 波形第二層 (綠/黃) -> 座標軸第三層 (灰) -> 背景最底層 (深灰)
     assign rgb_next = (video_on) ? (
                         (in_v_region) ? (
                             is_v_text ? 12'hFFF : 

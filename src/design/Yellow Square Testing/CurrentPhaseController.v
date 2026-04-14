@@ -1,8 +1,8 @@
 `timescale 1ns / 1ps
 
 module CurrentPhaseController #(
-    parameter CLK_DIV_MAX = 22'd1000000, // 調整此值可改變電流流動速度
-    parameter PHASE_BITS  = 5            // 5 bits 代表週期為 32 個像素
+    parameter CLK_DIV_MAX = 22'd1000000, 
+    parameter PHASE_BITS  = 5            
 )(
     input  wire                  clk_pixel,
     input  wire                  rst,
@@ -18,7 +18,7 @@ module CurrentPhaseController #(
         end else begin
             if (tick_counter >= CLK_DIV_MAX - 1) begin
                 tick_counter <= 0;
-                anim_phase   <= anim_phase + 1; // 自動溢位 0~31
+                anim_phase   <= anim_phase + 1; 
             end else begin
                 tick_counter <= tick_counter + 1;
             end

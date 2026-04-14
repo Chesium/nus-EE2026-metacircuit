@@ -15,10 +15,7 @@ module CircuitCanvas #(
     input  wire [11:0] x_pos,
     input  wire [11:0] y_pos,
     
-    // ==========================================
-    // 新增：接收來自動畫生成器的方向遮罩
     input wire[4:0] anim_phase,
-    // ==========================================
 
     output wire [11:0] rgb,
     output wire        rendered,
@@ -38,8 +35,6 @@ module CircuitCanvas #(
     output wire signed [12:0] grid_pos_x_out,
     output wire signed [12:0] grid_pos_y_out
 );
-  localparam integer CellSizeShift = $clog2(CellSize);
-  localparam integer CellSizeIsPow2 = (CellSize > 0) && ((CellSize & (CellSize - 1)) == 0);
   /*Parameter for panning*/
   localparam signed [12:0] min_grid_x =
       (CanvasWidth > (GridWidth * CellSize)) ? 13'sd0 : (CanvasWidth - (GridWidth * CellSize));
@@ -109,19 +104,15 @@ module CircuitCanvas #(
 
   wire [11:0] required_i;
   wire [11:0] required_j;
-  assign required_i = CellSizeIsPow2 ? (absolute_grid_x >> CellSizeShift)
-                                     : (absolute_grid_x / CellSize);
-  assign required_j = CellSizeIsPow2 ? (absolute_grid_y >> CellSizeShift)
-                                     : (absolute_grid_y / CellSize);
+  assign required_i = absolute_grid_x / CellSize;
+  assign required_j = absolute_grid_y/ CellSize;
   wire required_cell_in_bounds;
   assign required_cell_in_bounds = (required_i < GridWidth) && (required_j < GridHeight);
 
   wire [11:0] mouse_cell_i;
   wire [11:0] mouse_cell_j;
-  assign mouse_cell_i = CellSizeIsPow2 ? (absolute_mouse_grid_x >> CellSizeShift)
-                                       : (absolute_mouse_grid_x / CellSize);
-  assign mouse_cell_j = CellSizeIsPow2 ? (absolute_mouse_grid_y >> CellSizeShift)
-                                       : (absolute_mouse_grid_y / CellSize);
+  assign mouse_cell_i = absolute_mouse_grid_x / CellSize;
+  assign mouse_cell_j = absolute_mouse_grid_y / CellSize;
 
   wire hovering;
   assign hovering = required_cell_in_bounds &&
@@ -132,10 +123,8 @@ module CircuitCanvas #(
 
   wire [11:0] required_i_2;
   wire [11:0] required_j_2;
-  assign required_i_2 = CellSizeIsPow2 ? (absolute_grid_x_next >> CellSizeShift)
-                                       : (absolute_grid_x_next / CellSize);
-  assign required_j_2 = CellSizeIsPow2 ? (absolute_grid_y_next >> CellSizeShift)
-                                       : (absolute_grid_y_next / CellSize);
+  assign required_i_2 = absolute_grid_x_next / CellSize;
+  assign required_j_2 = absolute_grid_y_next / CellSize;
 
   wire [11:0] next_i;
   wire [11:0] next_j;
@@ -145,10 +134,8 @@ module CircuitCanvas #(
                   :required_j_2;
   wire [11:0] prefetched_i;
   wire [11:0] prefetched_j;
-  assign prefetched_i = CellSizeIsPow2 ? (absolute_grid_x_prefetch >> CellSizeShift)
-                                       : (absolute_grid_x_prefetch / CellSize);
-  assign prefetched_j = CellSizeIsPow2 ? (absolute_grid_y_prefetch >> CellSizeShift)
-                                       : (absolute_grid_y_prefetch / CellSize);
+  assign prefetched_i = absolute_grid_x_prefetch / CellSize;
+  assign prefetched_j = absolute_grid_y_prefetch / CellSize;
   reg [DataWidth-1:0] cached_data;
   reg [11:0] cached_data_i = 12'b1111_1111_1111;
   reg [11:0] cached_data_j = 12'b1111_1111_1111;
@@ -835,10 +822,10 @@ module CircuitCanvas #(
     begin
       case (yy)
         5'd0:  Ground = 32'b00000000000000000000000000000000;
-        5'd1:  Ground = 32'b00000000000000000000000000000000;
-        5'd2:  Ground = 32'b00000000000000000000000000000000;
-        5'd3:  Ground = 32'b00000000000000000000000000000000;
-        5'd4:  Ground = 32'b00000000000000000000000000000000;
+        5'd1:  Ground = 32'b00000000000001111110000000000000;
+        5'd2:  Ground = 32'b00000000000001111110000000000000;
+        5'd3:  Ground = 32'b00000000000001111110000000000000;
+        5'd4:  Ground = 32'b00000000000001111110000000000000;
         5'd5:  Ground = 32'b00000000000001111110000000000000;
         5'd6:  Ground = 32'b00000000000001111110000000000000;
         5'd7:  Ground = 32'b00000000000001111110000000000000;
@@ -945,22 +932,21 @@ module CircuitCanvas #(
     end
   endfunction
 
-// =========================================================================
-  // --- 純量絕對座標與無縫遮罩渲染邏輯 (Ultimate Flawless Flow) ---
-  // =========================================================================
   wire sprite_pixel;
+  wire [4:0] sprite_sample_x = GetXX(cell_offset_x[4:0], cell_offset_y[4:0], cell_rotation);
+  wire [4:0] sprite_sample_y = GetYY(cell_offset_x[4:0], cell_offset_y[4:0], cell_rotation);
   assign sprite_pixel = (required_cell_in_bounds && cell_enable) ?
       DecodeTop(
       cell_type, cell_rotation, cell_offset_x, cell_offset_y
   ) : 1'b0;
+  wire at_cell_max_edge = (cell_offset_x == (CellSize - 1)) || (cell_offset_y == (CellSize - 1));
+  wire sprite_pixel_visible = sprite_pixel && !at_cell_max_edge;
 
   localparam integer ColorPos = 12'hFFF;  
   localparam integer ColorYellow = 12'hFF0; 
   localparam integer ColorNeg = 12'h222;  
   localparam integer ColorNegHovering = 12'h280; 
 
-  // 1. 產生四大絕對方向的無縫遮罩 (利用 Canvas 絕對座標，保證絕不在 Cell 內部發生縮放與折返)
-  // 利用 5-bit 自然溢位的特性，完美產生 0~31 循環的 5-pixel 掃描波
   wire [4:0] phase = anim_phase;
   wire [4:0] mod_R = absolute_grid_x[4:0] - phase;
   wire [4:0] mod_L = absolute_grid_x[4:0] + phase;
@@ -972,18 +958,22 @@ module CircuitCanvas #(
   wire mask_D = mod_D < 5;
   wire mask_U = mod_U < 5;
 
-  // 2. 提取 Top module 設定的流向位元
-  wire flow_bit = cell_data[9]; // 0: 順時針前半 (Right/Down), 1: 順時針後半 (Left/Up)
+  wire flow_bit = cell_data[9]; 
 
-  // 3. 轉角對角線切割邏輯 (完美在 90 度交界處切換光束)
   wire dx_gt_dy = (cell_offset_x > cell_offset_y);
   wire dx_plus_dy_lt_31 = (cell_offset_x + cell_offset_y < 31);
 
-  // 4. 動態指派當前像素該吃哪一個遮罩
   reg active_mask;
   always @(*) begin
-      if (cell_type == 6'd1) begin
-          // Elbow Corners (根據旋轉角度決定切割與過彎方向)
+      if (cell_type == 6'd15) begin
+          case (cell_rotation)
+              2'd0: active_mask = mask_D; // ground lead enters from top
+              2'd1: active_mask = mask_L; // ground lead enters from right
+              2'd2: active_mask = mask_U; // ground lead enters from bottom
+              default: active_mask = mask_R; // ground lead enters from left
+          endcase
+      end else if (cell_type == 6'd1) begin
+
           case (cell_rotation)
               2'd1: active_mask = dx_gt_dy ? mask_R : mask_U;         // UL Corner: Up -> Right
               2'd2: active_mask = dx_plus_dy_lt_31 ? mask_R : mask_D; // UR Corner: Right -> Down
@@ -1000,16 +990,21 @@ module CircuitCanvas #(
       end
   end
 
-  // 5. 元件幾何判定 (決定黃色方塊該遵循 Sprite 還是強制走中心線)
   wire is_wire_type = (cell_type <= 6'd4);
+  wire is_ground_type = (cell_type == 6'd15);
   wire is_horz_center = (cell_offset_y >= 13 && cell_offset_y <= 18);
   wire is_vert_center = (cell_offset_x >= 13 && cell_offset_x <= 18);
   wire is_center_line = (cell_rotation == 2'd0 || cell_rotation == 2'd2) ? is_horz_center : is_vert_center;
+  wire is_center_line_visible = is_center_line && !at_cell_max_edge;
+  wire is_ground_flow_visible =
+      sprite_pixel_visible &&
+      (sprite_sample_x >= 5'd13) && (sprite_sample_x <= 5'd18) &&
+      (sprite_sample_y <= 5'd20);
 
-  // 6. 黃色像素最終嚴格判定
-  wire is_yellow = cell_enable && active_mask && (is_wire_type ? sprite_pixel : is_center_line);
-
-  // 網格與背景處理
+  wire is_yellow = cell_enable && active_mask &&
+                   (is_wire_type ? sprite_pixel_visible :
+                    (is_ground_type ? is_ground_flow_visible : is_center_line_visible));
+  
   wire [11:0] currentColorNeg;
   assign currentColorNeg = hovering ? ColorNegHovering : ColorNeg;
 
@@ -1021,9 +1016,8 @@ module CircuitCanvas #(
                          cell_offset_x >= CellSize - GridMarginWidth / 2 ||
                          cell_offset_y >= CellSize - GridMarginWidth / 2;
 
-  // 最終顏色輸出 (層級優先度: 黃色電流 > 元件本體 > 網格 > 背景)
   assign rgb = is_yellow    ? ColorYellow : 
-               sprite_pixel ? ColorPos : 
+               sprite_pixel_visible ? ColorPos : 
                (at_grid_edge ? GridColor : currentColorNeg);
   // =========================================================================
 

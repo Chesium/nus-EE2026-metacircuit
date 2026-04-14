@@ -16,7 +16,6 @@ module WaveformPlot #(
 
     assign rd_addr = local_x;
     
-    // 畫布高度為 128，所以 Y 座標最大為 127
     wire [7:0] target_y = 8'd127 - rd_data;
     reg [7:0] prev_y;
 
@@ -35,19 +34,11 @@ module WaveformPlot #(
 
     assign is_wave_pixel = (local_y >= y_min_safe) && (local_y <= y_max_safe);
 
-    // =========================================================
-    // 【重點修改：加粗的儀表板外框】
-    // Y 中心為 63，寬度為 242 所以 X 中心為 121。十字線維持 2 像素厚實感。
-    // 外圍邊框 (Top, Bottom, Left, Right) 全面加粗到 4 像素！
-    // =========================================================
-    assign is_axis_pixel = (local_y >= 8'd63 && local_y <= 8'd64) ||  // 水平十字線 (2px)
-                           (local_x >= 8'd120 && local_x <= 8'd121)|| // 垂直十字線 (2px)
-                           (local_x <= 8'd3)  || (local_x >= 8'd238)|| // 左、右厚邊框 (4px)
-                           (local_y <= 8'd3)  || (local_y >= 8'd124);  // 上、下厚邊框 (4px)
+    assign is_axis_pixel = (local_y >= 8'd63 && local_y <= 8'd64) ||  
+                           (local_x >= 8'd120 && local_x <= 8'd121)|| 
+                           (local_x <= 8'd3)  || (local_x >= 8'd238)|| 
+                           (local_y <= 8'd3)  || (local_y >= 8'd124);  
 
-    // =========================================================
-    // 硬體 OSD 字元點陣 (8x8 Bitmap)
-    // =========================================================
     reg [7:0] char_rom [0:7];
     initial begin
         if (IS_VOLTAGE == 1) begin

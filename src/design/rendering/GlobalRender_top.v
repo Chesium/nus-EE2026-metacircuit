@@ -34,10 +34,36 @@ module GlobalRender_top (
     localparam integer CANVAS_GRID_H   = 16;
     localparam integer CANVAS_CELL_COUNT = CANVAS_GRID_W * CANVAS_GRID_H;
     localparam integer CANVAS_ADDR_W   = $clog2(CANVAS_CELL_COUNT);
+    localparam [CANVAS_ADDR_W-1:0] COMPONENT_INDEX_INVALID = {CANVAS_ADDR_W{1'b1}};
     localparam integer CANVAS_X0       = LEFT_BAR_W;
     localparam integer CANVAS_Y0       = TOP_BAR_H;
     localparam integer CANVAS_W        = CANVAS_GRID_W * CANVAS_CELL_SIZE;
     localparam integer CANVAS_H        = SCREEN_H - TOP_BAR_H - BOTTOM_BAR_H;
+    localparam integer PROP_PANEL_X    = 0;
+    localparam integer PROP_PANEL_Y    = 0;
+    localparam integer PROP_PANEL_W    = 640;
+    localparam integer PROP_PANEL_H    = 64;
+    localparam integer PROP_VALUE_BOX_X0 = 224;
+    localparam integer PROP_VALUE_BOX_Y0 = 24;
+    localparam integer PROP_VALUE_BOX_X1 = 336;
+    localparam integer PROP_VALUE_BOX_Y1 = 44;
+    localparam integer STORE_VIEW_TEXT_MAX_CHARS = 32;
+    localparam integer STORE_VIEW_CARD_X0 = 56;
+    localparam integer STORE_VIEW_CARD_Y0 = 40;
+    localparam integer STORE_VIEW_CARD_X1 = 584;
+    localparam integer STORE_VIEW_CARD_Y1 = 424;
+    localparam integer STORE_VIEW_TEXT_X = 88;
+    localparam integer STORE_VIEW_TITLE_Y = 72;
+    localparam integer STORE_VIEW_HINT_Y = 104;
+    localparam integer STORE_VIEW_STATUS_Y = 152;
+    localparam integer STORE_VIEW_COUNT_Y = 184;
+    localparam integer STORE_VIEW_PACKED_Y = 224;
+    localparam integer STORE_VIEW_INDEX_Y = 248;
+    localparam integer STORE_VIEW_TYPE_Y = 272;
+    localparam integer STORE_VIEW_ROT_Y = 296;
+    localparam integer STORE_VIEW_VALUE_Y = 320;
+    localparam integer STORE_VIEW_RAW_Y = 344;
+    localparam integer STORE_VIEW_POS_Y = 368;
 
     // =========================================================
     // 【決定生死的遮罩精算】
@@ -71,9 +97,26 @@ module GlobalRender_top (
     wire [4:0]  keyboard_key_id;
     wire        keyboard_key_valid;
     wire [7:0]  keyboard_key_ascii;
-    reg  [7:0]  last_ascii = 8'h00;
+    wire [23:0] keyboard_key_rgb;
+    wire        keyboard_key_is_digit;
+    wire        keyboard_key_is_unit;
+    wire        keyboard_key_is_action;
+    (* ASYNC_REG = "TRUE" *) reg  [7:0]  keyboard_ascii_sys_ff0 = 8'h00;
+    (* ASYNC_REG = "TRUE" *) reg  [7:0]  keyboard_ascii_sys_ff1 = 8'h00;
 
     wire        keyboard_region_active;
+
+    // =========================================================
+    // Calculator on OLED signals
+    // =========================================================
+    wire        oled_frame_begin;
+    wire        oled_sending_pixels;
+    wire        oled_sample_pixel;
+    wire [12:0] oled_pixel_index;
+    wire [6:0]  oled_x_pos;
+    wire [5:0]  oled_y_pos;
+    wire [15:0] oled_pixel_rgb;
+    reg  [15:0] oled_data;
 
     wire [11:0] circuit_canvas_rgb;
     wire        circuit_canvas_rendered;
@@ -82,6 +125,18 @@ module GlobalRender_top (
     wire        toolbar_rendered;
     wire [3:0]  selected_toolbar_idx;
     wire [1:0]  selected_wire_variant;
+    (* ASYNC_REG = "TRUE" *) reg  [3:0]  selected_toolbar_idx_sys_ff0 = 4'd0;
+    (* ASYNC_REG = "TRUE" *) reg  [3:0]  selected_toolbar_idx_sys_ff1 = 4'd0;
+    (* ASYNC_REG = "TRUE" *) reg  [1:0]  selected_wire_variant_sys_ff0 = 2'd0;
+    (* ASYNC_REG = "TRUE" *) reg  [1:0]  selected_wire_variant_sys_ff1 = 2'd0;
+    wire signed [12:0] circuit_canvas_grid_pos_x;
+    wire signed [12:0] circuit_canvas_grid_pos_y;
+    (* ASYNC_REG = "TRUE" *) reg signed [12:0] circuit_canvas_grid_pos_x_sys_ff0 = 13'sd0;
+    (* ASYNC_REG = "TRUE" *) reg signed [12:0] circuit_canvas_grid_pos_x_sys_ff1 = 13'sd0;
+    (* ASYNC_REG = "TRUE" *) reg signed [12:0] circuit_canvas_grid_pos_y_sys_ff0 = 13'sd0;
+    (* ASYNC_REG = "TRUE" *) reg signed [12:0] circuit_canvas_grid_pos_y_sys_ff1 = 13'sd0;
+    wire signed [12:0] circuit_canvas_grid_pos_x_sys = circuit_canvas_grid_pos_x_sys_ff1;
+    wire signed [12:0] circuit_canvas_grid_pos_y_sys = circuit_canvas_grid_pos_y_sys_ff1;
     reg         mouse_left_d_sys = 1'b0;
     reg top_bar_active, left_bar_active, right_bar_active, canvas_label_active, title_active, frame_active, icon_active, grid_line_active;
     integer dx, dy;
@@ -89,6 +144,22 @@ module GlobalRender_top (
     wire [11:0] mouse_xpos, mouse_ypos;
     wire [3:0]  mouse_zpos;
     wire        mouse_left, mouse_middle, mouse_right, mouse_new_event;
+    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_xpos_pix_ff0 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_xpos_pix_ff1 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_ypos_pix_ff0 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_ypos_pix_ff1 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg         mouse_left_pix_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg         mouse_left_pix_ff1 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg         mouse_middle_pix_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg         mouse_middle_pix_ff1 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg         mouse_right_pix_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg         mouse_right_pix_ff1 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_xpos_nav_ff0 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_xpos_nav_ff1 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_ypos_nav_ff0 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_ypos_nav_ff1 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg         mouse_left_nav_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg         mouse_left_nav_ff1 = 1'b0;
     reg  [11:0] mouse_set_value;
     reg         mouse_set_max_x, mouse_set_max_y;
 
@@ -100,10 +171,22 @@ module GlobalRender_top (
     wire [CANVAS_ADDR_W-1:0]  circuit_canvas_ram_r_addr;
     reg  [15:0] circuit_canvas_ram_w_data = 16'd0;
     wire [15:0] circuit_canvas_ram_r_data;
-    reg  [31:0] init_cycles = 32'd0;
+    localparam [9:0] INIT_DELAY_CYCLES = 10'd1000;
+    reg  [9:0]  init_cycles = 10'd0;
 
     reg         clear_canvas_active = 1'b0;
     reg  [CANVAS_ADDR_W-1:0]  clear_canvas_addr = {CANVAS_ADDR_W{1'b0}};
+    wire [11:0] mouse_xpos_pix = mouse_xpos_pix_ff1;
+    wire [11:0] mouse_ypos_pix = mouse_ypos_pix_ff1;
+    wire        mouse_left_pix = mouse_left_pix_ff1;
+    wire        mouse_middle_pix = mouse_middle_pix_ff1;
+    wire        mouse_right_pix = mouse_right_pix_ff1;
+    wire [11:0] mouse_xpos_nav = mouse_xpos_nav_ff1;
+    wire [11:0] mouse_ypos_nav = mouse_ypos_nav_ff1;
+    wire        mouse_left_nav = mouse_left_nav_ff1;
+    wire [3:0]  selected_toolbar_idx_sys = selected_toolbar_idx_sys_ff1;
+    wire [1:0]  selected_wire_variant_sys = selected_wire_variant_sys_ff1;
+    wire        show_component_store_view = SW[1];
     assign keyboard_region_active = (x_pos >= KEYBOARD_REGION_X0) && (x_pos < KEYBOARD_REGION_X1) && (y_pos >= KEYBOARD_REGION_Y0) && (y_pos < KEYBOARD_REGION_Y1);
     assign mouse_rgb = {mouse_r, mouse_g, mouse_b};
 
@@ -113,6 +196,50 @@ module GlobalRender_top (
             rgb888_to_444 = {c[23:20], c[15:12], c[7:4]};
         end
     endfunction
+
+    function [7:0] ascii_hex_nibble;
+        input [3:0] nibble;
+        begin
+            case (nibble)
+                4'h0: ascii_hex_nibble = "0";
+                4'h1: ascii_hex_nibble = "1";
+                4'h2: ascii_hex_nibble = "2";
+                4'h3: ascii_hex_nibble = "3";
+                4'h4: ascii_hex_nibble = "4";
+                4'h5: ascii_hex_nibble = "5";
+                4'h6: ascii_hex_nibble = "6";
+                4'h7: ascii_hex_nibble = "7";
+                4'h8: ascii_hex_nibble = "8";
+                4'h9: ascii_hex_nibble = "9";
+                4'hA: ascii_hex_nibble = "A";
+                4'hB: ascii_hex_nibble = "B";
+                4'hC: ascii_hex_nibble = "C";
+                4'hD: ascii_hex_nibble = "D";
+                4'hE: ascii_hex_nibble = "E";
+                default: ascii_hex_nibble = "F";
+            endcase
+        end
+    endfunction
+
+    function [7:0] ascii_decimal_nibble;
+        input [3:0] nibble;
+        begin
+            if (nibble <= 4'd9) begin
+                ascii_decimal_nibble = nibble + 8'd48;
+            end else begin
+                ascii_decimal_nibble = "?";
+            end
+        end
+    endfunction
+
+    task set_store_char;
+        inout [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] text_bus;
+        input integer char_index;
+        input [7:0] ch;
+        begin
+            text_bus[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (char_index * 8) -: 8] = ch;
+        end
+    endtask
 
     function [15:0] make_cell_data;
         input [1:0] rotation;
@@ -199,89 +326,395 @@ module GlobalRender_top (
         end
     endfunction
 
-    function [4:0] glyph5x7_row;
-        input [7:0] c;
-        input [2:0] r;
+    localparam [5:0] SPRITE_WIRE       = 6'd0;
+    localparam [5:0] SPRITE_ELBOW      = 6'd1;
+    localparam [5:0] SPRITE_TEE        = 6'd2;
+    localparam [5:0] SPRITE_JUNCTION   = 6'd3;
+    localparam [5:0] SPRITE_RES_LEFT   = 6'd5;
+    localparam [5:0] SPRITE_RES_RIGHT  = 6'd6;
+    localparam [5:0] SPRITE_VOLT_LEFT  = 6'd7;
+    localparam [5:0] SPRITE_VOLT_RIGHT = 6'd8;
+    localparam [5:0] SPRITE_CURR_LEFT  = 6'd9;
+    localparam [5:0] SPRITE_CURR_RIGHT = 6'd10;
+    localparam [5:0] SPRITE_IND_LEFT   = 6'd11;
+    localparam [5:0] SPRITE_IND_RIGHT  = 6'd12;
+    localparam [5:0] SPRITE_CAP_LEFT   = 6'd13;
+    localparam [5:0] SPRITE_CAP_RIGHT  = 6'd14;
+    localparam [5:0] SPRITE_GROUND     = 6'd15;
+
+    localparam [3:0] COMPONENT_TYPE_WIRE      = 4'd0;
+    localparam [3:0] COMPONENT_TYPE_GROUND    = 4'd1;
+    localparam [3:0] COMPONENT_TYPE_RESISTOR  = 4'd2;
+    localparam [3:0] COMPONENT_TYPE_CAPACITOR = 4'd3;
+    localparam [3:0] COMPONENT_TYPE_INDUCTOR  = 4'd4;
+    localparam [3:0] COMPONENT_TYPE_VOLTAGE   = 4'd5;
+    localparam [3:0] COMPONENT_TYPE_CURRENT   = 4'd6;
+    localparam [3:0] COMPONENT_UNIT_NONE      = 4'd0;
+    localparam [3:0] COMPONENT_UNIT_M         = 4'd1;
+    localparam [3:0] COMPONENT_UNIT_K         = 4'd2;
+    localparam [3:0] COMPONENT_UNIT_m         = 4'd3;
+    localparam [3:0] COMPONENT_UNIT_U         = 4'd4;
+    localparam [3:0] COMPONENT_UNIT_N         = 4'd5;
+    localparam [3:0] COMPONENT_UNIT_P         = 4'd6;
+    localparam integer COMPONENT_STORE_ENTRY_W = 40;
+
+    function is_left_half_type;
+        input [5:0] sprite_type;
         begin
-            case (c)
-                "0": case (r) 0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10011; 3: glyph5x7_row = 5'b10101; 4: glyph5x7_row = 5'b11001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01110; endcase
-                "1": case (r) 0: glyph5x7_row = 5'b00100; 1: glyph5x7_row = 5'b01100; 2: glyph5x7_row = 5'b00100; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b00100; default: glyph5x7_row = 5'b01110; endcase
-                "2": case (r) 0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b00001; 3: glyph5x7_row = 5'b00010; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b01000; default: glyph5x7_row = 5'b11111; endcase
-                "3": case (r) 0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b00001; 2: glyph5x7_row = 5'b00001; 3: glyph5x7_row = 5'b01110; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b00001; default: glyph5x7_row = 5'b11110; endcase
-                "4": case (r) 0: glyph5x7_row = 5'b00010; 1: glyph5x7_row = 5'b00110; 2: glyph5x7_row = 5'b01010; 3: glyph5x7_row = 5'b10010; 4: glyph5x7_row = 5'b11111; 5: glyph5x7_row = 5'b00010; default: glyph5x7_row = 5'b00010; endcase
-                "5": case (r) 0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b11110; 3: glyph5x7_row = 5'b00001; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01110; endcase
-                "6": case (r) 0: glyph5x7_row = 5'b00110; 1: glyph5x7_row = 5'b01000; 2: glyph5x7_row = 5'b10000; 3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01110; endcase
-                "7": case (r) 0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b00001; 2: glyph5x7_row = 5'b00010; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b01000; 5: glyph5x7_row = 5'b01000; default: glyph5x7_row = 5'b01000; endcase
-                "8": case (r) 0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b01110; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01110; endcase
-                "9": case (r) 0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b01111; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b00010; default: glyph5x7_row = 5'b01100; endcase
-                "@": case (r) 0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10111; 3: glyph5x7_row = 5'b10101; 4: glyph5x7_row = 5'b10111; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b01111; endcase
-                "A": case (r) 0: glyph5x7_row = 5'b01110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b11111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b10001; endcase
-                "C": case (r) 0: glyph5x7_row = 5'b01111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b10000; 3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b01111; endcase
-                "D": case (r) 0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b11110; endcase
-                "E": case (r) 0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b11110; 3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b11111; endcase
-                "G": case (r) 0: glyph5x7_row = 5'b01111; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b10000; 3: glyph5x7_row = 5'b10111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01111; endcase
-                "H": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b11111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b10001; endcase
-                "M": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b11011; 2: glyph5x7_row = 5'b10101; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b10001; endcase
-                "P": case (r) 0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b10000; endcase
-                "R": case (r) 0: glyph5x7_row = 5'b11110; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10100; 5: glyph5x7_row = 5'b10010; default: glyph5x7_row = 5'b10001; endcase
-                "T": case (r) 0: glyph5x7_row = 5'b11111; 1: glyph5x7_row = 5'b00100; 2: glyph5x7_row = 5'b00100; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b00100; default: glyph5x7_row = 5'b00100; endcase
-                "V": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b01010; default: glyph5x7_row = 5'b00100; endcase
-                "W": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10101; 4: glyph5x7_row = 5'b10101; 5: glyph5x7_row = 5'b10101; default: glyph5x7_row = 5'b01010; endcase
-                "X": case (r) 0: glyph5x7_row = 5'b10001; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b01010; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b01010; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b10001; endcase
-                "a": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b00001; 3: glyph5x7_row = 5'b01111; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10011; default: glyph5x7_row = 5'b01101; endcase
-                "b": case (r) 0: glyph5x7_row = 5'b10000; 1: glyph5x7_row = 5'b10000; 2: glyph5x7_row = 5'b11110; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b11110; endcase
-                "c": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01110; endcase
-                "d": case (r) 0: glyph5x7_row = 5'b00001; 1: glyph5x7_row = 5'b00001; 2: glyph5x7_row = 5'b01111; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01111; endcase
-                "e": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b11111; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b01111; endcase
-                "f": case (r) 0: glyph5x7_row = 5'b00110; 1: glyph5x7_row = 5'b01000; 2: glyph5x7_row = 5'b11100; 3: glyph5x7_row = 5'b01000; 4: glyph5x7_row = 5'b01000; 5: glyph5x7_row = 5'b01000; default: glyph5x7_row = 5'b01000; endcase
-                "g": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01111; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b01111; 5: glyph5x7_row = 5'b00001; default: glyph5x7_row = 5'b01110; endcase
-                "i": case (r) 0: glyph5x7_row = 5'b00100; 1: glyph5x7_row = 5'b00000; 2: glyph5x7_row = 5'b01100; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b00100; default: glyph5x7_row = 5'b01110; endcase
-                "l": case (r) 0: glyph5x7_row = 5'b01100; 1: glyph5x7_row = 5'b00100; 2: glyph5x7_row = 5'b00100; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b00100; 5: glyph5x7_row = 5'b00100; default: glyph5x7_row = 5'b01110; endcase
-                "m": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11010; 2: glyph5x7_row = 5'b10101; 3: glyph5x7_row = 5'b10101; 4: glyph5x7_row = 5'b10101; 5: glyph5x7_row = 5'b10101; default: glyph5x7_row = 5'b10101; endcase
-                "n": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11110; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b10001; endcase
-                "o": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01110; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10001; default: glyph5x7_row = 5'b01110; endcase
-                "p": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11110; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b11110; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b10000; endcase
-                "r": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10110; 2: glyph5x7_row = 5'b11001; 3: glyph5x7_row = 5'b10000; 4: glyph5x7_row = 5'b10000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b10000; endcase
-                "s": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b01111; 2: glyph5x7_row = 5'b10000; 3: glyph5x7_row = 5'b01110; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b00001; default: glyph5x7_row = 5'b11110; endcase
-                "t": case (r) 0: glyph5x7_row = 5'b01000; 1: glyph5x7_row = 5'b01000; 2: glyph5x7_row = 5'b11100; 3: glyph5x7_row = 5'b01000; 4: glyph5x7_row = 5'b01000; 5: glyph5x7_row = 5'b01001; default: glyph5x7_row = 5'b00110; endcase
-                "u": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b10001; 5: glyph5x7_row = 5'b10011; default: glyph5x7_row = 5'b01101; endcase
-                "v": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b10001; 4: glyph5x7_row = 5'b01010; 5: glyph5x7_row = 5'b01010; default: glyph5x7_row = 5'b00100; endcase
-                "y": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b10001; 2: glyph5x7_row = 5'b10001; 3: glyph5x7_row = 5'b01111; 4: glyph5x7_row = 5'b00001; 5: glyph5x7_row = 5'b00010; default: glyph5x7_row = 5'b11100; endcase
-                "z": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11111; 2: glyph5x7_row = 5'b00010; 3: glyph5x7_row = 5'b00100; 4: glyph5x7_row = 5'b01000; 5: glyph5x7_row = 5'b10000; default: glyph5x7_row = 5'b11111; endcase
-                "=": case (r) 0: glyph5x7_row = 5'b00000; 1: glyph5x7_row = 5'b11111; 2: glyph5x7_row = 5'b00000; 3: glyph5x7_row = 5'b11111; 4: glyph5x7_row = 5'b00000; 5: glyph5x7_row = 5'b00000; default: glyph5x7_row = 5'b00000; endcase
-                default: glyph5x7_row = 5'b00000;
+            case (sprite_type)
+                SPRITE_RES_LEFT, SPRITE_VOLT_LEFT, SPRITE_CURR_LEFT,
+                SPRITE_IND_LEFT, SPRITE_CAP_LEFT: is_left_half_type = 1'b1;
+                default: is_left_half_type = 1'b0;
             endcase
         end
     endfunction
 
-    function glyph_hit;
-        input [7:0] c;
-        input integer scale;
-        input integer local_x;
-        input integer local_y;
-        reg [2:0] row_idx;
-        reg [2:0] col_idx;
-        reg [4:0] row_bits;
+    function is_right_half_type;
+        input [5:0] sprite_type;
         begin
-            glyph_hit = 1'b0;
-            if ((local_x >= 0) && (local_y >= 0) &&
-                (local_x < (5 * scale)) && (local_y < (7 * scale))) begin
-                row_idx = local_y / scale;
-                col_idx = local_x / scale;
-                row_bits = glyph5x7_row(c, row_idx);
-                glyph_hit = row_bits[4 - col_idx];
-            end
+            case (sprite_type)
+                SPRITE_RES_RIGHT, SPRITE_VOLT_RIGHT, SPRITE_CURR_RIGHT,
+                SPRITE_IND_RIGHT, SPRITE_CAP_RIGHT: is_right_half_type = 1'b1;
+                default: is_right_half_type = 1'b0;
+            endcase
         end
     endfunction
 
-    assign JC = 8'h00;
+    function component_store_is_origin;
+        input [15:0] cell_data;
+        input [5:0] sprite_type;
+        begin
+            component_store_is_origin = cell_data[0] && !is_right_half_type(sprite_type);
+        end
+    endfunction
+
+    function [3:0] component_type_from_sprite;
+        input [5:0] sprite_type;
+        begin
+            case (sprite_type)
+                SPRITE_GROUND: component_type_from_sprite = COMPONENT_TYPE_GROUND;
+                SPRITE_RES_LEFT, SPRITE_RES_RIGHT: component_type_from_sprite = COMPONENT_TYPE_RESISTOR;
+                SPRITE_CAP_LEFT, SPRITE_CAP_RIGHT: component_type_from_sprite = COMPONENT_TYPE_CAPACITOR;
+                SPRITE_IND_LEFT, SPRITE_IND_RIGHT: component_type_from_sprite = COMPONENT_TYPE_INDUCTOR;
+                SPRITE_VOLT_LEFT, SPRITE_VOLT_RIGHT: component_type_from_sprite = COMPONENT_TYPE_VOLTAGE;
+                SPRITE_CURR_LEFT, SPRITE_CURR_RIGHT: component_type_from_sprite = COMPONENT_TYPE_CURRENT;
+                SPRITE_WIRE, SPRITE_ELBOW, SPRITE_TEE, SPRITE_JUNCTION: component_type_from_sprite = COMPONENT_TYPE_WIRE;
+                default: component_type_from_sprite = COMPONENT_TYPE_WIRE;
+            endcase
+        end
+    endfunction
+
+    function [8:0] component_position_from_addr;
+        input [CANVAS_ADDR_W-1:0] cell_addr;
+        integer pos_x;
+        integer pos_y;
+        begin
+            pos_x = cell_addr % CANVAS_GRID_W;
+            pos_y = cell_addr / CANVAS_GRID_W;
+            component_position_from_addr = {pos_y[3:0], pos_x[4:0]};
+        end
+    endfunction
+
+    function [7:0] text_char_at8;
+        input [63:0] text_value;
+        input [2:0] char_index;
+        begin
+            case (char_index)
+                3'd0: text_char_at8 = text_value[63:56];
+                3'd1: text_char_at8 = text_value[55:48];
+                3'd2: text_char_at8 = text_value[47:40];
+                3'd3: text_char_at8 = text_value[39:32];
+                3'd4: text_char_at8 = text_value[31:24];
+                3'd5: text_char_at8 = text_value[23:16];
+                3'd6: text_char_at8 = text_value[15:8];
+                default: text_char_at8 = text_value[7:0];
+            endcase
+        end
+    endfunction
+
+    function [3:0] component_unit_code_from_ascii;
+        input [7:0] ascii;
+        begin
+            case (ascii)
+                "M": component_unit_code_from_ascii = COMPONENT_UNIT_M;
+                "k": component_unit_code_from_ascii = COMPONENT_UNIT_K;
+                "m": component_unit_code_from_ascii = COMPONENT_UNIT_m;
+                "u": component_unit_code_from_ascii = COMPONENT_UNIT_U;
+                "n": component_unit_code_from_ascii = COMPONENT_UNIT_N;
+                "p": component_unit_code_from_ascii = COMPONENT_UNIT_P;
+                default: component_unit_code_from_ascii = COMPONENT_UNIT_NONE;
+            endcase
+        end
+    endfunction
+
+    function [7:0] ascii_from_component_unit;
+        input [3:0] unit_code;
+        begin
+            case (unit_code)
+                COMPONENT_UNIT_M: ascii_from_component_unit = "M";
+                COMPONENT_UNIT_K: ascii_from_component_unit = "k";
+                COMPONENT_UNIT_m: ascii_from_component_unit = "m";
+                COMPONENT_UNIT_U: ascii_from_component_unit = "u";
+                COMPONENT_UNIT_N: ascii_from_component_unit = "n";
+                COMPONENT_UNIT_P: ascii_from_component_unit = "p";
+                default: ascii_from_component_unit = "-";
+            endcase
+        end
+    endfunction
+
+    function [3:0] component_unit_code_from_text;
+        input [63:0] text_value;
+        input [3:0] text_len;
+        integer idx;
+        reg [3:0] unit_code;
+        begin
+            unit_code = COMPONENT_UNIT_NONE;
+            for (idx = 0; idx < 8; idx = idx + 1) begin
+                if (idx < text_len) begin
+                    case (component_unit_code_from_ascii(text_char_at8(text_value, idx[2:0])))
+                        COMPONENT_UNIT_NONE: begin end
+                        default: unit_code = component_unit_code_from_ascii(text_char_at8(text_value, idx[2:0]));
+                    endcase
+                end
+            end
+            component_unit_code_from_text = unit_code;
+        end
+    endfunction
+
+    function [COMPONENT_STORE_ENTRY_W-1:0] make_component_store_entry;
+        input [3:0] component_unit;
+        input [CANVAS_ADDR_W-1:0] store_index;
+        input [3:0] component_type;
+        input [1:0] component_rotation;
+        input [11:0] component_value;
+        input [CANVAS_ADDR_W-1:0] cell_addr;
+        begin
+            make_component_store_entry = {
+                component_unit,
+                store_index,
+                component_type,
+                component_rotation,
+                component_value,
+                component_position_from_addr(cell_addr)
+            };
+        end
+    endfunction
+
+    function component_type_uses_two_cells;
+        input [3:0] component_type;
+        begin
+            case (component_type)
+                COMPONENT_TYPE_RESISTOR,
+                COMPONENT_TYPE_CAPACITOR,
+                COMPONENT_TYPE_INDUCTOR,
+                COMPONENT_TYPE_VOLTAGE,
+                COMPONENT_TYPE_CURRENT: component_type_uses_two_cells = 1'b1;
+                default: component_type_uses_two_cells = 1'b0;
+            endcase
+        end
+    endfunction
+
+    function component_type_needs_index;
+        input [3:0] component_type;
+        begin
+            case (component_type)
+                COMPONENT_TYPE_WIRE: component_type_needs_index = 1'b0;
+                default: component_type_needs_index = 1'b1;
+            endcase
+        end
+    endfunction
+
+    function [CANVAS_ADDR_W-1:0] component_addr_from_position;
+        input [8:0] component_position;
+        integer pos_x;
+        integer pos_y;
+        begin
+            pos_x = component_position[4:0];
+            pos_y = component_position[8:5];
+            component_addr_from_position = pos_x + (pos_y * CANVAS_GRID_W);
+        end
+    endfunction
+
+    function [CANVAS_ADDR_W-1:0] component_pair_addr_from_origin;
+        input [CANVAS_ADDR_W-1:0] origin_addr;
+        input [1:0] rotation;
+        integer delta;
+        integer tmp;
+        begin
+            case (rotation)
+                2'd0: delta = 1;
+                2'd1: delta = CANVAS_GRID_W;
+                2'd2: delta = -1;
+                default: delta = -CANVAS_GRID_W;
+            endcase
+
+            tmp = origin_addr + delta;
+            if ((tmp < 0) || (tmp >= CANVAS_CELL_COUNT)) component_pair_addr_from_origin = origin_addr;
+            else component_pair_addr_from_origin = tmp[CANVAS_ADDR_W-1:0];
+        end
+    endfunction
+
+    function [11:0] bcd_insert_ltr3;
+        input [11:0] cur;
+        input [3:0] digit;
+        input [1:0] digit_count;
+        begin
+            case (digit_count)
+                2'd0: bcd_insert_ltr3 = {digit, 8'd0};
+                2'd1: bcd_insert_ltr3 = {cur[11:8], digit, 4'd0};
+                2'd2: bcd_insert_ltr3 = {cur[11:8], cur[7:4], digit};
+                default: bcd_insert_ltr3 = cur;
+            endcase
+        end
+    endfunction
+
+    function [11:0] bcd_insert_ltr2;
+        input [11:0] cur;
+        input [3:0] digit;
+        input [1:0] digit_count;
+        begin
+            case (digit_count)
+                2'd0: bcd_insert_ltr2 = {4'd0, digit, 4'd0};
+                2'd1: bcd_insert_ltr2 = {4'd0, cur[7:4], digit};
+                default: bcd_insert_ltr2 = cur;
+            endcase
+        end
+    endfunction
+
+    function [11:0] bcd_delete_ltr3;
+        input [11:0] cur;
+        input [1:0] digit_count;
+        begin
+            case (digit_count)
+                2'd1: bcd_delete_ltr3 = 12'd0;
+                2'd2: bcd_delete_ltr3 = {cur[11:8], 8'd0};
+                2'd3: bcd_delete_ltr3 = {cur[11:8], cur[7:4], 4'd0};
+                default: bcd_delete_ltr3 = cur;
+            endcase
+        end
+    endfunction
+
+    function [11:0] bcd_delete_ltr2;
+        input [11:0] cur;
+        input [1:0] digit_count;
+        begin
+            case (digit_count)
+                2'd1: bcd_delete_ltr2 = 12'd0;
+                2'd2: bcd_delete_ltr2 = {4'd0, cur[7:4], 4'd0};
+                default: bcd_delete_ltr2 = cur;
+            endcase
+        end
+    endfunction
+
+    function [CANVAS_ADDR_W-1:0] pair_addr_for_cell;
+        input [CANVAS_ADDR_W-1:0] base_addr;
+        input [5:0] sprite_type;
+        input [1:0] rotation;
+        integer delta;
+        integer tmp;
+        begin
+            case (rotation)
+                2'd0: delta = 1;
+                2'd1: delta = CANVAS_GRID_W;
+                2'd2: delta = -1;
+                default: delta = -CANVAS_GRID_W;
+            endcase
+
+            if (is_left_half_type(sprite_type)) tmp = base_addr + delta;
+            else if (is_right_half_type(sprite_type)) tmp = base_addr - delta;
+            else tmp = base_addr;
+
+            if ((tmp < 0) || (tmp >= CANVAS_CELL_COUNT)) pair_addr_for_cell = base_addr;
+            else pair_addr_for_cell = tmp[CANVAS_ADDR_W-1:0];
+        end
+    endfunction
+
+    function keyboard_ascii_is_unit_char;
+        input [7:0] ascii;
+        begin
+            case (ascii)
+                "M", "k", "m", "u", "n", "p": keyboard_ascii_is_unit_char = 1'b1;
+                default: keyboard_ascii_is_unit_char = 1'b0;
+            endcase
+        end
+    endfunction
+
+    function [63:0] text_append8;
+        input [63:0] cur;
+        input [7:0] ascii;
+        input [3:0] len;
+        begin
+            case (len)
+                4'd0: text_append8 = {ascii, 56'd0};
+                4'd1: text_append8 = {cur[63:56], ascii, 48'd0};
+                4'd2: text_append8 = {cur[63:48], ascii, 40'd0};
+                4'd3: text_append8 = {cur[63:40], ascii, 32'd0};
+                4'd4: text_append8 = {cur[63:32], ascii, 24'd0};
+                4'd5: text_append8 = {cur[63:24], ascii, 16'd0};
+                4'd6: text_append8 = {cur[63:16], ascii, 8'd0};
+                4'd7: text_append8 = {cur[63:8], ascii};
+                default: text_append8 = cur;
+            endcase
+        end
+    endfunction
+
+    function [63:0] text_delete8;
+        input [63:0] cur;
+        input [3:0] len;
+        begin
+            case (len)
+                4'd1: text_delete8 = 64'd0;
+                4'd2: text_delete8 = {cur[63:56], 56'd0};
+                4'd3: text_delete8 = {cur[63:48], 48'd0};
+                4'd4: text_delete8 = {cur[63:40], 40'd0};
+                4'd5: text_delete8 = {cur[63:32], 32'd0};
+                4'd6: text_delete8 = {cur[63:24], 24'd0};
+                4'd7: text_delete8 = {cur[63:16], 16'd0};
+                4'd8: text_delete8 = {cur[63:8], 8'd0};
+                default: text_delete8 = cur;
+            endcase
+        end
+    endfunction
+
+    // JC 端口由 Oled_Display 模块驱动，必须移除强制拉低，否则 OLED 黑屏
+    // assign JC = 8'h00;
     assign SEG = 8'hFF;
     assign AN = 4'hF;
-    assign LED[4:0] = keyboard_key_id;
-    assign LED[7:5] = 3'b000;
-    assign LED[15:8] = last_ascii;
     ClockDivider #( .FREQ(25_000_000) ) clkdiv_pixel_inst ( .CLK100MHZ(CLK100MHZ), .clk_out(clk_pixel) );
     ClockDivider #( .FREQ(20) ) clkdiv_nav_inst ( .CLK100MHZ(CLK100MHZ), .clk_out(clk_nav) );
+
+    // =========================================================
+    // OLED Clock Divider: 100MHz -> 6.25MHz & 20Hz
+    // 生成 OLED 像素时钟和计算器导航时钟 (独立于系统时钟)
+    // =========================================================
+    reg [3:0] oled_clk_div_counter = 0;
+    reg [22:0] oled_clk_div_20hz = 0;
+    reg oled_clk6p25m = 0;
+    reg oled_clk20hz = 0;
+
+    always @(posedge CLK100MHZ) begin
+        if (oled_clk_div_counter == 7) begin
+            oled_clk_div_counter <= 0;
+            oled_clk6p25m <= ~oled_clk6p25m;
+        end else begin
+            oled_clk_div_counter <= oled_clk_div_counter + 1;
+        end
+        
+        if (oled_clk_div_20hz == 2500000) begin
+            oled_clk_div_20hz <= 0;
+            oled_clk20hz <= ~oled_clk20hz;
+        end else begin
+            oled_clk_div_20hz <= oled_clk_div_20hz + 1;
+        end
+    end
+
+    assign oled_x_pos = oled_pixel_index % 96;
+    assign oled_y_pos = oled_pixel_index / 96;
+
+    always @(posedge oled_clk6p25m) begin
+        oled_data <= oled_pixel_rgb;
+    end
+
     VGAControl vga_ctrl_inst (
         .clk_pixel(clk_pixel), .reset(SW[15]), .rgb(rgb),
         .hsync(HSYNC), .vsync(VSYNC), .video_on(video_on),
@@ -292,7 +725,7 @@ module GlobalRender_top (
     reg vsync_d;
     always @(posedge clk_pixel) vsync_d <= VSYNC;
     wire vsync_edge = (~VSYNC & vsync_d);
-    wire wave_rst_n = ~BTNC;
+    wire wave_rst_n = ~SW[15];
 
     MouseCtl mouse_ctrl_inst (
         .clk(CLK100MHZ), .rst(BTNC), .xpos(mouse_xpos), .ypos(mouse_ypos), .zpos(mouse_zpos),
@@ -300,15 +733,46 @@ module GlobalRender_top (
         .new_event(mouse_new_event), .value(mouse_set_value), .setx(1'b0), .sety(1'b0),
         .setmax_x(mouse_set_max_x), .setmax_y(mouse_set_max_y), .ps2_clk(PS2CLK), .ps2_data(PS2DATA)
     );
+    always @(posedge clk_pixel) begin
+        mouse_xpos_pix_ff0 <= mouse_xpos;
+        mouse_xpos_pix_ff1 <= mouse_xpos_pix_ff0;
+        mouse_ypos_pix_ff0 <= mouse_ypos;
+        mouse_ypos_pix_ff1 <= mouse_ypos_pix_ff0;
+        mouse_left_pix_ff0 <= mouse_left;
+        mouse_left_pix_ff1 <= mouse_left_pix_ff0;
+        mouse_middle_pix_ff0 <= mouse_middle;
+        mouse_middle_pix_ff1 <= mouse_middle_pix_ff0;
+        mouse_right_pix_ff0 <= mouse_right;
+        mouse_right_pix_ff1 <= mouse_right_pix_ff0;
+    end
+    always @(posedge clk_nav) begin
+        mouse_xpos_nav_ff0 <= mouse_xpos;
+        mouse_xpos_nav_ff1 <= mouse_xpos_nav_ff0;
+        mouse_ypos_nav_ff0 <= mouse_ypos;
+        mouse_ypos_nav_ff1 <= mouse_ypos_nav_ff0;
+        mouse_left_nav_ff0 <= mouse_left;
+        mouse_left_nav_ff1 <= mouse_left_nav_ff0;
+    end
+    always @(posedge CLK100MHZ) begin
+        selected_toolbar_idx_sys_ff0 <= selected_toolbar_idx;
+        selected_toolbar_idx_sys_ff1 <= selected_toolbar_idx_sys_ff0;
+        selected_wire_variant_sys_ff0 <= selected_wire_variant;
+        selected_wire_variant_sys_ff1 <= selected_wire_variant_sys_ff0;
+        circuit_canvas_grid_pos_x_sys_ff0 <= circuit_canvas_grid_pos_x;
+        circuit_canvas_grid_pos_x_sys_ff1 <= circuit_canvas_grid_pos_x_sys_ff0;
+        circuit_canvas_grid_pos_y_sys_ff0 <= circuit_canvas_grid_pos_y;
+        circuit_canvas_grid_pos_y_sys_ff1 <= circuit_canvas_grid_pos_y_sys_ff0;
+    end
     MouseDisplay mouse_disp_inst (
-        .pixel_clk(clk_pixel), .xpos(mouse_xpos), .ypos(mouse_ypos),
-        .mouse_left(mouse_left),
+        .pixel_clk(clk_pixel), .xpos(mouse_xpos_pix), .ypos(mouse_ypos_pix),
+        .mouse_left(mouse_left_pix),
         .hcount(x_pos), .vcount(y_pos), .enable_mouse_display_out(mouse_display_enable),
         .red_out(mouse_r), .green_out(mouse_g), .blue_out(mouse_b)
     );
 
-    SimpleRam #( .WordWidth(16), .WordCount(CANVAS_CELL_COUNT) ) circuit_canvas_ram_inst (
-        .clk(CLK100MHZ), .w_en(circuit_canvas_ram_w_en), .w_addr(circuit_canvas_ram_w_addr),
+    SimpleDualClockRam #( .WordWidth(16), .WordCount(CANVAS_CELL_COUNT) ) circuit_canvas_ram_inst (
+        .wr_clk(CLK100MHZ), .rd_clk(clk_pixel),
+        .w_en(circuit_canvas_ram_w_en), .w_addr(circuit_canvas_ram_w_addr),
         .r_addr(circuit_canvas_ram_r_addr), .d_in(circuit_canvas_ram_w_data), .d_out(circuit_canvas_ram_r_data)
     );
 
@@ -326,11 +790,9 @@ module GlobalRender_top (
         end
     end
 
-    wire signed [12:0] circuit_canvas_grid_pos_x;
-    wire signed [12:0] circuit_canvas_grid_pos_y;
     reg         interaction_frame_toggle_pix = 1'b0;
-    reg         interaction_frame_sync0 = 1'b0;
-    reg         interaction_frame_sync1 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg         interaction_frame_sync0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg         interaction_frame_sync1 = 1'b0;
     reg         interaction_frame_sync2 = 1'b0;
     wire        interaction_frame_tick;
     wire [3:0]  interaction_mode_select;
@@ -344,7 +806,7 @@ module GlobalRender_top (
     wire        interaction_frame_done;
     wire        interaction_frame_drop_flag;
 
-    assign interaction_mode_select = toolbar_mode_select(selected_toolbar_idx, selected_wire_variant);
+    assign interaction_mode_select = toolbar_mode_select(selected_toolbar_idx_sys, selected_wire_variant_sys);
     assign interaction_frame_tick = interaction_frame_sync1 ^ interaction_frame_sync2;
 
     CircuitCanvas #(
@@ -353,9 +815,9 @@ module GlobalRender_top (
         .CellSize(CANVAS_CELL_SIZE), .GridWidth(CANVAS_GRID_W), .GridHeight(CANVAS_GRID_H)
     ) circuit_canvas_inst (
         .clk_pixel(clk_pixel), .x_pos(x_pos), .y_pos(y_pos), .rgb(circuit_canvas_rgb),
-        .rendered(circuit_canvas_rendered), .mouse_x_pos(mouse_xpos), .mouse_y_pos(mouse_ypos),
+        .rendered(circuit_canvas_rendered), .mouse_x_pos(mouse_xpos_pix), .mouse_y_pos(mouse_ypos_pix),
         .data_addr(circuit_canvas_ram_r_addr), .incoming_data(circuit_canvas_ram_r_data),
-        .display_grid(1'b1), .mouse_left_click(mouse_left && (selected_toolbar_idx == 4'd0)),
+        .display_grid(1'b1), .mouse_left_click(mouse_left_pix && (selected_toolbar_idx == 4'd0)),
         .anim_phase(global_anim_phase),
         .grid_pos_x_out(circuit_canvas_grid_pos_x),
         .grid_pos_y_out(circuit_canvas_grid_pos_y)
@@ -366,9 +828,152 @@ module GlobalRender_top (
     reg  [11:0] selected_cell_i = 12'd0;
     reg  [11:0] selected_cell_j = 12'd0;
     reg  [15:0] selected_cell_data = 16'd0;
+    reg  [15:0] selected_cell_data_sys = 16'd0;
+    reg  [11:0] selected_value_bcd = 12'd0;
+    reg  [1:0]  selected_value_digits = 2'd0;
+    reg  [63:0] selected_value_text = 64'd0;
+    reg  [3:0]  selected_value_text_len = 4'd0;
+    reg  [CANVAS_ADDR_W-1:0] selected_component_index_sys = COMPONENT_INDEX_INVALID;
+    reg         selected_component_index_valid_sys = 1'b0;
+    reg  [3:0]  selected_component_unit_sys = COMPONENT_UNIT_NONE;
+    reg  [3:0]  selected_component_type_sys = COMPONENT_TYPE_WIRE;
+    reg  [1:0]  selected_component_rotation_sys = 2'd0;
+    reg  [11:0] selected_component_value_sys = 12'd0;
+    reg  [8:0]  selected_component_position_sys = 9'd0;
     reg         has_selection = 1'b0;
+    reg         value_edit_active = 1'b0;
     reg         mouse_left_d = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg [11:0] selected_cell_i_sys_ff0 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg [11:0] selected_cell_i_sys_ff1 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg [11:0] selected_cell_j_sys_ff0 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg [11:0] selected_cell_j_sys_ff1 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg        has_selection_sys_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        has_selection_sys_ff1 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        value_edit_active_sys_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        value_edit_active_sys_ff1 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg [15:0] selected_cell_data_ff0 = 16'd0;
+    (* ASYNC_REG = "TRUE" *) reg [15:0] selected_cell_data_ff1 = 16'd0;
+    (* ASYNC_REG = "TRUE" *) reg [63:0] selected_value_text_ui_ff0 = 64'd0;
+    (* ASYNC_REG = "TRUE" *) reg [63:0] selected_value_text_ui_ff1 = 64'd0;
+    (* ASYNC_REG = "TRUE" *) reg [3:0]  selected_value_text_len_ui_ff0 = 4'd0;
+    (* ASYNC_REG = "TRUE" *) reg [3:0]  selected_value_text_len_ui_ff1 = 4'd0;
+    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] selected_component_index_ui_ff0 = COMPONENT_INDEX_INVALID;
+    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] selected_component_index_ui_ff1 = COMPONENT_INDEX_INVALID;
+    (* ASYNC_REG = "TRUE" *) reg        selected_component_index_valid_ui_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        selected_component_index_valid_ui_ff1 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg [3:0]  selected_component_unit_ui_ff0 = COMPONENT_UNIT_NONE;
+    (* ASYNC_REG = "TRUE" *) reg [3:0]  selected_component_unit_ui_ff1 = COMPONENT_UNIT_NONE;
+    (* ASYNC_REG = "TRUE" *) reg [3:0]  selected_component_type_ui_ff0 = COMPONENT_TYPE_WIRE;
+    (* ASYNC_REG = "TRUE" *) reg [3:0]  selected_component_type_ui_ff1 = COMPONENT_TYPE_WIRE;
+    (* ASYNC_REG = "TRUE" *) reg [1:0]  selected_component_rotation_ui_ff0 = 2'd0;
+    (* ASYNC_REG = "TRUE" *) reg [1:0]  selected_component_rotation_ui_ff1 = 2'd0;
+    (* ASYNC_REG = "TRUE" *) reg [11:0] selected_component_value_ui_ff0 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg [11:0] selected_component_value_ui_ff1 = 12'd0;
+    (* ASYNC_REG = "TRUE" *) reg [8:0]  selected_component_position_ui_ff0 = 9'd0;
+    (* ASYNC_REG = "TRUE" *) reg [8:0]  selected_component_position_ui_ff1 = 9'd0;
+    (* ASYNC_REG = "TRUE" *) reg        component_store_busy_ui_ff0 = 1'b1;
+    (* ASYNC_REG = "TRUE" *) reg        component_store_busy_ui_ff1 = 1'b1;
+    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_count_ui_ff0 = {CANVAS_ADDR_W{1'b0}};
+    (* ASYNC_REG = "TRUE" *) reg [CANVAS_ADDR_W-1:0] component_store_count_ui_ff1 = {CANVAS_ADDR_W{1'b0}};
+    reg  [CANVAS_ADDR_W-1:0] component_store_view_index_ui = {CANVAS_ADDR_W{1'b0}};
+    reg         component_store_view_manual_ui = 1'b0;
+    reg         component_store_view_show_d = 1'b0;
+    reg         component_store_prev_toggle_nav = 1'b0;
+    reg         component_store_prev_btn_nav_d = 1'b0;
+    reg         component_store_next_toggle_nav = 1'b0;
+    reg         component_store_next_btn_nav_d = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        component_store_prev_toggle_pix_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        component_store_prev_toggle_pix_ff1 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        component_store_next_toggle_pix_ff0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg        component_store_next_toggle_pix_ff1 = 1'b0;
+    reg         component_store_prev_toggle_seen_pix = 1'b0;
+    reg         component_store_next_toggle_seen_pix = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] component_store_display_index_ui = {CANVAS_ADDR_W{1'b0}};
+    reg  [COMPONENT_STORE_ENTRY_W-1:0] component_store_display_entry_ui = {COMPONENT_STORE_ENTRY_W{1'b0}};
+    wire [11:0] selected_cell_i_sys = selected_cell_i_sys_ff1;
+    wire [11:0] selected_cell_j_sys = selected_cell_j_sys_ff1;
+    wire        has_selection_sys = has_selection_sys_ff1;
+    wire        value_edit_active_sys = value_edit_active_sys_ff1;
+    wire [63:0] selected_value_text_ui = selected_value_text_ui_ff1;
+    wire [3:0]  selected_value_text_len_ui = selected_value_text_len_ui_ff1;
+    wire [CANVAS_ADDR_W-1:0] selected_component_index_ui = selected_component_index_ui_ff1;
+    wire        selected_component_index_valid_ui = selected_component_index_valid_ui_ff1;
+    wire [3:0]  selected_component_unit_ui = selected_component_unit_ui_ff1;
+    wire [3:0]  selected_component_type_ui = selected_component_type_ui_ff1;
+    wire [1:0]  selected_component_rotation_ui = selected_component_rotation_ui_ff1;
+    wire [11:0] selected_component_value_ui = selected_component_value_ui_ff1;
+    wire [8:0]  selected_component_position_ui = selected_component_position_ui_ff1;
+    wire        component_store_busy_ui = component_store_busy_ui_ff1;
+    wire [CANVAS_ADDR_W-1:0] component_store_count_ui = component_store_count_ui_ff1;
+    wire        selected_component_store_ready_ui =
+        !component_store_busy_ui && selected_component_index_valid_ui &&
+        (selected_component_index_ui < component_store_count_ui);
+    wire        component_store_prev_event_pix =
+        (component_store_prev_toggle_pix_ff1 != component_store_prev_toggle_seen_pix);
+    wire        component_store_next_event_pix =
+        (component_store_next_toggle_pix_ff1 != component_store_next_toggle_seen_pix);
+    wire        component_store_view_has_entry_ui =
+        !component_store_busy_ui && (component_store_count_ui != {CANVAS_ADDR_W{1'b0}});
+    wire [CANVAS_ADDR_W-1:0] component_store_selected_index_ui =
+        selected_component_store_ready_ui ? selected_component_index_ui : {CANVAS_ADDR_W{1'b0}};
+    wire [CANVAS_ADDR_W-1:0] component_store_view_index_clamped_ui =
+        (component_store_count_ui == {CANVAS_ADDR_W{1'b0}}) ? {CANVAS_ADDR_W{1'b0}} :
+        ((component_store_view_index_ui < component_store_count_ui) ?
+            component_store_view_index_ui : (component_store_count_ui - 1'b1));
+    wire        component_store_view_entry_ready_ui =
+        component_store_view_has_entry_ui &&
+        (component_store_display_index_ui < component_store_count_ui);
+    wire [3:0]  component_store_view_unit_ui = component_store_display_entry_ui[39:36];
+    wire [CANVAS_ADDR_W-1:0] component_store_view_entry_index_ui =
+        component_store_display_entry_ui[35:27];
+    wire [3:0]  component_store_view_type_ui = component_store_display_entry_ui[26:23];
+    wire [1:0]  component_store_view_rotation_ui = component_store_display_entry_ui[22:21];
+    wire [11:0] component_store_view_value_ui = component_store_display_entry_ui[20:9];
+    wire [8:0]  component_store_view_position_ui = component_store_display_entry_ui[8:0];
     wire        mouse_left_rising;
+    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_status_data;
+    reg  [4:0] store_status_len;
+    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_count_data;
+    reg  [4:0] store_count_len;
+    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_packed_data;
+    reg  [4:0] store_packed_len;
+    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_index_data;
+    reg  [4:0] store_index_len;
+    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_type_data;
+    reg  [4:0] store_type_len;
+    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_rot_data;
+    reg  [4:0] store_rot_len;
+    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_value_data;
+    reg  [4:0] store_value_len;
+    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_raw_data;
+    reg  [4:0] store_raw_len;
+    reg  [STORE_VIEW_TEXT_MAX_CHARS * 8 - 1:0] store_pos_data;
+    reg  [4:0] store_pos_len;
+    wire       store_title_rendered;
+    wire [11:0] store_title_rgb;
+    wire       store_hint_rendered;
+    wire [11:0] store_hint_rgb;
+    wire       store_status_rendered;
+    wire [11:0] store_status_rgb;
+    wire       store_count_rendered;
+    wire [11:0] store_count_rgb;
+    wire       store_packed_rendered;
+    wire [11:0] store_packed_rgb;
+    wire       store_index_rendered;
+    wire [11:0] store_index_rgb;
+    wire       store_type_rendered;
+    wire [11:0] store_type_rgb;
+    wire       store_rot_rendered;
+    wire [11:0] store_rot_rgb;
+    wire       store_value_rendered;
+    wire [11:0] store_value_rgb;
+    wire       store_raw_rendered;
+    wire [11:0] store_raw_rgb;
+    wire       store_pos_rendered;
+    wire [11:0] store_pos_rgb;
+    reg        component_store_view_rendered;
+    reg  [11:0] component_store_view_rgb;
+    integer    store_char_idx;
     
     // 鼠标悬停检测
     wire signed [13:0] mouse_x_rel_canvas_signed;
@@ -380,28 +985,122 @@ module GlobalRender_top (
     wire [11:0] mouse_cell_i;
     wire [11:0] mouse_cell_j;
     wire        mouse_cell_valid;
-    wire        mouse_hover_component;
     wire        canvas_mouse_in_bounds;
-    wire        toolbar_place_two_cells;
-    wire [15:0] toolbar_place_data0;
-    wire [15:0] toolbar_place_data1;
-    wire        toolbar_is_rotate_tool;
-    wire        toolbar_is_delete_tool;
-    wire        toolbar_is_place_tool;
-    wire        mouse_left_rising_sys;
+    wire        mouse_in_prop_value_box;
+    wire        mouse_in_prop_panel;
+    wire        mouse_in_keyboard_panel;
+    wire        selected_is_editable_ui;
+    reg         value_ram_w_en = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] value_ram_w_addr = {CANVAS_ADDR_W{1'b0}};
+    reg  [11:0] value_ram_w_data = 12'd0;
+    wire [11:0] value_ram_r_data;
+    reg  [1:0]  value_digit_ram_w_data = 2'd0;
+    wire [1:0]  value_digit_ram_r_data;
+    reg  [63:0] value_text_ram_w_data = 64'd0;
+    wire [63:0] value_text_ram_r_data;
+    reg  [3:0]  value_text_len_ram_w_data = 4'd0;
+    wire [3:0]  value_text_len_ram_r_data;
+    reg         pending_pair_value_write = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] pending_pair_value_addr = {CANVAS_ADDR_W{1'b0}};
+    reg  [11:0] pending_pair_value_data = 12'd0;
+    reg  [1:0]  pending_pair_value_digits = 2'd0;
+    reg  [63:0] pending_pair_value_text = 64'd0;
+    reg  [3:0]  pending_pair_value_text_len = 4'd0;
+    reg         keyboard_event_toggle_nav = 1'b0;
+    reg  [7:0]  keyboard_event_ascii_nav = 8'h00;
+    (* ASYNC_REG = "TRUE" *) reg         keyboard_event_sync0 = 1'b0;
+    (* ASYNC_REG = "TRUE" *) reg         keyboard_event_sync1 = 1'b0;
+    reg         keyboard_event_seen = 1'b0;
+    reg  [11:0] edit_value_next_bcd = 12'd0;
+    reg  [1:0]  edit_value_next_digits = 2'd0;
+    reg  [63:0] edit_value_next_text = 64'd0;
+    reg  [3:0]  edit_value_next_text_len = 4'd0;
+    reg         edit_value_valid = 1'b0;
     
     // 示例元件数据 (从 init_cycles 中复制)
-    reg  [15:0] component_data [0:CANVAS_CELL_COUNT-1];
     reg  [15:0] canvas_shadow_data [0:CANVAS_CELL_COUNT-1];
-    reg  [CANVAS_ADDR_W-1:0]  hovered_addr;
-    wire [15:0] hovered_cell_data;
+    reg  [11:0] value_shadow_data [0:CANVAS_CELL_COUNT-1];
+    reg  [3:0]  value_unit_shadow_data [0:CANVAS_CELL_COUNT-1];
+    // component_store entry = {unit[3:0], index[8:0], type[3:0], rotation[1:0], value[11:0], position[8:0]}
+    // position[8:5] = y, position[4:0] = x
+    reg         component_store_w_en = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] component_store_w_addr = {CANVAS_ADDR_W{1'b0}};
+    reg  [COMPONENT_STORE_ENTRY_W-1:0] component_store_w_data = {COMPONENT_STORE_ENTRY_W{1'b0}};
+    reg  [CANVAS_ADDR_W-1:0] component_store_r_addr = {CANVAS_ADDR_W{1'b0}};
+    wire [COMPONENT_STORE_ENTRY_W-1:0] component_store_r_data;
+    reg  [CANVAS_ADDR_W-1:0] component_store_count = {CANVAS_ADDR_W{1'b0}};
+    wire [15:0] component_count_led_mask =
+        (component_store_count == {CANVAS_ADDR_W{1'b0}}) ? 16'h0000 :
+        (component_store_count >= 16) ? 16'hFFFF :
+        ((16'h0001 << component_store_count) - 16'h0001);
+    assign LED = component_count_led_mask;
+    reg         component_store_dirty = 1'b1;
+    reg         component_index_map_w_en = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] component_index_map_w_addr = {CANVAS_ADDR_W{1'b0}};
+    reg  [CANVAS_ADDR_W-1:0] component_index_map_w_data = COMPONENT_INDEX_INVALID;
+    reg         component_index_map_clear_active = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] component_index_map_clear_addr = {CANVAS_ADDR_W{1'b0}};
+    reg         component_index_map_pending_pair_write = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] component_index_map_pending_pair_addr = {CANVAS_ADDR_W{1'b0}};
+    reg  [CANVAS_ADDR_W-1:0] component_index_map_pending_pair_data = COMPONENT_INDEX_INVALID;
+    reg         component_store_rebuild_active = 1'b0;
+    reg  [CANVAS_ADDR_W-1:0] component_store_scan_addr = {CANVAS_ADDR_W{1'b0}};
+    reg  [CANVAS_ADDR_W-1:0] component_store_next_index = {CANVAS_ADDR_W{1'b0}};
+    reg         component_store_change_this_cycle;
+    wire [15:0] component_store_scan_cell = canvas_shadow_data[component_store_scan_addr];
+    wire [5:0]  component_store_scan_sprite = component_store_scan_cell[6:1];
+    wire [1:0]  component_store_scan_rotation = component_store_scan_cell[8:7];
+    wire [11:0] component_store_scan_value = value_shadow_data[component_store_scan_addr];
+    wire [3:0]  component_store_scan_unit = value_unit_shadow_data[component_store_scan_addr];
+    wire [3:0]  component_store_scan_type = component_type_from_sprite(component_store_scan_sprite);
+    wire        component_store_scan_needs_index = component_type_needs_index(component_store_scan_type);
+    wire        component_store_scan_is_two_cell = component_type_uses_two_cells(component_store_scan_type);
+    wire [CANVAS_ADDR_W-1:0] component_store_scan_pair_addr =
+        component_pair_addr_from_origin(component_store_scan_addr, component_store_scan_rotation);
+    wire [CANVAS_ADDR_W-1:0] selected_cell_addr_sys;
+    wire [CANVAS_ADDR_W-1:0] selected_value_store_addr_sys;
+    wire [CANVAS_ADDR_W-1:0] selected_component_index_map_data;
+    wire        component_store_busy =
+        component_index_map_pending_pair_write || component_index_map_clear_active ||
+        component_store_rebuild_active || component_store_dirty;
+    SimpleRam #( .WordWidth(CANVAS_ADDR_W), .WordCount(CANVAS_CELL_COUNT) ) component_index_map_ram_inst (
+        .clk(CLK100MHZ), .w_en(component_index_map_w_en), .w_addr(component_index_map_w_addr),
+        .r_addr(selected_cell_addr_sys), .d_in(component_index_map_w_data), .d_out(selected_component_index_map_data)
+    );
+    SimpleDualClockRam #( .WordWidth(COMPONENT_STORE_ENTRY_W), .WordCount(CANVAS_CELL_COUNT) ) component_store_ram_inst (
+        .wr_clk(CLK100MHZ), .rd_clk(clk_pixel),
+        .w_en(component_store_w_en), .w_addr(component_store_w_addr),
+        .r_addr(component_store_r_addr), .d_in(component_store_w_data), .d_out(component_store_r_data)
+    );
+    SimpleRam #( .WordWidth(12), .WordCount(CANVAS_CELL_COUNT) ) component_value_ram_inst (
+        .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
+        .r_addr(selected_value_store_addr_sys), .d_in(value_ram_w_data), .d_out(value_ram_r_data)
+    );
+    SimpleRam #( .WordWidth(2), .WordCount(CANVAS_CELL_COUNT) ) component_value_digit_ram_inst (
+        .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
+        .r_addr(selected_value_store_addr_sys), .d_in(value_digit_ram_w_data), .d_out(value_digit_ram_r_data)
+    );
+    SimpleRam #( .WordWidth(64), .WordCount(CANVAS_CELL_COUNT) ) component_value_text_ram_inst (
+        .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
+        .r_addr(selected_value_store_addr_sys), .d_in(value_text_ram_w_data), .d_out(value_text_ram_r_data)
+    );
+    SimpleRam #( .WordWidth(4), .WordCount(CANVAS_CELL_COUNT) ) component_value_text_len_ram_inst (
+        .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
+        .r_addr(selected_value_store_addr_sys), .d_in(value_text_len_ram_w_data), .d_out(value_text_len_ram_r_data)
+    );
 
     // =========================================================
     // Component Property Panel - 元件属性显示 (简化版)
     // =========================================================
+    assign selected_cell_addr_sys = selected_cell_i_sys + selected_cell_j_sys * CANVAS_GRID_W;
+    assign selected_value_store_addr_sys =
+        is_right_half_type(selected_cell_data_sys[6:1]) ?
+        pair_addr_for_cell(selected_cell_addr_sys, selected_cell_data_sys[6:1], selected_cell_data_sys[8:7]) :
+        selected_cell_addr_sys;
+
     // 鼠标悬停位置计算 (Canvas 区域：X0=64, Y0=64)
-    assign mouse_x_rel_canvas_signed = $signed({1'b0, mouse_xpos}) - CANVAS_X0;
-    assign mouse_y_rel_canvas_signed = $signed({1'b0, mouse_ypos}) - CANVAS_Y0;
+    assign mouse_x_rel_canvas_signed = $signed({1'b0, mouse_xpos_pix}) - CANVAS_X0;
+    assign mouse_y_rel_canvas_signed = $signed({1'b0, mouse_ypos_pix}) - CANVAS_Y0;
     assign mouse_grid_x_signed = mouse_x_rel_canvas_signed - $signed(circuit_canvas_grid_pos_x);
     assign mouse_grid_y_signed = mouse_y_rel_canvas_signed - $signed(circuit_canvas_grid_pos_y);
     assign mouse_grid_x_valid = mouse_grid_x_signed >= 0;
@@ -412,70 +1111,258 @@ module GlobalRender_top (
                               (mouse_cell_i < CANVAS_GRID_W) && (mouse_cell_j < CANVAS_GRID_H);
     
     // 鼠标点击边沿检测
-    assign canvas_mouse_in_bounds = (mouse_xpos >= CANVAS_X0) && (mouse_xpos < (CANVAS_X0 + CANVAS_W)) &&
-                                    (mouse_ypos >= CANVAS_Y0) && (mouse_ypos < (CANVAS_Y0 + CANVAS_H)) &&
+    assign canvas_mouse_in_bounds = (mouse_xpos_pix >= CANVAS_X0) && (mouse_xpos_pix < (CANVAS_X0 + CANVAS_W)) &&
+                                    (mouse_ypos_pix >= CANVAS_Y0) && (mouse_ypos_pix < (CANVAS_Y0 + CANVAS_H)) &&
                                
      mouse_cell_valid;
-    assign toolbar_place_two_cells = toolbar_tool_uses_two_cells(selected_toolbar_idx);
-    assign toolbar_place_data0 = toolbar_first_cell_data(selected_toolbar_idx);
-    assign toolbar_place_data1 = toolbar_second_cell_data(selected_toolbar_idx);
-    assign toolbar_is_rotate_tool = (selected_toolbar_idx == 4'd8);
-    assign toolbar_is_delete_tool = (selected_toolbar_idx == 4'd9);
-    assign toolbar_is_place_tool = (selected_toolbar_idx != 4'd0) && !toolbar_is_rotate_tool && !toolbar_is_delete_tool;
-    assign mouse_left_rising = mouse_left && !mouse_left_d;
-    assign mouse_left_rising_sys = mouse_left && !mouse_left_d_sys;
-    assign hovered_cell_data = canvas_shadow_data[hovered_addr];
+    assign mouse_in_prop_panel = has_selection &&
+                                 (mouse_xpos_pix >= PROP_PANEL_X) && (mouse_xpos_pix < (PROP_PANEL_X + PROP_PANEL_W)) &&
+                                 (mouse_ypos_pix >= PROP_PANEL_Y) && (mouse_ypos_pix < (PROP_PANEL_Y + PROP_PANEL_H));
+    assign mouse_in_keyboard_panel = (mouse_xpos_pix >= KEYBOARD_X) && (mouse_xpos_pix < (KEYBOARD_X + KEYBOARD_W)) &&
+                                     (mouse_ypos_pix >= KEYBOARD_Y) && (mouse_ypos_pix < (KEYBOARD_Y + KEYBOARD_H));
+    assign mouse_in_prop_value_box = has_selection &&
+                                     (mouse_xpos_pix >= PROP_VALUE_BOX_X0) && (mouse_xpos_pix < PROP_VALUE_BOX_X1) &&
+                                     (mouse_ypos_pix >= PROP_VALUE_BOX_Y0) && (mouse_ypos_pix < PROP_VALUE_BOX_Y1);
+    assign selected_is_editable_ui = has_selection && selected_cell_data[0] &&
+                                     ((selected_cell_data[6:1] == SPRITE_RES_LEFT) || (selected_cell_data[6:1] == SPRITE_RES_RIGHT) ||
+                                      (selected_cell_data[6:1] == SPRITE_VOLT_LEFT) || (selected_cell_data[6:1] == SPRITE_VOLT_RIGHT) ||
+                                      (selected_cell_data[6:1] == SPRITE_CURR_LEFT) || (selected_cell_data[6:1] == SPRITE_CURR_RIGHT) ||
+                                      (selected_cell_data[6:1] == SPRITE_IND_LEFT) || (selected_cell_data[6:1] == SPRITE_IND_RIGHT) ||
+                                      (selected_cell_data[6:1] == SPRITE_CAP_LEFT) || (selected_cell_data[6:1] == SPRITE_CAP_RIGHT));
+    assign mouse_left_rising = mouse_left_pix && !mouse_left_d;
+    always @(posedge CLK100MHZ) begin
+        selected_cell_i_sys_ff0 <= selected_cell_i;
+        selected_cell_i_sys_ff1 <= selected_cell_i_sys_ff0;
+        selected_cell_j_sys_ff0 <= selected_cell_j;
+        selected_cell_j_sys_ff1 <= selected_cell_j_sys_ff0;
+        has_selection_sys_ff0 <= has_selection;
+        has_selection_sys_ff1 <= has_selection_sys_ff0;
+        value_edit_active_sys_ff0 <= value_edit_active;
+        value_edit_active_sys_ff1 <= value_edit_active_sys_ff0;
+        if (has_selection_sys) begin
+            selected_cell_data_sys <= canvas_shadow_data[selected_cell_addr_sys];
+        end else begin
+            selected_cell_data_sys <= 16'd0;
+        end
+        if (has_selection_sys) begin
+            selected_component_unit_sys <= value_unit_shadow_data[selected_value_store_addr_sys];
+            selected_component_type_sys <= component_type_from_sprite(selected_cell_data_sys[6:1]);
+            selected_component_rotation_sys <= selected_cell_data_sys[8:7];
+            selected_component_value_sys <= value_shadow_data[selected_value_store_addr_sys];
+            selected_component_position_sys <= component_position_from_addr(selected_value_store_addr_sys);
+        end else begin
+            selected_component_unit_sys <= COMPONENT_UNIT_NONE;
+            selected_component_type_sys <= COMPONENT_TYPE_WIRE;
+            selected_component_rotation_sys <= 2'd0;
+            selected_component_value_sys <= 12'd0;
+            selected_component_position_sys <= 9'd0;
+        end
+        if (has_selection_sys && !component_store_busy &&
+            (selected_component_index_map_data != COMPONENT_INDEX_INVALID)) begin
+            selected_component_index_sys <= selected_component_index_map_data;
+            selected_component_index_valid_sys <= 1'b1;
+        end else begin
+            selected_component_index_sys <= COMPONENT_INDEX_INVALID;
+            selected_component_index_valid_sys <= 1'b0;
+        end
+    end
+
+    always @(posedge clk_pixel) begin
+        selected_cell_data_ff0 <= selected_cell_data_sys;
+        selected_cell_data_ff1 <= selected_cell_data_ff0;
+        selected_cell_data <= selected_cell_data_ff1;
+        selected_value_text_ui_ff0 <= selected_value_text;
+        selected_value_text_ui_ff1 <= selected_value_text_ui_ff0;
+        selected_value_text_len_ui_ff0 <= selected_value_text_len;
+        selected_value_text_len_ui_ff1 <= selected_value_text_len_ui_ff0;
+        selected_component_index_ui_ff0 <= selected_component_index_sys;
+        selected_component_index_ui_ff1 <= selected_component_index_ui_ff0;
+        selected_component_index_valid_ui_ff0 <= selected_component_index_valid_sys;
+        selected_component_index_valid_ui_ff1 <= selected_component_index_valid_ui_ff0;
+        selected_component_unit_ui_ff0 <= selected_component_unit_sys;
+        selected_component_unit_ui_ff1 <= selected_component_unit_ui_ff0;
+        selected_component_type_ui_ff0 <= selected_component_type_sys;
+        selected_component_type_ui_ff1 <= selected_component_type_ui_ff0;
+        selected_component_rotation_ui_ff0 <= selected_component_rotation_sys;
+        selected_component_rotation_ui_ff1 <= selected_component_rotation_ui_ff0;
+        selected_component_value_ui_ff0 <= selected_component_value_sys;
+        selected_component_value_ui_ff1 <= selected_component_value_ui_ff0;
+        selected_component_position_ui_ff0 <= selected_component_position_sys;
+        selected_component_position_ui_ff1 <= selected_component_position_ui_ff0;
+        component_store_busy_ui_ff0 <= component_store_busy;
+        component_store_busy_ui_ff1 <= component_store_busy_ui_ff0;
+        component_store_count_ui_ff0 <= component_store_count;
+        component_store_count_ui_ff1 <= component_store_count_ui_ff0;
+        component_store_prev_toggle_pix_ff0 <= component_store_prev_toggle_nav;
+        component_store_prev_toggle_pix_ff1 <= component_store_prev_toggle_pix_ff0;
+        component_store_next_toggle_pix_ff0 <= component_store_next_toggle_nav;
+        component_store_next_toggle_pix_ff1 <= component_store_next_toggle_pix_ff0;
+        component_store_view_show_d <= show_component_store_view;
+
+        if (component_store_prev_event_pix) begin
+            component_store_prev_toggle_seen_pix <= component_store_prev_toggle_pix_ff1;
+        end
+        if (component_store_next_event_pix) begin
+            component_store_next_toggle_seen_pix <= component_store_next_toggle_pix_ff1;
+        end
+
+        if (!component_store_view_manual_ui && selected_component_store_ready_ui) begin
+            component_store_view_index_ui <= component_store_selected_index_ui;
+        end else if (component_store_view_has_entry_ui &&
+                     (component_store_view_index_ui >= component_store_count_ui)) begin
+            component_store_view_index_ui <= component_store_count_ui - 1'b1;
+        end
+
+        if (!show_component_store_view) begin
+            component_store_view_manual_ui <= 1'b0;
+        end else if (!component_store_view_show_d) begin
+            component_store_view_manual_ui <= 1'b0;
+        end
+
+        if (show_component_store_view && component_store_view_has_entry_ui) begin
+            if (component_store_prev_event_pix) begin
+                component_store_view_manual_ui <= 1'b1;
+                if (component_store_view_index_clamped_ui == {CANVAS_ADDR_W{1'b0}}) begin
+                    component_store_view_index_ui <= component_store_count_ui - 1'b1;
+                end else begin
+                    component_store_view_index_ui <= component_store_view_index_clamped_ui - 1'b1;
+                end
+            end else if (component_store_next_event_pix) begin
+                component_store_view_manual_ui <= 1'b1;
+                if ((component_store_view_index_clamped_ui + 1'b1) >= component_store_count_ui) begin
+                    component_store_view_index_ui <= {CANVAS_ADDR_W{1'b0}};
+                end else begin
+                    component_store_view_index_ui <= component_store_view_index_clamped_ui + 1'b1;
+                end
+            end
+        end
+
+        component_store_r_addr <= component_store_view_index_clamped_ui;
+        component_store_display_index_ui <= component_store_r_addr;
+        component_store_display_entry_ui <= component_store_r_data;
+    end
     // 同步鼠标点击 - 记录选中的单元格
     always @(posedge clk_pixel) begin
-        mouse_left_d <= mouse_left;
-        if (mouse_left_rising && mouse_cell_valid) begin
+        mouse_left_d <= mouse_left_pix;
+        if (show_component_store_view) begin
+            value_edit_active <= 1'b0;
+        end else if (mouse_left_rising && canvas_mouse_in_bounds) begin
             selected_cell_i <= mouse_cell_i;
             selected_cell_j <= mouse_cell_j;
             has_selection <= 1'b1;
+            value_edit_active <= 1'b0;
+        end else if (mouse_left_rising && mouse_in_prop_value_box && selected_is_editable_ui) begin
+            value_edit_active <= 1'b1;
+        end else if (mouse_left_rising && mouse_in_keyboard_panel) begin
+            // Keep the current property-panel state while the on-screen keyboard is used for input.
+        end else if (mouse_left_rising) begin
+            value_edit_active <= 1'b0;
+            if (!mouse_in_prop_panel) begin
+                has_selection <= 1'b0;
+            end
         end
     end
+
+/*
 
     // 示例元件数据初始化 (与 init_cycles 中的数据相同)
-    integer init_idx;
     always @(posedge clk_pixel) begin
         // 初始化所有单元为 0
-        for (init_idx = 0; init_idx < CANVAS_CELL_COUNT; init_idx = init_idx + 1) begin
-            component_data[init_idx] <= 16'd0;
-        end
         // 加载示例元件 (更新為新電路：所有轉角+90度，Tee L/R翻轉)
-        component_data[34] <= 16'h0083; // UL  (rot=1)
-        component_data[35] <= 16'h000F; // V-Source L (flow_bit=0)
-        component_data[36] <= 16'h0011; // V-Source R (flow_bit=0)
-        component_data[37] <= 16'h0103; // UR  (rot=2)
-        component_data[50] <= 16'h0281; // Wire L   (flow_bit=1)
-        component_data[53] <= 16'h0081; // Wire R   (flow_bit=0)
-        component_data[66] <= 16'h0285; // Tee L    (rot=1, flow_bit=1)
-        component_data[67] <= 16'h020B; // Res L    (flow_bit=1)
-        component_data[68] <= 16'h020D; // Res R    (flow_bit=1)
-        component_data[69] <= 16'h0185; // Tee R    (rot=3, flow_bit=0)
-        component_data[82] <= 16'h0281; // Wire L2  (flow_bit=1)
-        component_data[85] <= 16'h0081; // Wire R2  (flow_bit=0)
-        component_data[98] <= 16'h0003; // LL  (rot=0)
-        component_data[99] <= 16'h021B; // Cap L    (flow_bit=1)
-        component_data[100]<= 16'h021D; // Cap R    (flow_bit=1)
-        component_data[101]<= 16'h0183; // LR  (rot=3)
-    end
     
     // 计算悬停的单元格地址
-    always @(*) begin
-        hovered_addr = mouse_cell_i + mouse_cell_j * CANVAS_GRID_W;
-    end
     
     // 从本地存储读取选中单元格的数据
-    always @(posedge clk_pixel) begin
-        if (mouse_left_rising && mouse_cell_valid) begin
-            selected_cell_data <= canvas_shadow_data[hovered_addr];
-        end else if (has_selection) begin
-            selected_cell_data <= canvas_shadow_data[selected_cell_i + selected_cell_j * CANVAS_GRID_W];
+
+    // 例化属性面板
+    end
+
+*/
+    wire [5:0] selected_sprite_type = selected_cell_data_sys[6:1];
+    wire [1:0] selected_rotation = selected_cell_data_sys[8:7];
+    wire selected_is_resistor = (selected_sprite_type == SPRITE_RES_LEFT) || (selected_sprite_type == SPRITE_RES_RIGHT);
+    wire selected_is_voltage = (selected_sprite_type == SPRITE_VOLT_LEFT) || (selected_sprite_type == SPRITE_VOLT_RIGHT);
+    wire selected_is_current = (selected_sprite_type == SPRITE_CURR_LEFT) || (selected_sprite_type == SPRITE_CURR_RIGHT);
+    wire selected_is_inductor = (selected_sprite_type == SPRITE_IND_LEFT) || (selected_sprite_type == SPRITE_IND_RIGHT);
+    wire selected_is_capacitor = (selected_sprite_type == SPRITE_CAP_LEFT) || (selected_sprite_type == SPRITE_CAP_RIGHT);
+    wire selected_is_editable = has_selection_sys && selected_cell_data_sys[0] &&
+        (selected_is_resistor || selected_is_voltage || selected_is_current ||
+         selected_is_inductor || selected_is_capacitor);
+    wire [CANVAS_ADDR_W-1:0] selected_pair_addr = pair_addr_for_cell(selected_cell_addr_sys, selected_sprite_type, selected_rotation);
+    wire keyboard_edit_event = (keyboard_event_sync1 != keyboard_event_seen);
+    wire keyboard_ascii_is_digit = (keyboard_ascii_sys_ff1 >= "0") && (keyboard_ascii_sys_ff1 <= "9");
+    wire keyboard_ascii_is_dot = (keyboard_ascii_sys_ff1 == ".");
+    wire keyboard_ascii_is_unit = keyboard_ascii_is_unit_char(keyboard_ascii_sys_ff1);
+    wire keyboard_ascii_is_value_char = keyboard_ascii_is_digit || keyboard_ascii_is_dot || keyboard_ascii_is_unit;
+    wire [3:0] keyboard_ascii_digit = keyboard_ascii_sys_ff1 - "0";
+
+    always @(*) begin
+        edit_value_next_bcd = selected_value_bcd;
+        edit_value_next_digits = selected_value_digits;
+        edit_value_next_text = selected_value_text;
+        edit_value_next_text_len = selected_value_text_len;
+        edit_value_valid = 1'b0;
+
+        if (selected_is_editable && value_edit_active_sys) begin
+            if (keyboard_ascii_is_value_char && (selected_value_text_len < 4'd8)) begin
+                edit_value_next_text = text_append8(selected_value_text, keyboard_ascii_sys_ff1, selected_value_text_len);
+                edit_value_next_text_len = selected_value_text_len + 1'b1;
+                if (selected_is_resistor) begin
+                    if (keyboard_ascii_is_digit && (selected_value_digits < 2'd3)) begin
+                        edit_value_next_bcd = bcd_insert_ltr3(selected_value_bcd, keyboard_ascii_digit, selected_value_digits);
+                        edit_value_next_digits = selected_value_digits + 1'b1;
+                    end
+                end else begin
+                    if (keyboard_ascii_is_digit && (selected_value_digits < 2'd2)) begin
+                        edit_value_next_bcd = bcd_insert_ltr2(selected_value_bcd, keyboard_ascii_digit, selected_value_digits);
+                        edit_value_next_digits = selected_value_digits + 1'b1;
+                    end
+                end
+                edit_value_valid = 1'b1;
+            end else if (keyboard_ascii_sys_ff1 == 8'h08) begin
+                if (selected_value_text_len != 4'd0) begin
+                    edit_value_next_text = text_delete8(selected_value_text, selected_value_text_len);
+                    edit_value_next_text_len = selected_value_text_len - 1'b1;
+                    if (selected_is_resistor && (selected_value_digits != 2'd0)) begin
+                        edit_value_next_bcd = bcd_delete_ltr3(selected_value_bcd, selected_value_digits);
+                        edit_value_next_digits = selected_value_digits - 1'b1;
+                    end else if ((selected_is_voltage || selected_is_current ||
+                                  selected_is_inductor || selected_is_capacitor) &&
+                                 (selected_value_digits != 2'd0)) begin
+                        edit_value_next_bcd = bcd_delete_ltr2(selected_value_bcd, selected_value_digits);
+                        edit_value_next_digits = selected_value_digits - 1'b1;
+                    end
+                    edit_value_valid = 1'b1;
+                end
+            end else if (keyboard_ascii_sys_ff1 == 8'h7F) begin
+                edit_value_next_bcd = 12'd0;
+                edit_value_next_digits = 2'd0;
+                edit_value_next_text = 64'd0;
+                edit_value_next_text_len = 4'd0;
+                edit_value_valid = 1'b1;
+            end
         end
     end
 
-    // 例化属性面板
+    always @(posedge clk_nav) begin
+        component_store_prev_btn_nav_d <= BTNL;
+        component_store_next_btn_nav_d <= BTNR;
+        if (show_component_store_view && BTNL && !component_store_prev_btn_nav_d) begin
+            component_store_prev_toggle_nav <= ~component_store_prev_toggle_nav;
+        end
+        if (show_component_store_view && BTNR && !component_store_next_btn_nav_d) begin
+            component_store_next_toggle_nav <= ~component_store_next_toggle_nav;
+        end
+        if (keyboard_key_valid) begin
+            keyboard_event_ascii_nav <= keyboard_key_ascii;
+            keyboard_event_toggle_nav <= ~keyboard_event_toggle_nav;
+        end
+    end
+    always @(posedge CLK100MHZ) begin
+        keyboard_ascii_sys_ff0 <= keyboard_event_ascii_nav;
+        keyboard_ascii_sys_ff1 <= keyboard_ascii_sys_ff0;
+    end
+
     ComponentPropertyPanel #(
         .PANEL_X(0),
         .PANEL_Y(0),
@@ -490,9 +1377,15 @@ module GlobalRender_top (
         
         .mouse_cell_j(mouse_cell_j),
         .selected_cell_data(selected_cell_data),
+        .selected_value_text(selected_value_text_ui),
+        .selected_value_text_len(selected_value_text_len_ui),
+        .value_edit_active(value_edit_active),
+        .value_editable(selected_is_editable_ui),
         .has_selection(has_selection),
         .selected_cell_i(selected_cell_i),
         .selected_cell_j(selected_cell_j),
+        .selected_component_index_valid(selected_component_index_valid_ui),
+        .selected_component_index(selected_component_index_ui),
         .panel_rendered(prop_panel_rendered),
         .panel_rgb(prop_panel_rgb)
     );
@@ -513,7 +1406,554 @@ module GlobalRender_top (
         interaction_frame_sync2 <= interaction_frame_sync1;
     end
 
-    assign interaction_bg_cmd_ready = (init_cycles >= 32'd1000) && !clear_canvas_active;
+    always @(*) begin
+        for (store_char_idx = 0; store_char_idx < STORE_VIEW_TEXT_MAX_CHARS; store_char_idx = store_char_idx + 1) begin
+            store_status_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
+            store_count_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
+            store_packed_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
+            store_index_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
+            store_type_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
+            store_rot_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
+            store_value_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
+            store_raw_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
+            store_pos_data[STORE_VIEW_TEXT_MAX_CHARS * 8 - 1 - (store_char_idx * 8) -: 8] = 8'd0;
+        end
+
+        store_status_len = 5'd0;
+        store_count_len = 5'd0;
+        store_packed_len = 5'd0;
+        store_index_len = 5'd0;
+        store_type_len = 5'd0;
+        store_rot_len = 5'd0;
+        store_value_len = 5'd0;
+        store_raw_len = 5'd0;
+        store_pos_len = 5'd0;
+
+        set_store_char(store_status_data, 0, "S");
+        set_store_char(store_status_data, 1, "t");
+        set_store_char(store_status_data, 2, "a");
+        set_store_char(store_status_data, 3, "t");
+        set_store_char(store_status_data, 4, "u");
+        set_store_char(store_status_data, 5, "s");
+        set_store_char(store_status_data, 6, ":");
+        set_store_char(store_status_data, 7, " ");
+        if (component_store_busy_ui) begin
+            set_store_char(store_status_data, 8, "s");
+            set_store_char(store_status_data, 9, "t");
+            set_store_char(store_status_data, 10, "o");
+            set_store_char(store_status_data, 11, "r");
+            set_store_char(store_status_data, 12, "e");
+            set_store_char(store_status_data, 13, " ");
+            set_store_char(store_status_data, 14, "r");
+            set_store_char(store_status_data, 15, "e");
+            set_store_char(store_status_data, 16, "b");
+            set_store_char(store_status_data, 17, "u");
+            set_store_char(store_status_data, 18, "i");
+            set_store_char(store_status_data, 19, "l");
+            set_store_char(store_status_data, 20, "d");
+            set_store_char(store_status_data, 21, "i");
+            set_store_char(store_status_data, 22, "n");
+            set_store_char(store_status_data, 23, "g");
+            set_store_char(store_status_data, 24, ".");
+            set_store_char(store_status_data, 25, ".");
+            set_store_char(store_status_data, 26, ".");
+            store_status_len = 5'd27;
+        end else if (!component_store_view_has_entry_ui) begin
+            set_store_char(store_status_data, 8, "s");
+            set_store_char(store_status_data, 9, "t");
+            set_store_char(store_status_data, 10, "o");
+            set_store_char(store_status_data, 11, "r");
+            set_store_char(store_status_data, 12, "e");
+            set_store_char(store_status_data, 13, " ");
+            set_store_char(store_status_data, 14, "e");
+            set_store_char(store_status_data, 15, "m");
+            set_store_char(store_status_data, 16, "p");
+            set_store_char(store_status_data, 17, "t");
+            set_store_char(store_status_data, 18, "y");
+            store_status_len = 5'd19;
+        end else if (component_store_view_manual_ui) begin
+            set_store_char(store_status_data, 8, "m");
+            set_store_char(store_status_data, 9, "a");
+            set_store_char(store_status_data, 10, "n");
+            set_store_char(store_status_data, 11, "u");
+            set_store_char(store_status_data, 12, "a");
+            set_store_char(store_status_data, 13, "l");
+            set_store_char(store_status_data, 14, " ");
+            set_store_char(store_status_data, 15, "b");
+            set_store_char(store_status_data, 16, "r");
+            set_store_char(store_status_data, 17, "o");
+            set_store_char(store_status_data, 18, "w");
+            set_store_char(store_status_data, 19, "s");
+            set_store_char(store_status_data, 20, "e");
+            store_status_len = 5'd21;
+        end else if (selected_component_store_ready_ui) begin
+            set_store_char(store_status_data, 8, "f");
+            set_store_char(store_status_data, 9, "o");
+            set_store_char(store_status_data, 10, "l");
+            set_store_char(store_status_data, 11, "l");
+            set_store_char(store_status_data, 12, "o");
+            set_store_char(store_status_data, 13, "w");
+            set_store_char(store_status_data, 14, " ");
+            set_store_char(store_status_data, 15, "s");
+            set_store_char(store_status_data, 16, "e");
+            set_store_char(store_status_data, 17, "l");
+            set_store_char(store_status_data, 18, "e");
+            set_store_char(store_status_data, 19, "c");
+            set_store_char(store_status_data, 20, "t");
+            set_store_char(store_status_data, 21, "i");
+            set_store_char(store_status_data, 22, "o");
+            set_store_char(store_status_data, 23, "n");
+            store_status_len = 5'd24;
+        end else begin
+            set_store_char(store_status_data, 8, "e");
+            set_store_char(store_status_data, 9, "n");
+            set_store_char(store_status_data, 10, "t");
+            set_store_char(store_status_data, 11, "r");
+            set_store_char(store_status_data, 12, "y");
+            set_store_char(store_status_data, 13, " ");
+            set_store_char(store_status_data, 14, "r");
+            set_store_char(store_status_data, 15, "e");
+            set_store_char(store_status_data, 16, "a");
+            set_store_char(store_status_data, 17, "d");
+            set_store_char(store_status_data, 18, "y");
+            store_status_len = 5'd19;
+        end
+
+        set_store_char(store_count_data, 0, "C");
+        set_store_char(store_count_data, 1, "o");
+        set_store_char(store_count_data, 2, "u");
+        set_store_char(store_count_data, 3, "n");
+        set_store_char(store_count_data, 4, "t");
+        set_store_char(store_count_data, 5, " ");
+        set_store_char(store_count_data, 6, ":");
+        set_store_char(store_count_data, 7, " ");
+        if (component_store_busy_ui) begin
+            set_store_char(store_count_data, 8, "-");
+            set_store_char(store_count_data, 9, "-");
+            set_store_char(store_count_data, 10, "-");
+        end else begin
+            set_store_char(store_count_data, 8, (component_store_count_ui / 100) + 8'd48);
+            set_store_char(store_count_data, 9, ((component_store_count_ui % 100) / 10) + 8'd48);
+            set_store_char(store_count_data, 10, (component_store_count_ui % 10) + 8'd48);
+        end
+        store_count_len = 5'd11;
+
+        set_store_char(store_packed_data, 0, "P");
+        set_store_char(store_packed_data, 1, "a");
+        set_store_char(store_packed_data, 2, "c");
+        set_store_char(store_packed_data, 3, "k");
+        set_store_char(store_packed_data, 4, "e");
+        set_store_char(store_packed_data, 5, "d");
+        set_store_char(store_packed_data, 6, ":");
+        set_store_char(store_packed_data, 7, " ");
+        if (component_store_view_entry_ready_ui) begin
+            set_store_char(store_packed_data, 8, "0");
+            set_store_char(store_packed_data, 9, "x");
+            set_store_char(store_packed_data, 10, ascii_hex_nibble(component_store_display_entry_ui[39:36]));
+            set_store_char(store_packed_data, 11, ascii_hex_nibble(component_store_display_entry_ui[35:32]));
+            set_store_char(store_packed_data, 12, ascii_hex_nibble(component_store_display_entry_ui[31:28]));
+            set_store_char(store_packed_data, 13, ascii_hex_nibble(component_store_display_entry_ui[27:24]));
+            set_store_char(store_packed_data, 14, ascii_hex_nibble(component_store_display_entry_ui[23:20]));
+            set_store_char(store_packed_data, 15, ascii_hex_nibble(component_store_display_entry_ui[19:16]));
+            set_store_char(store_packed_data, 16, ascii_hex_nibble(component_store_display_entry_ui[15:12]));
+            set_store_char(store_packed_data, 17, ascii_hex_nibble(component_store_display_entry_ui[11:8]));
+            set_store_char(store_packed_data, 18, ascii_hex_nibble(component_store_display_entry_ui[7:4]));
+            set_store_char(store_packed_data, 19, ascii_hex_nibble(component_store_display_entry_ui[3:0]));
+            store_packed_len = 5'd20;
+        end else begin
+            set_store_char(store_packed_data, 8, "-");
+            set_store_char(store_packed_data, 9, "-");
+            set_store_char(store_packed_data, 10, "-");
+            set_store_char(store_packed_data, 11, "-");
+            set_store_char(store_packed_data, 12, "-");
+            set_store_char(store_packed_data, 13, "-");
+            set_store_char(store_packed_data, 14, "-");
+            set_store_char(store_packed_data, 15, "-");
+            set_store_char(store_packed_data, 16, "-");
+            set_store_char(store_packed_data, 17, "-");
+            store_packed_len = 5'd18;
+        end
+
+        set_store_char(store_index_data, 0, "I");
+        set_store_char(store_index_data, 1, "n");
+        set_store_char(store_index_data, 2, "d");
+        set_store_char(store_index_data, 3, "e");
+        set_store_char(store_index_data, 4, "x");
+        set_store_char(store_index_data, 5, " ");
+        set_store_char(store_index_data, 6, ":");
+        set_store_char(store_index_data, 7, " ");
+        if (component_store_view_entry_ready_ui) begin
+            set_store_char(store_index_data, 8, (component_store_view_entry_index_ui / 100) + 8'd48);
+            set_store_char(store_index_data, 9, ((component_store_view_entry_index_ui % 100) / 10) + 8'd48);
+            set_store_char(store_index_data, 10, (component_store_view_entry_index_ui % 10) + 8'd48);
+        end else begin
+            set_store_char(store_index_data, 8, "-");
+            set_store_char(store_index_data, 9, "-");
+            set_store_char(store_index_data, 10, "-");
+        end
+        store_index_len = 5'd11;
+
+        set_store_char(store_type_data, 0, "T");
+        set_store_char(store_type_data, 1, "y");
+        set_store_char(store_type_data, 2, "p");
+        set_store_char(store_type_data, 3, "e");
+        set_store_char(store_type_data, 4, " ");
+        set_store_char(store_type_data, 5, " ");
+        set_store_char(store_type_data, 6, ":");
+        set_store_char(store_type_data, 7, " ");
+        if (component_store_view_entry_ready_ui) begin
+            case (component_store_view_type_ui)
+                COMPONENT_TYPE_GROUND: begin
+                    set_store_char(store_type_data, 8, "G");
+                    set_store_char(store_type_data, 9, "R");
+                    set_store_char(store_type_data, 10, "O");
+                    set_store_char(store_type_data, 11, "U");
+                    set_store_char(store_type_data, 12, "N");
+                    set_store_char(store_type_data, 13, "D");
+                    store_type_len = 5'd14;
+                end
+                COMPONENT_TYPE_RESISTOR: begin
+                    set_store_char(store_type_data, 8, "R");
+                    set_store_char(store_type_data, 9, "E");
+                    set_store_char(store_type_data, 10, "S");
+                    set_store_char(store_type_data, 11, "I");
+                    set_store_char(store_type_data, 12, "S");
+                    set_store_char(store_type_data, 13, "T");
+                    set_store_char(store_type_data, 14, "O");
+                    set_store_char(store_type_data, 15, "R");
+                    store_type_len = 5'd16;
+                end
+                COMPONENT_TYPE_CAPACITOR: begin
+                    set_store_char(store_type_data, 8, "C");
+                    set_store_char(store_type_data, 9, "A");
+                    set_store_char(store_type_data, 10, "P");
+                    set_store_char(store_type_data, 11, "A");
+                    set_store_char(store_type_data, 12, "C");
+                    set_store_char(store_type_data, 13, "I");
+                    set_store_char(store_type_data, 14, "T");
+                    set_store_char(store_type_data, 15, "O");
+                    set_store_char(store_type_data, 16, "R");
+                    store_type_len = 5'd17;
+                end
+                COMPONENT_TYPE_INDUCTOR: begin
+                    set_store_char(store_type_data, 8, "I");
+                    set_store_char(store_type_data, 9, "N");
+                    set_store_char(store_type_data, 10, "D");
+                    set_store_char(store_type_data, 11, "U");
+                    set_store_char(store_type_data, 12, "C");
+                    set_store_char(store_type_data, 13, "T");
+                    set_store_char(store_type_data, 14, "O");
+                    set_store_char(store_type_data, 15, "R");
+                    store_type_len = 5'd16;
+                end
+                COMPONENT_TYPE_VOLTAGE: begin
+                    set_store_char(store_type_data, 8, "V");
+                    set_store_char(store_type_data, 9, "O");
+                    set_store_char(store_type_data, 10, "L");
+                    set_store_char(store_type_data, 11, "T");
+                    set_store_char(store_type_data, 12, "A");
+                    set_store_char(store_type_data, 13, "G");
+                    set_store_char(store_type_data, 14, "E");
+                    store_type_len = 5'd15;
+                end
+                COMPONENT_TYPE_CURRENT: begin
+                    set_store_char(store_type_data, 8, "C");
+                    set_store_char(store_type_data, 9, "U");
+                    set_store_char(store_type_data, 10, "R");
+                    set_store_char(store_type_data, 11, "R");
+                    set_store_char(store_type_data, 12, "E");
+                    set_store_char(store_type_data, 13, "N");
+                    set_store_char(store_type_data, 14, "T");
+                    store_type_len = 5'd15;
+                end
+                default: begin
+                    set_store_char(store_type_data, 8, "W");
+                    set_store_char(store_type_data, 9, "I");
+                    set_store_char(store_type_data, 10, "R");
+                    set_store_char(store_type_data, 11, "E");
+                    store_type_len = 5'd12;
+                end
+            endcase
+        end else begin
+            set_store_char(store_type_data, 8, "-");
+            store_type_len = 5'd9;
+        end
+
+        set_store_char(store_rot_data, 0, "R");
+        set_store_char(store_rot_data, 1, "o");
+        set_store_char(store_rot_data, 2, "t");
+        set_store_char(store_rot_data, 3, " ");
+        set_store_char(store_rot_data, 4, " ");
+        set_store_char(store_rot_data, 5, " ");
+        set_store_char(store_rot_data, 6, ":");
+        set_store_char(store_rot_data, 7, " ");
+        if (component_store_view_entry_ready_ui) begin
+            set_store_char(store_rot_data, 8, component_store_view_rotation_ui + 8'd48);
+        end else begin
+            set_store_char(store_rot_data, 8, "-");
+        end
+        store_rot_len = 5'd9;
+
+        set_store_char(store_value_data, 0, "V");
+        set_store_char(store_value_data, 1, "a");
+        set_store_char(store_value_data, 2, "l");
+        set_store_char(store_value_data, 3, "u");
+        set_store_char(store_value_data, 4, "e");
+        set_store_char(store_value_data, 5, " ");
+        set_store_char(store_value_data, 6, ":");
+        set_store_char(store_value_data, 7, " ");
+        if (component_store_view_entry_ready_ui) begin
+            if (component_store_view_value_ui[11:8] != 4'd0) begin
+                set_store_char(store_value_data, 8, ascii_decimal_nibble(component_store_view_value_ui[11:8]));
+                set_store_char(store_value_data, 9, ascii_decimal_nibble(component_store_view_value_ui[7:4]));
+                set_store_char(store_value_data, 10, ascii_decimal_nibble(component_store_view_value_ui[3:0]));
+                store_value_len = 5'd11;
+            end else if (component_store_view_value_ui[7:4] != 4'd0) begin
+                set_store_char(store_value_data, 8, ascii_decimal_nibble(component_store_view_value_ui[7:4]));
+                set_store_char(store_value_data, 9, ascii_decimal_nibble(component_store_view_value_ui[3:0]));
+                store_value_len = 5'd10;
+            end else begin
+                set_store_char(store_value_data, 8, ascii_decimal_nibble(component_store_view_value_ui[3:0]));
+                store_value_len = 5'd9;
+            end
+            if (component_store_view_unit_ui != COMPONENT_UNIT_NONE) begin
+                set_store_char(store_value_data, store_value_len, ascii_from_component_unit(component_store_view_unit_ui));
+                store_value_len = store_value_len + 1'b1;
+            end
+        end else begin
+            set_store_char(store_value_data, 8, "-");
+            store_value_len = 5'd9;
+        end
+
+        set_store_char(store_raw_data, 0, "R");
+        set_store_char(store_raw_data, 1, "a");
+        set_store_char(store_raw_data, 2, "w");
+        set_store_char(store_raw_data, 3, " ");
+        set_store_char(store_raw_data, 4, " ");
+        set_store_char(store_raw_data, 5, " ");
+        set_store_char(store_raw_data, 6, ":");
+        set_store_char(store_raw_data, 7, " ");
+        set_store_char(store_raw_data, 8, "0");
+        set_store_char(store_raw_data, 9, "x");
+        if (component_store_view_entry_ready_ui) begin
+            set_store_char(store_raw_data, 10, ascii_hex_nibble(component_store_view_value_ui[11:8]));
+            set_store_char(store_raw_data, 11, ascii_hex_nibble(component_store_view_value_ui[7:4]));
+            set_store_char(store_raw_data, 12, ascii_hex_nibble(component_store_view_value_ui[3:0]));
+        end else begin
+            set_store_char(store_raw_data, 10, "-");
+            set_store_char(store_raw_data, 11, "-");
+            set_store_char(store_raw_data, 12, "-");
+        end
+        store_raw_len = 5'd13;
+
+        set_store_char(store_pos_data, 0, "P");
+        set_store_char(store_pos_data, 1, "o");
+        set_store_char(store_pos_data, 2, "s");
+        set_store_char(store_pos_data, 3, " ");
+        set_store_char(store_pos_data, 4, " ");
+        set_store_char(store_pos_data, 5, " ");
+        set_store_char(store_pos_data, 6, ":");
+        set_store_char(store_pos_data, 7, " ");
+        if (component_store_view_entry_ready_ui) begin
+            set_store_char(store_pos_data, 8, "(");
+            set_store_char(store_pos_data, 9, (component_store_view_position_ui[4:0] / 10) + 8'd48);
+            set_store_char(store_pos_data, 10, (component_store_view_position_ui[4:0] % 10) + 8'd48);
+            set_store_char(store_pos_data, 11, ",");
+            set_store_char(store_pos_data, 12, " ");
+            set_store_char(store_pos_data, 13, (component_store_view_position_ui[8:5] / 10) + 8'd48);
+            set_store_char(store_pos_data, 14, (component_store_view_position_ui[8:5] % 10) + 8'd48);
+            set_store_char(store_pos_data, 15, ")");
+        end else begin
+            set_store_char(store_pos_data, 8, "(");
+            set_store_char(store_pos_data, 9, "-");
+            set_store_char(store_pos_data, 10, "-");
+            set_store_char(store_pos_data, 11, ",");
+            set_store_char(store_pos_data, 12, " ");
+            set_store_char(store_pos_data, 13, "-");
+            set_store_char(store_pos_data, 14, "-");
+            set_store_char(store_pos_data, 15, ")");
+        end
+        store_pos_len = 5'd16;
+    end
+
+    TextBox #(
+        .TEXT_CONTENT("COMPONENT STORE"),
+        .TEXT_LEN(15),
+        .MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)
+    ) u_store_title (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_TITLE_Y),
+        .scale(4'd2),
+        .text_enable(store_title_rendered),
+        .text_color(store_title_rgb)
+    );
+
+    TextBox #(
+        .TEXT_CONTENT("SW1 VIEW  L/R BROWSE"),
+        .TEXT_LEN(20),
+        .MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)
+    ) u_store_hint (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_HINT_Y),
+        .scale(4'd1),
+        .text_enable(store_hint_rendered),
+        .text_color(store_hint_rgb)
+    );
+
+    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_status (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .text_data(store_status_data),
+        .text_len(store_status_len),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_STATUS_Y),
+        .scale(4'd1),
+        .text_enable(store_status_rendered),
+        .text_color(store_status_rgb)
+    );
+
+    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_count (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .text_data(store_count_data),
+        .text_len(store_count_len),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_COUNT_Y),
+        .scale(4'd1),
+        .text_enable(store_count_rendered),
+        .text_color(store_count_rgb)
+    );
+
+    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_packed (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .text_data(store_packed_data),
+        .text_len(store_packed_len),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_PACKED_Y),
+        .scale(4'd1),
+        .text_enable(store_packed_rendered),
+        .text_color(store_packed_rgb)
+    );
+
+    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_index (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .text_data(store_index_data),
+        .text_len(store_index_len),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_INDEX_Y),
+        .scale(4'd1),
+        .text_enable(store_index_rendered),
+        .text_color(store_index_rgb)
+    );
+
+    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_type (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .text_data(store_type_data),
+        .text_len(store_type_len),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_TYPE_Y),
+        .scale(4'd1),
+        .text_enable(store_type_rendered),
+        .text_color(store_type_rgb)
+    );
+
+    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_rot (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .text_data(store_rot_data),
+        .text_len(store_rot_len),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_ROT_Y),
+        .scale(4'd1),
+        .text_enable(store_rot_rendered),
+        .text_color(store_rot_rgb)
+    );
+
+    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_value (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .text_data(store_value_data),
+        .text_len(store_value_len),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_VALUE_Y),
+        .scale(4'd1),
+        .text_enable(store_value_rendered),
+        .text_color(store_value_rgb)
+    );
+
+    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_raw (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .text_data(store_raw_data),
+        .text_len(store_raw_len),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_RAW_Y),
+        .scale(4'd1),
+        .text_enable(store_raw_rendered),
+        .text_color(store_raw_rgb)
+    );
+
+    DynamicTextBox #(.MAX_CHARS(STORE_VIEW_TEXT_MAX_CHARS)) u_store_pos (
+        .clk_pixel(clk_pixel),
+        .hcount(x_pos),
+        .vcount(y_pos),
+        .text_data(store_pos_data),
+        .text_len(store_pos_len),
+        .start_x(STORE_VIEW_TEXT_X),
+        .start_y(STORE_VIEW_POS_Y),
+        .scale(4'd1),
+        .text_enable(store_pos_rendered),
+        .text_color(store_pos_rgb)
+    );
+
+    always @(*) begin
+        component_store_view_rendered = video_on;
+        component_store_view_rgb = 12'h132;
+
+        if ((x_pos >= STORE_VIEW_CARD_X0) && (x_pos < STORE_VIEW_CARD_X1) &&
+            (y_pos >= STORE_VIEW_CARD_Y0) && (y_pos < STORE_VIEW_CARD_Y1)) begin
+            component_store_view_rgb = 12'h254;
+            if ((x_pos < STORE_VIEW_CARD_X0 + 3) || (x_pos >= STORE_VIEW_CARD_X1 - 3) ||
+                (y_pos < STORE_VIEW_CARD_Y0 + 3) || (y_pos >= STORE_VIEW_CARD_Y1 - 3)) begin
+                component_store_view_rgb = 12'hFC9;
+            end else if (y_pos < STORE_VIEW_CARD_Y0 + 48) begin
+                component_store_view_rgb = 12'h365;
+            end else if ((y_pos == STORE_VIEW_COUNT_Y - 12) || (y_pos == STORE_VIEW_PACKED_Y - 12)) begin
+                component_store_view_rgb = 12'h486;
+            end
+        end
+
+        if (store_title_rendered) component_store_view_rgb = store_title_rgb;
+        if (store_hint_rendered) component_store_view_rgb = store_hint_rgb;
+        if (store_status_rendered) component_store_view_rgb = store_status_rgb;
+        if (store_count_rendered) component_store_view_rgb = store_count_rgb;
+        if (store_packed_rendered) component_store_view_rgb = store_packed_rgb;
+        if (store_index_rendered) component_store_view_rgb = store_index_rgb;
+        if (store_type_rendered) component_store_view_rgb = store_type_rgb;
+        if (store_rot_rendered) component_store_view_rgb = store_rot_rgb;
+        if (store_value_rendered) component_store_view_rgb = store_value_rgb;
+        if (store_raw_rendered) component_store_view_rgb = store_raw_rgb;
+        if (store_pos_rendered) component_store_view_rgb = store_pos_rgb;
+    end
+
+    assign interaction_bg_cmd_ready = (init_cycles >= INIT_DELAY_CYCLES) && !clear_canvas_active;
 
     InteractionController #(
         .CanvasPosX(CANVAS_X0),
@@ -529,15 +1969,15 @@ module GlobalRender_top (
     ) interaction_controller_inst (
         .clk(CLK100MHZ),
         .reset(BTNC),
-        .frame_start_pulse(interaction_frame_tick && (selected_toolbar_idx != 4'd0)),
+        .frame_start_pulse(interaction_frame_tick && (selected_toolbar_idx_sys != 4'd0)),
         .mode_select(interaction_mode_select),
         .mouse_x(mouse_xpos),
         .mouse_y(mouse_ypos),
         .mouse_left(mouse_left),
         .mouse_middle(mouse_middle),
         .mouse_right(mouse_right),
-        .grid_pos_x(circuit_canvas_grid_pos_x),
-        .grid_pos_y(circuit_canvas_grid_pos_y),
+        .grid_pos_x(circuit_canvas_grid_pos_x_sys),
+        .grid_pos_y(circuit_canvas_grid_pos_y_sys),
         .bg_cmd_ready(interaction_bg_cmd_ready),
         .bg_rsp_valid(interaction_bg_rsp_valid),
         .bg_rsp_rdata(interaction_bg_rsp_rdata),
@@ -551,6 +1991,26 @@ module GlobalRender_top (
 
     wire        matrix_rendered;
     wire [11:0] matrix_rgb;
+    localparam [1023:0] MATRIX_A_CONST = {
+        16'h8000, 16'h0240, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000,
+        16'h0240, 16'hEC40, 16'h0380, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000,
+        16'h0000, 16'h0380, 16'h1E1A, 16'h04CC, 16'h0000, 16'h0000, 16'h0000, 16'h0000,
+        16'h0000, 16'h0000, 16'h04CC, 16'h2840, 16'h05E6, 16'h0000, 16'h0000, 16'h0000,
+        16'h0000, 16'h0000, 16'h0000, 16'h05E6, 16'hCD67, 16'h06B3, 16'h0000, 16'h0000,
+        16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h06B3, 16'h3CCD, 16'h0766, 16'h0000,
+        16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0766, 16'hB91A, 16'h081A,
+        16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h0000, 16'h081A, 16'h63FD
+    };
+    localparam [1023:0] MATRIX_LU_CONST = {
+        16'h0100, 16'h0080, 16'h0040, 16'h001A, 16'h000C, 16'h0005, 16'h0002, 16'h0000,
+        16'h0200, 16'h0180, 16'h00C0, 16'h004C, 16'h0026, 16'h0014, 16'h000A, 16'h0005,
+        16'h0300, 16'h0280, 16'h0200, 16'h0100, 16'h0080, 16'h0040, 16'h001F, 16'h000F,
+        16'h0400, 16'h0380, 16'h0300, 16'h0280, 16'h0140, 16'h0099, 16'h004C, 16'h0026,
+        16'h0500, 16'h0480, 16'h0400, 16'h0380, 16'h0300, 16'h0180, 16'h00C0, 16'h0059,
+        16'h0600, 16'h0580, 16'h0500, 16'h0480, 16'h0400, 16'h0380, 16'h01C0, 16'h00D9,
+        16'h0700, 16'h0680, 16'h0600, 16'h0580, 16'h0500, 16'h0480, 16'h0400, 16'h0200,
+        16'h0800, 16'h0780, 16'h0700, 16'h0680, 16'h0600, 16'h0580, 16'h0500, 16'h0480
+    };
     reg  [1023:0] matrix_a_data;    // 8x8 Q8.8 定点数矩阵
     reg  [1023:0] matrix_lu_data;   // 8x8 Q8.8 定点数矩阵
 
@@ -746,8 +2206,8 @@ module GlobalRender_top (
         .hcount(x_pos),
         .vcount(y_pos),
         .video_on(video_on),
-        .matrix_a_data(matrix_a_data),
-        .matrix_lu_data(matrix_lu_data),
+        .matrix_a_data(MATRIX_A_CONST),
+        .matrix_lu_data(MATRIX_LU_CONST),
         .matrix_rendered(matrix_rendered),
         .matrix_rgb(matrix_rgb)
     );
@@ -764,23 +2224,61 @@ module GlobalRender_top (
         .KEY_W(KEY_W),
         .KEY_H(KEY_H)
     ) keyboard_vga_inst (
-        .clk_nav(clk_nav), .btnU(BTNU), .btnD(BTND), .btnL(BTNL), .btnR(BTNR), 
-        .btnC(BTNC),
-        .mouse_x(mouse_xpos), .mouse_y(mouse_ypos), .mouse_left(mouse_left),
+        .clk_nav(clk_nav),
+        .mouse_x(mouse_xpos_nav), .mouse_y(mouse_ypos_nav), .mouse_left(mouse_left_nav),
         .x(x_pos), .y(y_pos), .pixel_rgb(keyboard_rgb), .key_id(keyboard_key_id),
-        .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii)
+        .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii),
+        .key_rgb(keyboard_key_rgb), .key_is_digit(keyboard_key_is_digit),
+        .key_is_unit(keyboard_key_is_unit), .key_is_action(keyboard_key_is_action)
     );
     ToolbarVGA toolbar_vga_inst (
         .clk_pixel(clk_pixel),
-        .mouse_x(mouse_xpos),
-        .mouse_y(mouse_ypos),
-        .mouse_left(mouse_left),
+        .mouse_x(mouse_xpos_pix),
+        .mouse_y(mouse_ypos_pix),
+        .mouse_left(mouse_left_pix),
         .x(x_pos),
         .y(y_pos),
         .pixel_rgb(toolbar_rgb),
         .rendered(toolbar_rendered),
         .selected_tool_idx(selected_toolbar_idx),
         .selected_wire_variant(selected_wire_variant)
+    );
+
+    // =========================================================
+    // Calculator on OLED 实例化 (96x64 OLED)
+    // =========================================================
+    Calculator #(
+        .OLED_W(96),
+        .OLED_H(64),
+        .DATA_W(10)
+    ) calculator_inst (
+        .clk(CLK100MHZ),
+        .clk_nav(oled_clk20hz),      // 使用独立的 20Hz 导航时钟
+        .btnU(BTNU),
+        .btnD(BTND),
+        .btnL(BTNL),
+        .btnR(BTNR),
+        .btnC(BTNC),                 // BTNC 用作确认键
+        .x(oled_x_pos),
+        .y(oled_y_pos),
+        .pixel_rgb(oled_pixel_rgb)
+    );
+
+    Oled_Display oled_inst (
+        .clk(oled_clk6p25m),         // 使用独立的 6.25MHz 像素时钟
+        .reset(1'b0),                // OLED 始终工作，不复位
+        .frame_begin(oled_frame_begin),
+        .sending_pixels(oled_sending_pixels),
+        .sample_pixel(oled_sample_pixel),
+        .pixel_index(oled_pixel_index),
+        .pixel_data(oled_data),
+        .cs(JC[0]),
+        .sdin(JC[1]),
+        .sclk(JC[3]),
+        .d_cn(JC[4]),
+        .resn(JC[5]),
+        .vccen(JC[6]),
+        .pmoden(JC[7])
     );
     // =========================================================
     // 電壓波形 (X: 0 ~ 241, Y: 352 ~ 479)
@@ -849,22 +2347,8 @@ module GlobalRender_top (
     wire [3:0] i_max_u = i_max_val % 10;
 
     // 【新增】動態字元引擎
-    wire v_dyn_text =
-        glyph_hit("M", 2, x_pos - 146, y_pos - 360) ||
-        glyph_hit("A", 2, x_pos - 158, y_pos - 360) ||
-        glyph_hit("X", 2, x_pos - 170, y_pos - 360) ||
-        glyph_hit("=", 2, x_pos - 182, y_pos - 360) ||
-        glyph_hit("0" + v_max_h, 2, x_pos - 194, y_pos - 360) ||
-        glyph_hit("0" + v_max_t, 2, x_pos - 206, y_pos - 360) ||
-        glyph_hit("0" + v_max_u, 2, x_pos - 218, y_pos - 360);
-    wire i_dyn_text =
-        glyph_hit("M", 2, x_pos - 388, y_pos - 360) ||
-        glyph_hit("A", 2, x_pos - 400, y_pos - 360) ||
-        glyph_hit("X", 2, x_pos - 412, y_pos - 360) ||
-        glyph_hit("=", 2, x_pos - 424, y_pos - 360) ||
-        glyph_hit("0" + i_max_h, 2, x_pos - 436, y_pos - 360) ||
-        glyph_hit("0" + i_max_t, 2, x_pos - 448, y_pos - 360) ||
-        glyph_hit("0" + i_max_u, 2, x_pos - 460, y_pos - 360);
+    wire v_dyn_text = 1'b0;
+    wire i_dyn_text = 1'b0;
     // =========================================================
     // 波形影像混合邏輯 (修復波形溢出邊框的問題)
     // =========================================================
@@ -883,59 +2367,376 @@ module GlobalRender_top (
         in_i_region ?
         (i_dyn_text ? 12'h0FF : is_i_text ? 12'hFFF : i_wave_display ? 12'hFF0 : is_i_axis ? 12'h444 : 12'h111) :
         12'h000;
-    always @(posedge clk_nav) begin
-        if (keyboard_key_valid && (keyboard_key_id != 5'd18)) last_ascii <= keyboard_key_ascii;
-    end
 
     // RAM 初始化與滑鼠重置
     always @(posedge CLK100MHZ) begin
         mouse_set_value <= 12'h000;
-        mouse_set_max_x <= 1'b0; mouse_set_max_y <= 1'b0;
+        mouse_set_max_x <= 1'b0;
+        mouse_set_max_y <= 1'b0;
         circuit_canvas_ram_w_en <= 1'b0;
+        value_ram_w_en <= 1'b0;
+        component_index_map_w_en <= 1'b0;
+        component_store_w_en <= 1'b0;
+        value_digit_ram_w_data <= selected_value_digits;
+        value_text_ram_w_data <= selected_value_text;
+        value_text_len_ram_w_data <= selected_value_text_len;
         mouse_left_d_sys <= mouse_left;
         interaction_bg_rsp_valid <= 1'b0;
-        if (init_cycles < 32'd1000) init_cycles <= init_cycles + 1'b1;
+        selected_value_bcd <= value_ram_r_data;
+        selected_value_digits <= value_digit_ram_r_data;
+        selected_value_text <= value_text_ram_r_data;
+        selected_value_text_len <= value_text_len_ram_r_data;
+        keyboard_event_sync0 <= keyboard_event_toggle_nav;
+        keyboard_event_sync1 <= keyboard_event_sync0;
+        component_store_change_this_cycle = 1'b0;
 
-        if (keyboard_key_valid && (keyboard_key_id == 5'd18)) begin
+        if (init_cycles < INIT_DELAY_CYCLES) begin
+            init_cycles <= init_cycles + 1'b1;
+        end
+
+        if (keyboard_edit_event) begin
+            keyboard_event_seen <= keyboard_event_sync1;
+        end
+
+        if (keyboard_edit_event && (keyboard_ascii_sys_ff1 == 8'h7F) && !selected_is_editable) begin
             clear_canvas_active <= 1'b1;
-            clear_canvas_addr <= {CANVAS_ADDR_W{1'b0}}; init_cycles <= 32'd1000;
+            clear_canvas_addr <= {CANVAS_ADDR_W{1'b0}};
+            init_cycles <= INIT_DELAY_CYCLES;
+            pending_pair_value_write <= 1'b0;
         end
 
         if (clear_canvas_active) begin
+            pending_pair_value_write <= 1'b0;
             circuit_canvas_ram_w_en <= 1'b1;
-            circuit_canvas_ram_w_addr <= clear_canvas_addr; circuit_canvas_ram_w_data <= 16'd0;
+            circuit_canvas_ram_w_addr <= clear_canvas_addr;
+            circuit_canvas_ram_w_data <= 16'd0;
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= clear_canvas_addr;
+            value_ram_w_data <= 12'd0;
+            value_digit_ram_w_data <= 2'd0;
+            value_text_ram_w_data <= 64'd0;
+            value_text_len_ram_w_data <= 4'd0;
             canvas_shadow_data[clear_canvas_addr] <= 16'd0;
-            if (clear_canvas_addr == CANVAS_CELL_COUNT - 1) clear_canvas_active <= 1'b0;
-            else clear_canvas_addr <= clear_canvas_addr + 1'b1;
-        end else if (init_cycles == 32'd1) begin mouse_set_max_x <= 1'b1; mouse_set_value <= 12'd639;
-        end else if (init_cycles == 32'd2) begin mouse_set_max_y <= 1'b1; mouse_set_value <= 12'd479;
-        end else if (init_cycles < CANVAS_CELL_COUNT) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= init_cycles[CANVAS_ADDR_W-1:0]; circuit_canvas_ram_w_data <= 16'd0; canvas_shadow_data[init_cycles[CANVAS_ADDR_W-1:0]] <= 16'd0;
-        end else if (init_cycles == CANVAS_CELL_COUNT + 0) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd38;  circuit_canvas_ram_w_data <= 16'h0083; canvas_shadow_data[9'd38]  <= 16'h0083; // (2,2) UL
-        end else if (init_cycles == CANVAS_CELL_COUNT + 1) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd39;  circuit_canvas_ram_w_data <= 16'h000F; canvas_shadow_data[9'd39]  <= 16'h000F; // (3,2) V-Source L
-        end else if (init_cycles == CANVAS_CELL_COUNT + 2) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd40;  circuit_canvas_ram_w_data <= 16'h0011; canvas_shadow_data[9'd40]  <= 16'h0011; // (4,2) V-Source R
-        end else if (init_cycles == CANVAS_CELL_COUNT + 3) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd41;  circuit_canvas_ram_w_data <= 16'h0103; canvas_shadow_data[9'd41]  <= 16'h0103; // (5,2) UR
-        end else if (init_cycles == CANVAS_CELL_COUNT + 4) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd56;  circuit_canvas_ram_w_data <= 16'h0281; canvas_shadow_data[9'd56]  <= 16'h0281; // (2,3) Wire L
-        end else if (init_cycles == CANVAS_CELL_COUNT + 5) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd59;  circuit_canvas_ram_w_data <= 16'h0081; canvas_shadow_data[9'd59]  <= 16'h0081; // (5,3) Wire R
-        end else if (init_cycles == CANVAS_CELL_COUNT + 6) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd74;  circuit_canvas_ram_w_data <= 16'h0285; canvas_shadow_data[9'd74]  <= 16'h0285; // (2,4) Tee L
-        end else if (init_cycles == CANVAS_CELL_COUNT + 7) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd75;  circuit_canvas_ram_w_data <= 16'h020B; canvas_shadow_data[9'd75]  <= 16'h020B; // (3,4) Resistor L
-        end else if (init_cycles == CANVAS_CELL_COUNT + 8) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd76;  circuit_canvas_ram_w_data <= 16'h020D; canvas_shadow_data[9'd76]  <= 16'h020D; // (4,4) Resistor R
-        end else if (init_cycles == CANVAS_CELL_COUNT + 9) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd77;  circuit_canvas_ram_w_data <= 16'h0185; canvas_shadow_data[9'd77]  <= 16'h0185; // (5,4) Tee R
-        end else if (init_cycles == CANVAS_CELL_COUNT +10) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd92;  circuit_canvas_ram_w_data <= 16'h0281; canvas_shadow_data[9'd92]  <= 16'h0281; // (2,5) Wire L2
-        end else if (init_cycles == CANVAS_CELL_COUNT +11) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd95;  circuit_canvas_ram_w_data <= 16'h0081; canvas_shadow_data[9'd95]  <= 16'h0081; // (5,5) Wire R2
-        end else if (init_cycles == CANVAS_CELL_COUNT +12) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd110; circuit_canvas_ram_w_data <= 16'h0003; canvas_shadow_data[9'd110] <= 16'h0003; // (2,6) LL
-        end else if (init_cycles == CANVAS_CELL_COUNT +13) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd111; circuit_canvas_ram_w_data <= 16'h021B; canvas_shadow_data[9'd111] <= 16'h021B; // (3,6) Capacitor L
-        end else if (init_cycles == CANVAS_CELL_COUNT +14) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd112; circuit_canvas_ram_w_data <= 16'h021D; canvas_shadow_data[9'd112] <= 16'h021D; // (4,6) Capacitor R
-        end else if (init_cycles == CANVAS_CELL_COUNT +15) begin circuit_canvas_ram_w_en <= 1'b1; circuit_canvas_ram_w_addr <= 9'd113; circuit_canvas_ram_w_data <= 16'h0183; canvas_shadow_data[9'd113] <= 16'h0183; // (5,6) LR
+            value_shadow_data[clear_canvas_addr] <= 12'd0;
+            value_unit_shadow_data[clear_canvas_addr] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+
+            if (clear_canvas_addr == CANVAS_CELL_COUNT - 1) begin
+                clear_canvas_active <= 1'b0;
+            end else begin
+                clear_canvas_addr <= clear_canvas_addr + 1'b1;
+            end
+        end else if (init_cycles == 10'd1) begin
+            mouse_set_max_x <= 1'b1;
+            mouse_set_value <= 12'd639;
+        end else if (init_cycles == 10'd2) begin
+            mouse_set_max_y <= 1'b1;
+            mouse_set_value <= 12'd479;
+        end else if (init_cycles < CANVAS_CELL_COUNT) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= init_cycles[CANVAS_ADDR_W-1:0];
+            circuit_canvas_ram_w_data <= 16'd0;
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= init_cycles[CANVAS_ADDR_W-1:0];
+            value_ram_w_data <= 12'd0;
+            value_digit_ram_w_data <= 2'd0;
+            value_text_ram_w_data <= 64'd0;
+            value_text_len_ram_w_data <= 4'd0;
+            canvas_shadow_data[init_cycles[CANVAS_ADDR_W-1:0]] <= 16'd0;
+            value_shadow_data[init_cycles[CANVAS_ADDR_W-1:0]] <= 12'd0;
+            value_unit_shadow_data[init_cycles[CANVAS_ADDR_W-1:0]] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 0) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd38;
+            circuit_canvas_ram_w_data <= 16'h0083;
+            canvas_shadow_data[9'd38] <= 16'h0083;
+            value_shadow_data[9'd38] <= 12'd0;
+            value_unit_shadow_data[9'd38] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 1) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd39;
+            circuit_canvas_ram_w_data <= 16'h000F;
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= 9'd39;
+            value_ram_w_data <= 12'h010;
+            value_digit_ram_w_data <= 2'd2;
+            value_text_ram_w_data <= {"1", "0", 48'd0};
+            value_text_len_ram_w_data <= 4'd2;
+            canvas_shadow_data[9'd39] <= 16'h000F;
+            value_shadow_data[9'd39] <= 12'h010;
+            value_unit_shadow_data[9'd39] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 2) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd40;
+            circuit_canvas_ram_w_data <= 16'h0011;
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= 9'd40;
+            value_ram_w_data <= 12'h010;
+            value_digit_ram_w_data <= 2'd2;
+            value_text_ram_w_data <= {"1", "0", 48'd0};
+            value_text_len_ram_w_data <= 4'd2;
+            canvas_shadow_data[9'd40] <= 16'h0011;
+            value_shadow_data[9'd40] <= 12'h010;
+            value_unit_shadow_data[9'd40] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 3) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd41;
+            circuit_canvas_ram_w_data <= 16'h0103;
+            canvas_shadow_data[9'd41] <= 16'h0103;
+            value_shadow_data[9'd41] <= 12'd0;
+            value_unit_shadow_data[9'd41] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 4) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd56;
+            circuit_canvas_ram_w_data <= 16'h0281;
+            canvas_shadow_data[9'd56] <= 16'h0281;
+            value_shadow_data[9'd56] <= 12'd0;
+            value_unit_shadow_data[9'd56] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 5) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd59;
+            circuit_canvas_ram_w_data <= 16'h0081;
+            canvas_shadow_data[9'd59] <= 16'h0081;
+            value_shadow_data[9'd59] <= 12'd0;
+            value_unit_shadow_data[9'd59] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 6) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd74;
+            circuit_canvas_ram_w_data <= 16'h0285;
+            canvas_shadow_data[9'd74] <= 16'h0285;
+            value_shadow_data[9'd74] <= 12'd0;
+            value_unit_shadow_data[9'd74] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 7) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd75;
+            circuit_canvas_ram_w_data <= 16'h020B;
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= 9'd75;
+            value_ram_w_data <= 12'h100;
+            value_digit_ram_w_data <= 2'd3;
+            value_text_ram_w_data <= {"1", "0", "0", 40'd0};
+            value_text_len_ram_w_data <= 4'd3;
+            canvas_shadow_data[9'd75] <= 16'h020B;
+            value_shadow_data[9'd75] <= 12'h100;
+            value_unit_shadow_data[9'd75] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 8) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd76;
+            circuit_canvas_ram_w_data <= 16'h020D;
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= 9'd76;
+            value_ram_w_data <= 12'h100;
+            value_digit_ram_w_data <= 2'd3;
+            value_text_ram_w_data <= {"1", "0", "0", 40'd0};
+            value_text_len_ram_w_data <= 4'd3;
+            canvas_shadow_data[9'd76] <= 16'h020D;
+            value_shadow_data[9'd76] <= 12'h100;
+            value_unit_shadow_data[9'd76] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 9) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd77;
+            circuit_canvas_ram_w_data <= 16'h0185;
+            canvas_shadow_data[9'd77] <= 16'h0185;
+            value_shadow_data[9'd77] <= 12'd0;
+            value_unit_shadow_data[9'd77] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 10) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd92;
+            circuit_canvas_ram_w_data <= 16'h0281;
+            canvas_shadow_data[9'd92] <= 16'h0281;
+            value_shadow_data[9'd92] <= 12'd0;
+            value_unit_shadow_data[9'd92] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 11) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd95;
+            circuit_canvas_ram_w_data <= 16'h0081;
+            canvas_shadow_data[9'd95] <= 16'h0081;
+            value_shadow_data[9'd95] <= 12'd0;
+            value_unit_shadow_data[9'd95] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 12) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd110;
+            circuit_canvas_ram_w_data <= 16'h0003;
+            canvas_shadow_data[9'd110] <= 16'h0003;
+            value_shadow_data[9'd110] <= 12'd0;
+            value_unit_shadow_data[9'd110] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 13) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd111;
+            circuit_canvas_ram_w_data <= 16'h021B;
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= 9'd111;
+            value_ram_w_data <= 12'h100;
+            value_digit_ram_w_data <= 2'd3;
+            value_text_ram_w_data <= {"1", "0", "0", "p", 32'd0};
+            value_text_len_ram_w_data <= 4'd4;
+            canvas_shadow_data[9'd111] <= 16'h021B;
+            value_shadow_data[9'd111] <= 12'h100;
+            value_unit_shadow_data[9'd111] <= COMPONENT_UNIT_P;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 14) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd112;
+            circuit_canvas_ram_w_data <= 16'h021D;
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= 9'd112;
+            value_ram_w_data <= 12'h100;
+            value_digit_ram_w_data <= 2'd3;
+            value_text_ram_w_data <= {"1", "0", "0", "p", 32'd0};
+            value_text_len_ram_w_data <= 4'd4;
+            canvas_shadow_data[9'd112] <= 16'h021D;
+            value_shadow_data[9'd112] <= 12'h100;
+            value_unit_shadow_data[9'd112] <= COMPONENT_UNIT_P;
+            component_store_change_this_cycle = 1'b1;
+        end else if (init_cycles == CANVAS_CELL_COUNT + 15) begin
+            circuit_canvas_ram_w_en <= 1'b1;
+            circuit_canvas_ram_w_addr <= 9'd113;
+            circuit_canvas_ram_w_data <= 16'h0183;
+            canvas_shadow_data[9'd113] <= 16'h0183;
+            value_shadow_data[9'd113] <= 12'd0;
+            value_unit_shadow_data[9'd113] <= COMPONENT_UNIT_NONE;
+            component_store_change_this_cycle = 1'b1;
+        end else if (pending_pair_value_write) begin
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= pending_pair_value_addr;
+            value_ram_w_data <= pending_pair_value_data;
+            value_digit_ram_w_data <= pending_pair_value_digits;
+            value_text_ram_w_data <= pending_pair_value_text;
+            value_text_len_ram_w_data <= pending_pair_value_text_len;
+            value_shadow_data[pending_pair_value_addr] <= pending_pair_value_data;
+            value_unit_shadow_data[pending_pair_value_addr] <= component_unit_code_from_text(
+                pending_pair_value_text,
+                pending_pair_value_text_len
+            );
+            pending_pair_value_write <= 1'b0;
+            component_store_change_this_cycle = 1'b1;
+        end else if (keyboard_edit_event && edit_value_valid) begin
+            value_ram_w_en <= 1'b1;
+            value_ram_w_addr <= selected_cell_addr_sys;
+            value_ram_w_data <= edit_value_next_bcd;
+            value_digit_ram_w_data <= edit_value_next_digits;
+            value_text_ram_w_data <= edit_value_next_text;
+            value_text_len_ram_w_data <= edit_value_next_text_len;
+            value_shadow_data[selected_cell_addr_sys] <= edit_value_next_bcd;
+            value_unit_shadow_data[selected_cell_addr_sys] <= component_unit_code_from_text(
+                edit_value_next_text,
+                edit_value_next_text_len
+            );
+            selected_value_bcd <= edit_value_next_bcd;
+            selected_value_digits <= edit_value_next_digits;
+            selected_value_text <= edit_value_next_text;
+            selected_value_text_len <= edit_value_next_text_len;
+            component_store_change_this_cycle = 1'b1;
+
+            if (selected_pair_addr != selected_cell_addr_sys) begin
+                pending_pair_value_write <= 1'b1;
+                pending_pair_value_addr <= selected_pair_addr;
+                pending_pair_value_data <= edit_value_next_bcd;
+                pending_pair_value_digits <= edit_value_next_digits;
+                pending_pair_value_text <= edit_value_next_text;
+                pending_pair_value_text_len <= edit_value_next_text_len;
+            end
         end else if (interaction_bg_cmd_valid && interaction_bg_cmd_ready) begin
             if (interaction_bg_cmd_write) begin
                 circuit_canvas_ram_w_en <= 1'b1;
                 circuit_canvas_ram_w_addr <= interaction_bg_cmd_addr;
                 circuit_canvas_ram_w_data <= interaction_bg_cmd_wdata;
                 canvas_shadow_data[interaction_bg_cmd_addr] <= interaction_bg_cmd_wdata;
+                component_store_change_this_cycle = 1'b1;
+                if (interaction_bg_cmd_wdata == 16'd0) begin
+                    value_ram_w_en <= 1'b1;
+                    value_ram_w_addr <= interaction_bg_cmd_addr;
+                    value_ram_w_data <= 12'd0;
+                    value_digit_ram_w_data <= 2'd0;
+                    value_text_ram_w_data <= 64'd0;
+                    value_text_len_ram_w_data <= 4'd0;
+                    value_shadow_data[interaction_bg_cmd_addr] <= 12'd0;
+                    value_unit_shadow_data[interaction_bg_cmd_addr] <= COMPONENT_UNIT_NONE;
+                end
             end else begin
                 interaction_bg_rsp_valid <= 1'b1;
                 interaction_bg_rsp_rdata <= canvas_shadow_data[interaction_bg_cmd_addr];
             end
+        end
+
+        if (component_index_map_pending_pair_write) begin
+            component_index_map_w_en <= 1'b1;
+            component_index_map_w_addr <= component_index_map_pending_pair_addr;
+            component_index_map_w_data <= component_index_map_pending_pair_data;
+            component_index_map_pending_pair_write <= 1'b0;
+        end else if (component_index_map_clear_active) begin
+            component_index_map_w_en <= 1'b1;
+            component_index_map_w_addr <= component_index_map_clear_addr;
+            component_index_map_w_data <= COMPONENT_INDEX_INVALID;
+            if (component_index_map_clear_addr == CANVAS_CELL_COUNT - 1) begin
+                component_index_map_clear_active <= 1'b0;
+                component_store_rebuild_active <= 1'b1;
+                component_store_scan_addr <= {CANVAS_ADDR_W{1'b0}};
+                component_store_next_index <= {CANVAS_ADDR_W{1'b0}};
+                component_store_count <= {CANVAS_ADDR_W{1'b0}};
+            end else begin
+                component_index_map_clear_addr <= component_index_map_clear_addr + 1'b1;
+            end
+        end else if (component_store_rebuild_active) begin
+            if (component_store_is_origin(component_store_scan_cell, component_store_scan_sprite) &&
+                component_store_scan_needs_index) begin
+                component_store_w_en <= 1'b1;
+                component_store_w_addr <= component_store_next_index;
+                component_store_w_data <= make_component_store_entry(
+                    component_store_scan_unit,
+                    component_store_next_index,
+                    component_store_scan_type,
+                    component_store_scan_rotation,
+                    component_store_scan_value,
+                    component_store_scan_addr
+                );
+                component_index_map_w_en <= 1'b1;
+                component_index_map_w_addr <= component_store_scan_addr;
+                component_index_map_w_data <= component_store_next_index;
+                if (component_store_scan_is_two_cell &&
+                    (component_store_scan_pair_addr != component_store_scan_addr)) begin
+                    component_index_map_pending_pair_write <= 1'b1;
+                    component_index_map_pending_pair_addr <= component_store_scan_pair_addr;
+                    component_index_map_pending_pair_data <= component_store_next_index;
+                end
+                if (component_store_scan_addr == CANVAS_CELL_COUNT - 1) begin
+                    component_store_count <= component_store_next_index + 1'b1;
+                    component_store_rebuild_active <= 1'b0;
+                end else begin
+                    component_store_next_index <= component_store_next_index + 1'b1;
+                    component_store_scan_addr <= component_store_scan_addr + 1'b1;
+                end
+            end else begin
+                if (component_store_scan_addr == CANVAS_CELL_COUNT - 1) begin
+                    component_store_count <= component_store_next_index;
+                    component_store_rebuild_active <= 1'b0;
+                end else begin
+                    component_store_scan_addr <= component_store_scan_addr + 1'b1;
+                end
+            end
+        end else if (!component_store_change_this_cycle && component_store_dirty) begin
+            component_index_map_clear_active <= 1'b1;
+            component_index_map_clear_addr <= {CANVAS_ADDR_W{1'b0}};
+            component_index_map_pending_pair_write <= 1'b0;
+            component_store_dirty <= 1'b0;
+        end
+
+        if (component_store_change_this_cycle) begin
+            component_store_dirty <= 1'b1;
         end
     end
 
@@ -972,14 +2773,7 @@ module GlobalRender_top (
             if (frame_active) ui_rgb = 12'hFFF;
         end
 
-        if (glyph_hit("P", 4, x_pos - 4, y_pos - 4) || glyph_hit("r", 4, x_pos - 28, y_pos - 4) || glyph_hit("o", 4, x_pos - 52, y_pos - 4) || glyph_hit("p", 4, x_pos - 76, y_pos - 4) || glyph_hit("e", 4, x_pos - 100, y_pos - 4) || glyph_hit("r", 4, x_pos - 124, y_pos - 4) || glyph_hit("t", 4, x_pos - 148, y_pos - 4) || glyph_hit("y", 4, x_pos - 172, y_pos - 4) || glyph_hit("E", 4, x_pos - 212, y_pos - 4) || glyph_hit("d", 4, x_pos - 236, y_pos - 4) || glyph_hit("i", 
-        4, x_pos - 260, y_pos - 4) || glyph_hit("t", 4, x_pos - 276, y_pos - 4) || glyph_hit("o", 4, x_pos - 300, y_pos - 4) || glyph_hit("r", 4, x_pos - 324, y_pos - 4)) title_active = 1'b1;
-        if (glyph_hit("R", 4, x_pos - 40, y_pos - 28) || glyph_hit("1", 4, x_pos - 64, y_pos - 28) || glyph_hit("2", 4, x_pos - 208, y_pos - 28) || glyph_hit("3", 4, x_pos - 232, y_pos - 28) || glyph_hit("0", 4, x_pos - 256, y_pos - 28) || glyph_hit("H", 4, x_pos - 360, y_pos - 28) || glyph_hit("o", 4, x_pos - 384, y_pos - 28) || glyph_hit("r", 4, x_pos - 408, y_pos - 28) || glyph_hit("i", 4, x_pos - 428, y_pos - 28) || glyph_hit("z", 4, x_pos - 444, y_pos - 28) || glyph_hit("o", 4, x_pos - 468, y_pos - 28) || 
-        glyph_hit("n", 4, x_pos - 492, y_pos - 28) || glyph_hit("t", 4, x_pos - 516, y_pos - 28) || glyph_hit("a", 4, x_pos - 536, y_pos - 28) || glyph_hit("l", 4, x_pos - 560, y_pos - 28)) title_active = 1'b1;
-        if (1'b0) title_active = 1'b1;
-        if (1'b0) title_active = 1'b1;
-        if (glyph_hit("V", 5, x_pos - 240, y_pos - 446) || glyph_hit("G", 5, x_pos - 270, y_pos - 446) || glyph_hit("A", 5, x_pos - 300, y_pos - 446) || glyph_hit("6", 5, x_pos - 352, y_pos - 446) || glyph_hit("4", 5, x_pos - 382, y_pos - 446) || glyph_hit("0", 5, x_pos - 412, y_pos - 446) || glyph_hit("@", 5, x_pos - 492, y_pos - 446) || glyph_hit("6", 5, x_pos - 544, y_pos - 446) || glyph_hit("0", 5, x_pos - 574, y_pos - 446)) title_active = 1'b1;
-        if (1'b0) title_active = 1'b1;
+        title_active = 1'b0;
         if (title_active && !dynamic_wave_active) ui_rgb = 12'hFFF;
     end
 
@@ -988,6 +2782,8 @@ module GlobalRender_top (
             rgb <= BLACK;
         end else if (mouse_display_enable) begin
             rgb <= mouse_rgb;
+        end else if (show_component_store_view && component_store_view_rendered) begin
+            rgb <= component_store_view_rgb;
         end else if (show_matrix && matrix_rendered) begin
             // 全屏矩阵显示
             rgb <= matrix_rgb;

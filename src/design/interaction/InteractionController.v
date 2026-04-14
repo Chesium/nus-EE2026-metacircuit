@@ -90,6 +90,41 @@ module InteractionController #(
   reg readback_is_clear = 1'b0;
   reg clear_rsp_pending = 1'b0;
   reg rotate_rsp_pending = 1'b0;
+  reg clear_decode_pending = 1'b0;
+  reg rotate_decode_pending = 1'b0;
+  reg clear_apply_pending = 1'b0;
+  reg rotate_apply_pending = 1'b0;
+  reg decode_issue_pending = 1'b0;
+  reg decode_cmd0_valid = 1'b0;
+  reg decode_cmd0_write = 1'b1;
+  reg [AddrWidth-1:0] decode_cmd0_addr = 0;
+  reg [DataWidth-1:0] decode_cmd0_wdata = 0;
+  reg decode_cmd1_valid = 1'b0;
+  reg decode_cmd1_write = 1'b1;
+  reg [AddrWidth-1:0] decode_cmd1_addr = 0;
+  reg [DataWidth-1:0] decode_cmd1_wdata = 0;
+  reg decode_cmd2_valid = 1'b0;
+  reg decode_cmd2_write = 1'b1;
+  reg [AddrWidth-1:0] decode_cmd2_addr = 0;
+  reg [DataWidth-1:0] decode_cmd2_wdata = 0;
+  reg decode_readback_is_clear = 1'b0;
+  reg [AddrWidth-1:0] decode_rotate_addr = 0;
+  reg [11:0] decode_rotate_cell_i = 0;
+  reg [11:0] decode_rotate_cell_j = 0;
+  reg cmd_issue_pending = 1'b0;
+  reg issue_cmd0_valid = 1'b0;
+  reg issue_cmd0_write = 1'b1;
+  reg [AddrWidth-1:0] issue_cmd0_addr = 0;
+  reg [DataWidth-1:0] issue_cmd0_wdata = 0;
+  reg issue_cmd1_valid = 1'b0;
+  reg issue_cmd1_write = 1'b1;
+  reg [AddrWidth-1:0] issue_cmd1_addr = 0;
+  reg [DataWidth-1:0] issue_cmd1_wdata = 0;
+  reg issue_cmd2_valid = 1'b0;
+  reg issue_cmd2_write = 1'b1;
+  reg [AddrWidth-1:0] issue_cmd2_addr = 0;
+  reg [DataWidth-1:0] issue_cmd2_wdata = 0;
+  reg [DataWidth-1:0] rsp_data_hold = 0;
   reg [AddrWidth-1:0] rotate_addr = 0;
   reg [11:0] rotate_cell_i = 0;
   reg [11:0] rotate_cell_j = 0;
@@ -130,6 +165,17 @@ module InteractionController #(
   reg [5:0] secondary_sprite_type;
   reg [5:0] partner_sprite_type;
   reg [1:0] next_rotation_value;
+  reg decoded_is_two_cell = 1'b0;
+  reg decoded_origin_cell_valid = 1'b0;
+  reg decoded_partner_cell_valid = 1'b0;
+  reg decoded_next_partner_cell_valid = 1'b0;
+  reg [AddrWidth-1:0] decoded_origin_cell_addr = 0;
+  reg [AddrWidth-1:0] decoded_partner_cell_addr = 0;
+  reg [AddrWidth-1:0] decoded_next_partner_cell_addr = 0;
+  reg [5:0] decoded_primary_sprite_type = 0;
+  reg [5:0] decoded_secondary_sprite_type = 0;
+  reg [1:0] decoded_next_rotation_value = 0;
+  reg [DataWidth-1:0] decoded_rotated_cell_data = 0;
 
   function [DataWidth-1:0] MakeCellData;
     input [1:0] rotation;
@@ -277,19 +323,23 @@ module InteractionController #(
   assign bg_cmd_addr = cmd0_addr;
   assign bg_cmd_wdata = cmd0_wdata;
   assign frame_done = !decode_pending && !cmd0_valid && !cmd1_valid && !cmd2_valid &&
-                      !clear_rsp_pending && !rotate_rsp_pending;
+                      !clear_rsp_pending && !rotate_rsp_pending &&
+                      !clear_decode_pending && !rotate_decode_pending &&
+                      !clear_apply_pending && !rotate_apply_pending &&
+                      !decode_issue_pending &&
+                      !cmd_issue_pending;
 
   always @(*) begin
-    clicked_sprite_type = bg_rsp_rdata[6:1];
-    clicked_rotation = bg_rsp_rdata[8:7];
-    clicked_is_two_cell = bg_rsp_rdata[0] && IsTwoCellSprite(bg_rsp_rdata[6:1]);
-    clicked_is_left_half = IsLeftSprite(bg_rsp_rdata[6:1]);
-    pair_step_x = PairStepX(bg_rsp_rdata[8:7]);
-    pair_step_y = PairStepY(bg_rsp_rdata[8:7]);
-    partner_sprite_type = PairSpriteType(bg_rsp_rdata[6:1]);
+    clicked_sprite_type = rsp_data_hold[6:1];
+    clicked_rotation = rsp_data_hold[8:7];
+    clicked_is_two_cell = rsp_data_hold[0] && IsTwoCellSprite(rsp_data_hold[6:1]);
+    clicked_is_left_half = IsLeftSprite(rsp_data_hold[6:1]);
+    pair_step_x = PairStepX(rsp_data_hold[8:7]);
+    pair_step_y = PairStepY(rsp_data_hold[8:7]);
+    partner_sprite_type = PairSpriteType(rsp_data_hold[6:1]);
     primary_sprite_type = clicked_is_left_half ? clicked_sprite_type : partner_sprite_type;
     secondary_sprite_type = clicked_is_left_half ? partner_sprite_type : clicked_sprite_type;
-    next_rotation_value = bg_rsp_rdata[8:7] + 2'b01;
+    next_rotation_value = rsp_data_hold[8:7] + 2'b01;
     next_pair_step_x = PairStepX(next_rotation_value);
     next_pair_step_y = PairStepY(next_rotation_value);
 
@@ -350,6 +400,52 @@ module InteractionController #(
       readback_is_clear <= 1'b0;
       clear_rsp_pending <= 1'b0;
       rotate_rsp_pending <= 1'b0;
+      clear_decode_pending <= 1'b0;
+      rotate_decode_pending <= 1'b0;
+      clear_apply_pending <= 1'b0;
+      rotate_apply_pending <= 1'b0;
+      decode_issue_pending <= 1'b0;
+      decode_cmd0_valid <= 1'b0;
+      decode_cmd0_write <= 1'b1;
+      decode_cmd0_addr <= 0;
+      decode_cmd0_wdata <= 0;
+      decode_cmd1_valid <= 1'b0;
+      decode_cmd1_write <= 1'b1;
+      decode_cmd1_addr <= 0;
+      decode_cmd1_wdata <= 0;
+      decode_cmd2_valid <= 1'b0;
+      decode_cmd2_write <= 1'b1;
+      decode_cmd2_addr <= 0;
+      decode_cmd2_wdata <= 0;
+      decode_readback_is_clear <= 1'b0;
+      decode_rotate_addr <= 0;
+      decode_rotate_cell_i <= 0;
+      decode_rotate_cell_j <= 0;
+      cmd_issue_pending <= 1'b0;
+      issue_cmd0_valid <= 1'b0;
+      issue_cmd0_write <= 1'b1;
+      issue_cmd0_addr <= 0;
+      issue_cmd0_wdata <= 0;
+      issue_cmd1_valid <= 1'b0;
+      issue_cmd1_write <= 1'b1;
+      issue_cmd1_addr <= 0;
+      issue_cmd1_wdata <= 0;
+      issue_cmd2_valid <= 1'b0;
+      issue_cmd2_write <= 1'b1;
+      issue_cmd2_addr <= 0;
+      issue_cmd2_wdata <= 0;
+      rsp_data_hold <= 0;
+      decoded_is_two_cell <= 1'b0;
+      decoded_origin_cell_valid <= 1'b0;
+      decoded_partner_cell_valid <= 1'b0;
+      decoded_next_partner_cell_valid <= 1'b0;
+      decoded_origin_cell_addr <= 0;
+      decoded_partner_cell_addr <= 0;
+      decoded_next_partner_cell_addr <= 0;
+      decoded_primary_sprite_type <= 0;
+      decoded_secondary_sprite_type <= 0;
+      decoded_next_rotation_value <= 0;
+      decoded_rotated_cell_data <= 0;
       rotate_addr <= 0;
       rotate_cell_i <= 0;
       rotate_cell_j <= 0;
@@ -358,7 +454,11 @@ module InteractionController #(
     end else begin
       if (frame_start_pulse) begin
         if (decode_pending || cmd0_valid || cmd1_valid || cmd2_valid ||
-            clear_rsp_pending || rotate_rsp_pending) begin
+            clear_rsp_pending || rotate_rsp_pending ||
+            clear_decode_pending || rotate_decode_pending ||
+            clear_apply_pending || rotate_apply_pending ||
+            decode_issue_pending ||
+            cmd_issue_pending) begin
           frame_drop_flag <= 1'b1;
         end
         decode_pending <= 1'b1;
@@ -368,9 +468,32 @@ module InteractionController #(
         readback_is_clear <= 1'b0;
         clear_rsp_pending <= 1'b0;
         rotate_rsp_pending <= 1'b0;
+        clear_decode_pending <= 1'b0;
+        rotate_decode_pending <= 1'b0;
+        clear_apply_pending <= 1'b0;
+        rotate_apply_pending <= 1'b0;
+        decode_issue_pending <= 1'b0;
+        cmd_issue_pending <= 1'b0;
       end else begin
         if (decode_pending) begin
           decode_pending <= 1'b0;
+          decode_issue_pending <= 1'b0;
+          decode_cmd0_valid <= 1'b0;
+          decode_cmd0_write <= 1'b1;
+          decode_cmd0_addr <= 0;
+          decode_cmd0_wdata <= 0;
+          decode_cmd1_valid <= 1'b0;
+          decode_cmd1_write <= 1'b1;
+          decode_cmd1_addr <= 0;
+          decode_cmd1_wdata <= 0;
+          decode_cmd2_valid <= 1'b0;
+          decode_cmd2_write <= 1'b1;
+          decode_cmd2_addr <= 0;
+          decode_cmd2_wdata <= 0;
+          decode_readback_is_clear <= 1'b0;
+          decode_rotate_addr <= 0;
+          decode_rotate_cell_i <= 0;
+          decode_rotate_cell_j <= 0;
           if ((mode_select == ModeRotateCell) && draw_target_cell_valid && single_action) begin
             if (rotate_frame_holdoff != 0) begin
               rotate_frame_holdoff <= rotate_frame_holdoff - 1'b1;
@@ -384,137 +507,148 @@ module InteractionController #(
           case (mode_select)
             ModeDrawWires: begin
               if (draw_cmd_valid) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= draw_cmd_wdata;
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= draw_cmd_wdata;
               end
             end
 
             ModeDrawJunction: begin
               if (draw_target_cell_valid && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= MakeCellData(2'b00, SpriteJunction);
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteJunction);
               end
             end
 
             ModeDrawElbow: begin
               if (draw_target_cell_valid && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= MakeCellData(2'b00, SpriteElbow);
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteElbow);
               end
             end
 
             ModeDrawTee: begin
               if (draw_target_cell_valid && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= MakeCellData(2'b00, SpriteTee);
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteTee);
               end
             end
 
             ModeDrawResistor: begin
               if (dual_cell_fits && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= MakeCellData(2'b00, SpriteResLeft);
-                cmd1_valid <= 1'b1;
-                cmd1_write <= 1'b1;
-                cmd1_addr <= second_cell_addr;
-                cmd1_wdata <= MakeCellData(2'b00, SpriteResRight);
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteResLeft);
+                decode_cmd1_valid <= 1'b1;
+                decode_cmd1_write <= 1'b1;
+                decode_cmd1_addr <= second_cell_addr;
+                decode_cmd1_wdata <= MakeCellData(2'b00, SpriteResRight);
               end
             end
 
             ModeDrawVoltage: begin
               if (dual_cell_fits && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= MakeCellData(2'b00, SpriteVoltLeft);
-                cmd1_valid <= 1'b1;
-                cmd1_write <= 1'b1;
-                cmd1_addr <= second_cell_addr;
-                cmd1_wdata <= MakeCellData(2'b00, SpriteVoltRight);
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteVoltLeft);
+                decode_cmd1_valid <= 1'b1;
+                decode_cmd1_write <= 1'b1;
+                decode_cmd1_addr <= second_cell_addr;
+                decode_cmd1_wdata <= MakeCellData(2'b00, SpriteVoltRight);
               end
             end
 
             ModeDrawCurrent: begin
               if (dual_cell_fits && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= MakeCellData(2'b00, SpriteCurrLeft);
-                cmd1_valid <= 1'b1;
-                cmd1_write <= 1'b1;
-                cmd1_addr <= second_cell_addr;
-                cmd1_wdata <= MakeCellData(2'b00, SpriteCurrRight);
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteCurrLeft);
+                decode_cmd1_valid <= 1'b1;
+                decode_cmd1_write <= 1'b1;
+                decode_cmd1_addr <= second_cell_addr;
+                decode_cmd1_wdata <= MakeCellData(2'b00, SpriteCurrRight);
               end
             end
 
             ModeDrawInductor: begin
               if (dual_cell_fits && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= MakeCellData(2'b00, SpriteIndLeft);
-                cmd1_valid <= 1'b1;
-                cmd1_write <= 1'b1;
-                cmd1_addr <= second_cell_addr;
-                cmd1_wdata <= MakeCellData(2'b00, SpriteIndRight);
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteIndLeft);
+                decode_cmd1_valid <= 1'b1;
+                decode_cmd1_write <= 1'b1;
+                decode_cmd1_addr <= second_cell_addr;
+                decode_cmd1_wdata <= MakeCellData(2'b00, SpriteIndRight);
               end
             end
 
             ModeDrawCapacitor: begin
               if (dual_cell_fits && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= MakeCellData(2'b00, SpriteCapLeft);
-                cmd1_valid <= 1'b1;
-                cmd1_write <= 1'b1;
-                cmd1_addr <= second_cell_addr;
-                cmd1_wdata <= MakeCellData(2'b00, SpriteCapRight);
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteCapLeft);
+                decode_cmd1_valid <= 1'b1;
+                decode_cmd1_write <= 1'b1;
+                decode_cmd1_addr <= second_cell_addr;
+                decode_cmd1_wdata <= MakeCellData(2'b00, SpriteCapRight);
               end
             end
 
             ModeDrawGround: begin
               if (draw_target_cell_valid && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b1;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= MakeCellData(2'b00, SpriteGround);
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b1;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteGround);
               end
             end
 
             ModeClearCell: begin
               if (draw_target_cell_valid && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b0;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= {DataWidth{1'b0}};
-                rotate_addr <= draw_cmd_addr;
-                rotate_cell_i <= draw_target_cell_i;
-                rotate_cell_j <= draw_target_cell_j;
-                readback_is_clear <= 1'b1;
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b0;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= {DataWidth{1'b0}};
+                decode_rotate_addr <= draw_cmd_addr;
+                decode_rotate_cell_i <= draw_target_cell_i;
+                decode_rotate_cell_j <= draw_target_cell_j;
+                decode_readback_is_clear <= 1'b1;
               end
             end
 
             ModeRotateCell: begin
               if ((rotate_frame_holdoff == 0) && draw_target_cell_valid && single_action) begin
-                cmd0_valid <= 1'b1;
-                cmd0_write <= 1'b0;
-                cmd0_addr <= draw_cmd_addr;
-                cmd0_wdata <= {DataWidth{1'b0}};
-                rotate_addr <= draw_cmd_addr;
-                rotate_cell_i <= draw_target_cell_i;
-                rotate_cell_j <= draw_target_cell_j;
-                readback_is_clear <= 1'b0;
+                decode_issue_pending <= 1'b1;
+                decode_cmd0_valid <= 1'b1;
+                decode_cmd0_write <= 1'b0;
+                decode_cmd0_addr <= draw_cmd_addr;
+                decode_cmd0_wdata <= {DataWidth{1'b0}};
+                decode_rotate_addr <= draw_cmd_addr;
+                decode_rotate_cell_i <= draw_target_cell_i;
+                decode_rotate_cell_j <= draw_target_cell_j;
               end
             end
 
@@ -552,46 +686,130 @@ module InteractionController #(
           end
         end
 
-        if (clear_rsp_pending && bg_rsp_valid) begin
-          clear_rsp_pending <= 1'b0;
-          if (clicked_is_two_cell && origin_cell_valid && partner_cell_valid) begin
-            cmd0_valid <= 1'b1;
-            cmd0_write <= 1'b1;
-            cmd0_addr <= origin_cell_addr;
-            cmd0_wdata <= {DataWidth{1'b0}};
-            cmd1_valid <= 1'b1;
-            cmd1_write <= 1'b1;
-            cmd1_addr <= partner_cell_addr;
-            cmd1_wdata <= {DataWidth{1'b0}};
+        if (decode_issue_pending) begin
+          decode_issue_pending <= 1'b0;
+          cmd0_valid <= decode_cmd0_valid;
+          cmd0_write <= decode_cmd0_write;
+          cmd0_addr <= decode_cmd0_addr;
+          cmd0_wdata <= decode_cmd0_wdata;
+          cmd1_valid <= decode_cmd1_valid;
+          cmd1_write <= decode_cmd1_write;
+          cmd1_addr <= decode_cmd1_addr;
+          cmd1_wdata <= decode_cmd1_wdata;
+          cmd2_valid <= decode_cmd2_valid;
+          cmd2_write <= decode_cmd2_write;
+          cmd2_addr <= decode_cmd2_addr;
+          cmd2_wdata <= decode_cmd2_wdata;
+          readback_is_clear <= decode_readback_is_clear;
+          rotate_addr <= decode_rotate_addr;
+          rotate_cell_i <= decode_rotate_cell_i;
+          rotate_cell_j <= decode_rotate_cell_j;
+        end else if (cmd_issue_pending) begin
+          cmd_issue_pending <= 1'b0;
+          cmd0_valid <= issue_cmd0_valid;
+          cmd0_write <= issue_cmd0_write;
+          cmd0_addr <= issue_cmd0_addr;
+          cmd0_wdata <= issue_cmd0_wdata;
+          cmd1_valid <= issue_cmd1_valid;
+          cmd1_write <= issue_cmd1_write;
+          cmd1_addr <= issue_cmd1_addr;
+          cmd1_wdata <= issue_cmd1_wdata;
+          cmd2_valid <= issue_cmd2_valid;
+          cmd2_write <= issue_cmd2_write;
+          cmd2_addr <= issue_cmd2_addr;
+          cmd2_wdata <= issue_cmd2_wdata;
+        end else if (clear_apply_pending) begin
+          clear_apply_pending <= 1'b0;
+          cmd_issue_pending <= 1'b1;
+          issue_cmd0_valid <= 1'b1;
+          issue_cmd0_write <= 1'b1;
+          issue_cmd1_valid <= 1'b0;
+          issue_cmd1_write <= 1'b1;
+          issue_cmd1_addr <= 0;
+          issue_cmd1_wdata <= 0;
+          issue_cmd2_valid <= 1'b0;
+          issue_cmd2_write <= 1'b1;
+          issue_cmd2_addr <= 0;
+          issue_cmd2_wdata <= 0;
+          if (decoded_is_two_cell && decoded_origin_cell_valid && decoded_partner_cell_valid) begin
+            issue_cmd0_addr <= decoded_origin_cell_addr;
+            issue_cmd0_wdata <= {DataWidth{1'b0}};
+            issue_cmd1_valid <= 1'b1;
+            issue_cmd1_addr <= decoded_partner_cell_addr;
+            issue_cmd1_wdata <= {DataWidth{1'b0}};
           end else begin
-            cmd0_valid <= 1'b1;
-            cmd0_write <= 1'b1;
-            cmd0_addr <= rotate_addr;
-            cmd0_wdata <= {DataWidth{1'b0}};
+            issue_cmd0_addr <= rotate_addr;
+            issue_cmd0_wdata <= {DataWidth{1'b0}};
           end
+        end else if (rotate_apply_pending) begin
+          rotate_apply_pending <= 1'b0;
+          cmd_issue_pending <= 1'b1;
+          issue_cmd0_valid <= 1'b0;
+          issue_cmd0_write <= 1'b1;
+          issue_cmd0_addr <= 0;
+          issue_cmd0_wdata <= 0;
+          issue_cmd1_valid <= 1'b0;
+          issue_cmd1_write <= 1'b1;
+          issue_cmd1_addr <= 0;
+          issue_cmd1_wdata <= 0;
+          issue_cmd2_valid <= 1'b0;
+          issue_cmd2_write <= 1'b1;
+          issue_cmd2_addr <= 0;
+          issue_cmd2_wdata <= 0;
+          if (decoded_is_two_cell && decoded_origin_cell_valid &&
+              decoded_partner_cell_valid && decoded_next_partner_cell_valid) begin
+            issue_cmd0_valid <= 1'b1;
+            issue_cmd0_addr <= decoded_origin_cell_addr;
+            issue_cmd0_wdata <= MakeCellData(decoded_next_rotation_value, decoded_primary_sprite_type);
+            issue_cmd1_valid <= 1'b1;
+            issue_cmd1_addr <= decoded_next_partner_cell_addr;
+            issue_cmd1_wdata <= MakeCellData(decoded_next_rotation_value, decoded_secondary_sprite_type);
+            if (decoded_partner_cell_addr != decoded_next_partner_cell_addr) begin
+              issue_cmd2_valid <= 1'b1;
+              issue_cmd2_addr <= decoded_partner_cell_addr;
+              issue_cmd2_wdata <= {DataWidth{1'b0}};
+            end
+          end else if (!decoded_is_two_cell) begin
+            issue_cmd0_valid <= 1'b1;
+            issue_cmd0_addr <= rotate_addr;
+            issue_cmd0_wdata <= decoded_rotated_cell_data;
+          end
+        end else if (clear_decode_pending) begin
+          clear_decode_pending <= 1'b0;
+          clear_apply_pending <= 1'b1;
+          decoded_is_two_cell <= clicked_is_two_cell;
+          decoded_origin_cell_valid <= origin_cell_valid;
+          decoded_partner_cell_valid <= partner_cell_valid;
+          decoded_next_partner_cell_valid <= next_partner_cell_valid;
+          decoded_origin_cell_addr <= origin_cell_addr;
+          decoded_partner_cell_addr <= partner_cell_addr;
+          decoded_next_partner_cell_addr <= next_partner_cell_addr;
+          decoded_primary_sprite_type <= primary_sprite_type;
+          decoded_secondary_sprite_type <= secondary_sprite_type;
+          decoded_next_rotation_value <= next_rotation_value;
+          decoded_rotated_cell_data <= RotateCellData(rsp_data_hold);
+        end else if (rotate_decode_pending) begin
+          rotate_decode_pending <= 1'b0;
+          rotate_apply_pending <= 1'b1;
+          decoded_is_two_cell <= clicked_is_two_cell;
+          decoded_origin_cell_valid <= origin_cell_valid;
+          decoded_partner_cell_valid <= partner_cell_valid;
+          decoded_next_partner_cell_valid <= next_partner_cell_valid;
+          decoded_origin_cell_addr <= origin_cell_addr;
+          decoded_partner_cell_addr <= partner_cell_addr;
+          decoded_next_partner_cell_addr <= next_partner_cell_addr;
+          decoded_primary_sprite_type <= primary_sprite_type;
+          decoded_secondary_sprite_type <= secondary_sprite_type;
+          decoded_next_rotation_value <= next_rotation_value;
+          decoded_rotated_cell_data <= RotateCellData(rsp_data_hold);
+        end else if (clear_rsp_pending && bg_rsp_valid) begin
+          clear_rsp_pending <= 1'b0;
+          clear_decode_pending <= 1'b1;
+          rsp_data_hold <= bg_rsp_rdata;
         end else if (rotate_rsp_pending && bg_rsp_valid) begin
           rotate_rsp_pending <= 1'b0;
-          if (clicked_is_two_cell && origin_cell_valid && partner_cell_valid && next_partner_cell_valid) begin
-            cmd0_valid <= 1'b1;
-            cmd0_write <= 1'b1;
-            cmd0_addr <= origin_cell_addr;
-            cmd0_wdata <= MakeCellData(next_rotation_value, primary_sprite_type);
-            cmd1_valid <= 1'b1;
-            cmd1_write <= 1'b1;
-            cmd1_addr <= next_partner_cell_addr;
-            cmd1_wdata <= MakeCellData(next_rotation_value, secondary_sprite_type);
-            if (partner_cell_addr != next_partner_cell_addr) begin
-              cmd2_valid <= 1'b1;
-              cmd2_write <= 1'b1;
-              cmd2_addr <= partner_cell_addr;
-              cmd2_wdata <= {DataWidth{1'b0}};
-            end
-          end else if (!clicked_is_two_cell) begin
-            cmd0_valid <= 1'b1;
-            cmd0_write <= 1'b1;
-            cmd0_addr <= rotate_addr;
-            cmd0_wdata <= RotateCellData(bg_rsp_rdata);
-          end
+          rotate_decode_pending <= 1'b1;
+          rsp_data_hold <= bg_rsp_rdata;
         end
       end
     end

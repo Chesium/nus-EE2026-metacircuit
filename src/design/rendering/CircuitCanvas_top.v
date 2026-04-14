@@ -332,32 +332,19 @@ TextBox #(
     .text_enable (text_rendered),
     .text_color (text_rgb)
 );
-// ==============================================================================
-// 动态定点数 (Q8.8) 测试逻辑
-// ==============================================================================
 
-// 1. 信号定义
 wire text_rendered_val;
 wire signed [15:0] dynamic_value_q8_8; // Q8.8 格式：[15:8]整数，[7:0]小数
 
-// 2. 生成缓慢变化的计数器 (用于模拟小数部分)
-// 使用 32 位计数器，取最高 8 位 [31:24]
-// 变化频率 ≈ 100MHz / 2^24 ≈ 5.96 Hz (每秒变化约 6 次，肉眼清晰可见)
 reg [31:0] slow_counter;
 always @(posedge CLK100MHZ) begin
     slow_counter <= slow_counter + 1'b1;
 end
 
-// 提取小数部分 (8 位)
 wire [7:0] fractional_part = slow_counter[31:24]; 
 
-// 3. 构造 Q8.8 定点数
-// 逻辑：(鼠标 X 低 8 位 << 8) + 小数部分
-// 效果：整数部分随鼠标移动，小数部分自动滚动。当小数从 .99 变回 .00 时，整数会自动 +1 (进位测试)
 assign dynamic_value_q8_8 = ({mouse_xpos[7:0], 8'd0}) + {8'd0, fractional_part};
 
-// 4. 例化动态文本显示模块
-// 显示内容示例：鼠标在 123，小数在 0.45 -> 显示 "123.45"
 DynamicTextDisplay #(
     .TOTAL_BITS   (16),       // 输入总位宽 16
     .FRAC_BITS    (8),        // 【关键】小数位数设为 8 (匹配 Q8.8)

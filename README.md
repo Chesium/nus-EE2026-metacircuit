@@ -1,11 +1,14 @@
 # MetaCircuit
 
+- **Team Member:** Chen Shimin, Hsu Yuchen, Xie Ziyi, Wang Zhirui
+- **Final Grade: A**
+
 An interactive circuit design and visualization system built on the Digilent Basys 3 FPGA.
 
 NUS EE2026 AY2025/26 Semester 2, Session 1 Group 9.
 
 <p align="center">
-  <img src="assets/before-assessment.jpg" alt="MetaCircuit running on a Basys 3 during the final assessment" width="92%">
+  <img src="assets/demo.jpg" alt="MetaCircuit" width="50%">
 </p>
 
 MetaCircuit turns the FPGA into a mouse-driven circuit editor. Users draw a circuit on a 640x480 VGA canvas, edit component values with an on-screen keyboard, inspect connectivity, and send the extracted netlist to a floating-point DC solver.
@@ -150,15 +153,6 @@ See [`src/uart_link/README.md`](src/uart_link/README.md) for packet formats and 
 - [FDP requirements](docs/EE2026%20FDP%20Requirements.pdf)
 - [Project proposal](docs/EE2026%20FDP%20Proposal.pdf)
 - [Final report](docs/EE2026%20FDP%20Final%20Report.pdf)
-
-## Team
-
-| Member | Main contribution |
-| --- | --- |
-| Chen Shimin | Circuit canvas, component storage, VGA path, and backend architecture |
-| Hsu Yuchen | Waveform visualization, current display, buffering, and panning |
-| Xie Ziyi | Toolbar, drawing interaction, keyboard input, and system control |
-| Wang Zhirui | Property panel, matrix/text displays, and OLED calculator |
 
 ## IDE setup
 

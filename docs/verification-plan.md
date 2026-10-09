@@ -34,7 +34,7 @@ the same observables for comparison.
 | ID | Milestone | Status |
 |----|-----------|--------|
 | M0 | Harness bring-up: framescope runs metacircuit on local Verilator; VGA timing correct | done |
-| M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | not started |
+| M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | golden v1 ready for human testing; RTL comparison not run yet |
 | M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | not started |
 | M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | not started |
 | M4 | Lockstep sessions, coverage, agent interface (MCP) | not started |
@@ -47,11 +47,11 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 
 ### framescope (FS)
 
-- [ ] FS-1 (P0) Sub-frame event timing: `[[event]] frame = N, line = L` so inputs can change in the back porch, after the RTL's VSYNC capture edge.
-- [ ] FS-2 (P0) Per-frame probes: sample named internal expressions at a fixed point in each frame (frame counter, `mode_select`, `grid_pos_x/y`, init-done) and report them in the frame JSON. Needed to align RTL frames with golden frames.
-- [ ] FS-3 (P0) Memory dumps: write CellStore / ComponentStore contents at the end of chosen frames (JSON or hex) for state-level comparison.
-- [ ] FS-4 (P0) `framescope compare`: frames vs reference PNGs with region masks; diff PNG, per-region pixel counts, bounding boxes. Already listed as planned in framescope's `docs/architecture.md`.
-- [ ] FS-5 (P0) Batch runner: many scenarios against one build, parallel processes, one JSON summary.
+- [x] FS-1 (P0) Sub-frame event timing: `[[event]] frame = N, line = L` so inputs can change in the back porch, after the RTL's VSYNC capture edge.
+- [x] FS-2 (P0) Per-frame probes: sample named internal expressions at a fixed point in each frame (frame counter, `mode_select`, `grid_pos_x/y`, init-done) and report them in the frame JSON. Needed to align RTL frames with golden frames.
+- [x] FS-3 (P0) Memory dumps: write CellStore / ComponentStore contents at the end of chosen frames (JSON or hex) for state-level comparison.
+- [x] FS-4 (P0) `framescope compare`: frames vs reference PNGs with region masks; diff PNG, per-region pixel counts, bounding boxes. Already listed as planned in framescope's `docs/architecture.md`.
+- [x] FS-5 (P0) Batch runner: many scenarios against one build, parallel processes, one JSON summary.
 - [ ] FS-6 (P1) Speed: checkpoint after boot (Verilator `--savable`), restore per scenario; option to skip PNG encoding; try `--threads`. Baseline: ~1.1 s per frame, so a 300-frame scenario is ~5.5 min.
 - [ ] FS-7 (P1) UART monitor (decode `RsTx` lines into the report) and RX driver (scripted lines, or a host process such as `src/uart_link`'s simulated solver).
 - [ ] FS-8 (P1) Seeded X-initialisation (`+verilator+rand+reset`) to expose reset bugs that `--x-initial fast` hides.
@@ -62,18 +62,18 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 
 ### RTL design-for-test (RTL)
 
-- [ ] RTL-1 (P0) Make `global_anim_phase` frame-locked. Today it advances every 1,000,000 pixel clocks (40 ms) while a frame is 420,000 clocks, so the phase changes mid-frame on a different line each time (`src/design/rendering/GlobalRender_top.v:1101`). Advance on VSYNC every N frames instead (D-009).
-- [ ] RTL-2 (P0) Latch the cursor position once per frame for `MouseDisplay`, so an input change mid-frame cannot tear the cursor.
-- [ ] RTL-3 (P0) Measure and document the input-to-effect latency (mouse change, then capture, then command, then ping-pong swap, then visible) as a spec constant the golden model uses.
+- [x] RTL-1 (P0) Make `global_anim_phase` frame-locked. Today it advances every 1,000,000 pixel clocks (40 ms) while a frame is 420,000 clocks, so the phase changes mid-frame on a different line each time (`src/design/rendering/GlobalRender_top.v:1101`). Advance on VSYNC every N frames instead (D-009).
+- [x] RTL-2 (P0) Latch the cursor position once per frame for `MouseDisplay`, so an input change mid-frame cannot tear the cursor.
+- [x] RTL-3 (P0) Measure and document the input-to-effect latency (mouse change, then capture, then command, then ping-pong swap, then visible) as a spec constant the golden model uses.
 - [ ] RTL-4 (P1) Make the frontend UART path testable in simulation: it is gated by `SW[5]` and `RsRx` idles, so no solver ever replies and the voltage display is never exercised.
 - [ ] RTL-5 (P1) Make the framescope mouse stub honour `setmax_x/y` and `setx/sety` like the Digilent controller, or confirm it is out of scope for M1-M3 (D-010).
 
 ### Golden model (GM)
 
-- [ ] GM-1 (P0) Core state model (TypeScript, `golden/`; D-005, D-006): CellStore, ComponentStore, tool mode, pan offset, property-panel state; `step(state, mouse_snapshot) -> state` at frame granularity, matching the RTL's per-frame mouse capture.
-- [ ] GM-2 (P0) Interaction semantics for M1: tool selection, draw wire/junction/elbow/tee/ground, place R/L/C/V/I, rotate (incl. `RotateFramesPerStep` holdoff), delete, pan with clamping. Source of truth: `structure.md` and the final report, not a transliteration of `InteractionController.v` (D-007).
-- [ ] GM-3 (P0) State export in the same format as the FS-3 RAM dumps.
-- [ ] GM-4 (P1) Asset extraction script: sprite functions and palette in `CircuitCanvas.v`, `FontROM.v`, toolbar and keypad icons, cursor bitmaps, into JSON.
+- [x] GM-1 (P0) Core state model (TypeScript, `golden/`; D-005, D-006): CellStore, ComponentStore, tool mode, pan offset, property-panel state; `step(state, mouse_snapshot) -> state` at frame granularity, matching the RTL's per-frame mouse capture.
+- [x] GM-2 (P0) Interaction semantics for M1: tool selection, draw wire/junction/elbow/tee/ground, place R/L/C/V/I, rotate (incl. `RotateFramesPerStep` holdoff), delete, pan with clamping. Source of truth: `structure.md` and the final report, not a transliteration of `InteractionController.v` (D-007).
+- [x] GM-3 (P0) State export in the same format as the FS-3 RAM dumps.
+- [x] GM-4 (P1) Asset extraction script: sprite functions and palette in `CircuitCanvas.v`, `FontROM.v`, toolbar and keypad icons, cursor bitmaps, into JSON.
 - [ ] GM-5 (P1) Renderer: `render(state, t) -> 640x480 RGB444`, pixel-exact, from the GM-4 assets.
 - [ ] GM-6 (P1) Cell decoder: classify each visible grid cell of a frame into (sprite, rotation, colour) using the GM-4 assets, so mismatches read as "cell (3,4) is RL rot 1, expected RR rot 1".
 - [ ] GM-7 (P1) Backend: flooding, component node extraction, stamping, DC solve; differential test against the simpyhls DSL kernels (`simpyhls/examples/*.dsl.py`) on random circuits.
@@ -81,8 +81,8 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 
 ### Scenarios and web shell (SC)
 
-- [ ] SC-1 (P0) Scenario format: per-frame mouse states plus macros (`click_tool`, `click_cell`, `drag`); compilers to golden input and to framescope `stim.toml`.
-- [ ] SC-2 (P0) One hand-written M1 scenario that exercises every canvas tool.
+- [x] SC-1 (P0) Scenario format: per-frame mouse states plus macros (`click_tool`, `click_cell`, `drag`); compilers to golden input and to framescope `stim.toml`.
+- [x] SC-2 (P0) One hand-written M1 scenario that exercises every canvas tool.
 - [ ] SC-3 (P1) Web shell: 640x480 canvas drawn with `putImageData`, scaled nearest-neighbour; mouse mapped to per-frame snapshots; record and replay sessions as scenario files.
 - [ ] SC-4 (P1) Playwright tests that replay scenarios in the web shell and check against the headless golden output.
 - [ ] SC-5 (P1) Human test sessions on the web shell; triage every RTL/golden mismatch (D-007).
@@ -92,6 +92,7 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [ ] INF-1 Merge `fix/vga-timing` (metacircuit) and `native-verilator-json-ports` (framescope) into their default branches.
 - [ ] INF-2 framescope's `examples/metacircuit/framescope.toml` defaults `METACIRCUIT` to `../../../EE2026/metacircuit`; this checkout needs `METACIRCUIT=<path>/nus-EE2026-metacircuit`. Change the default or document it.
 - [ ] INF-3 One framescope test run under the docker runtime failed once with an error that did not reproduce in 10 later runs; traceback was not captured. Watch for it.
+- [ ] RTL-6 (P1) The keypad samples the mouse on a free-running 20 Hz `clk_nav`, not frame-locked; its state lags the cursor by several frames.
 - [ ] INF-4 CI: framescope unit tests + metacircuit integration test on the pinned container (Verilator 5.020); native 5.046 as a second job.
 
 ## Decisions made
@@ -137,3 +138,8 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 - 2026-10-09: framescope's timing report exposed the `VGAControl` off-by-one; fixed with sync/blanking alignment (`c5fee06`, branch `fix/vga-timing`). Column 639 now renders; all other pixels unchanged across a 5-frame click scenario.
 - 2026-10-09: Plan written (this document).
 - 2026-10-09: Q-001 to Q-008 settled with the recommended options (D-005 to D-012).
+- 2026-10-09: RTL-1/RTL-2 (`34dc50e`): pixel-domain mouse latched at the VSYNC edge; animation steps every 2 frames. Idle frames now come in identical CRC pairs.
+- 2026-10-09: framescope FS-1..FS-5 on branch `m1-harness` (merge `77ff7aa`): line-timed events, probes, memory dumps, `compare`, `batch`. 70 tests pass on native and docker.
+- 2026-10-09: RTL-3 measured: an input changed in frame N's back porch is visible in frame N+1 (cursor, hover, toolbar, canvas edits; the edit lands in vertical blanking, no tearing). Dumps at the end of frame N+1 show it.
+- 2026-10-09: framescope findings: CellStore is mirrored, not double-buffered; boot clear skips cells 1 and 2; ComponentStore entries above the count are stale; horizontal pan range is 0.
+- 2026-10-09: Golden v1 in `golden/` (GM-1..GM-4, SC-1, SC-2): 71 unit tests, 2 Playwright tests, assets pixel-exact against RTL frames. 21 assumptions in `golden/ASSUMPTIONS.md` await human testing.

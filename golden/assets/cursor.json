@@ -1,0 +1,376 @@
+{
+  "schema": "metacircuit-assets/cursor",
+  "schema_version": 1,
+  "source": {
+    "generator": "golden/tools/extract_assets.py",
+    "rtl_commit": "2044980df64a2d08a92e315d0e713c1939322198",
+    "rtl_commit_meaning": "last git commit that touched any of the files below (`git log -1 --format=%H -- <files>`); file contents are pinned by sha256",
+    "files": [
+      {
+        "path": "src/design/rendering/MouseDisplay.vhd",
+        "sha256": "110ca59e31f7b5a4440be51a6a7b5b47e8ea2d572014f0ae9e21842855d4c5c7",
+        "line_ranges": {
+          "CURSOR_SIZE": [
+            213,
+            213
+          ],
+          "fill_row": [
+            182,
+            211
+          ],
+          "hover_row": [
+            83,
+            114
+          ],
+          "pressed_fill_row": [
+            149,
+            180
+          ],
+          "pressed_row": [
+            116,
+            147
+          ],
+          "render: colours": [
+            287,
+            294
+          ],
+          "render: enable register": [
+            271,
+            274
+          ],
+          "render: fill = fill_row OR (pressed AND pressed_fill_row)": [
+            257,
+            258
+          ],
+          "render: hover outline": [
+            250,
+            250
+          ],
+          "render: lookup bounds": [
+            246,
+            246
+          ],
+          "render: outline wins, MSB-first": [
+            255,
+            256
+          ],
+          "render: pressed outline": [
+            248,
+            248
+          ],
+          "render: xdiff is 5 bits": [
+            226,
+            226
+          ],
+          "render: ydiff is 5 bits": [
+            233,
+            233
+          ]
+        }
+      }
+    ]
+  },
+  "cross_check": "The four tables and the pixel/enable/colour logic were compared with the SV port used in simulation (framescope examples/metacircuit/stubs/MouseDisplay.sv) when this extractor was written: identical. The extractor itself reads only the VHDL.",
+  "size": 28,
+  "sprite_format": {
+    "rows": "rows[r] is cursor row r (r = 0 top)",
+    "chars": "'O' outline, 'F' fill, '.' transparent; char c (0 = leftmost) is bit (27 - c) of the RTL row",
+    "raw_chars": "raw tables: '1'/'0', same order (char c = bit 27 - c)"
+  },
+  "colors": {
+    "O": {
+      "rgb12": "0x000",
+      "rgb24": "#000000"
+    },
+    "F": {
+      "rgb12": "0xFFF",
+      "rgb24": "#ffffff"
+    }
+  },
+  "sprites": {
+    "hover": [
+      "............................",
+      "............................",
+      "....OO......................",
+      "..OOOOO.....................",
+      "..OOFFOO..........O.........",
+      "..OOFFOO..OO.OOOOOOOO.......",
+      "...OFFFOOOOOOOOOOOFOO.......",
+      "...OOFFOOOFFOOFFOOFFOO......",
+      "....OOFFOOFFOOFFOOFFFO......",
+      "....OOFFOOFFFOOFFOOFFOO.....",
+      ".....OOFFOOFFOOFFOOFFFOO....",
+      ".....OOFFFOFFFOOFFOFFFOO....",
+      "......OOFFOOFFFFFFFFFFFOO...",
+      ".......OFFFOFFFFFFFFFFFOO...",
+      ".......OOFFFFFFFFFFFFFFFOO..",
+      "....OOOOOFFFFFFFFFFFFFFFOO..",
+      "...OOOOOOOFFFFFFFFFFFFFFOO..",
+      "..OOFFFFOOOFFFFFFFFFFFFFOO..",
+      "...OOFFFFOFFFFFFFFFFFFFFOO..",
+      "....OOOFFFFFFFFFFFFFFFFOO...",
+      ".....OOOFFFFFFFFFFFFFFOOO...",
+      ".......OOFFFFFFFFFFFFOOO....",
+      "........OOOFFFFFFFFOOO......",
+      ".........OOOFFFFFOOOO.......",
+      "...........OOOOOOOO.........",
+      ".............OOOO...........",
+      "............................",
+      "............................"
+    ],
+    "pressed": [
+      "............................",
+      "............................",
+      "............................",
+      ".........OO..OO.OOOO........",
+      "....FF.OOOOOOOOOOOFOO.......",
+      "....FOOOOOFFOOFFOOFFOO......",
+      "....OOFFOOFFOOFFOOFFFO......",
+      "....OOFFOOFFFOOFFOOFFOO.....",
+      ".....OOFFOOFFOOFFOOFFFOO....",
+      ".....OOFFFOFFFOOFFOFFFOO....",
+      "......OOFFOOFFFFFFFFFFFOO...",
+      "....OOOOFFFOFFFFFFFFFFFOO...",
+      "...OOFOOOFFFFFFFFFFFFFFFOO..",
+      "..OOFFOOOFFFFFFFFFFFFFFFOO..",
+      "..OOFFOOOOFFFFFFFFFFFFFFOO..",
+      "..OOFFFFFOOFFFFFFFFFFFFFOO..",
+      "...OOFFFFFOFFFFFFFFFFFFFOO..",
+      "....OOOFFFFFFFFFFFFFFFFOO...",
+      ".....OOOFFFFFFFFFFFFFFOOO...",
+      ".......OOFFFFFFFFFFFFOOO....",
+      "........OOOFFFFFFFFOOO......",
+      ".........OOOFFFFFOOOO.......",
+      "...........OOOOOOOO.........",
+      "............FOOOO...........",
+      "............................",
+      "............................",
+      "............................",
+      "............................"
+    ]
+  },
+  "sprites_as_displayed": {
+    "hover": [
+      "............................",
+      "............................",
+      "....OO......................",
+      "..OOOOO.....................",
+      "..OOFFOO..........O.........",
+      "..OOFFOO..OO.OOOOOOOO.......",
+      "...OFFFOOOOOOOOOOOFOO.......",
+      "...OOFFOOOFFOOFFOOFFOO......",
+      "....OOFFOOFFOOFFOOFFFO......",
+      "....OOFFOOFFFOOFFOOFFOO.....",
+      ".....OOFFOOFFOOFFOOFFFOO....",
+      ".....OOFFFOFFFOOFFOFFFOO....",
+      "......OOFFOOFFFFFFFFFFFOO...",
+      ".......OFFFOFFFFFFFFFFFOO...",
+      ".......OOFFFFFFFFFFFFFFFOO..",
+      "....OOOOOFFFFFFFFFFFFFFFOO..",
+      "...OOOOOOOFFFFFFFFFFFFFFOO..",
+      "..OOFFFFOOOFFFFFFFFFFFFFOO..",
+      "...OOFFFFOFFFFFFFFFFFFFFOO..",
+      "....OOOFFFFFFFFFFFFFFFFOO...",
+      ".....OOOFFFFFFFFFFFFFFOOO...",
+      ".......OOFFFFFFFFFFFFOOO....",
+      "........OOOFFFFFFFFOOO......",
+      ".........OOOFFFFFOOOO.......",
+      "...........OOOOOOOO.........",
+      ".............OOOO...........",
+      "............................",
+      "............................"
+    ],
+    "pressed": [
+      "............................",
+      "............................",
+      "............................",
+      ".........OO..OO.OOOO........",
+      "....OF.FOOOOOOOOOOFOO.......",
+      "....OOOOOOFFOOFFOOFFOO......",
+      "....OOFFOOFFOOFFOOFFFO......",
+      "....OOFFOOFFFOOFFOOFFOO.....",
+      ".....OOFFOOFFOOFFOOFFFOO....",
+      ".....OOFFFOFFFOOFFOFFFOO....",
+      "......OOFFOOFFFFFFFFFFFOO...",
+      "....OOOOFFFOFFFFFFFFFFFOO...",
+      "...OOFOOOFFFFFFFFFFFFFFFOO..",
+      "..OOFFOOOFFFFFFFFFFFFFFFOO..",
+      "..OOFFOOOOFFFFFFFFFFFFFFOO..",
+      "..OOFFFFFOOFFFFFFFFFFFFFOO..",
+      "...OOFFFFFOFFFFFFFFFFFFFOO..",
+      "....OOOFFFFFFFFFFFFFFFFOO...",
+      ".....OOOFFFFFFFFFFFFFFOOO...",
+      ".......OOFFFFFFFFFFFFOOO....",
+      "........OOOFFFFFFFFOOO......",
+      ".........OOOFFFFFOOOO.......",
+      "...........OOOOOOOO.........",
+      "............OOOOO...........",
+      "............................",
+      "............................",
+      "............................",
+      "............................"
+    ]
+  },
+  "as_displayed_changes": {
+    "hover": [],
+    "pressed": [
+      [
+        4,
+        4
+      ],
+      [
+        4,
+        7
+      ],
+      [
+        5,
+        4
+      ],
+      [
+        23,
+        12
+      ]
+    ],
+    "format": "[row, col] pixels where sprites_as_displayed differs from sprites"
+  },
+  "sprite_selection": "pressed while the (frame-latched) left mouse button is held, else hover",
+  "raw_tables": {
+    "hover_outline": [
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000110000000000000000000000",
+      "0011111000000000000000000000",
+      "0011001100000000001000000000",
+      "0011001100110111111110000000",
+      "0001000111111111110110000000",
+      "0001100111001100110011000000",
+      "0000110011001100110001000000",
+      "0000110011000110011001100000",
+      "0000011001100110011000110000",
+      "0000011000100011001000110000",
+      "0000001100110000000000011000",
+      "0000000100010000000000011000",
+      "0000000110000000000000001100",
+      "0000111110000000000000001100",
+      "0001111111000000000000001100",
+      "0011000011100000000000001100",
+      "0001100001000000000000001100",
+      "0000111000000000000000011000",
+      "0000011100000000000000111000",
+      "0000000110000000000001110000",
+      "0000000011100000000111000000",
+      "0000000001110000011110000000",
+      "0000000000011111111000000000",
+      "0000000000000111100000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000"
+    ],
+    "pressed_outline": [
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000001100110111100000000",
+      "0000000111111111110110000000",
+      "0000011111001100110011000000",
+      "0000110011001100110001000000",
+      "0000110011000110011001100000",
+      "0000011001100110011000110000",
+      "0000011000100011001000110000",
+      "0000001100110000000000011000",
+      "0000111100010000000000011000",
+      "0001101110000000000000001100",
+      "0011001110000000000000001100",
+      "0011001111000000000000001100",
+      "0011000001100000000000001100",
+      "0001100000100000000000001100",
+      "0000111000000000000000011000",
+      "0000011100000000000000111000",
+      "0000000110000000000001110000",
+      "0000000011100000000111000000",
+      "0000000001110000011110000000",
+      "0000000000011111111000000000",
+      "0000000000000111100000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000"
+    ],
+    "fill": [
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000110000000000000000000000",
+      "0000110000000000000000000000",
+      "0000111000000000001000000000",
+      "0000011000110011001100000000",
+      "0000001100110011001110000000",
+      "0000001100111001100110000000",
+      "0000000110011001100111000000",
+      "0000000111011100110111000000",
+      "0000000011001111111111100000",
+      "0000000011101111111111100000",
+      "0000000001111111111111110000",
+      "0000000001111111111111110000",
+      "0000000000111111111111110000",
+      "0000111100011111111111110000",
+      "0000011110111111111111110000",
+      "0000000111111111111111100000",
+      "0000000011111111111111000000",
+      "0000000001111111111110000000",
+      "0000000000011111111000000000",
+      "0000000000001111100000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000"
+    ],
+    "pressed_fill": [
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000001000000000",
+      "0000000000110011001100000000",
+      "0000001100110011001110000000",
+      "0000001100111001100110000000",
+      "0000000110011001100111000000",
+      "0000000111011100110111000000",
+      "0000000011001111111111100000",
+      "0000000011101111111111100000",
+      "0000010001111111111111110000",
+      "0000110001111111111111110000",
+      "0000110000111111111111110000",
+      "0000111110011111111111110000",
+      "0000011111011111111111110000",
+      "0000000111111111111111100000",
+      "0000000011111111111111000000",
+      "0000000001111111111100000000",
+      "0000000000011111111000000000",
+      "0000000000001111100000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000",
+      "0000000000000000000000000000"
+    ],
+    "composition": "outline (hover_outline or pressed_outline) wins; else fill, or pressed_fill when pressed (so pressed fill = fill OR pressed_fill); else transparent"
+  },
+  "placement": {
+    "screen_x": "mouse_x + c + 2",
+    "screen_y": "mouse_y + r",
+    "sprite_origin_offset": [
+      2,
+      0
+    ],
+    "sprite_origin_offset_meaning": "sprite pixel (c=0, r=0) is drawn at (mouse_x + 2, mouse_y)",
+    "visible_columns": [
+      0,
+      26
+    ],
+    "note": "Screen coordinates are VGA x_pos/y_pos (= framescope PNG pixels with de_delay = 2). The +2 comes from MouseDisplay's two pixel-clock register stages (mousepixel, then enable_mouse_display) that the rest of the screen does not have; the range check is made on the delayed hcount, so sprite column 27 is never shown (no sprite uses it: verified empty). Rows have no offset. The cursor is drawn above every other layer.",
+    "colour_hold_quirk": "The colour register is updated only while the previous pixel was enabled, so the first pixel of each horizontal run shows the colour held from the last pixel of the previous run in scan order (for the first run of a frame: the last run of the previous frame's cursor; both sprites end in an outline pixel, so this does not depend on the previous sprite). sprites_as_displayed has this applied and is what the RTL actually shows (verified against framescope frames); the very first frame after reset is the exception (uninitialised register)."
+  },
+  "rtl_literal_notes": []
+}

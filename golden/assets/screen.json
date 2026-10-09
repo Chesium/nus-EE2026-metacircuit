@@ -1,0 +1,332 @@
+{
+  "schema": "metacircuit-assets/screen",
+  "schema_version": 1,
+  "source": {
+    "generator": "golden/tools/extract_assets.py",
+    "rtl_commit": "34dc50ef31592ab94effa30f53d2d8cbf89175da",
+    "rtl_commit_meaning": "last git commit that touched any of the files below (`git log -1 --format=%H -- <files>`); file contents are pinned by sha256",
+    "files": [
+      {
+        "path": "src/design/rendering/GlobalRender_top.v",
+        "sha256": "5f246ec1295ffa8520706e3e8d1dda0653ccfb550ce34135b65b9c953e975ea4",
+        "line_ranges": {
+          "SPRITE_* localparams": [
+            554,
+            568
+          ],
+          "final rgb mux": [
+            3829,
+            3846
+          ],
+          "function toolbar_mode_select": [
+            528,
+            552
+          ],
+          "instance circuit_canvas_inst": [
+            1152,
+            1166
+          ],
+          "instance keyboard_vga_inst": [
+            3225,
+            3239
+          ],
+          "instance toolbar_vga_inst": [
+            3240,
+            3251
+          ],
+          "localparam BACKGROUND": [
+            27,
+            27
+          ],
+          "localparam BLACK": [
+            26,
+            26
+          ],
+          "localparam BOTTOM_BAR_H": [
+            33,
+            33
+          ],
+          "localparam CANVAS_BG_DEFAULT_COLOR_IDX": [
+            60,
+            60
+          ],
+          "localparam CANVAS_CELL_SIZE": [
+            34,
+            34
+          ],
+          "localparam CANVAS_FG_DEFAULT_COLOR_IDX": [
+            59,
+            59
+          ],
+          "localparam CANVAS_GRID_H": [
+            36,
+            36
+          ],
+          "localparam CANVAS_GRID_W": [
+            35,
+            35
+          ],
+          "localparam CANVAS_H": [
+            43,
+            43
+          ],
+          "localparam CANVAS_W": [
+            42,
+            42
+          ],
+          "localparam CANVAS_X0": [
+            40,
+            40
+          ],
+          "localparam CANVAS_Y0": [
+            41,
+            41
+          ],
+          "localparam ENABLE_PROP_PANEL": [
+            53,
+            53
+          ],
+          "localparam ENABLE_WAVEFORMS": [
+            54,
+            54
+          ],
+          "localparam KEYBOARD_H": [
+            71,
+            71
+          ],
+          "localparam KEYBOARD_SCALE": [
+            67,
+            67
+          ],
+          "localparam KEYBOARD_W": [
+            70,
+            70
+          ],
+          "localparam KEYBOARD_X": [
+            75,
+            75
+          ],
+          "localparam KEYBOARD_Y": [
+            77,
+            77
+          ],
+          "localparam KEY_H": [
+            69,
+            69
+          ],
+          "localparam KEY_W": [
+            68,
+            68
+          ],
+          "localparam LEFT_BAR_W": [
+            31,
+            31
+          ],
+          "localparam PROP_PANEL_H": [
+            47,
+            47
+          ],
+          "localparam PROP_PANEL_W": [
+            46,
+            46
+          ],
+          "localparam PROP_PANEL_X": [
+            44,
+            44
+          ],
+          "localparam PROP_PANEL_Y": [
+            45,
+            45
+          ],
+          "localparam RIGHT_BAR_W": [
+            32,
+            32
+          ],
+          "localparam SCREEN_H": [
+            28,
+            28
+          ],
+          "localparam SCREEN_W": [
+            29,
+            29
+          ],
+          "localparam TOP_BAR_H": [
+            30,
+            30
+          ],
+          "ui_rgb composition": [
+            3792,
+            3829
+          ]
+        }
+      },
+      {
+        "path": "src/design/Dashboard/ComponentPropertyPanel.v",
+        "sha256": "e352cac195d725dfacb7c2dba8d4a36fd98cf9a293b239b8f0e283084289e3c8",
+        "line_ranges": {
+          "colour constants": [
+            33,
+            39
+          ]
+        }
+      }
+    ]
+  },
+  "screen": {
+    "w": 640,
+    "h": 480
+  },
+  "background": {
+    "rgb12": "0xECC",
+    "rgb24": "#eecccc"
+  },
+  "blanking": {
+    "rgb12": "0x000",
+    "rgb24": "#000000"
+  },
+  "bars": {
+    "top_bar": {
+      "region": "y < 64",
+      "fill": {
+        "rgb12": "0xEBA",
+        "rgb24": "#eebbaa",
+        "rtl_rgb888": "#E2B2A8"
+      },
+      "grid_line": {
+        "rgb12": "0xEDC",
+        "rgb24": "#eeddcc",
+        "rtl_rgb888": "#EFD2CC"
+      },
+      "boxes": [
+        [
+          32,
+          164,
+          22,
+          48
+        ],
+        [
+          196,
+          324,
+          22,
+          48
+        ],
+        [
+          356,
+          486,
+          22,
+          48
+        ],
+        [
+          518,
+          608,
+          22,
+          48
+        ]
+      ],
+      "box_fill": {
+        "rgb12": "0xEDD",
+        "rgb24": "#eedddd",
+        "rtl_rgb888": "#EED7D1"
+      },
+      "boxes_format": "[x0, x1, y0, y1], half-open"
+    },
+    "left_bar": {
+      "region": "x < 64 and 64 <= y < 352",
+      "fill": {
+        "rgb12": "0xFDB",
+        "rgb24": "#ffddbb",
+        "rtl_rgb888": "#F3D9B8"
+      },
+      "grid_line": {
+        "rgb12": "0xDEF",
+        "rgb24": "#ddeeff",
+        "rtl_rgb888": "#D9E8F2"
+      },
+      "note": "the toolbar (toolbar.json) covers this whole region"
+    },
+    "right_bar": {
+      "region": "x >= 484 and y >= 64",
+      "fill": {
+        "rgb12": "0xDDD",
+        "rgb24": "#dddddd",
+        "rtl_rgb888": "#D0D0D0"
+      },
+      "grid_line": {
+        "rgb12": "0xDDD",
+        "rgb24": "#dddddd",
+        "rtl_rgb888": "#DBDBDB"
+      },
+      "frames": {
+        "rects": [
+          [
+            504,
+            618,
+            84,
+            196
+          ],
+          [
+            504,
+            618,
+            218,
+            326
+          ],
+          [
+            504,
+            618,
+            356,
+            466
+          ]
+        ],
+        "rects_format": "[x0, x1, y0, y1], half-open; only an outline is drawn",
+        "outline_rule_rtl": "if ((x_pos < 506) || (x_pos >= 616) || (y_pos == 84) || (y_pos == 195) || (y_pos == 218) || (y_pos == 325) || (y_pos == 356) || (y_pos == 465)) begin",
+        "color": {
+          "rgb12": "0xFFF",
+          "rgb24": "#ffffff"
+        }
+      }
+    }
+  },
+  "grid_line_rule": "x mod 32 == 0 or y mod 32 == 0 (screen coordinates), inside a bar",
+  "ui_rule": "background; top bar fill, grid lines, then boxes; left bar fill, grid lines, then toolbar; right bar fill, grid lines, then frame outlines",
+  "layer_priority": [
+    "blanking (outside the visible area)",
+    "cursor (cursor.json)",
+    "keypad region (keypad.json)",
+    "canvas region (canvas.json)",
+    "waveforms (ENABLE_WAVEFORMS=0)",
+    "property panel (ENABLE_PROP_PANEL=1; covers 640x64 at (0,0))",
+    "ui (bars and background, above)"
+  ],
+  "property_panel_colors": {
+    "COLOR_BG": {
+      "rgb12": "0xECC",
+      "rgb24": "#eecccc"
+    },
+    "COLOR_TEXT": {
+      "rgb12": "0x210",
+      "rgb24": "#221100"
+    },
+    "COLOR_CAPTION": {
+      "rgb12": "0x754",
+      "rgb24": "#775544"
+    },
+    "COLOR_BORDER": {
+      "rgb12": "0xB86",
+      "rgb24": "#bb8866"
+    },
+    "COLOR_BOX_BG": {
+      "rgb12": "0xFED",
+      "rgb24": "#ffeedd"
+    },
+    "COLOR_BOX_BORDER": {
+      "rgb12": "0xC96",
+      "rgb24": "#cc9966"
+    },
+    "COLOR_BOX_ACTIVE": {
+      "rgb12": "0xFD0",
+      "rgb24": "#ffdd00"
+    }
+  },
+  "property_panel_note": "The property panel (ComponentPropertyPanel.v, text via DynamicTextBox/FontROM) is dynamic content; only its colour constants are extracted here.",
+  "rtl_literal_notes": []
+}

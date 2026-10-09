@@ -1,0 +1,4072 @@
+{
+  "schema": "metacircuit-assets/keypad",
+  "schema_version": 1,
+  "source": {
+    "generator": "golden/tools/extract_assets.py",
+    "rtl_commit": "34dc50ef31592ab94effa30f53d2d8cbf89175da",
+    "rtl_commit_meaning": "last git commit that touched any of the files below (`git log -1 --format=%H -- <files>`); file contents are pinned by sha256",
+    "files": [
+      {
+        "path": "src/design/rendering/KeyboardVGA.v",
+        "sha256": "47e9bebd27d49c2d27e17c165db5468482130ff6f9cd436728e288d0c80651b9",
+        "line_ranges": {
+          "ButtonVGA instances": [
+            273,
+            297
+          ],
+          "button_w_for_id": [
+            257,
+            266
+          ],
+          "button_x0_for_id": [
+            246,
+            255
+          ],
+          "colour palette": [
+            62,
+            75
+          ],
+          "key_ascii_for_id": [
+            104,
+            130
+          ],
+          "key_color_for_id": [
+            132,
+            144
+          ],
+          "key_is_action_for_id": [
+            166,
+            174
+          ],
+          "key_is_digit_for_id": [
+            146,
+            154
+          ],
+          "key_is_unit_for_id": [
+            156,
+            164
+          ],
+          "label0_for_id": [
+            176,
+            202
+          ],
+          "label1_for_id": [
+            204,
+            213
+          ],
+          "label2_for_id": [
+            215,
+            224
+          ],
+          "localparam ACTION_GAP": [
+            56,
+            56
+          ],
+          "localparam BORDER": [
+            49,
+            49
+          ],
+          "localparam DEL_W": [
+            57,
+            57
+          ],
+          "localparam EDGE_THICK": [
+            50,
+            50
+          ],
+          "localparam FONT3_SCALE": [
+            55,
+            55
+          ],
+          "localparam FONT5_SCALE": [
+            54,
+            54
+          ],
+          "localparam KEYBOARD_H": [
+            38,
+            38
+          ],
+          "localparam KEYBOARD_W": [
+            37,
+            37
+          ],
+          "localparam MARKER_H": [
+            53,
+            53
+          ],
+          "localparam MARKER_OFFSET": [
+            51,
+            51
+          ],
+          "localparam MARKER_W": [
+            52,
+            52
+          ],
+          "localparam PANEL_BORDER": [
+            42,
+            42
+          ],
+          "localparam RST_W": [
+            58,
+            58
+          ],
+          "localparam TOTAL_KEYS": [
+            36,
+            36
+          ],
+          "module KeyboardVGA parameters": [
+            5,
+            15
+          ],
+          "pixel mux": [
+            356,
+            356
+          ],
+          "small_text_for_id": [
+            236,
+            244
+          ],
+          "text_cols_for_id": [
+            226,
+            234
+          ]
+        }
+      },
+      {
+        "path": "src/design/rendering/ButtonVGA.v",
+        "sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+        "line_ranges": {
+          "ButtonVGA darken_rgb_eighth": [
+            94,
+            94
+          ],
+          "ButtonVGA darken_rgb_quarter": [
+            85,
+            85
+          ],
+          "ButtonVGA geometry": [
+            215,
+            231
+          ],
+          "ButtonVGA inside_button": [
+            57,
+            60
+          ],
+          "ButtonVGA layer priority": [
+            291,
+            298
+          ],
+          "ButtonVGA lighten_rgb_quarter": [
+            75,
+            75
+          ],
+          "ButtonVGA rgb888_to_444": [
+            65,
+            65
+          ],
+          "ButtonVGA state colours": [
+            204,
+            212
+          ],
+          "ButtonVGA text": [
+            234,
+            284
+          ],
+          "darken_rgb_eighth": [
+            91,
+            98
+          ],
+          "darken_rgb_quarter": [
+            82,
+            89
+          ],
+          "glyph3x5": [
+            150,
+            160
+          ],
+          "glyph3x5_row": [
+            162,
+            176
+          ],
+          "glyph5x7": [
+            100,
+            130
+          ],
+          "glyph5x7_row": [
+            132,
+            148
+          ],
+          "lighten_rgb_quarter": [
+            69,
+            80
+          ],
+          "module ButtonVGA parameters": [
+            1,
+            24
+          ]
+        }
+      },
+      {
+        "path": "src/design/rendering/GlobalRender_top.v",
+        "sha256": "5f246ec1295ffa8520706e3e8d1dda0653ccfb550ce34135b65b9c953e975ea4",
+        "line_ranges": {
+          "SPRITE_* localparams": [
+            554,
+            568
+          ],
+          "final rgb mux": [
+            3829,
+            3846
+          ],
+          "function toolbar_mode_select": [
+            528,
+            552
+          ],
+          "instance circuit_canvas_inst": [
+            1152,
+            1166
+          ],
+          "instance keyboard_vga_inst": [
+            3225,
+            3239
+          ],
+          "instance toolbar_vga_inst": [
+            3240,
+            3251
+          ],
+          "localparam BACKGROUND": [
+            27,
+            27
+          ],
+          "localparam BLACK": [
+            26,
+            26
+          ],
+          "localparam BOTTOM_BAR_H": [
+            33,
+            33
+          ],
+          "localparam CANVAS_BG_DEFAULT_COLOR_IDX": [
+            60,
+            60
+          ],
+          "localparam CANVAS_CELL_SIZE": [
+            34,
+            34
+          ],
+          "localparam CANVAS_FG_DEFAULT_COLOR_IDX": [
+            59,
+            59
+          ],
+          "localparam CANVAS_GRID_H": [
+            36,
+            36
+          ],
+          "localparam CANVAS_GRID_W": [
+            35,
+            35
+          ],
+          "localparam CANVAS_H": [
+            43,
+            43
+          ],
+          "localparam CANVAS_W": [
+            42,
+            42
+          ],
+          "localparam CANVAS_X0": [
+            40,
+            40
+          ],
+          "localparam CANVAS_Y0": [
+            41,
+            41
+          ],
+          "localparam ENABLE_PROP_PANEL": [
+            53,
+            53
+          ],
+          "localparam ENABLE_WAVEFORMS": [
+            54,
+            54
+          ],
+          "localparam KEYBOARD_H": [
+            71,
+            71
+          ],
+          "localparam KEYBOARD_SCALE": [
+            67,
+            67
+          ],
+          "localparam KEYBOARD_W": [
+            70,
+            70
+          ],
+          "localparam KEYBOARD_X": [
+            75,
+            75
+          ],
+          "localparam KEYBOARD_Y": [
+            77,
+            77
+          ],
+          "localparam KEY_H": [
+            69,
+            69
+          ],
+          "localparam KEY_W": [
+            68,
+            68
+          ],
+          "localparam LEFT_BAR_W": [
+            31,
+            31
+          ],
+          "localparam PROP_PANEL_H": [
+            47,
+            47
+          ],
+          "localparam PROP_PANEL_W": [
+            46,
+            46
+          ],
+          "localparam PROP_PANEL_X": [
+            44,
+            44
+          ],
+          "localparam PROP_PANEL_Y": [
+            45,
+            45
+          ],
+          "localparam RIGHT_BAR_W": [
+            32,
+            32
+          ],
+          "localparam SCREEN_H": [
+            28,
+            28
+          ],
+          "localparam SCREEN_W": [
+            29,
+            29
+          ],
+          "localparam TOP_BAR_H": [
+            30,
+            30
+          ],
+          "ui_rgb composition": [
+            3792,
+            3829
+          ]
+        }
+      }
+    ]
+  },
+  "region": {
+    "x0": 485,
+    "y0": 352,
+    "w": 155,
+    "h": 128,
+    "top_level_region": [
+      485,
+      352,
+      640,
+      480
+    ],
+    "background": {
+      "rgb12": "0xFFE",
+      "rgb24": "#ffffee",
+      "rtl_rgb888": "#F8F4EC"
+    }
+  },
+  "parameters": {
+    "KEY_COUNT": 19,
+    "COLS": 5,
+    "ROWS": 4,
+    "FONT_SCALE": 2,
+    "KEYBOARD_X0": 485,
+    "KEYBOARD_Y0": 352,
+    "KEY_W": 31,
+    "KEY_H": 32
+  },
+  "instance_overrides": {
+    "KEY_COUNT": "19",
+    "FONT_SCALE": "KEYBOARD_SCALE",
+    "KEYBOARD_X0": "KEYBOARD_X",
+    "KEYBOARD_Y0": "KEYBOARD_Y",
+    "KEY_W": "KEY_W",
+    "KEY_H": "KEY_H"
+  },
+  "derived": {
+    "DEL_W": 46,
+    "RST_W": 47,
+    "ACTION_GAP": 0,
+    "BORDER": 3,
+    "EDGE_THICK": 2,
+    "MARKER_OFFSET": 7,
+    "MARKER_W": 3,
+    "MARKER_H": 3,
+    "FONT5_SCALE": 2
+  },
+  "rtl_colors": {
+    "RGB_BG": "#F8F4EC",
+    "RGB_BORDER": "#CBBFB0",
+    "RGB_DEL": "#FFB7B2",
+    "RGB_DIGIT": "#AFCBFF",
+    "RGB_DOT": "#F9E79F",
+    "RGB_NONE": "#E7DDD2",
+    "RGB_PANEL": "#F3EADF",
+    "RGB_PANEL_BORDER": "#5A4F44",
+    "RGB_PRESSED_BORDER": "#D9A900",
+    "RGB_RST": "#A9D8D0",
+    "RGB_SELECTED_BORDER": "#FFD84D",
+    "RGB_SELECTED_MARKER": "#FFF7D2",
+    "RGB_TEXT": "#5B534D",
+    "RGB_UNIT": "#BEE8B7"
+  },
+  "keys": [
+    {
+      "id": 0,
+      "enabled": true,
+      "x0": 485,
+      "y0": 352,
+      "w": 31,
+      "h": 32,
+      "label": "1",
+      "ascii": 49,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 1,
+      "enabled": true,
+      "x0": 516,
+      "y0": 352,
+      "w": 31,
+      "h": 32,
+      "label": "2",
+      "ascii": 50,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "enabled": true,
+      "x0": 547,
+      "y0": 352,
+      "w": 31,
+      "h": 32,
+      "label": "3",
+      "ascii": 51,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "enabled": true,
+      "x0": 578,
+      "y0": 352,
+      "w": 31,
+      "h": 32,
+      "label": "M",
+      "ascii": 77,
+      "kind": "unit",
+      "face_rtl_color": "RGB_UNIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXFFXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXFFXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          },
+          "R": {
+            "rgb12": "0x8A8",
+            "rgb24": "#88aa88",
+            "rtl_rgb888": "#8FAE8A"
+          },
+          "M": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          },
+          "F": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDFD",
+            "rgb24": "#ddffdd",
+            "rtl_rgb888": "#DAF1D6"
+          },
+          "R": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9BB297"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B8",
+            "rgb24": "#99bb88",
+            "rtl_rgb888": "#93B28D"
+          },
+          "R": {
+            "rgb12": "0x797",
+            "rgb24": "#779977",
+            "rtl_rgb888": "#7E9979"
+          },
+          "M": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          },
+          "F": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9FB69A"
+          },
+          "R": {
+            "rgb12": "0x898",
+            "rgb24": "#889988",
+            "rtl_rgb888": "#889C84"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xBDB",
+            "rgb24": "#bbddbb",
+            "rtl_rgb888": "#B5D0B0"
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "enabled": true,
+      "x0": 609,
+      "y0": 352,
+      "w": 31,
+      "h": 32,
+      "label": "k",
+      "ascii": 107,
+      "kind": "unit",
+      "face_rtl_color": "RGB_UNIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          },
+          "R": {
+            "rgb12": "0x8A8",
+            "rgb24": "#88aa88",
+            "rtl_rgb888": "#8FAE8A"
+          },
+          "M": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          },
+          "F": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDFD",
+            "rgb24": "#ddffdd",
+            "rtl_rgb888": "#DAF1D6"
+          },
+          "R": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9BB297"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B8",
+            "rgb24": "#99bb88",
+            "rtl_rgb888": "#93B28D"
+          },
+          "R": {
+            "rgb12": "0x797",
+            "rgb24": "#779977",
+            "rtl_rgb888": "#7E9979"
+          },
+          "M": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          },
+          "F": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9FB69A"
+          },
+          "R": {
+            "rgb12": "0x898",
+            "rgb24": "#889988",
+            "rtl_rgb888": "#889C84"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xBDB",
+            "rgb24": "#bbddbb",
+            "rtl_rgb888": "#B5D0B0"
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "enabled": true,
+      "x0": 485,
+      "y0": 384,
+      "w": 31,
+      "h": 32,
+      "label": "4",
+      "ascii": 52,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "enabled": true,
+      "x0": 516,
+      "y0": 384,
+      "w": 31,
+      "h": 32,
+      "label": "5",
+      "ascii": 53,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMXXXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "enabled": true,
+      "x0": 547,
+      "y0": 384,
+      "w": 31,
+      "h": 32,
+      "label": "6",
+      "ascii": 54,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "enabled": true,
+      "x0": 578,
+      "y0": 384,
+      "w": 31,
+      "h": 32,
+      "label": "m",
+      "ascii": 109,
+      "kind": "unit",
+      "face_rtl_color": "RGB_UNIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          },
+          "R": {
+            "rgb12": "0x8A8",
+            "rgb24": "#88aa88",
+            "rtl_rgb888": "#8FAE8A"
+          },
+          "M": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          },
+          "F": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDFD",
+            "rgb24": "#ddffdd",
+            "rtl_rgb888": "#DAF1D6"
+          },
+          "R": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9BB297"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B8",
+            "rgb24": "#99bb88",
+            "rtl_rgb888": "#93B28D"
+          },
+          "R": {
+            "rgb12": "0x797",
+            "rgb24": "#779977",
+            "rtl_rgb888": "#7E9979"
+          },
+          "M": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          },
+          "F": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9FB69A"
+          },
+          "R": {
+            "rgb12": "0x898",
+            "rgb24": "#889988",
+            "rtl_rgb888": "#889C84"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xBDB",
+            "rgb24": "#bbddbb",
+            "rtl_rgb888": "#B5D0B0"
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "enabled": true,
+      "x0": 609,
+      "y0": 384,
+      "w": 31,
+      "h": 32,
+      "label": "u",
+      "ascii": 117,
+      "kind": "unit",
+      "face_rtl_color": "RGB_UNIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          },
+          "R": {
+            "rgb12": "0x8A8",
+            "rgb24": "#88aa88",
+            "rtl_rgb888": "#8FAE8A"
+          },
+          "M": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          },
+          "F": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDFD",
+            "rgb24": "#ddffdd",
+            "rtl_rgb888": "#DAF1D6"
+          },
+          "R": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9BB297"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B8",
+            "rgb24": "#99bb88",
+            "rtl_rgb888": "#93B28D"
+          },
+          "R": {
+            "rgb12": "0x797",
+            "rgb24": "#779977",
+            "rtl_rgb888": "#7E9979"
+          },
+          "M": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          },
+          "F": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9FB69A"
+          },
+          "R": {
+            "rgb12": "0x898",
+            "rgb24": "#889988",
+            "rtl_rgb888": "#889C84"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xBDB",
+            "rgb24": "#bbddbb",
+            "rtl_rgb888": "#B5D0B0"
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "enabled": true,
+      "x0": 485,
+      "y0": 416,
+      "w": 31,
+      "h": 32,
+      "label": "7",
+      "ascii": 55,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMXXXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 11,
+      "enabled": true,
+      "x0": 516,
+      "y0": 416,
+      "w": 31,
+      "h": 32,
+      "label": "8",
+      "ascii": 56,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "enabled": true,
+      "x0": 547,
+      "y0": 416,
+      "w": 31,
+      "h": 32,
+      "label": "9",
+      "ascii": 57,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "enabled": true,
+      "x0": 578,
+      "y0": 416,
+      "w": 31,
+      "h": 32,
+      "label": "n",
+      "ascii": 110,
+      "kind": "unit",
+      "face_rtl_color": "RGB_UNIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          },
+          "R": {
+            "rgb12": "0x8A8",
+            "rgb24": "#88aa88",
+            "rtl_rgb888": "#8FAE8A"
+          },
+          "M": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          },
+          "F": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDFD",
+            "rgb24": "#ddffdd",
+            "rtl_rgb888": "#DAF1D6"
+          },
+          "R": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9BB297"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B8",
+            "rgb24": "#99bb88",
+            "rtl_rgb888": "#93B28D"
+          },
+          "R": {
+            "rgb12": "0x797",
+            "rgb24": "#779977",
+            "rtl_rgb888": "#7E9979"
+          },
+          "M": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          },
+          "F": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9FB69A"
+          },
+          "R": {
+            "rgb12": "0x898",
+            "rgb24": "#889988",
+            "rtl_rgb888": "#889C84"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xBDB",
+            "rgb24": "#bbddbb",
+            "rtl_rgb888": "#B5D0B0"
+          }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "enabled": true,
+      "x0": 609,
+      "y0": 416,
+      "w": 31,
+      "h": 32,
+      "label": "p",
+      "ascii": 112,
+      "kind": "unit",
+      "face_rtl_color": "RGB_UNIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          },
+          "R": {
+            "rgb12": "0x8A8",
+            "rgb24": "#88aa88",
+            "rtl_rgb888": "#8FAE8A"
+          },
+          "M": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          },
+          "F": {
+            "rgb12": "0xBEB",
+            "rgb24": "#bbeebb",
+            "rtl_rgb888": "#BEE8B7"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDFD",
+            "rgb24": "#ddffdd",
+            "rtl_rgb888": "#DAF1D6"
+          },
+          "R": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9BB297"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCEC",
+            "rgb24": "#cceecc",
+            "rtl_rgb888": "#CEEDC9"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B8",
+            "rgb24": "#99bb88",
+            "rtl_rgb888": "#93B28D"
+          },
+          "R": {
+            "rgb12": "0x797",
+            "rgb24": "#779977",
+            "rtl_rgb888": "#7E9979"
+          },
+          "M": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          },
+          "F": {
+            "rgb12": "0xACA",
+            "rgb24": "#aaccaa",
+            "rtl_rgb888": "#A7CBA1"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9B9",
+            "rgb24": "#99bb99",
+            "rtl_rgb888": "#9FB69A"
+          },
+          "R": {
+            "rgb12": "0x898",
+            "rgb24": "#889988",
+            "rtl_rgb888": "#889C84"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xBDB",
+            "rgb24": "#bbddbb",
+            "rtl_rgb888": "#B5D0B0"
+          }
+        }
+      }
+    },
+    {
+      "id": 15,
+      "enabled": true,
+      "x0": 485,
+      "y0": 448,
+      "w": 31,
+      "h": 32,
+      "label": ".",
+      "ascii": 46,
+      "kind": "dot",
+      "face_rtl_color": "RGB_DOT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xFEB",
+            "rgb24": "#ffeebb",
+            "rtl_rgb888": "#FAEDB7"
+          },
+          "R": {
+            "rgb12": "0xBA7",
+            "rgb24": "#bbaa77",
+            "rtl_rgb888": "#BBAE78"
+          },
+          "M": {
+            "rgb12": "0xFE9",
+            "rgb24": "#ffee99",
+            "rtl_rgb888": "#F9E79F"
+          },
+          "F": {
+            "rgb12": "0xFE9",
+            "rgb24": "#ffee99",
+            "rtl_rgb888": "#F9E79F"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xFFC",
+            "rgb24": "#ffffcc",
+            "rtl_rgb888": "#FBF1C9"
+          },
+          "R": {
+            "rgb12": "0xBB8",
+            "rgb24": "#bbbb88",
+            "rtl_rgb888": "#BCB28A"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xFEB",
+            "rgb24": "#ffeebb",
+            "rtl_rgb888": "#FAEDB7"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xBB7",
+            "rgb24": "#bbbb77",
+            "rtl_rgb888": "#BFB27B"
+          },
+          "R": {
+            "rgb12": "0xA96",
+            "rgb24": "#aa9966",
+            "rtl_rgb888": "#A49969"
+          },
+          "M": {
+            "rgb12": "0xDC8",
+            "rgb24": "#ddcc88",
+            "rtl_rgb888": "#DACB8C"
+          },
+          "F": {
+            "rgb12": "0xDC8",
+            "rgb24": "#ddcc88",
+            "rtl_rgb888": "#DACB8C"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCB8",
+            "rgb24": "#ccbb88",
+            "rtl_rgb888": "#C0B68D"
+          },
+          "R": {
+            "rgb12": "0xA97",
+            "rgb24": "#aa9977",
+            "rtl_rgb888": "#A59C79"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xDDA",
+            "rgb24": "#ddddaa",
+            "rtl_rgb888": "#DBD0A1"
+          }
+        }
+      }
+    },
+    {
+      "id": 16,
+      "enabled": true,
+      "x0": 516,
+      "y0": 448,
+      "w": 31,
+      "h": 32,
+      "label": "0",
+      "ascii": 48,
+      "kind": "digit",
+      "face_rtl_color": "RGB_DIGIT",
+      "text_cols": 1,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFXXXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFXXFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXXXFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFXXXXXXFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          },
+          "R": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#8499C0"
+          },
+          "M": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          },
+          "F": {
+            "rgb12": "0xACF",
+            "rgb24": "#aaccff",
+            "rtl_rgb888": "#AFCBFF"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xDEF",
+            "rgb24": "#ddeeff",
+            "rtl_rgb888": "#D2E1FF"
+          },
+          "R": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#93A2C0"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xCDF",
+            "rgb24": "#ccddff",
+            "rtl_rgb888": "#C3D8FF"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x89C",
+            "rgb24": "#8899cc",
+            "rtl_rgb888": "#879CC4"
+          },
+          "R": {
+            "rgb12": "0x78A",
+            "rgb24": "#7788aa",
+            "rtl_rgb888": "#7486A8"
+          },
+          "M": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          },
+          "F": {
+            "rgb12": "0x9BE",
+            "rgb24": "#99bbee",
+            "rtl_rgb888": "#9AB2E0"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AC",
+            "rgb24": "#99aacc",
+            "rtl_rgb888": "#96A6C4"
+          },
+          "R": {
+            "rgb12": "0x88A",
+            "rgb24": "#8888aa",
+            "rtl_rgb888": "#818EA8"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xABE",
+            "rgb24": "#aabbee",
+            "rtl_rgb888": "#ABBDE0"
+          }
+        }
+      }
+    },
+    {
+      "id": 17,
+      "enabled": true,
+      "x0": 547,
+      "y0": 448,
+      "w": 46,
+      "h": 32,
+      "label": "DEL",
+      "ascii": 8,
+      "kind": "delete",
+      "face_rtl_color": "RGB_DEL",
+      "text_cols": 3,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFXXXXXXXXFFFFXXXXXXXXXXFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXXXXXXXFFFFXXXXXXXXXXFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXXXXXXXFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXXXXXXXFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFXXFFFFFFFFFRRBBB",
+        "BBBTTFXXXXXXXXFFFFXXXXXXXXXXFFXXXXXXXXXXFRRBBB",
+        "BBBTTFXXXXXXXXFFFFXXXXXXXXXXFFXXXXXXXXXXFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xFCC",
+            "rgb24": "#ffcccc",
+            "rtl_rgb888": "#FFC9C5"
+          },
+          "R": {
+            "rgb12": "0xC88",
+            "rgb24": "#cc8888",
+            "rtl_rgb888": "#C08A86"
+          },
+          "M": {
+            "rgb12": "0xFBB",
+            "rgb24": "#ffbbbb",
+            "rtl_rgb888": "#FFB7B2"
+          },
+          "F": {
+            "rgb12": "0xFBB",
+            "rgb24": "#ffbbbb",
+            "rtl_rgb888": "#FFB7B2"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xFDD",
+            "rgb24": "#ffdddd",
+            "rtl_rgb888": "#FFD6D3"
+          },
+          "R": {
+            "rgb12": "0xC99",
+            "rgb24": "#cc9999",
+            "rtl_rgb888": "#C09794"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xFCC",
+            "rgb24": "#ffcccc",
+            "rtl_rgb888": "#FFC9C5"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xC88",
+            "rgb24": "#cc8888",
+            "rtl_rgb888": "#C48D89"
+          },
+          "R": {
+            "rgb12": "0xA77",
+            "rgb24": "#aa7777",
+            "rtl_rgb888": "#A87975"
+          },
+          "M": {
+            "rgb12": "0xEA9",
+            "rgb24": "#eeaa99",
+            "rtl_rgb888": "#E0A19C"
+          },
+          "F": {
+            "rgb12": "0xEA9",
+            "rgb24": "#eeaa99",
+            "rtl_rgb888": "#E0A19C"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xC99",
+            "rgb24": "#cc9999",
+            "rtl_rgb888": "#C49A98"
+          },
+          "R": {
+            "rgb12": "0xA88",
+            "rgb24": "#aa8888",
+            "rtl_rgb888": "#A88482"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xEBA",
+            "rgb24": "#eebbaa",
+            "rtl_rgb888": "#E0B0AD"
+          }
+        }
+      }
+    },
+    {
+      "id": 18,
+      "enabled": true,
+      "x0": 593,
+      "y0": 448,
+      "w": 47,
+      "h": 32,
+      "label": "RST",
+      "ascii": 127,
+      "kind": "reset",
+      "face_rtl_color": "RGB_RST",
+      "text_cols": 3,
+      "small_text": false,
+      "role_map": [
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFMMMFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFXXXXXXXXFFFFFFXXXXXXXXFFXXXXXXXXXXFFRRBBB",
+        "BBBTTFXXXXXXXXFFFFFFXXXXXXXXFFXXXXXXXXXXFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXFFFFFFFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXXXXXXXFFFFFFXXXXXXFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXXXXXXXFFFFFFXXXXXXFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXFFXXFFFFFFFFFFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXFFXXFFFFFFFFFFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXFFFFXXFFFFFFFFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXFFFFXXFFFFFFFFFFFFXXFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXXXXXXXFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFXXFFFFFFXXFFXXXXXXXXFFFFFFFFXXFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBTTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      ],
+      "state_colors": {
+        "normal": {
+          "B": {
+            "rgb12": "0xCBB",
+            "rgb24": "#ccbbbb",
+            "rtl_rgb888": "#CBBFB0"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xBED",
+            "rgb24": "#bbeedd",
+            "rtl_rgb888": "#BEE1DB"
+          },
+          "R": {
+            "rgb12": "0x7A9",
+            "rgb24": "#77aa99",
+            "rtl_rgb888": "#7FA29C"
+          },
+          "M": {
+            "rgb12": "0xADD",
+            "rgb24": "#aadddd",
+            "rtl_rgb888": "#A9D8D0"
+          },
+          "F": {
+            "rgb12": "0xADD",
+            "rgb24": "#aadddd",
+            "rtl_rgb888": "#A9D8D0"
+          }
+        },
+        "selected": {
+          "B": {
+            "rgb12": "0xFD4",
+            "rgb24": "#ffdd44",
+            "rtl_rgb888": "#FFD84D"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0xCEE",
+            "rgb24": "#cceeee",
+            "rtl_rgb888": "#CEE8E4"
+          },
+          "R": {
+            "rgb12": "0x8AA",
+            "rgb24": "#88aaaa",
+            "rtl_rgb888": "#8FA9A5"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xBED",
+            "rgb24": "#bbeedd",
+            "rtl_rgb888": "#BEE1DB"
+          }
+        },
+        "pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x8AA",
+            "rgb24": "#88aaaa",
+            "rtl_rgb888": "#82A6A0"
+          },
+          "R": {
+            "rgb12": "0x688",
+            "rgb24": "#668888",
+            "rtl_rgb888": "#6F8E89"
+          },
+          "M": {
+            "rgb12": "0x9BB",
+            "rgb24": "#99bbbb",
+            "rtl_rgb888": "#94BDB6"
+          },
+          "F": {
+            "rgb12": "0x9BB",
+            "rgb24": "#99bbbb",
+            "rtl_rgb888": "#94BDB6"
+          }
+        },
+        "selected_pressed": {
+          "B": {
+            "rgb12": "0xDA0",
+            "rgb24": "#ddaa00",
+            "rtl_rgb888": "#D9A900"
+          },
+          "X": {
+            "rgb12": "0x554",
+            "rgb24": "#555544",
+            "rtl_rgb888": "#5B534D"
+          },
+          "T": {
+            "rgb12": "0x9AA",
+            "rgb24": "#99aaaa",
+            "rtl_rgb888": "#93ADA8"
+          },
+          "R": {
+            "rgb12": "0x799",
+            "rgb24": "#779999",
+            "rtl_rgb888": "#7E9490"
+          },
+          "M": {
+            "rgb12": "0xFFD",
+            "rgb24": "#ffffdd",
+            "rtl_rgb888": "#FFF7D2"
+          },
+          "F": {
+            "rgb12": "0xACC",
+            "rgb24": "#aacccc",
+            "rtl_rgb888": "#A7C5C0"
+          }
+        }
+      }
+    },
+    {
+      "id": 19,
+      "enabled": false,
+      "x0": 609,
+      "y0": 448,
+      "w": 31,
+      "h": 32,
+      "label": "",
+      "ascii": 0,
+      "kind": "none",
+      "face_rtl_color": "RGB_NONE"
+    }
+  ],
+  "role_legend": {
+    "B": "border (BORDER px ring); colour depends on state",
+    "X": "label text pixel",
+    "T": "top/left bevel edge",
+    "R": "bottom/right bevel edge",
+    "M": "selected marker; drawn as the face colour unless the button is selected",
+    "F": "face"
+  },
+  "states": {
+    "selected": "mouse is over the key (hover); uses the nav-clock mouse",
+    "pressed": "mouse is over the key and the left button is held"
+  },
+  "glyph_format": "glyphs[name][char] is a list of rows (top first) of '0'/'1', char 0 leftmost; drawn scaled by FONT5_SCALE (5x7) or FONT3_SCALE (3x5); already rendered into role_map 'X'",
+  "glyphs": {
+    "glyph5x7": {
+      "0": [
+        "01110",
+        "10001",
+        "10011",
+        "10101",
+        "11001",
+        "10001",
+        "01110"
+      ],
+      "1": [
+        "00100",
+        "01100",
+        "00100",
+        "00100",
+        "00100",
+        "00100",
+        "01110"
+      ],
+      "2": [
+        "01110",
+        "10001",
+        "00001",
+        "00010",
+        "00100",
+        "01000",
+        "11111"
+      ],
+      "3": [
+        "11110",
+        "00001",
+        "00001",
+        "01110",
+        "00001",
+        "00001",
+        "11110"
+      ],
+      "4": [
+        "00010",
+        "00110",
+        "01010",
+        "10010",
+        "11111",
+        "00010",
+        "00010"
+      ],
+      "5": [
+        "11111",
+        "10000",
+        "11110",
+        "00001",
+        "00001",
+        "10001",
+        "01110"
+      ],
+      "6": [
+        "00110",
+        "01000",
+        "10000",
+        "11110",
+        "10001",
+        "10001",
+        "01110"
+      ],
+      "7": [
+        "11111",
+        "00001",
+        "00010",
+        "00100",
+        "01000",
+        "01000",
+        "01000"
+      ],
+      "8": [
+        "01110",
+        "10001",
+        "10001",
+        "01110",
+        "10001",
+        "10001",
+        "01110"
+      ],
+      "9": [
+        "01110",
+        "10001",
+        "10001",
+        "01111",
+        "00001",
+        "00010",
+        "01100"
+      ],
+      "D": [
+        "11110",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "11110"
+      ],
+      "E": [
+        "11111",
+        "10000",
+        "10000",
+        "11110",
+        "10000",
+        "10000",
+        "11111"
+      ],
+      "L": [
+        "10000",
+        "10000",
+        "10000",
+        "10000",
+        "10000",
+        "10000",
+        "11111"
+      ],
+      "M": [
+        "10001",
+        "11011",
+        "10101",
+        "10101",
+        "10001",
+        "10001",
+        "10001"
+      ],
+      "R": [
+        "11110",
+        "10001",
+        "10001",
+        "11110",
+        "10100",
+        "10010",
+        "10001"
+      ],
+      "S": [
+        "01111",
+        "10000",
+        "10000",
+        "01110",
+        "00001",
+        "00001",
+        "11110"
+      ],
+      "T": [
+        "11111",
+        "00100",
+        "00100",
+        "00100",
+        "00100",
+        "00100",
+        "00100"
+      ],
+      "k": [
+        "10000",
+        "10000",
+        "10010",
+        "10100",
+        "11000",
+        "10100",
+        "10010"
+      ],
+      "m": [
+        "00000",
+        "11010",
+        "10101",
+        "10101",
+        "10101",
+        "10101",
+        "00000"
+      ],
+      "u": [
+        "00000",
+        "10001",
+        "10001",
+        "10011",
+        "11101",
+        "10000",
+        "10000"
+      ],
+      "n": [
+        "00000",
+        "11110",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "00000"
+      ],
+      "p": [
+        "00000",
+        "11110",
+        "10001",
+        "11110",
+        "10000",
+        "10000",
+        "00000"
+      ],
+      ".": [
+        "00000",
+        "00000",
+        "00000",
+        "00000",
+        "00000",
+        "01100",
+        "01100"
+      ]
+    },
+    "glyph3x5": {
+      "D": [
+        "110",
+        "101",
+        "101",
+        "101",
+        "110"
+      ],
+      "E": [
+        "111",
+        "100",
+        "111",
+        "100",
+        "111"
+      ],
+      "L": [
+        "100",
+        "100",
+        "100",
+        "100",
+        "111"
+      ]
+    }
+  },
+  "pixel_rule": "Inside the region: background; inside an enabled key: key.state_colors[state][role_map[ly][lx]] (later keys win on overlap; keys do not overlap here).",
+  "rtl_literal_notes": []
+}

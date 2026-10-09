@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MetaCircuit Golden Shell</title>
+    <link rel="stylesheet" href="/src/web/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>MetaCircuit golden model <span class="sub">web shell (M1: canvas slice)</span></h1>
+      <span id="renderer-badge" class="badge"></span>
+    </header>
+
+    <main class="layout">
+      <section class="screen-col">
+        <div class="screen-wrap">
+          <canvas id="screen" width="640" height="480" data-testid="screen"></canvas>
+        </div>
+        <div class="controls" role="toolbar" aria-label="Simulation controls">
+          <div class="group">
+            <button id="btn-pause" title="Pause / resume (Space)">Pause</button>
+            <button id="btn-step" title="Advance one frame while paused (N)">Step 1 frame</button>
+            <button id="btn-reset" title="Reset to the boot state (R)">Reset</button>
+          </div>
+          <div class="group">
+            <button id="btn-record" title="Reset, then record every frame of mouse input">Record</button>
+            <button id="btn-mark" title="Add a checkpoint at the current frame (C)" disabled>Mark checkpoint</button>
+            <button id="btn-download-rec" title="Download the recording as scenario JSON" disabled>Download scenario</button>
+          </div>
+          <div class="group">
+            <label class="file-btn" title="Load a scenario JSON and replay it">
+              Load scenario<input id="file-scenario" type="file" accept=".json,application/json" />
+            </label>
+            <button id="btn-replay-play" disabled>Play</button>
+            <button id="btn-replay-step" disabled>Step</button>
+            <button id="btn-live" disabled title="Leave replay and return to live mouse input">Back to live</button>
+          </div>
+          <div class="group">
+            <button id="btn-dump" title="Download the current RAM dumps and semantic state">Download state dump</button>
+            <label class="check">graphics
+              <select id="sel-renderer"></select>
+            </label>
+            <label class="check"><input id="chk-cursor" type="checkbox" /> show OS cursor</label>
+            <label class="check">scale
+              <select id="sel-scale">
+                <option value="1">1x</option>
+                <option value="2" selected>2x</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <p class="hint">
+          Move and click on the screen as you would on the monitor. One mouse sample is taken per frame (60 fps); presses
+          shorter than a frame are held until the next frame. Middle and right buttons are recorded but have no effect in M1.
+        </p>
+      </section>
+
+      <aside class="panel" data-testid="panel">
+        <h2>Status</h2>
+        <dl class="kv">
+          <dt>Frame</dt><dd id="v-frame" data-testid="frame">0</dd>
+          <dt>Mode</dt><dd id="v-mode" data-testid="mode">live</dd>
+          <dt>Tool</dt><dd id="v-tool" data-testid="tool">pan</dd>
+          <dt>Mode code</dt><dd id="v-modecode">0xF</dd>
+          <dt>Pan offset</dt><dd id="v-pan" data-testid="pan">(0, 0)</dd>
+          <dt>Mouse</dt><dd id="v-mouse">-</dd>
+        </dl>
+
+        <h2>Cell under cursor</h2>
+        <dl class="kv">
+          <dt>Cell</dt><dd id="v-cell" data-testid="cell">-</dd>
+          <dt>Word</dt><dd id="v-cellword">-</dd>
+          <dt>Sprite</dt><dd id="v-cellsprite" data-testid="cell-sprite">-</dd>
+          <dt>Component</dt><dd id="v-cellcomp">-</dd>
+        </dl>
+
+        <h2>ComponentStore <span id="v-compcount" class="count" data-testid="component-count">0</span></h2>
+        <table class="comps" data-testid="components">
+          <thead><tr><th>slot</th><th>kind</th><th>anchor</th><th>rot</th><th>value</th><th>word</th></tr></thead>
+          <tbody id="comp-body"></tbody>
+        </table>
+
+        <div id="replay-box" hidden>
+          <h2>Replay <span id="v-replay-name" class="count"></span></h2>
+          <p class="small">Each checkpoint compares the shell's state with a headless run of the same scenario.</p>
+          <ol id="cp-list" class="cps" data-testid="checkpoints"></ol>
+        </div>
+
+        <div id="rec-box" hidden>
+          <h2>Recording</h2>
+          <p class="small"><span id="v-rec-frames">0</span> frames, <span id="v-rec-cps">0</span> checkpoints</p>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="/src/web/main.ts"></script>
+  </body>
+</html>

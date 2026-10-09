@@ -91,6 +91,13 @@ regions, row map, per-element terminals, issues, rejection),
 `netlists.json`. Extraction rules and open choices are in
 [`M3_ASSUMPTIONS.md`](M3_ASSUMPTIONS.md).
 
+The DC solver (`src/backend/solve.ts`) turns a `Netlist` into a `VoltageSnapshot`.
+`solveDc` is the spec solve: float32, wire unit codes, R/I/V/C/L, and a structural
+singularity check. `simulateUartSolver` predicts `src/uart_link`'s simulated solver
+(D-012) bit for bit, including its `ER` replies. Unit table, stamping conventions,
+numeric policy, differential results and open choices (including source
+polarity, Q-009) are in [`M3_SOLVER_ASSUMPTIONS.md`](M3_SOLVER_ASSUMPTIONS.md).
+
 `run` writes, per checkpoint, `<NN>_<label>.ram.json` (all memories),
 `dumps/<memory>/frame_NNNN.json` (one memory per file, the same layout as
 framescope's `run --dump`), `<NN>_<label>.state.json` (decoded state), and an index
@@ -113,6 +120,10 @@ byte against `src/uart_link/protocol.py` (`tools/uart_protocol_ref.py`), and
 (`tools/simpyhls_backend.py`). simpyhls is found via `$SIMPYHLS_DIR`, the
 `simpyhls` submodule or the nearest ancestor checkout that has one. Without
 Python or simpyhls these tests are skipped.
+
+The solver tests do not need Python. They compare against committed fixtures
+(`test/fixtures/solver_dc.json`) that `npm run fixtures:solver` regenerates from the
+simpyhls kernels and `frontend_tester.py`; append `-- --check` to verify them.
 
 ## M1 RTL regression
 
@@ -281,6 +292,7 @@ golden/
   src/scenario/    format types, expander, stim compiler, headless runner
   src/render/      framebuffer, renderer interface, placeholder and asset renderers
   src/backend/     M3: node extraction (netlist.ts), uart_link codec (uart.ts), shared types
+                   DC solver (value, arith, stamp, lu, solve)
   src/cli/         golden CLI
   src/web/         web shell
   scenarios/       hand-written scenarios (m1_canvas_tools.json)

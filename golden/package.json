@@ -18,7 +18,8 @@
     "test:e2e": "playwright test",
     "test:rtl": "python3 tools/test_rtl.py",
     "verify:m1": "python3 tools/verify_m1.py",
-    "verify:m2": "python3 tools/verify_m2.py"
+    "verify:m2": "python3 tools/verify_m2.py",
+    "fixtures:solver": "python3 tools/gen_solver_fixtures.py"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

@@ -14,7 +14,7 @@ import { step } from '../core/step.ts';
 import { expandScenario, framesToScenario } from '../scenario/expand.ts';
 import { runScenario } from '../scenario/run.ts';
 import type { CanonicalScenario, Checkpoint, Scenario } from '../scenario/types.ts';
-import { makeFramebuffer } from '../render/framebuffer.ts';
+import { getPx, makeFramebuffer } from '../render/framebuffer.ts';
 import { AssetRenderer, bundleFromRecord } from '../render/assetRenderer.ts';
 import { PlaceholderRenderer } from '../render/placeholder.ts';
 import { DEFAULT_RENDER_OPTIONS, type Renderer } from '../render/renderer.ts';
@@ -33,6 +33,8 @@ let mode: Mode = 'live';
 // Live mouse: latest position and buttons, plus presses that happened since the last sample.
 const live = { x: SCREEN_W / 2, y: SCREEN_H / 2, buttons: { left: false, middle: false, right: false } };
 const pressedSince = { left: false, middle: false, right: false };
+// OS pointer over the canvas, for the colour inspector (independent of replayed mouse input).
+const pointer = { x: 0, y: 0, inside: false };
 
 // Recording.
 let recording: { frames: MouseSnapshot[]; checkpoints: Checkpoint[] } | null = null;
@@ -67,6 +69,8 @@ if (assetLoad.bundle) {
 renderers.push(new PlaceholderRenderer());
 let renderer: Renderer = renderers[0]!;
 const fb = makeFramebuffer();
+// Cursor-free render for the colour inspector: the cursor sprite is drawn over the pixel it points at.
+const fbBare = makeFramebuffer();
 const canvas = $<HTMLCanvasElement>('screen');
 const ctx = canvas.getContext('2d')!;
 const image = ctx.createImageData(SCREEN_W, SCREEN_H);
@@ -84,6 +88,10 @@ function toScreen(e: PointerEvent): { x: number; y: number } {
 
 canvas.addEventListener('pointermove', (e) => {
   Object.assign(live, toScreen(e));
+  Object.assign(pointer, toScreen(e), { inside: true });
+});
+canvas.addEventListener('pointerleave', () => {
+  pointer.inside = false;
 });
 canvas.addEventListener('pointerdown', (e) => {
   Object.assign(live, toScreen(e));
@@ -177,7 +185,7 @@ function draw(): void {
 let lastPanelKey = '';
 function updatePanel(mouse: MouseSnapshot): void {
   const comps = liveComponents(state);
-  const key = `${state.frame}|${mouse.x},${mouse.y},${+mouse.left}${+mouse.middle}${+mouse.right}|${mode}|${paused}|${replay?.playing}|${recording?.checkpoints.length}`;
+  const key = `${state.frame}|${mouse.x},${mouse.y},${+mouse.left}${+mouse.middle}${+mouse.right}|${pointer.inside ? `${pointer.x},${pointer.y}` : '-'}|${renderer.name}|${mode}|${paused}|${replay?.playing}|${recording?.checkpoints.length}`;
   if (key === lastPanelKey) return;
   lastPanelKey = key;
 
@@ -206,6 +214,8 @@ function updatePanel(mouse: MouseSnapshot): void {
     $('v-cell').textContent = 'outside canvas';
   }
 
+  updatePixel(mouse);
+
   $('v-compcount').textContent = String(comps.length);
   $('comp-body').innerHTML = comps
     .map(({ slot, c }) => {
@@ -232,6 +242,22 @@ function updatePanel(mouse: MouseSnapshot): void {
     $('v-rec-cps').textContent = String(recording.checkpoints.length);
   }
   syncButtons();
+}
+
+function updatePixel(mouse: MouseSnapshot): void {
+  const swatch = $('v-px-swatch');
+  if (!pointer.inside) {
+    $('v-px').textContent = '-';
+    $('v-px-color').textContent = '-';
+    swatch.style.background = 'transparent';
+    return;
+  }
+  renderer.render(state, mouse, fbBare, { ...DEFAULT_RENDER_OPTIONS, drawCursor: false });
+  const c = getPx(fbBare, pointer.x, pointer.y);
+  const css = `#${[c >> 8, (c >> 4) & 0xf, c & 0xf].map((n) => n.toString(16).repeat(2)).join('')}`.toUpperCase();
+  $('v-px').textContent = `(${pointer.x}, ${pointer.y})`;
+  $('v-px-color').textContent = `RGB444 0x${c.toString(16).toUpperCase().padStart(3, '0')}, ${css}`;
+  swatch.style.background = css;
 }
 
 function escapeHtml(s: string): string {

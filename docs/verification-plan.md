@@ -4,7 +4,7 @@ Living document for making MetaCircuit deterministically testable without hardwa
 Track progress here: tick TODOs, append to the log, and move questions from
 "to be made" to "made" when settled. IDs are stable; never reuse one.
 
-Last updated: 2026-10-08 (client date; M1 acceptance)
+Last updated: 2026-10-08 (client date; M2 automated verification)
 
 ## Goal
 
@@ -35,7 +35,7 @@ the same observables for comparison.
 |----|-----------|--------|
 | M0 | Harness bring-up: framescope runs metacircuit on local Verilator; VGA timing correct | done |
 | M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | done: human accepted; 267 frames / 25 checkpoints pass on native and Docker, including saved web recording |
-| M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | not started |
+| M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | native and Docker automated regressions pass: 103 frames / 22 checkpoints, all pixels; human validation pending |
 | M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | not started |
 | M4 | Lockstep sessions, coverage, agent interface (MCP) | not started |
 
@@ -74,9 +74,9 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] GM-2 (P0) Interaction semantics for M1: tool selection, draw wire/junction/elbow/tee/ground, place R/L/C/V/I, rotate (incl. `RotateFramesPerStep` holdoff), delete, pan with clamping. Source of truth: `structure.md` and the final report, not a transliteration of `InteractionController.v` (D-007).
 - [x] GM-3 (P0) State export in the same format as the FS-3 RAM dumps.
 - [x] GM-4 (P1) Asset extraction script: sprite functions and palette in `CircuitCanvas.v`, `FontROM.v`, toolbar and keypad icons, cursor bitmaps, into JSON.
-- [ ] GM-5 (P1) Renderer: `render(state, t) -> 640x480 RGB444`, pixel-exact, from the GM-4 assets.
-- [ ] GM-6 (P1) Cell decoder: classify each visible grid cell of a frame into (sprite, rotation, colour) using the GM-4 assets, so mismatches read as "cell (3,4) is RL rot 1, expected RR rot 1".
-- [ ] GM-7 (P1) Backend: flooding, component node extraction, stamping, DC solve; differential test against the simpyhls DSL kernels (`simpyhls/examples/*.dsl.py`) on random circuits.
+- [x] GM-5 (P1) Renderer: `render(state, t) -> 640x480 RGB444`, pixel-exact, from the GM-4 assets. Full UI, font, flow/caret phases and independent settled node colours implemented; human M2 validation remains pending.
+- [x] GM-6 (P1) Cell decoder: classify each visible grid cell of a frame into (sprite, rotation, colour) using the GM-4 assets, so mismatches read as "cell (3,4) is RL rot 1, expected RR rot 1". Preserves symmetric rotation ambiguity and cursor occlusion; corruption witnesses feed the M2 runner.
+- [ ] GM-7 (P1) Backend: flooding, component node extraction, stamping, DC solve; differential test against the simpyhls DSL kernels (`simpyhls/examples/*.dsl.py`) on random circuits. M2's settled connectivity/colour slice is implemented independently; solver and random differential coverage remain.
 - [ ] GM-8 (P1) Netlist export in the `src/uart_link` protocol format, to compare against the RTL's UART output (FS-7).
 
 ### Scenarios and web shell (SC)
@@ -90,9 +90,9 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 ### Infrastructure (INF)
 
 - [ ] INF-1 Merge `fix/vga-timing` (metacircuit) and `native-verilator-json-ports` (framescope) into their default branches.
-- [ ] INF-2 framescope's `examples/metacircuit/framescope.toml` defaults `METACIRCUIT` to `../../../EE2026/metacircuit`; this checkout needs `METACIRCUIT=<path>/nus-EE2026-metacircuit`. Change the default or document it.
+- [x] INF-2 framescope's `examples/metacircuit/framescope.toml` defaults `METACIRCUIT` to the sibling `../../../nus-EE2026-metacircuit` checkout. Environment overrides still work.
 - [ ] INF-3 One framescope test run under the docker runtime failed once with an error that did not reproduce in 10 later runs; traceback was not captured. Watch for it.
-- [ ] RTL-6 (P1) The keypad samples the mouse on a free-running 20 Hz `clk_nav`, not frame-locked; its state lags the cursor by several frames.
+- [x] RTL-6 (P1) Keypad uses the cursor's frame-latched mouse on `clk_pixel`; short single-frame presses and hover/pressed styling are deterministic. Caret also toggles every ten frames, replacing its free-running pixel counter.
 - [ ] INF-4 CI: framescope unit tests + metacircuit integration test on the pinned container (Verilator 5.020); native 5.046 as a second job.
 
 ## Decisions made
@@ -111,6 +111,8 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 | D-010 | 2026-10-09 | (Q-006) Mouse input is modelled as absolute position and buttons at the `MouseCtl` outputs (the framescope stub) for M1-M3. PS/2 packets through a ported controller (FS-10) come later, as a separate test of the driver. | Keeps scenarios simple and identical across golden, framescope and web shell. |
 | D-011 | 2026-10-09 | (Q-007) Comparison order: state first (RAM dumps, probes, UART netlist), then decoded cells, then masked pixels with zero tolerance inside masks. Animation regions stay masked until RTL-1 lands. | State mismatches say what is wrong; pixel diffs only say that something is. |
 | D-012 | 2026-10-09 | (Q-008) For M3 the solver is `src/uart_link`'s simulated solver, driven through a framescope UART RX driver (FS-7). Co-simulating `SolverBoard_top` (with floating-point IP models) comes later as a separate integration test. | Reuses an existing host-side model and avoids modelling the Xilinx floating-point IP up front. |
+| D-013 | 2026-10-08 | Keypad uses the cursor's frame-latched mouse; caret toggles every ten VSYNC edges. | Deterministic one-frame input latency and stable per-frame pixels replace free-running UI clocks. |
+| D-014 | 2026-10-08 | M2 colour references come from a reciprocal-port graph with row-major node numbering; default pixel masks exclude nothing. | The graph is independent of the RTL flood FSM. Stable checkpoints verify every pixel; dense-circuit flooding transients remain outside the current settled-colour regression. |
 
 ## Decisions to be made
 
@@ -148,6 +150,8 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 - 2026-10-08 (client date): Added `CanvasCommandGuard` to validate all destination cells before committing a placement or rotation. `InteractionController` now tracks canvas gesture origin, stamps components once per press and ignores right/middle-only input. Rotation copies value/unit/display text from the anchor to the new partner before clearing the old cell. Two focused RTL benches pass, including memory backpressure and rejection without partial writes. Vivado's source list includes the guard. Asset metadata regenerated; bitmap payloads unchanged.
 - 2026-10-08 (client date): M1 achieved. Native Verilator 5.046 and Docker 5.020 each pass all 25 checkpoints over 267 frames; all 267 frame CRCs and all 200 memory dumps agree across runtimes. No late stimulus events or dropped interaction frames. Both the hand-written scenario and the saved web recording pass state comparisons. 86 golden tests, 3 Playwright tests, 20 asset tests, 2 RTL benches, and 70 framescope tests per runtime pass; typecheck/build/extraction checks pass. Evidence: [`m1-verification.json`](m1-verification.json).
 - 2026-10-08 (client date): Confirmed cursor/toolbar/pan probes against the golden at every frame on both toolchains (267/267 each). Added `m1_latency.json`, with a RAM/probe checkpoint every frame and no wait margin: native passes 11/11, proving toolbar selection and the guarded canvas write still appear exactly one frame after the back-porch input change.
+- 2026-10-08 (client date): M2 blockers implemented with three parallel agents: property/keypad core and RTL-6, full UI renderer and frame-locked caret, independent pixel cell decoder and node-colour graph. Fixed DEL removing a digit when deleting a unit suffix; `123k -> 123` now preserves BCD. Added full UI font/layout assets and blank-value rendering for newly placed components. Updated framescope's sibling checkout default and UI/text/colour probes.
+- 2026-10-08 (client date): M2 automated pass: native 5.046 and Docker 5.020 each pass 103 frames / 22 checkpoints for state, UI/text probes, node-colour RAM and all 307,200 pixels per checkpoint at zero tolerance. All 103 CRCs and 176 memory dumps agree across runtimes. M1 still passes 267 frames / 25 checkpoints. 129 golden tests, 4 Playwright tests (including real-pointer M2 full-image hashing), 20 extraction tests, 3 focused RTL benches and 70 native framescope tests (2 environment-dependent skips) pass; typecheck/build/assets pass. Evidence: [`m2-verification.json`](m2-verification.json). M2 human acceptance remains pending.
 
 ## M1 acceptance and regression
 
@@ -178,4 +182,41 @@ Local full artifacts are in `golden/out/m1/rtl-fixed-native/` and
 them. Generated runs are ignored by Git. The tracked evidence JSON records the
 results, toolchains and source hashes; the runner reproduces the full artifacts.
 The existing 25 MHz timing warning remains expected. Boot-clear skipped cells,
-keypad frame locking and full UI/pixel verification remain separate future work.
+and backend UART remain separate work. Keypad frame locking and full UI/pixel
+verification were subsequently implemented for M2 below.
+
+## M2 automated verification and remaining acceptance
+
+Run from `golden/`:
+
+```sh
+npm run verify:m2
+npm run verify:m2 -- --runtime docker
+npm run verify:m2 -- --scenario scenarios/m2_boot.json
+```
+
+`m2_full_ui.json` checks 103 frames / 22 checkpoints, including toolbar/keypad
+hover, either-half selection, active caret, reset, one-frame digit press latency,
+BCD and unit editing, suffix/digit deletion, literal decimal text, ground summary,
+outside selection, canvas clear and a newly placed blank-value component. The
+runner checks M1 state first, then selection/value/text probes and independently
+derived node-colour RAM, then full 640x480 PNGs. The default mask file defines
+report regions only: no pixel is excluded and channel tolerance is zero.
+
+References use the independent TypeScript model and reciprocal connectivity
+graph. RTL palette snapshots were used separately during renderer triage, and
+are not inputs to regression reference generation. The cell decoder diagnoses
+failures from pixels while retaining symmetric rotations and cursor occlusion;
+its flow-colour exclusion applies only to diagnosis, never acceptance pixels.
+
+The M2 browser regression drives all scenario frames through real pointer events
+and checks semantic properties and a full ImageData hash at every checkpoint.
+That verifies web/headless agreement; it does not replace human validation.
+[`golden/M2_ASSUMPTIONS.md`](../golden/M2_ASSUMPTIONS.md) records the property/keypad
+choices requiring that pass. Dense-circuit flooding transients and more than 255
+isolated nodes are not covered by this settled-colour regression; the independent
+graph uses wider IDs so it can expose the RTL's eight-bit node limit.
+
+M2 remains pending human acceptance of the full UI. Native and Docker automated
+verification pass all 22 checkpoints with zero differing pixels. Toolchain evidence and
+regression artifacts are recorded in [`m2-verification.json`](m2-verification.json).

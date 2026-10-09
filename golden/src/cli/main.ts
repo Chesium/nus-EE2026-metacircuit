@@ -13,6 +13,8 @@ import { runScenario } from '../scenario/run.ts';
 import { compileStim } from '../scenario/stim.ts';
 import type { Scenario } from '../scenario/types.ts';
 import { compareRun } from './compare.ts';
+import { renderReferences } from './reference.ts';
+import { compareUi } from './compare-ui.ts';
 
 const USAGE = `usage: golden <command> <scenario.json> [options]
 
@@ -23,7 +25,9 @@ commands:
           --out (default out/<scenario name>)
   stim    compile the scenario to a framescope stimulus TOML (stdout or -o FILE)
   expand  print the canonical per-frame form (JSON)
+  render  generate checkpoint reference PNGs from the asset renderer into --out
   compare compare a framescope run directory with --reference golden output
+  compare-ui compare property selection/value/keypad probes with pixel references
 
 options:
   --out DIR            run: output directory
@@ -60,6 +64,10 @@ function main(argv: string[]): number {
   if (cmd === 'compare') {
     if (!values.reference) throw new Error('compare requires --reference DIR');
     return compareRun(file, values.reference, values.output);
+  }
+  if (cmd === 'compare-ui') {
+    if (!values.reference) throw new Error('compare-ui requires --reference DIR');
+    return compareUi(file, values.reference, values.output ?? join(file, 'ui-compare.json'));
   }
   const scenario = JSON.parse(readFileSync(file, 'utf8')) as Scenario;
   const canonical = expandScenario(scenario);
@@ -110,6 +118,13 @@ function main(argv: string[]): number {
       for (const c of index) {
         process.stderr.write(`  ${c.label.padEnd(28)} frame ${String(c.frame).padStart(4)}  cells ${c.cells}  components ${c.components}\n`);
       }
+      return 0;
+    }
+    case 'render': {
+      const cfg = makeConfig({ inputLatencyFrames: int(values.latency, DEFAULT_CONFIG.inputLatencyFrames), rotateFramesPerStep: int(values['rotate-frames'], 8) });
+      const outDir = values.out ?? join('out', canonical.name);
+      renderReferences(canonical, outDir, cfg);
+      process.stderr.write(`${canonical.name}: ${canonical.checkpoints.length} pixel checkpoints -> ${outDir}\n`);
       return 0;
     }
     default:

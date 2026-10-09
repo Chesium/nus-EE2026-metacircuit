@@ -5,4 +5,5 @@ export * from './encoding.ts';
 export * from './geometry.ts';
 export * from './state.ts';
 export * from './step.ts';
+export * from './properties.ts';
 export * from './export.ts';

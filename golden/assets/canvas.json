@@ -3,7 +3,7 @@
   "schema_version": 1,
   "source": {
     "generator": "golden/tools/extract_assets.py",
-    "rtl_commit": "34dc50ef31592ab94effa30f53d2d8cbf89175da",
+    "rtl_commit": "46d9e089f6321425b7bec4866cc416339b49f532",
     "rtl_commit_meaning": "last git commit that touched any of the files below (`git log -1 --format=%H -- <files>`); file contents are pinned by sha256",
     "files": [
       {
@@ -186,31 +186,31 @@
       },
       {
         "path": "src/design/rendering/GlobalRender_top.v",
-        "sha256": "2feda612cbee5ff1f167ba8f395eba730f93738fdacfe987ec99cd0b3747d813",
+        "sha256": "a46cfbae8b1bf901e957bd77af8559ccf18c38e6355eb3644c19594ab3c6da9a",
         "line_ranges": {
           "SPRITE_* localparams": [
-            554,
-            568
+            545,
+            559
           ],
           "final rgb mux": [
-            3861,
-            3878
+            3857,
+            3874
           ],
           "function toolbar_mode_select": [
-            528,
-            552
+            519,
+            543
           ],
           "instance circuit_canvas_inst": [
-            1159,
-            1173
+            1141,
+            1155
           ],
           "instance keyboard_vga_inst": [
-            3246,
-            3260
+            3242,
+            3256
           ],
           "instance toolbar_vga_inst": [
-            3261,
-            3272
+            3257,
+            3268
           ],
           "localparam BACKGROUND": [
             27,
@@ -333,8 +333,8 @@
             30
           ],
           "ui_rgb composition": [
-            3824,
-            3861
+            3820,
+            3857
           ]
         }
       }

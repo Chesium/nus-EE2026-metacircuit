@@ -5,9 +5,11 @@ module ComponentPropertyPanel #(
     parameter integer PANEL_Y = 0,
     parameter integer PANEL_W = 640,
     parameter integer PANEL_H = 64,
-    parameter integer MAX_CHARS = 16
+    parameter integer MAX_CHARS = 16,
+    parameter integer BLINK_FRAMES_PER_HALF = 10
 )(
     input wire clk_pixel,
+    input wire frame_tick,
     input wire [11:0] hcount,
     input wire [11:0] vcount,
     input wire video_on,
@@ -141,7 +143,9 @@ module ComponentPropertyPanel #(
     reg [4:0] coord_len_q = 5'd0;
     reg [MAX_CHARS * 8 - 1:0] input_data_q = {MAX_CHARS * 8{1'b0}};
     reg [4:0] input_len_q = 5'd0;
-    reg [22:0] blink_counter = 23'd0;
+    localparam integer BLINK_COUNT_W = (BLINK_FRAMES_PER_HALF <= 1) ? 1 : $clog2(BLINK_FRAMES_PER_HALF);
+    reg [BLINK_COUNT_W-1:0] blink_frame_counter = 0;
+    reg blink_visible = 1'b0;
     integer i;
 
     wire [11:0] label_text_width = ({7'd0, label_len_q} << 3);
@@ -477,7 +481,7 @@ module ComponentPropertyPanel #(
     wire value_box_border = in_value_box &&
                             ((hcount == VALUE_BOX_X0) || (hcount == VALUE_BOX_X1 - 1) ||
                              (vcount == VALUE_BOX_Y0) || (vcount == VALUE_BOX_Y1 - 1));
-    wire cursor_visible = value_edit_active && value_editable && blink_counter[22];
+    wire cursor_visible = value_edit_active && value_editable && blink_visible;
     wire cursor_active = cursor_visible && in_value_box &&
                          (hcount >= cursor_x0) && (hcount < cursor_x1) &&
                          (vcount >= (VALUE_BOX_Y0 + 12'd3)) && (vcount < (VALUE_BOX_Y1 - 12'd3));
@@ -491,7 +495,14 @@ module ComponentPropertyPanel #(
     );
 
     always @(posedge clk_pixel) begin
-        blink_counter <= blink_counter + 1'b1;
+        if (frame_tick) begin
+            if (blink_frame_counter == BLINK_FRAMES_PER_HALF - 1) begin
+                blink_frame_counter <= 0;
+                blink_visible <= !blink_visible;
+            end else begin
+                blink_frame_counter <= blink_frame_counter + 1'b1;
+            end
+        end
     end
 
     always @(posedge clk_pixel) begin

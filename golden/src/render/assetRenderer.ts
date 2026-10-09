@@ -1,14 +1,17 @@
 // Renderer built from the GM-4 assets (golden/assets/*.json, format in
 // golden/assets/README.md). It follows the documented pixel rules, including the
-// canvas one-pixel data lag and the cursor's displayed sprites. Not modelled yet
-// (so not authoritative): property-panel text, flood node colours (fg/bg colour
-// RAMs are taken as the defaults), the flow animation, and the keypad's 20 Hz lag.
+// canvas one-pixel data lag, property text's extra register, and the cursor's
+// displayed sprites. Colour RAMs and independent keypad/caret samples can be
+// supplied by the caller; otherwise node colours come from the independent
+// settled connectivity graph. See INTERFACE_FACTS IF-030–034.
 
 import { decodeCell } from '../core/encoding.ts';
+import { deriveConnectivity } from '../core/connectivity.ts';
+import { selectedProperties } from '../core/properties.ts';
 import { screenToCell } from '../core/geometry.ts';
 import type { GoldenState, MouseSnapshot } from '../core/state.ts';
 import { type Framebuffer, fillRect, setPx } from './framebuffer.ts';
-import type { RenderOptions, Renderer } from './renderer.ts';
+import type { PropertyPanelSnapshot, RenderOptions, Renderer } from './renderer.ts';
 
 // ---------------------------------------------------------------- asset JSON shapes (subset we use)
 
@@ -21,7 +24,7 @@ export interface AssetBundle {
     schema_version: number;
     sprites: { id: number; rows: Rows }[];
     palette: { index: number; rgb12: string }[];
-    colors: { grid: Color; default_fg_idx: number; default_bg_idx: number; hover_bg_idx: number };
+    colors: { grid: Color; flow_yellow: Color; default_fg_idx: number; default_bg_idx: number; hover_bg_idx: number };
     geometry: { canvas_x0: number; canvas_y0: number; canvas_w: number; canvas_h: number; cell_size: number; grid_w: number; grid_h: number };
   };
   toolbar: {
@@ -46,11 +49,13 @@ export interface AssetBundle {
       top_bar: { fill: Color; grid_line: Color; boxes: [number, number, number, number][]; box_fill: Color };
       right_bar: { fill: Color; grid_line: Color; frames: { rects: [number, number, number, number][]; color: Color } };
     };
-    property_panel_colors: { COLOR_BG: Color };
+    property_panel_colors: Record<string, Color>;
+    property_panel_layout: Record<string, number>;
   };
+  font8x8: { glyphs: Record<string, Rows> };
 }
 
-export const ASSET_FILES = ['canvas', 'toolbar', 'cursor', 'keypad', 'screen'] as const;
+export const ASSET_FILES = ['canvas', 'toolbar', 'cursor', 'keypad', 'screen', 'font8x8'] as const;
 
 /** Build a bundle from {name: parsed JSON}; returns null (with the reason) when something is missing. */
 export function bundleFromRecord(rec: Record<string, unknown>): { bundle: AssetBundle | null; problem?: string } {
@@ -67,7 +72,7 @@ const c12 = (c: Color | string) => parseInt(typeof c === 'string' ? c : c.rgb12,
 
 export class AssetRenderer implements Renderer {
   readonly name = 'assets';
-  readonly authoritative = false;
+  readonly authoritative = true;
   private readonly sprites: Uint8Array[]; // per id: 32*32 bits, row-major [row*32+col]
   private readonly palette: number[];
   private readonly icons: Map<number, Uint8Array>;
@@ -84,11 +89,67 @@ export class AssetRenderer implements Renderer {
     // Background and bars (screen.json ui_rule), then the property panel's fill over the top bar.
     fillRect(fb, 0, 0, fb.width, fb.height, c12(A.screen.background));
     this.rightBar(fb);
-    fillRect(fb, 0, 0, 640, 64, c12(A.screen.property_panel_colors.COLOR_BG));
+    this.propertyPanel(s, fb, opts);
     this.toolbar(s, mouse, fb);
     this.canvas(s, mouse, fb, opts);
-    this.keypad(mouse, fb);
+    this.keypad(opts.keypadMouse ?? mouse, fb);
     if (opts.drawCursor) this.cursor(mouse, fb);
+  }
+
+  private propertyPanel(s: GoldenState, fb: Framebuffer, opts: RenderOptions): void {
+    const colors = this.a.screen.property_panel_colors;
+    const p = this.a.screen.property_panel_layout;
+    const color = (name: string) => c12(colors[name]!);
+    const x0 = p.PANEL_X! + 1, y0 = p.PANEL_Y!, w = p.PANEL_W!, h = p.PANEL_H!;
+    // The panel enable/color register leaves x=0 to the unregistered top bar.
+    fillRect(fb, 0, 0, 1, h, c12(this.a.screen.bars.top_bar.grid_line));
+    fillRect(fb, x0, y0, w, h, color('COLOR_BG'));
+    const selected = opts.propertyPanel ?? panelFromState(s);
+    if (!selected) return;
+    const cell = decodeCell(selected.word);
+    const editable = cell.enabled && cell.sprite >= 5 && cell.sprite <= 14;
+    const hint = !cell.enabled;
+    const texts: { text: string; x: number; y: number; color: number }[] = [];
+    const caption = color('COLOR_CAPTION'), ink = color('COLOR_TEXT');
+    if (hint) {
+      const text = 'Click component';
+      texts.push({ text, x: x0 + Math.floor((w - text.length * 8) / 2), y: p.HINT_Y!, color: ink });
+    } else {
+      texts.push({ text: 'Type', x: p.TYPE_X!, y: p.TITLE_Y!, color: caption });
+      texts.push({ text: 'Pos/Idx', x: p.POS_X!, y: p.TITLE_Y!, color: caption });
+      texts.push({ text: SPRITE_LABELS[cell.sprite] ?? 'Click component', x: p.TYPE_X!, y: p.CONTENT_Y!, color: ink });
+      const index = selected.componentIndex === null ? '---' : String(selected.componentIndex).padStart(3, '0');
+      const coords = `#${index} (${String(selected.col).padStart(2, '0')}, ${String(selected.row).padStart(2, '0')})`;
+      texts.push({ text: coords, x: p.POS_X!, y: p.CONTENT_Y!, color: ink });
+      if (editable) {
+        texts.push({ text: 'Value', x: p.VALUE_X!, y: p.TITLE_Y!, color: caption });
+        texts.push({ text: selected.valueText.slice(0, 8), x: p.INPUT_X!, y: p.INPUT_Y!, color: ink });
+        fillRect(fb, p.VALUE_BOX_X0! + 1, p.VALUE_BOX_Y0!, p.VALUE_BOX_X1! - p.VALUE_BOX_X0!, p.VALUE_BOX_Y1! - p.VALUE_BOX_Y0!, color('COLOR_BOX_BG'));
+        for (const x of [p.SEP0_X!, p.SEP1_X!]) fillRect(fb, x + 1, p.SEP_Y0!, 1, p.SEP_Y1! - p.SEP_Y0!, color('COLOR_BORDER'));
+        if (selected.editActive && (opts.caretVisible ?? capturedCaretVisible(s.frame))) {
+          fillRect(fb, p.INPUT_X! + 1 + Math.min(selected.valueText.length, 7) * 8, p.VALUE_BOX_Y0! + 3, 2,
+            p.VALUE_BOX_Y1! - p.VALUE_BOX_Y0! - 6, color('COLOR_BOX_ACTIVE'));
+        }
+      }
+    }
+    // DynamicTextBox adds one more pixel register than the panel rectangles.
+    // With framescope de_delay=2, glyphs appear two pixels right of their origin.
+    for (const text of texts) this.text(fb, text.text, text.x + (hint ? 1 : 2), text.y, text.color);
+    if (editable) {
+      const c = color(selected.editActive ? 'COLOR_BOX_ACTIVE' : 'COLOR_BOX_BORDER');
+      rectBorder(fb, p.VALUE_BOX_X0! + 1, p.VALUE_BOX_Y0!, p.VALUE_BOX_X1! - p.VALUE_BOX_X0!, p.VALUE_BOX_Y1! - p.VALUE_BOX_Y0!, c);
+    }
+    rectBorder(fb, x0, y0, w, h, color('COLOR_BORDER'));
+  }
+
+  private text(fb: Framebuffer, text: string, x: number, y: number, color: number): void {
+    for (let k = 0; k < text.length; k++) {
+      const glyph = this.a.font8x8.glyphs[String(text.charCodeAt(k))];
+      if (!glyph) continue;
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+        if (glyph[r]![c] === '1') setPx(fb, x + k * 8 + c, y + r, color);
+      }
+    }
   }
 
   private rightBar(fb: Framebuffer): void {
@@ -138,8 +199,10 @@ export class AssetRenderer implements Renderer {
     const g = this.a.canvas.geometry;
     const col = this.a.canvas.colors;
     const grid = c12(col.grid);
-    const fg = this.palette[col.default_fg_idx] ?? 0xfff;
-    const bg = this.palette[col.default_bg_idx] ?? 0x222;
+    const nodes = !s.cellFgColor || !s.cellBgColor ? deriveConnectivity(s.cells) : null;
+    const fgColors = opts.cellFgColor ?? s.cellFgColor ?? nodes!.cellFgColor;
+    const bgColors = opts.cellBgColor ?? s.cellBgColor ?? nodes!.cellBgColor;
+    const phase = opts.animationPhase ?? capturedAnimationPhase(s.frame);
     const hoverBg = this.palette[col.hover_bg_idx] ?? 0x280;
     const hover = opts.hover ? screenToCell(mouse.x, mouse.y, s.panX, s.panY) : null;
     const cellAt = (i: number, j: number): number =>
@@ -154,17 +217,25 @@ export class AssetRenderer implements Renderer {
         const dx = ax - i * g.cell_size;
         // One-pixel data lag: the cell word is the one fetched for x - 1.
         let word = 0;
+        let dataAddr = -1;
         if (x > g.canvas_x0) {
           const pax = ax - 1;
-          word = cellAt(Math.floor(pax / g.cell_size), j);
+          const pi = Math.floor(pax / g.cell_size);
+          word = cellAt(pi, j);
+          if (pi >= 0 && pi < g.grid_w && j >= 0 && j < g.grid_h) dataAddr = pi + j * g.grid_w;
         }
+        const fgIdx = dataAddr < 0 ? col.default_fg_idx : (fgColors?.[dataAddr] ?? col.default_fg_idx) & 15;
+        const bgIdx = dataAddr < 0 ? col.default_bg_idx : (bgColors?.[dataAddr] ?? col.default_bg_idx) & 15;
+        const fg = this.palette[fgIdx] ?? 0xfff;
+        const bg = this.palette[bgIdx] ?? 0x222;
         const cell = decodeCell(word);
         const bits = cell.enabled ? this.sprites[cell.sprite] : undefined;
         const sprite = !!bits && samplePixel(bits, cell.rotation, dx, dy);
         const visible = sprite && dx !== 31 && dy !== 31;
         const isGrid = dx < 1 || dy < 1 || dx >= 31 || dy >= 31;
         let c: number;
-        if (visible) c = fg;
+        if (flowPixel(word, dx, dy, phase, visible)) c = c12(col.flow_yellow);
+        else if (visible) c = fg;
         else if (isGrid) c = grid;
         else c = hover && hover.col === i && hover.row === j ? hoverBg : bg;
         setPx(fb, x, y, c);
@@ -201,6 +272,63 @@ export class AssetRenderer implements Renderer {
       }
     });
   }
+}
+
+const SPRITE_LABELS = ['Wire', 'Elbow', 'Tee', 'Junction', undefined, 'Resistor', 'Resistor',
+  'Voltage Source', 'Voltage Source', 'Current Source', 'Current Source', 'Inductor', 'Inductor',
+  'Capacitor', 'Capacitor', 'Ground'];
+
+function panelFromState(s: GoldenState): PropertyPanelSnapshot | null {
+  const ui = s as GoldenState & { selectedCell?: { col: number; row: number } | null; valueEditActive?: boolean };
+  const selected = ui.selectedCell;
+  if (!selected) return null;
+  const addr = selected.col + selected.row * 18;
+  const index = s.componentIndexMap[addr];
+  const component = index === undefined || index === 0x1ff ? null : s.components[index];
+  // The displayed identifier is the row-major live-component rank. Internal
+  // golden slots retain the accepted smallest-free-slot semantic (A-011).
+  const displayIndex = component ? s.components.filter((c) => c &&
+    c.row * 18 + c.col < component.row * 18 + component.col).length : null;
+  return { ...selected, word: s.cells[addr] ?? 0, componentIndex: displayIndex,
+    valueText: selectedProperties(s).valueText,
+    editActive: ui.valueEditActive ?? false };
+}
+
+function rectBorder(fb: Framebuffer, x: number, y: number, w: number, h: number, color: number): void {
+  fillRect(fb, x, y, w, 1, color);
+  fillRect(fb, x, y + h - 1, w, 1, color);
+  fillRect(fb, x, y, 1, h, color);
+  fillRect(fb, x + w - 1, y, 1, h, color);
+}
+
+/** Capture zero follows startup blanking: phases are 1,1,2,2,... (IF-030). */
+export function capturedAnimationPhase(stateFrame: number): number {
+  return (1 + Math.floor(Math.max(0, stateFrame - 1) / 2)) & 31;
+}
+
+export function capturedCaretVisible(stateFrame: number): boolean {
+  return (Math.floor((Math.max(0, stateFrame - 1) + 2) / 10) & 1) === 1;
+}
+
+/** Five-pixel moving bands, continuous across adjacent cells and through elbows. */
+export function flowPixel(word: number, dx: number, dy: number, phase: number, spriteVisible: boolean): boolean {
+  const cell = decodeCell(word);
+  if (!cell.enabled || dx === 31 || dy === 31) return false;
+  const right = ((dx - phase) & 31) < 5, left = ((dx + phase) & 31) < 5;
+  const down = ((dy - phase) & 31) < 5, up = ((dy + phase) & 31) < 5;
+  let mask: boolean;
+  if (cell.sprite === 1) {
+    switch (cell.rotation) {
+      case 1: mask = dx > dy ? right : up; break;
+      case 2: mask = dx + dy < 31 ? right : down; break;
+      case 3: mask = dx > dy ? down : left; break;
+      default: mask = dx + dy < 31 ? up : left; break;
+    }
+  } else {
+    mask = (cell.rotation & 1) ? (word & 0x200 ? up : down) : (word & 0x200 ? left : right);
+  }
+  const center = (cell.rotation & 1) ? dx >= 13 && dx <= 18 : dy >= 13 && dy <= 18;
+  return mask && (cell.sprite <= 4 ? spriteVisible : center);
 }
 
 function rowsToBits(rows: Rows): Uint8Array {

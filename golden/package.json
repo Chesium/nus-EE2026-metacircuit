@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:rtl": "python3 tools/test_rtl.py",
-    "verify:m1": "python3 tools/verify_m1.py"
+    "verify:m1": "python3 tools/verify_m1.py",
+    "verify:m2": "python3 tools/verify_m2.py"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

@@ -231,8 +231,12 @@ order: cursor > keypad > canvas > waveforms (disabled) > property panel > bars a
 background. In practice the property panel (enabled, 640x64, `COLOR_BG` 0xECC)
 covers the top bar, the toolbar covers the left bar, and the canvas and keypad
 cover most of the right bar. Only column x = 484 for y >= 352 shows it (0xDDD).
-`property_panel_colors` are the panel's constants. Its text content is dynamic and
-not extracted.
+`property_panel_colors` are the panel's constants. `property_panel_layout` holds
+the absolute panel, caption, value-box and separator coordinates. Its text content
+is dynamic and not extracted. The panel's registered enable/color shifts its
+layer one pixel right; the text has a further one-pixel register delay. Column 0
+therefore retains the top-bar grid colour. The renderer consumes `font8x8.json`
+for panel glyphs and frame-locked caret/flow phases (INTERFACE_FACTS IF-030–033).
 
 ## font8x8.json
 

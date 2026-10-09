@@ -60,6 +60,58 @@ ComponentStore (scan order, packing) and when colour RAMs are reset. Only the
 encodings and the "stale above `component_count`" comparison rule were taken from
 it (as the coordinator asked); the rebuild behaviour was not adopted (A-011).
 
+## M2 presentation facts (2026-10-08)
+
+The GM-5 renderer additionally reads rendering-only layout, text tables and
+pixel equations; it does not read interaction or editing state machines. The
+following facts extend the original v1 source restrictions for presentation.
+
+- **IF-030** Property panel geometry and strings: `ComponentPropertyPanel.v`
+  localparams at lines 59–82, sprite label/caption/coordinate string tables at
+  lines 171–342, and rectangle priority at lines 475–543. The extractor records
+  geometry constants as `screen.property_panel_layout`; glyphs remain shared
+  `font8x8.json` assets. Panel registers shift its complete layer one pixel right,
+  leaving column 0 to the top-bar grid colour. `DynamicTextBox.v:309–317` adds
+  another register, so text appears two pixels right of nominal glyph origins.
+  Verified against full selected-panel PNGs for component detail, summary,
+  empty-cell hint, active/inactive value boxes, digits and SI suffixes.
+- **IF-031** Flow presentation: `CircuitCanvas.v:984–1049` supplies the four
+  five-pixel modulo-32 bands, diagonal elbow splits, sprite/centre-line masks
+  and yellow priority. This shares the presentation equations, not how cell
+  flow bit 9 is assigned; golden edits retain their independently chosen bit
+  semantics. Sprite, palette and colour-RAM values are sampled at x−1, as
+  already documented in the GM-4 assets. Six captured idle frames match every
+  pixel using the boot words and measured colour RAMs, including flow pixels.
+- **IF-032** Capture timing: the framescope startup gives two VSYNC leading
+  edges before captured frame 0. With D-009's two-frame phase advance, observed
+  animation phases are `1,1,2,2,…`, and golden state frame N+1 renders phase
+  `(1 + floor(N/2)) mod 32`. Explicit render-option overrides support captures
+  with another startup convention.
+- **IF-033** Caret cadence: `ComponentPropertyPanel.v` now has
+  `BLINK_FRAMES_PER_HALF=10` and a `frame_tick` input wired to `vsync_edge`.
+  Visible phase starts false and toggles every ten edges, close to the prior
+  pixel-counter cadence. Captured frame N uses `floor((N+2)/10) mod 2`.
+  The caret shares the panel's one-pixel shift and text-over-caret priority.
+- **IF-034** Property-panel component identifier is the row-major rank of live
+  component anchors. The renderer computes this presentation identifier while
+  the semantic model retains its accepted hole-preserving slots (A-011).
+
+Full-UI presentation replay at 17 settled checkpoints (through frame 76) of
+`full_ui` matches 640×480 pixels with zero masks. This replay used measured
+fg/bg colour RAM arrays to isolate renderer validation; regression references
+derive node colours independently through `core/connectivity.ts`.
+After integrating that independent connectivity reference and using the core's
+literal value text, all 22 `full_ui` checkpoints match every 640×480 pixel,
+including the new resistor's empty value field; no pixels or colours are masked.
+
+M2 connectivity table facts: **IF-035** `BackendFetchers.v`'s
+`decode_p_from_cell` supplies the base four-port masks (down/right/up/left bits):
+wire 0101, elbow 0110, tee 0111, junction/cross 1111, ground 0001; component
+halves have no conductor ports. Rotation cyclically shifts the mask left.
+`GlobalRender_top.v`'s `node_result_to_bg_palette_idx` maps node zero to default
+background and node N>0 to `1 + ((N-1) mod 13)`. Graph connectivity and numbering
+are derived independently from the netlist diagram and software flooding notebook.
+
 ## Incidental exposure (behaviour seen by accident)
 
 Listed for honesty, so a reviewer can judge whether an assumption might be

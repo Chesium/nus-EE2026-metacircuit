@@ -10,6 +10,26 @@ export interface RenderOptions {
   drawCursor: boolean;
   /** Highlight the canvas cell under the cursor. */
   hover: boolean;
+  /** Override the frame-locked current-flow phase (0..31) for a capture. */
+  animationPhase?: number;
+  /** Colour RAM snapshots; indices are row-major, with four palette bits each. */
+  cellFgColor?: ArrayLike<number>;
+  cellBgColor?: ArrayLike<number>;
+  /** The keypad samples its mouse in a separate 20 Hz clock domain. */
+  keypadMouse?: MouseSnapshot;
+  /** Explicit caret phase when replaying a capture of the free-running blink counter. */
+  caretVisible?: boolean;
+  /** A panel-port snapshot, useful for rendering independently decoded pixels. */
+  propertyPanel?: PropertyPanelSnapshot;
+}
+
+export interface PropertyPanelSnapshot {
+  col: number;
+  row: number;
+  word: number;
+  componentIndex: number | null;
+  valueText: string;
+  editActive: boolean;
 }
 
 export interface Renderer {

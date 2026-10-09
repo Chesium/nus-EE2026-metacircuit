@@ -410,7 +410,7 @@ window.__golden = {
 };
 
 const RENDERER_NOTES: Record<string, string> = {
-  assets: 'RTL bitmaps; panel text, node colours, flow animation not drawn',
+  assets: 'RTL bitmaps with property text, node colours and frame-locked flow',
   placeholder: 'stand-in graphics, not pixel-exact',
 };
 function updateBadge(): void {

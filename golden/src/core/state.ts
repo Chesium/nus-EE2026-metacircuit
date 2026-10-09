@@ -24,6 +24,9 @@ export interface Component {
   rotation: number; // 0..3
   valueBcd: number; // 3-digit BCD
   unit: number; // Unit code
+  /** Literal keypad text; absent means the initial value's display text. */
+  displayText?: string;
+  inputDigits?: number;
 }
 
 /** Where the current left-button gesture started (A-006). */
@@ -50,6 +53,11 @@ export interface GoldenState {
   rotateHoldoff: number;
   /** Snapshots delayed by the input latency (oldest first). */
   latencyQueue: MouseSnapshot[];
+  /** Property selection is a cell, so empty cells and wires can be inspected. */
+  selectedCell: { col: number; row: number } | null;
+  valueEditActive: boolean;
+  cellFgColor?: Uint8Array;
+  cellBgColor?: Uint8Array;
 }
 
 export function defaultMouse(): MouseSnapshot {
@@ -105,6 +113,8 @@ function emptyState(): GoldenState {
     gesture: 'none',
     rotateHoldoff: 0,
     latencyQueue: [],
+    selectedCell: null,
+    valueEditActive: false,
   };
 }
 
@@ -116,6 +126,9 @@ export function cloneState(s: GoldenState): GoldenState {
     components: s.components.map((c) => (c ? { ...c } : null)),
     prevMouse: { ...s.prevMouse },
     latencyQueue: s.latencyQueue.map((m) => ({ ...m })),
+    selectedCell: s.selectedCell ? { ...s.selectedCell } : null,
+    ...(s.cellFgColor ? { cellFgColor: s.cellFgColor.slice() } : {}),
+    ...(s.cellBgColor ? { cellBgColor: s.cellBgColor.slice() } : {}),
   };
 }
 

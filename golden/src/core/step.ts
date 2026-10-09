@@ -9,6 +9,7 @@ import { DEFAULT_CONFIG, type GoldenConfig } from './config.ts';
 import { EMPTY_CELL, cellAddr, decodeCell, makeCell } from './encoding.ts';
 import { inGrid, insideCanvas, pairCell, screenToCell, toolbarHit } from './geometry.ts';
 import { cloneState, defaultMouse, type Component, type GoldenState, type MouseSnapshot } from './state.ts';
+import { propertyPress } from './properties.ts';
 
 export function sanitizeMouse(m: MouseSnapshot): MouseSnapshot {
   const clamp = (v: number, hi: number) => Math.min(Math.max(Math.trunc(v), 0), hi);
@@ -25,6 +26,7 @@ export function step(prev: GoldenState, mouseIn: MouseSnapshot, cfg: GoldenConfi
   const pressed = m.left && !pm.left;
 
   if (pressed) {
+    propertyPress(s, m);
     const hit = toolbarHit(m.x, m.y);
     if (hit >= 0) {
       s.gesture = 'toolbar';
@@ -220,5 +222,6 @@ export function clearCanvas(prev: GoldenState): GoldenState {
   s.cells.fill(EMPTY_CELL);
   s.componentIndexMap.fill(COMPONENT_INDEX_INVALID);
   s.components.fill(null);
+  s.valueEditActive = false;
   return s;
 }

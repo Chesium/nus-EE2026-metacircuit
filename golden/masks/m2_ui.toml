@@ -1,0 +1,27 @@
+# All 640x480 pixels are compared, with zero tolerance. Regions explain failures.
+tolerance = 0
+
+[[region]]
+name = "property_panel"
+mode = "report"
+rect = [0, 0, 640, 64]
+
+[[region]]
+name = "toolbar"
+mode = "report"
+rect = [0, 64, 64, 288]
+
+[[region]]
+name = "canvas"
+mode = "report"
+rect = [64, 64, 576, 288]
+
+[[region]]
+name = "keypad"
+mode = "report"
+rect = [485, 352, 155, 128]
+
+[[region]]
+name = "bottom_background"
+mode = "report"
+rect = [0, 352, 485, 128]

@@ -83,7 +83,7 @@ module GlobalRender_top (
     localparam integer KEYBOARD_REGION_Y1 = KEYBOARD_Y + KEYBOARD_H;
     // =========================================================
 
-    wire clk_pixel, clk_nav, video_on;
+    wire clk_pixel, video_on;
     wire [11:0] x_pos, y_pos;
     reg  [11:0] rgb;
 
@@ -158,12 +158,6 @@ module GlobalRender_top (
     reg         mouse_left_pix_frame = 1'b0;
     reg         mouse_middle_pix_frame = 1'b0;
     reg         mouse_right_pix_frame = 1'b0;
-    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_xpos_nav_ff0 = 12'd0;
-    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_xpos_nav_ff1 = 12'd0;
-    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_ypos_nav_ff0 = 12'd0;
-    (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_ypos_nav_ff1 = 12'd0;
-    (* ASYNC_REG = "TRUE" *) reg         mouse_left_nav_ff0 = 1'b0;
-    (* ASYNC_REG = "TRUE" *) reg         mouse_left_nav_ff1 = 1'b0;
     reg  [11:0] mouse_set_value;
     reg         mouse_set_max_x, mouse_set_max_y;
 
@@ -199,9 +193,6 @@ module GlobalRender_top (
     wire        mouse_left_pix = mouse_left_pix_frame;
     wire        mouse_middle_pix = mouse_middle_pix_frame;
     wire        mouse_right_pix = mouse_right_pix_frame;
-    wire [11:0] mouse_xpos_nav = mouse_xpos_nav_ff1;
-    wire [11:0] mouse_ypos_nav = mouse_ypos_nav_ff1;
-    wire        mouse_left_nav = mouse_left_nav_ff1;
     wire [3:0]  selected_toolbar_idx_sys = selected_toolbar_idx_sys_ff1;
     wire [1:0]  selected_wire_variant_sys = selected_wire_variant_sys_ff1;
     assign keyboard_region_active = (x_pos >= KEYBOARD_REGION_X0) && (x_pos < KEYBOARD_REGION_X1) && (y_pos >= KEYBOARD_REGION_Y0) && (y_pos < KEYBOARD_REGION_Y1);
@@ -985,7 +976,6 @@ module GlobalRender_top (
         .AN(AN)
     );
     ClockDivider #( .FREQ(25_000_000) ) clkdiv_pixel_inst ( .CLK100MHZ(CLK100MHZ), .clk_out(clk_pixel) );
-    ClockDivider #( .FREQ(20) ) clkdiv_nav_inst ( .CLK100MHZ(CLK100MHZ), .clk_out(clk_nav) );
 
     // =========================================================
     // OLED Clock Divider: 100MHz -> 6.25MHz & 20Hz
@@ -1066,14 +1056,6 @@ module GlobalRender_top (
             mouse_middle_pix_frame <= mouse_middle_pix_ff1;
             mouse_right_pix_frame <= mouse_right_pix_ff1;
         end
-    end
-    always @(posedge clk_nav) begin
-        mouse_xpos_nav_ff0 <= mouse_xpos;
-        mouse_xpos_nav_ff1 <= mouse_xpos_nav_ff0;
-        mouse_ypos_nav_ff0 <= mouse_ypos;
-        mouse_ypos_nav_ff1 <= mouse_ypos_nav_ff0;
-        mouse_left_nav_ff0 <= mouse_left;
-        mouse_left_nav_ff1 <= mouse_left_nav_ff0;
     end
     always @(posedge CLK100MHZ) begin
         selected_toolbar_idx_sys_ff0 <= selected_toolbar_idx;
@@ -1266,8 +1248,8 @@ module GlobalRender_top (
     reg  [1:0]  pending_pair_value_digits = 2'd0;
     reg  [63:0] pending_pair_value_text = 64'd0;
     reg  [3:0]  pending_pair_value_text_len = 4'd0;
-    reg         keyboard_event_toggle_nav = 1'b0;
-    reg  [7:0]  keyboard_event_ascii_nav = 8'h00;
+    reg         keyboard_event_toggle_pix = 1'b0;
+    reg  [7:0]  keyboard_event_ascii_pix = 8'h00;
     (* ASYNC_REG = "TRUE" *) reg         keyboard_event_sync0 = 1'b0;
     (* ASYNC_REG = "TRUE" *) reg         keyboard_event_sync1 = 1'b0;
     reg         keyboard_event_seen = 1'b0;
@@ -3065,7 +3047,10 @@ module GlobalRender_top (
     wire keyboard_ascii_is_value_char = keyboard_ascii_is_digit || keyboard_ascii_is_dot || keyboard_ascii_is_unit;
     wire [3:0] keyboard_ascii_digit = keyboard_ascii_sys_ff1 - "0";
 
+    integer edit_text_idx;
+    reg [7:0] edit_text_char;
     always @(*) begin
+        edit_text_char = 8'd0;
         edit_value_next_bcd = selected_value_bcd;
         edit_value_next_digits = selected_value_digits;
         edit_value_next_text = selected_value_text;
@@ -3092,15 +3077,6 @@ module GlobalRender_top (
                 if (selected_value_text_len != 4'd0) begin
                     edit_value_next_text = text_delete8(selected_value_text, selected_value_text_len);
                     edit_value_next_text_len = selected_value_text_len - 1'b1;
-                    if (selected_is_resistor && (selected_value_digits != 2'd0)) begin
-                        edit_value_next_bcd = bcd_delete_ltr3(selected_value_bcd, selected_value_digits);
-                        edit_value_next_digits = selected_value_digits - 1'b1;
-                    end else if ((selected_is_voltage || selected_is_current ||
-                                  selected_is_inductor || selected_is_capacitor) &&
-                                 (selected_value_digits != 2'd0)) begin
-                        edit_value_next_bcd = bcd_delete_ltr2(selected_value_bcd, selected_value_digits);
-                        edit_value_next_digits = selected_value_digits - 1'b1;
-                    end
                     edit_value_valid = 1'b1;
                 end
             end else if (keyboard_ascii_sys_ff1 == 8'h7F) begin
@@ -3110,17 +3086,36 @@ module GlobalRender_top (
                 edit_value_next_text_len = 4'd0;
                 edit_value_valid = 1'b1;
             end
+            if (edit_value_valid) begin
+                edit_value_next_bcd = 12'd0;
+                edit_value_next_digits = 2'd0;
+                for (edit_text_idx = 0; edit_text_idx < 8; edit_text_idx = edit_text_idx + 1) begin
+                    edit_text_char = text_char_at8(edit_value_next_text, edit_text_idx[2:0]);
+                    if ((edit_text_idx < edit_value_next_text_len) &&
+                        (edit_text_char >= "0") && (edit_text_char <= "9")) begin
+                        if (selected_is_resistor && (edit_value_next_digits < 2'd3)) begin
+                            edit_value_next_bcd = bcd_insert_ltr3(edit_value_next_bcd, edit_text_char - "0", edit_value_next_digits);
+                            edit_value_next_digits = edit_value_next_digits + 1'b1;
+                        end else if (!selected_is_resistor && (edit_value_next_digits < 2'd2)) begin
+                            edit_value_next_bcd = bcd_insert_ltr2(edit_value_next_bcd, edit_text_char - "0", edit_value_next_digits);
+                            edit_value_next_digits = edit_value_next_digits + 1'b1;
+                        end
+                    end
+                end
+            end
         end
     end
 
-    always @(posedge clk_nav) begin
+    // The VGA keypad consumes the same frame-latched snapshot as the cursor.
+    // Its one-pixel-clock event pulse crosses to the system domain via toggle.
+    always @(posedge clk_pixel) begin
         if (keyboard_key_valid) begin
-            keyboard_event_ascii_nav <= keyboard_key_ascii;
-            keyboard_event_toggle_nav <= ~keyboard_event_toggle_nav;
+            keyboard_event_ascii_pix <= keyboard_key_ascii;
+            keyboard_event_toggle_pix <= ~keyboard_event_toggle_pix;
         end
     end
     always @(posedge CLK100MHZ) begin
-        keyboard_ascii_sys_ff0 <= keyboard_event_ascii_nav;
+        keyboard_ascii_sys_ff0 <= keyboard_event_ascii_pix;
         keyboard_ascii_sys_ff1 <= keyboard_ascii_sys_ff0;
     end
 
@@ -3133,6 +3128,7 @@ module GlobalRender_top (
                 .PANEL_H(64)
             ) u_prop_panel (
                 .clk_pixel(clk_pixel),
+                .frame_tick(vsync_edge),
                 .hcount(x_pos),
                 .vcount(y_pos),
                 .video_on(video_on),
@@ -3251,8 +3247,8 @@ module GlobalRender_top (
         .KEY_W(KEY_W),
         .KEY_H(KEY_H)
     ) keyboard_vga_inst (
-        .clk_nav(clk_nav),
-        .mouse_x(mouse_xpos_nav), .mouse_y(mouse_ypos_nav), .mouse_left(mouse_left_nav),
+        .clk_nav(clk_pixel),
+        .mouse_x(mouse_xpos_pix), .mouse_y(mouse_ypos_pix), .mouse_left(mouse_left_pix),
         .x(x_pos), .y(y_pos), .pixel_rgb(keyboard_rgb), .key_id(keyboard_key_id),
         .key_valid(keyboard_key_valid), .key_ascii(keyboard_key_ascii),
         .key_rgb(keyboard_key_rgb), .key_is_digit(keyboard_key_is_digit),
@@ -3448,7 +3444,7 @@ module GlobalRender_top (
         selected_value_digits <= value_digit_ram_r_data;
         selected_value_text <= value_text_ram_r_data;
         selected_value_text_len <= value_text_len_ram_r_data;
-        keyboard_event_sync0 <= keyboard_event_toggle_nav;
+        keyboard_event_sync0 <= keyboard_event_toggle_pix;
         keyboard_event_sync1 <= keyboard_event_sync0;
         component_store_change_this_cycle = 1'b0;
 

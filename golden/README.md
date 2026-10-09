@@ -2,7 +2,7 @@
 
 A software reference model of the MetaCircuit editor, used as ground truth when
 testing the RTL in simulation (see [`docs/verification-plan.md`](../docs/verification-plan.md),
-items GM-1..GM-3, SC-1, SC-2 and an early slice of SC-3).
+items GM-1..GM-6, SC-1..SC-4; M2 human validation is pending).
 
 - **Core** (`src/core`): TypeScript, no dependencies. It runs the same way in Node and in
   the browser. `step(state, mouseSnapshot) -> state` advances one frame (D-008).
@@ -46,8 +46,8 @@ npm run dev        # then open the printed URL (default http://localhost:5173)
 - **Graphics**: `assets` (the default) uses the RTL bitmaps from
   `golden/assets/*.json` (GM-4) when they exist, including the documented RTL
   quirks (canvas data lag at dx = 0, cursor at +2 px with the last column hidden,
-  cursor colour hold). It does not yet draw property-panel text, flood node
-  colours, the flow animation or the keypad's slower update. `placeholder` is hand-drawn stand-ins. A badge shows which one
+  cursor colour hold), property-panel text, node colours and frame-locked flow
+  animation. The keypad shares the frame-latched cursor input. `placeholder` is hand-drawn stand-ins. A badge shows which one
   is active.
 - **Side panel**: frame counter, selected tool (and wire variant), interaction mode
   code, pan offset, mouse sample, the cell under the cursor (decoded word, sprite,
@@ -76,6 +76,9 @@ npm run golden -- expand scenarios/m1_canvas_tools.json
 
 # Compare a completed framescope run with the reference state output
 npm run golden -- compare out/m1/rtl --reference out/m1/reference
+
+# Generate independent full UI checkpoint PNGs (vga/frame_NNNN.png)
+npm run golden -- render scenarios/m2_full_ui.json --out out/m2/reference
 ```
 
 `run` writes, per checkpoint, `<NN>_<label>.ram.json` (all memories),
@@ -206,11 +209,42 @@ junction, elbow, tee, ground, R/L/C/V/I placement, rotate (with the 8-frame
 repeat), delete, pan with clamping, the RTL boot circuit, RAM-dump export and
 semantic decode, scenarios, stim compilation, the web shell.
 
-Out of scope for now: property panel and value editing (components carry default
-values), keypad, flooding / netlist / node colours / flow animation (GM-7, GM-8),
-pixel-exact rendering and the cell decoder (GM-5, GM-6; the asset renderer is a
-start), UART, and value editing. M1 includes a checkpoint comparison CLI and a
-repeatable framescope regression runner.
+M2 adds property selection, immediate value/text/unit editing, the keypad, font
+rendering, cursor, flow animation and settled node colours. The independent
+connectivity oracle uses reciprocal graph edges and row-major node labels; it
+does not simulate the flooding engine's cycle-by-cycle progress. Dense circuits
+may therefore need settling frames before colour checkpoints. Backend stamping,
+DC solve and UART remain M3 work (GM-7, GM-8, FS-7).
+
+M2 assumptions are recorded in [`M2_ASSUMPTIONS.md`](M2_ASSUMPTIONS.md), and require
+human validation. The asset renderer marks its output `authoritative: true`
+for the supported settled UI states. Automated agreement is evidence of consistency with the RTL, rather than human
+acceptance of the chosen property/keypad semantics.
+
+## M2 pixel regression
+
+```sh
+npm run verify:m2
+npm run verify:m2 -- --runtime docker
+npm run verify:m2 -- --scenario scenarios/m2_boot.json
+# Reuse a completed RTL capture while developing the independent reference
+npm run verify:m2 -- --actual out/m2/my-run/rtl --out out/m2/new-comparison
+```
+
+The default scenario has 103 frames and 22 checkpoints. The runner generates
+reference states and PNGs solely from scenario inputs, captures checkpoint RAM
+and pixels, then checks M1 state, UI selection/edit/value/text probes, settled
+background colour RAM and enabled-sprite foreground RAM. Finally, framescope
+compares every 640x480 pixel at zero tolerance. `masks/m2_ui.toml` reports counts
+for panel, toolbar, canvas, keypad and bottom background; it excludes no pixels.
+An explicit `--masks` override supports diagnostic region comparisons.
+
+Outputs include `summary.json`, `state-compare.json`, `ui-compare.json` and
+`pixels/compare.json`, with diff PNGs on failures. Failed pixel runs also get
+`decoded-cells.json`: independent sprite/rotation/colour recovery, retaining
+symmetric rotation ambiguity, cursor occlusion and corruption witnesses. Its
+yellow-flow mask only aids diagnosis; the exact pixel comparison still checks
+those pixels. `VisibleCellDecoder` also accepts RGB444 arrays directly.
 
 ## Layout
 

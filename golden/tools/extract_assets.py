@@ -1348,6 +1348,13 @@ def extract_screen(top: Source, pp: Source) -> dict:
         pp.record("colour constants", m.start(), m.end())
     if "COLOR_BG" not in ppc:
         fail(f"{PROP_PANEL}: COLOR_BG not found")
+    panel_env = {key.removeprefix("PROP_"): tl[key] for key in
+                 ("PROP_PANEL_X", "PROP_PANEL_Y", "PROP_PANEL_W", "PROP_PANEL_H")}
+    panel_fields = ["TYPE_X", "VALUE_X", "POS_X", "TITLE_Y", "CONTENT_Y", "INPUT_X", "INPUT_Y",
+                    "VALUE_BOX_X0", "VALUE_BOX_Y0", "VALUE_BOX_X1", "VALUE_BOX_Y1",
+                    "SEP0_X", "SEP1_X", "SEP_Y0", "SEP_Y1", "HINT_Y"]
+    layout = parse_localparams(pp, panel_fields, env=panel_env)
+    panel_layout = {**panel_env, **{key: layout[key] for key in panel_fields}}
 
     return {
         "schema": "metacircuit-assets/screen",
@@ -1375,8 +1382,10 @@ def extract_screen(top: Source, pp: Source) -> dict:
             "ui (bars and background, above)",
         ],
         "property_panel_colors": ppc,
+        "property_panel_layout": panel_layout,
         "property_panel_note": "The property panel (ComponentPropertyPanel.v, text via DynamicTextBox/FontROM) is "
-                               "dynamic content; only its colour constants are extracted here.",
+                               "dynamic content; colour and geometry constants are extracted here. Text glyphs "
+                               "have an extra one-pixel register delay relative to panel borders.",
     }
 
 

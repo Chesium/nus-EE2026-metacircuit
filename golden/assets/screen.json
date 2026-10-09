@@ -3,36 +3,36 @@
   "schema_version": 1,
   "source": {
     "generator": "golden/tools/extract_assets.py",
-    "rtl_commit": "34dc50ef31592ab94effa30f53d2d8cbf89175da",
+    "rtl_commit": "46d9e089f6321425b7bec4866cc416339b49f532",
     "rtl_commit_meaning": "last git commit that touched any of the files below (`git log -1 --format=%H -- <files>`); file contents are pinned by sha256",
     "files": [
       {
         "path": "src/design/rendering/GlobalRender_top.v",
-        "sha256": "2feda612cbee5ff1f167ba8f395eba730f93738fdacfe987ec99cd0b3747d813",
+        "sha256": "a46cfbae8b1bf901e957bd77af8559ccf18c38e6355eb3644c19594ab3c6da9a",
         "line_ranges": {
           "SPRITE_* localparams": [
-            554,
-            568
+            545,
+            559
           ],
           "final rgb mux": [
-            3861,
-            3878
+            3857,
+            3874
           ],
           "function toolbar_mode_select": [
-            528,
-            552
+            519,
+            543
           ],
           "instance circuit_canvas_inst": [
-            1159,
-            1173
+            1141,
+            1155
           ],
           "instance keyboard_vga_inst": [
-            3246,
-            3260
+            3242,
+            3256
           ],
           "instance toolbar_vga_inst": [
-            3261,
-            3272
+            3257,
+            3268
           ],
           "localparam BACKGROUND": [
             27,
@@ -155,18 +155,82 @@
             30
           ],
           "ui_rgb composition": [
-            3824,
-            3861
+            3820,
+            3857
           ]
         }
       },
       {
         "path": "src/design/Dashboard/ComponentPropertyPanel.v",
-        "sha256": "e352cac195d725dfacb7c2dba8d4a36fd98cf9a293b239b8f0e283084289e3c8",
+        "sha256": "5880297db9a89662309c107fd25bffef7335cbf964447ebececb7b7d1c301554",
         "line_ranges": {
           "colour constants": [
-            33,
-            39
+            35,
+            41
+          ],
+          "localparam CONTENT_Y": [
+            63,
+            63
+          ],
+          "localparam HINT_Y": [
+            82,
+            82
+          ],
+          "localparam INPUT_X": [
+            64,
+            64
+          ],
+          "localparam INPUT_Y": [
+            65,
+            65
+          ],
+          "localparam POS_X": [
+            61,
+            61
+          ],
+          "localparam SEP0_X": [
+            77,
+            77
+          ],
+          "localparam SEP1_X": [
+            78,
+            78
+          ],
+          "localparam SEP_Y0": [
+            79,
+            79
+          ],
+          "localparam SEP_Y1": [
+            80,
+            80
+          ],
+          "localparam TITLE_Y": [
+            62,
+            62
+          ],
+          "localparam TYPE_X": [
+            59,
+            59
+          ],
+          "localparam VALUE_BOX_X0": [
+            73,
+            73
+          ],
+          "localparam VALUE_BOX_X1": [
+            75,
+            75
+          ],
+          "localparam VALUE_BOX_Y0": [
+            74,
+            74
+          ],
+          "localparam VALUE_BOX_Y1": [
+            76,
+            76
+          ],
+          "localparam VALUE_X": [
+            60,
+            60
           ]
         }
       }
@@ -327,6 +391,28 @@
       "rgb24": "#ffdd00"
     }
   },
-  "property_panel_note": "The property panel (ComponentPropertyPanel.v, text via DynamicTextBox/FontROM) is dynamic content; only its colour constants are extracted here.",
+  "property_panel_layout": {
+    "PANEL_X": 0,
+    "PANEL_Y": 0,
+    "PANEL_W": 640,
+    "PANEL_H": 64,
+    "TYPE_X": 16,
+    "VALUE_X": 224,
+    "POS_X": 392,
+    "TITLE_Y": 10,
+    "CONTENT_Y": 30,
+    "INPUT_X": 232,
+    "INPUT_Y": 30,
+    "VALUE_BOX_X0": 224,
+    "VALUE_BOX_Y0": 24,
+    "VALUE_BOX_X1": 336,
+    "VALUE_BOX_Y1": 44,
+    "SEP0_X": 192,
+    "SEP1_X": 376,
+    "SEP_Y0": 10,
+    "SEP_Y1": 54,
+    "HINT_Y": 26
+  },
+  "property_panel_note": "The property panel (ComponentPropertyPanel.v, text via DynamicTextBox/FontROM) is dynamic content; colour and geometry constants are extracted here. Text glyphs have an extra one-pixel register delay relative to panel borders.",
   "rtl_literal_notes": []
 }

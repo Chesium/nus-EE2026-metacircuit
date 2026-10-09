@@ -1,0 +1,29 @@
+{
+  "name": "m2_full_ui",
+  "description": "M2 deterministic full UI: toolbar, component/empty selection, editing, keypad hover and one-frame presses, unit suffix deletion, cursor and node colours. All edits begin with RST. Human acceptance of M2 semantics is pending.",
+  "steps": [
+    "wait 3", "checkpoint boot",
+    "move 500 368", "wait 2", "checkpoint keypad_hover",
+    "click_cell 4 4", "wait 1", "checkpoint resistor_selected",
+    "click 280 34", "wait 1", "checkpoint resistor_editing",
+    "click 620 464", "wait 1", "checkpoint value_reset",
+    "move 500 368", "down left", "wait 1", "checkpoint digit_press_pending",
+    "up left", "wait 1", "checkpoint digit_pressed",
+    "wait 1", "checkpoint digit_released",
+    "click 531 368", "click 562 368", "wait 1", "checkpoint digits_123",
+    "click 624 368", "wait 1", "checkpoint unit_kilo",
+    "click 570 464", "wait 1", "checkpoint delete_unit_preserves_digits",
+    "click 570 464", "wait 1", "checkpoint delete_digit",
+    "click 500 464", "click 500 400", "wait 1", "checkpoint literal_decimal",
+    "click 280 54", "wait 1", "checkpoint editing_closed",
+    "click_cell 2 7", "wait 1", "checkpoint ground_selected",
+    "click_cell 3 2", "click 280 34", "click 620 464",
+    "click 500 368", "click 531 368", "click 624 400", "wait 1", "checkpoint voltage_micro",
+    "click_tool wire", "wait 1", "checkpoint toolbar_selected",
+    "move 500 368", "wait 2", "checkpoint keypad_hover_after_toolbar",
+    "click_cell 0 0", "wait 1", "checkpoint empty_selected",
+    "click 620 464", "wait 2", "checkpoint cleared",
+    "click_tool resistor", "click_cell 5 3", "wait 2", "checkpoint new_resistor",
+    "click_tool pan", "click_cell 6 3", "wait 1", "checkpoint new_resistor_selected"
+  ]
+}

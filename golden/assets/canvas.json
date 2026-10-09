@@ -6,163 +6,163 @@
     "files": [
       {
         "path": "src/design/rendering/CircuitCanvas.v",
-        "sha256": "a7317f8a9cd01b803ccb31b4774104c285e9bf1833283c9b39b83d3d455a5b98",
+        "sha256": "6d6b45b6faf2a07029b2b43d857320dd2ea143d0e7b630dad684022adba4027a",
         "line_ranges": {
           "CL": [
-            204,
-            243
+            210,
+            249
           ],
           "CR": [
-            245,
-            284
+            251,
+            290
           ],
           "Cross": [
-            287,
-            326
+            293,
+            332
           ],
           "DecodeTop": [
-            934,
-            942
+            940,
+            948
           ],
           "Elbow": [
-            662,
-            701
+            668,
+            707
           ],
           "GetPixelVal": [
-            900,
-            906
+            906,
+            912
           ],
           "GetRow": [
-            908,
-            932
+            914,
+            938
           ],
           "GetXX": [
-            870,
-            883
+            876,
+            889
           ],
           "GetYY": [
-            885,
-            898
+            891,
+            904
           ],
           "Ground": [
-            829,
-            868
+            835,
+            874
           ],
           "IL": [
-            329,
-            368
+            335,
+            374
           ],
           "IR": [
-            370,
-            409
+            376,
+            415
           ],
           "Junction": [
-            412,
-            451
+            418,
+            457
           ],
           "LL": [
-            454,
-            493
+            460,
+            499
           ],
           "LR": [
-            495,
-            534
+            501,
+            540
           ],
           "RL": [
-            537,
-            576
+            543,
+            582
           ],
           "RR": [
-            578,
-            617
+            584,
+            623
           ],
           "Tee": [
-            620,
-            659
+            626,
+            665
           ],
           "VL": [
-            704,
-            743
+            710,
+            749
           ],
           "VR": [
-            745,
-            784
+            751,
+            790
           ],
           "Wire": [
-            787,
-            826
+            793,
+            832
           ],
           "at_cell_max_edge": [
-            952,
-            952
+            958,
+            958
           ],
           "at_grid_edge": [
-            1036,
-            1039
+            1042,
+            1045
           ],
           "cell data register": [
-            1060,
-            1075
+            1067,
+            1083
           ],
           "cell word decode": [
-            189,
-            192
+            195,
+            198
           ],
           "colour lookup": [
-            1042,
-            1043
+            1048,
+            1049
           ],
           "colour mux": [
-            1046,
-            1048
+            1052,
+            1054
           ],
           "flow animation": [
-            990,
-            1032
+            996,
+            1038
           ],
           "hover background": [
-            1040,
-            1041
+            1046,
+            1047
           ],
           "hovering": [
-            123,
-            127
+            127,
+            131
           ],
           "localparam ColorYellow": [
-            955,
-            955
+            961,
+            961
           ],
           "localparam DefaultBgColorIdx": [
-            178,
-            178
+            184,
+            184
           ],
           "localparam DefaultFgColorIdx": [
-            177,
-            177
+            183,
+            183
           ],
           "localparam EmptyCellData": [
-            176,
-            176
+            182,
+            182
           ],
           "localparam GridColor": [
-            956,
-            956
+            962,
+            962
           ],
           "localparam GridMarginWidth": [
-            1034,
-            1034
+            1040,
+            1040
           ],
           "localparam HoverBgColorIdx": [
-            179,
-            179
+            185,
+            185
           ],
           "module CircuitCanvas parameters": [
             1,
             12
           ],
           "palette_idx_to_rgb12": [
-            958,
-            980
+            964,
+            986
           ],
           "pan clamp": [
             44,
@@ -173,12 +173,12 @@
             71
           ],
           "sprite_pixel": [
-            948,
-            951
+            954,
+            957
           ],
           "sprite_pixel_visible": [
-            953,
-            953
+            959,
+            959
           ]
         }
       },
@@ -1202,7 +1202,7 @@
     "grid = dx < 1 or dy < 1 or dx >= 31 or dy >= 31.",
     "bg_idx = hover_bg_idx if (mouse is over the same in-bounds cell and not visible and not grid) else cell bg.",
     "colour = flow_yellow if flow-highlighted, else palette[fg] if visible, else grid colour if grid, else palette[bg_idx].",
-    "RTL timing quirk: the cell word/fg/bg are registered, so each pixel uses the cell data fetched for the previous pixel (x-1) while dx/dy/i/j/grid/hover come from x. Only pixels with dx == 0 can differ (they show the left neighbour cell's sprite/fg, decoded at dx = 0); at x = canvas_x0 the data is empty."
+    "Timing: the cell word/fg/bg are registered, but the register latches the next pixel's cell, so every pixel uses the data of its own cell (i, j), including dx == 0 and x = canvas_x0."
   ],
   "flow_animation": {
     "note": "Animated current-flow highlight (logic, not an asset); masked in comparisons until the phase is frame-locked (RTL-1). Constants for reference only.",

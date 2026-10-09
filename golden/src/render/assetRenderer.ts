@@ -1,9 +1,9 @@
 // Renderer built from the GM-4 assets (golden/assets/*.json, format in
-// golden/assets/README.md). It follows the documented pixel rules, including the
-// canvas one-pixel data lag, property text's extra register, and the cursor's
-// displayed sprites. Colour RAMs and independent keypad/caret samples can be
-// supplied by the caller; otherwise node colours come from the independent
-// settled connectivity graph. See INTERFACE_FACTS IF-030–034.
+// golden/assets/README.md). It follows the documented pixel rules, including
+// property text's extra register and the cursor's displayed sprites. Colour RAMs
+// and independent keypad/caret samples can be supplied by the caller; otherwise
+// node colours come from the independent settled connectivity graph. See
+// INTERFACE_FACTS IF-030–034.
 
 import { decodeCell } from '../core/encoding.ts';
 import { deriveConnectivity } from '../core/connectivity.ts';
@@ -205,8 +205,6 @@ export class AssetRenderer implements Renderer {
     const phase = opts.animationPhase ?? capturedAnimationPhase(s.frame);
     const hoverBg = this.palette[col.hover_bg_idx] ?? 0x280;
     const hover = opts.hover ? screenToCell(mouse.x, mouse.y, s.panX, s.panY) : null;
-    const cellAt = (i: number, j: number): number =>
-      i >= 0 && j >= 0 && i < g.grid_w && j < g.grid_h ? s.cells[i + j * g.grid_w]! : 0;
     for (let y = g.canvas_y0; y < g.canvas_y0 + g.canvas_h; y++) {
       const ay = y - g.canvas_y0 - s.panY;
       const j = Math.floor(ay / g.cell_size);
@@ -215,15 +213,8 @@ export class AssetRenderer implements Renderer {
         const ax = x - g.canvas_x0 - s.panX;
         const i = Math.floor(ax / g.cell_size);
         const dx = ax - i * g.cell_size;
-        // One-pixel data lag: the cell word is the one fetched for x - 1.
-        let word = 0;
-        let dataAddr = -1;
-        if (x > g.canvas_x0) {
-          const pax = ax - 1;
-          const pi = Math.floor(pax / g.cell_size);
-          word = cellAt(pi, j);
-          if (pi >= 0 && pi < g.grid_w && j >= 0 && j < g.grid_h) dataAddr = pi + j * g.grid_w;
-        }
+        const dataAddr = i >= 0 && j >= 0 && i < g.grid_w && j < g.grid_h ? i + j * g.grid_w : -1;
+        const word = dataAddr < 0 ? 0 : s.cells[dataAddr]!;
         const fgIdx = dataAddr < 0 ? col.default_fg_idx : (fgColors?.[dataAddr] ?? col.default_fg_idx) & 15;
         const bgIdx = dataAddr < 0 ? col.default_bg_idx : (bgColors?.[dataAddr] ?? col.default_bg_idx) & 15;
         const fg = this.palette[fgIdx] ?? 0xfff;

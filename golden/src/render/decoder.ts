@@ -80,7 +80,6 @@ interface Match { candidate: VisibleCellCandidate; errors: number; fg: number | 
 const hex = (c: number) => `0x${c.toString(16).padStart(3, '0')}`;
 
 /** Match the cell interiors; borders remain the responsibility of exact pixel comparison.
- * dx=0 is excluded because of the registered canvas RAM's left-neighbour lag.
  * Both outer rows/columns are excluded because grid and sprite priority can
  * conceal sprite bits there. Partial/panned cells retain every visible interior
  * sample, including pixels on the canvas clipping edge.

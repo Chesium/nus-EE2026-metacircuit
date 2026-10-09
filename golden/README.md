@@ -45,9 +45,8 @@ npm run dev        # then open the printed URL (default http://localhost:5173)
   (1-frame latency, A-003).
 - **Graphics**: `assets` (the default) uses the RTL bitmaps from
   `golden/assets/*.json` (GM-4) when they exist, including the documented RTL
-  quirks (canvas data lag at dx = 0, cursor at +2 px with the last column hidden,
-  cursor colour hold), property-panel text, node colours and frame-locked flow
-  animation. The keypad shares the frame-latched cursor input. `placeholder` is hand-drawn stand-ins. A badge shows which one
+  quirks (cursor at +2 px with the last column hidden, cursor colour hold),
+  property-panel text, node colours and frame-locked flow animation. The keypad shares the frame-latched cursor input. `placeholder` is hand-drawn stand-ins. A badge shows which one
   is active.
 - **Side panel**: frame counter, selected tool (and wire variant), interaction mode
   code, pan offset, mouse sample, the cell under the cursor (decoded word, sprite,

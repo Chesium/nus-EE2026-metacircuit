@@ -53,7 +53,7 @@ describe.skipIf(!haveAssets)('asset renderer (golden/assets present)', () => {
     expect(bundleFromRecord({ canvas: rec.canvas }).problem).toMatch(/missing asset files/);
   });
 
-  it('renders palette RAMs with the canvas fetch lag and hover priority', () => {
+  it('renders palette RAMs aligned to each cell, including its left column, and hover priority', () => {
     const s = initialState({ bootCircuit: false });
     s.cells[0] = 1; // horizontal wire
     const fg = new Uint8Array(288).fill(15), bg = new Uint8Array(288);
@@ -63,7 +63,8 @@ describe.skipIf(!haveAssets)('asset renderer (golden/assets present)', () => {
     r.render(s, mouse, fb, { drawCursor: false, hover: false, cellFgColor: fg, cellBgColor: bg, animationPhase: 20 });
     expect(getPx(fb, 74, 79)).toBe(0xc33); // foreground
     expect(getPx(fb, 74, 74)).toBe(0xe63); // node background
-    expect(getPx(fb, 96, 79)).toBe(0xc33); // x-1 fetch: previous cell at boundary
+    expect(getPx(fb, 64, 79)).toBe(0xc33); // the wire's own left column, at the canvas edge
+    expect(getPx(fb, 96, 79)).toBe(0x666); // the next (empty) cell's left column is grid, not the wire
     expect(getPx(fb, 97, 79)).toBe(0x222); // next empty cell
     r.render(s, { ...mouse, x: 74, y: 74 }, fb, { drawCursor: false, hover: true, cellBgColor: bg });
     expect(getPx(fb, 74, 74)).toBe(0x280);

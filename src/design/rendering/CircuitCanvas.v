@@ -90,12 +90,16 @@ module CircuitCanvas #(
   assign y_pos_rel_canvas_next = x_pos_rel_canvas == CanvasWidth - 1 
           ? (y_pos_rel_canvas == CanvasHeight - 1 ? 0 : y_pos_rel_canvas + 1)
           : y_pos_rel_canvas;
+  // Fetch three pixels ahead: one cycle for the address register, one for the
+  // synchronous RAM read, and one for the cell_data register, so the latched
+  // cell data lines up with the (registered) x_pos it is drawn at.
   wire [11:0] x_pos_rel_canvas_prefetch;
   wire [11:0] y_pos_rel_canvas_prefetch;
-  assign x_pos_rel_canvas_prefetch = x_pos_rel_canvas == CanvasWidth - 1 ? 1 :
-                                     x_pos_rel_canvas == CanvasWidth - 2 ? 0 :
-                                     x_pos_rel_canvas + 2;
-  assign y_pos_rel_canvas_prefetch = x_pos_rel_canvas >= CanvasWidth - 2
+  assign x_pos_rel_canvas_prefetch = x_pos_rel_canvas == CanvasWidth - 1 ? 2 :
+                                     x_pos_rel_canvas == CanvasWidth - 2 ? 1 :
+                                     x_pos_rel_canvas == CanvasWidth - 3 ? 0 :
+                                     x_pos_rel_canvas + 3;
+  assign y_pos_rel_canvas_prefetch = (x_pos_rel_canvas >= CanvasWidth - 3 && x_pos_rel_canvas < CanvasWidth)
           ? (y_pos_rel_canvas == CanvasHeight - 1 ? 0 : y_pos_rel_canvas + 1)
           : y_pos_rel_canvas;
   wire [12:0] absolute_grid_x = {1'b0, x_pos_rel_canvas} - grid_pos_x;
@@ -130,6 +134,8 @@ module CircuitCanvas #(
   wire [11:0] required_j_2;
   assign required_i_2 = absolute_grid_x_next / CellSize;
   assign required_j_2 = absolute_grid_y_next / CellSize;
+  wire required_cell_in_bounds_2;
+  assign required_cell_in_bounds_2 = (required_i_2 < GridWidth) && (required_j_2 < GridHeight);
 
   wire [11:0] next_i;
   wire [11:0] next_j;
@@ -1050,18 +1056,20 @@ module CircuitCanvas #(
 
   reg [1:0] status = 2'b00;
 
+  // cell_data is registered, so latch the cell of the next pixel (required_*_2):
+  // it is what the pixel after this clock edge is drawn from.
   always @(posedge clk_pixel) begin
     returned_data_i <= requested_data_i;
     returned_data_j <= requested_data_j;
     requested_data_i <= prefetched_i;
     requested_data_j <= prefetched_j;
 
-    if (!required_cell_in_bounds) begin
+    if (!required_cell_in_bounds_2) begin
       cell_data <= EmptyCellData;
       cell_fg_color_idx <= DefaultFgColorIdx;
       cell_bg_color_idx <= DefaultBgColorIdx;
       status <= 2'b00;
-    end else if (returned_data_i == required_i && returned_data_j == required_j) begin
+    end else if (returned_data_i == required_i_2 && returned_data_j == required_j_2) begin
       cached_data <= incoming_data;
       cached_fg_color_idx <= incoming_fg_color_idx;
       cached_bg_color_idx <= incoming_bg_color_idx;
@@ -1071,7 +1079,7 @@ module CircuitCanvas #(
       cell_fg_color_idx <= incoming_fg_color_idx;
       cell_bg_color_idx <= incoming_bg_color_idx;
       status <= 2'b10;
-    end else if (cached_data_i == required_i && cached_data_j == required_j) begin
+    end else if (cached_data_i == required_i_2 && cached_data_j == required_j_2) begin
       cell_data <= cached_data;
       cell_fg_color_idx <= cached_fg_color_idx;
       cell_bg_color_idx <= cached_bg_color_idx;

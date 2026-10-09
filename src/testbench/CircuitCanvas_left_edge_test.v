@@ -1,161 +1,202 @@
 `timescale 1ns / 1ps
 
+// Checks that CircuitCanvas's registered cell data lines up with the pixel it is
+// drawn at. x_pos/y_pos are driven like the VGA counter registers (they change on
+// the clock edge), and at every canvas pixel the latched cell word and colour
+// indices are compared, mid-cycle, with the RAM entries of the cell under that
+// pixel. Misaligned data shows up at each cell's left column (dx = 0), which
+// would otherwise draw the left neighbour's sprite.
 module CircuitCanvas_left_edge_test ();
 
-  localparam integer GridWidth = 16;
-  localparam integer GridHeight = 16;
+  wire done_vga, done_tight;
+  wire [31:0] failures_vga, failures_tight;
+
+  // The canvas as GlobalRender_top instantiates it, scanned with the 800-pixel VGA line.
+  CircuitCanvasAlignmentCase #(
+      .CanvasPosX(64), .CanvasPosY(64), .CanvasWidth(576), .CanvasHeight(288),
+      .GridWidth(18), .GridHeight(16), .LineLength(800), .FrameLines(525)
+  ) vga_case (
+      .done(done_vga), .failures(failures_vga)
+  );
+
+  // A canvas at x = 0 that fills the whole line, so the fetch must wrap to the next row.
+  CircuitCanvasAlignmentCase #(
+      .CanvasPosX(0), .CanvasPosY(0), .CanvasWidth(400), .CanvasHeight(300),
+      .GridWidth(16), .GridHeight(16), .LineLength(400), .FrameLines(300)
+  ) tight_case (
+      .done(done_tight), .failures(failures_tight)
+  );
+
+  initial begin
+    wait (done_vga && done_tight);
+    if (failures_vga + failures_tight == 0) begin
+      $display("CircuitCanvas_left_edge_test passed.");
+      $finish;
+    end else begin
+      $fatal(1, "CircuitCanvas_left_edge_test: %0d misaligned pixel(s).", failures_vga + failures_tight);
+    end
+  end
+
+endmodule
+
+module CircuitCanvasAlignmentCase #(
+    parameter integer CanvasPosX = 0,
+    parameter integer CanvasPosY = 0,
+    parameter integer CanvasWidth = 400,
+    parameter integer CanvasHeight = 300,
+    parameter integer GridWidth = 16,
+    parameter integer GridHeight = 16,
+    parameter integer LineLength = 400,
+    parameter integer FrameLines = 300
+) (
+    output reg        done = 1'b0,
+    output reg [31:0] failures = 0
+);
+
   localparam integer CellSize = 32;
   localparam integer CellCount = GridWidth * GridHeight;
   localparam integer AddrWidth = $clog2(CellCount);
   localparam integer DataWidth = 16;
-
-  localparam [DataWidth-1:0] Row0Word = 16'b0000000_10_000001_1;
-  localparam [DataWidth-1:0] Row1Word = 16'b0000000_01_000010_1;
-  localparam [DataWidth-1:0] Row2Word = 16'b0000000_11_001000_1;
+  localparam integer MinPanX = CanvasWidth > GridWidth * CellSize ? 0 : CanvasWidth - GridWidth * CellSize;
+  localparam integer MinPanY = CanvasHeight > GridHeight * CellSize ? 0 : CanvasHeight - GridHeight * CellSize;
+  localparam [11:0] LastX = LineLength - 1;
+  localparam [11:0] LastY = FrameLines - 1;
 
   reg clk_pixel = 1'b0;
   always #20 clk_pixel = ~clk_pixel;  // 25 MHz
 
+  // VGA-style counters: they advance on the clock edge, like h_count_reg/v_count_reg.
   reg [11:0] x_pos = 0;
   reg [11:0] y_pos = 0;
+  always @(posedge clk_pixel) begin
+    if (x_pos == LastX) begin
+      x_pos <= 0;
+      y_pos <= (y_pos == LastY) ? 12'd0 : y_pos + 1;
+    end else begin
+      x_pos <= x_pos + 1;
+    end
+  end
 
   wire [11:0] rgb;
   wire rendered;
   wire [AddrWidth-1:0] data_addr;
   wire [DataWidth-1:0] incoming_data;
+  wire [3:0] incoming_fg_color_idx;
+  wire [3:0] incoming_bg_color_idx;
 
-  SimpleRam #(
-      .WordWidth(DataWidth),
-      .WordCount(CellCount)
-  ) ram_inst (
-      .clk  (clk_pixel),
-      .w_en (1'b0),
-      .w_addr({AddrWidth{1'b0}}),
-      .r_addr(data_addr),
-      .d_in ({DataWidth{1'b0}}),
-      .d_out(incoming_data)
+  SimpleRam #(.WordWidth(DataWidth), .WordCount(CellCount)) cell_ram (
+      .clk(clk_pixel), .w_en(1'b0), .w_addr({AddrWidth{1'b0}}), .r_addr(data_addr),
+      .d_in({DataWidth{1'b0}}), .d_out(incoming_data)
+  );
+  SimpleRam #(.WordWidth(4), .WordCount(CellCount)) fg_ram (
+      .clk(clk_pixel), .w_en(1'b0), .w_addr({AddrWidth{1'b0}}), .r_addr(data_addr),
+      .d_in(4'd0), .d_out(incoming_fg_color_idx)
+  );
+  SimpleRam #(.WordWidth(4), .WordCount(CellCount)) bg_ram (
+      .clk(clk_pixel), .w_en(1'b0), .w_addr({AddrWidth{1'b0}}), .r_addr(data_addr),
+      .d_in(4'd0), .d_out(incoming_bg_color_idx)
   );
 
-  CircuitCanvas dut (
-      .clk_pixel(clk_pixel),
-      .x_pos(x_pos),
-      .y_pos(y_pos),
-      .rgb(rgb),
-      .rendered(rendered),
-      .mouse_x_pos(12'd0),
-      .mouse_y_pos(12'd0),
-      .data_addr(data_addr),
-      .incoming_data(incoming_data),
-      .display_grid(1'b1),
-      .mouse_left_click(1'b0)
+  CircuitCanvas #(
+      .CanvasPosX(CanvasPosX), .CanvasPosY(CanvasPosY),
+      .CanvasWidth(CanvasWidth), .CanvasHeight(CanvasHeight),
+      .CellSize(CellSize), .GridWidth(GridWidth), .GridHeight(GridHeight)
+  ) dut (
+      .clk_pixel(clk_pixel), .x_pos(x_pos), .y_pos(y_pos), .anim_phase(5'd0),
+      .rgb(rgb), .rendered(rendered), .mouse_x_pos(12'd0), .mouse_y_pos(12'd0),
+      .data_addr(data_addr), .incoming_data(incoming_data),
+      .incoming_fg_color_idx(incoming_fg_color_idx), .incoming_bg_color_idx(incoming_bg_color_idx),
+      .display_grid(1'b1), .mouse_left_click(1'b0),
+      .grid_pos_x_out(), .grid_pos_y_out()
   );
 
-  integer failure_count = 0;
-  integer sample_x;
-
-  task automatic log_sample;
-    input signed [12:0] pan_x;
-    input integer row;
+  // Every cell gets a distinct word and neighbouring cells get distinct colours.
+  function automatic [DataWidth-1:0] word_at(input integer addr);
+    word_at = {addr[DataWidth-2:0], 1'b1};
+  endfunction
+  function automatic [3:0] fg_at(input integer addr);
+    integer m;
     begin
-      $display("pan_x=%0d row=%0d x=%0d y=%0d req=(%0d,%0d) req2=(%0d,%0d) data_addr=%0d req_idx=(%0d,%0d) ret_idx=(%0d,%0d) cache_idx=(%0d,%0d) incoming_data=%h cell_data=%h",
-               pan_x, row, x_pos, y_pos, dut.required_i, dut.required_j, dut.required_i_2,
-               dut.required_j_2, data_addr, dut.requested_data_i, dut.requested_data_j,
-               dut.returned_data_i, dut.returned_data_j, dut.cached_data_i,
-               dut.cached_data_j, incoming_data, dut.cell_data);
+      m = addr % 15;
+      fg_at = m[3:0];
     end
-  endtask
-
-  task automatic expect_word;
-    input [DataWidth-1:0] got;
-    input [DataWidth-1:0] expected;
-    input [255:0] message;
+  endfunction
+  function automatic [3:0] bg_at(input integer addr);
+    integer m;
     begin
-      if (got !== expected) begin
-        failure_count = failure_count + 1;
-        $display("FAIL: %0s got=%h expected=%h", message, got, expected);
+      m = 14 - (addr % 15);
+      bg_at = m[3:0];
+    end
+  endfunction
+
+  reg checking = 1'b0;
+  integer pan_x = 0;
+  integer pan_y = 0;
+  integer checked = 0;
+
+  always @(negedge clk_pixel) begin
+    if (checking && rendered) begin : check_pixel
+      integer ax, ay, i, j, addr;
+      reg [DataWidth-1:0] want_word;
+      reg [3:0] want_fg, want_bg;
+      ax = x_pos - CanvasPosX - pan_x;
+      ay = y_pos - CanvasPosY - pan_y;
+      i = ax / CellSize;
+      j = ay / CellSize;
+      addr = i + j * GridWidth;
+      if (i < GridWidth && j < GridHeight) begin
+        want_word = word_at(addr);
+        want_fg = fg_at(addr);
+        want_bg = bg_at(addr);
+      end else begin
+        want_word = 0;
+        want_fg = 4'hF;
+        want_bg = 4'h0;
       end
-    end
-  endtask
-
-  task automatic run_left_edge_case;
-    input signed [12:0] pan_x;
-    input integer row;
-    input [DataWidth-1:0] expected_word;
-    integer sample_y;
-    begin
-      dut.grid_pos_x = pan_x;
-      dut.grid_pos_y = 13'sd0;
-
-      sample_y = (row * CellSize) + 8;
-
-      x_pos = 12'd398;
-      y_pos = sample_y - 1;
-      @(posedge clk_pixel);
-      #1;
-      log_sample(pan_x, row);
-
-      x_pos = 12'd399;
-      y_pos = sample_y - 1;
-      @(posedge clk_pixel);
-      #1;
-      log_sample(pan_x, row);
-
-      for (sample_x = 0; sample_x < 6; sample_x = sample_x + 1) begin
-        x_pos = sample_x[11:0];
-        y_pos = sample_y;
-        @(posedge clk_pixel);
-        #1;
-        log_sample(pan_x, row);
-
-        if (dut.required_i == 0 && dut.required_j == row) begin
-          if (dut.returned_data_i == 0 && dut.returned_data_j == row) begin
-            expect_word(incoming_data, expected_word,
-                        "incoming_data should match the left-edge sprite word");
-          end
-
-          if (sample_x >= 1 || dut.returned_data_i == 0) begin
-            expect_word(dut.cell_data, expected_word,
-                        "cell_data should settle to the left-edge sprite word");
-          end
+      checked = checked + 1;
+      if (dut.cell_data !== want_word || dut.cell_fg_color_idx !== want_fg || dut.cell_bg_color_idx !== want_bg) begin
+        if (failures < 10) begin
+          $display("FAIL canvas@(%0d,%0d) pan=(%0d,%0d) pixel=(%0d,%0d) cell=(%0d,%0d) dx=%0d: data=%h fg=%h bg=%h, expected %h %h %h",
+                   CanvasPosX, CanvasPosY, pan_x, pan_y, x_pos, y_pos, i, j, ax % CellSize,
+                   dut.cell_data, dut.cell_fg_color_idx, dut.cell_bg_color_idx, want_word, want_fg, want_bg);
         end
+        failures = failures + 1;
       end
+    end
+  end
+
+  task automatic scan_frame;
+    input integer px;
+    input integer py;
+    begin
+      @(negedge clk_pixel);
+      checking = 1'b0;
+      pan_x = px;
+      pan_y = py;
+      dut.grid_pos_x = px;
+      dut.grid_pos_y = py;
+      repeat (LineLength) @(negedge clk_pixel);  // let the fetch pipeline refill
+      checking = 1'b1;
+      repeat (LineLength * FrameLines) @(negedge clk_pixel);
+      checking = 1'b0;
     end
   endtask
 
-  initial begin
-    integer idx;
-
-    for (idx = 0; idx < CellCount; idx = idx + 1) begin
-      ram_inst.mem[idx] = 16'd0;
+  initial begin : run
+    integer addr;
+    for (addr = 0; addr < CellCount; addr = addr + 1) begin
+      cell_ram.mem[addr] = word_at(addr);
+      fg_ram.mem[addr] = fg_at(addr);
+      bg_ram.mem[addr] = bg_at(addr);
     end
 
-    ram_inst.mem[0] = Row0Word;
-    ram_inst.mem[16] = Row1Word;
-    ram_inst.mem[32] = Row2Word;
+    scan_frame(0, 0);
+    scan_frame(MinPanX < -8 ? -8 : MinPanX, MinPanY < -5 ? -5 : MinPanY);
+    scan_frame(MinPanX < -31 ? -31 : MinPanX, MinPanY < -31 ? -31 : MinPanY);
+    scan_frame(MinPanX, MinPanY);
 
-    repeat (6) @(posedge clk_pixel);
-
-    $display("Running left-edge fetch checks with pan_x = 0...");
-    run_left_edge_case(13'sd0, 0, Row0Word);
-    run_left_edge_case(13'sd0, 1, Row1Word);
-    run_left_edge_case(13'sd0, 2, Row2Word);
-
-    $display("Running left-edge fetch checks with pan_x = -8...");
-    run_left_edge_case(-13'sd8, 0, Row0Word);
-    run_left_edge_case(-13'sd8, 1, Row1Word);
-    run_left_edge_case(-13'sd8, 2, Row2Word);
-
-    $display("Running left-edge fetch checks with pan_x = -31...");
-    run_left_edge_case(-13'sd31, 0, Row0Word);
-    run_left_edge_case(-13'sd31, 1, Row1Word);
-    run_left_edge_case(-13'sd31, 2, Row2Word);
-
-    if (failure_count == 0) begin
-      $display("CircuitCanvas_left_edge_test completed without reproducing a mismatch.");
-      $finish;
-    end else begin
-      $fatal(1, "CircuitCanvas_left_edge_test reproduced %0d mismatch(es).", failure_count);
-    end
+    $display("canvas@(%0d,%0d): %0d pixels checked, %0d misaligned", CanvasPosX, CanvasPosY, checked, failures);
+    done = 1'b1;
   end
 
 endmodule

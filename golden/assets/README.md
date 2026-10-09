@@ -38,8 +38,8 @@ partial data.
 - **Screen coordinates** are the RTL's `x_pos`/`y_pos` (0..639, 0..479). These are
   also framescope PNG pixel coordinates: the metacircuit manifest sets
   `de_delay = 2`, which removes the two output register stages. Every layer is drawn
-  at its nominal position, with two exceptions: the cursor is shifted 2 px right
-  (`cursor.json`), and the canvas has a one-pixel data lag (see `canvas.json`).
+  at its nominal position, with one exception: the cursor is shifted 2 px right
+  (`cursor.json`).
 - **Bitmap rows** are arrays of strings. `rows[0]` is the top row. Within a row,
   character 0 is the **leftmost** pixel. The strings are the RTL's binary
   literals written MSB first, so character `c` of a W-bit row is bit `W-1-c`.
@@ -141,14 +141,14 @@ rotation. Example: the Wire sprite is a horizontal band (rows 13..18). With
    `visible` (sprite pixels at `dx == 0` or `dy == 0` draw over the grid line);
    `grid` colour; otherwise `palette[hover_bg_idx]` if the mouse is in this cell,
    else `palette[bg]`.
-5. **One-pixel data lag (RTL quirk).** The cell word and the fg/bg indices are
-   registered, so each pixel uses the cell data fetched for pixel `x - 1`, while
-   `dx`, `dy`, the grid test and the hover test use `x`. Only the `dx == 0` column
-   of each cell is affected. There, `visible`/fg come from the *left neighbour's*
-   sprite, sampled at `dx = 0` with the neighbour's rotation. At `x = 64` (the
-   canvas's first column) the data is empty. Without this rule, 50 to 60 pixels of
-   the default circuit differ per frame (for example, a vertical wire's grid-line
-   column takes the colour of the cell to its left).
+5. **Cell data timing.** The cell word and the fg/bg indices are registered. The
+   RTL fetches three pixels ahead and latches the *next* pixel's cell, so every
+   pixel, including each cell's `dx == 0` column and `x = 64`, uses the data of its
+   own cell. Before this was fixed, the register latched the current pixel's cell,
+   so each pixel used the data for `x - 1`: every cell's left column showed its left
+   neighbour's sprite and fg, and `x = 64` was empty.
+   `src/testbench/CircuitCanvas_left_edge_test.v` (run by `tools/test_rtl.py`)
+   checks the alignment at every canvas pixel.
 
 `flow_animation` lists the constants of the animated current highlight (yellow
 bands 5 px wide, moving with `anim_phase`). That is renderer logic, not an asset.
@@ -251,8 +251,9 @@ cycles the wire tool to variant 1). The cells were decoded into (sprite, rotatio
 fg, bg) from these assets. The script then re-rendered the canvas, toolbar, keypad,
 cursor and the bottom background from the JSON and compared every pixel with the
 PNGs. Result: 0 mismatching pixels, excluding the animated yellow flow pixels.
-This needs the canvas data-lag rule and `sprites_as_displayed` for the pressed
-cursor. Exercised: rotations 0..3, sprites Wire, Elbow, Tee, RL, RR, VL, VR and
+This needs `sprites_as_displayed` for the pressed cursor. (That run predates the
+canvas cell-data fix and also needed a one-pixel data-lag rule; after the fix,
+`npm run verify:m2` again finds 0 differing pixels without it.) Exercised: rotations 0..3, sprites Wire, Elbow, Tee, RL, RR, VL, VR and
 Ground, palette entries 0, 1, 2, 14 and 15, grid, hover, toolbar states normal,
 selected and selected_pressed, toolbar icons 0, 2..9, 10 and 11, both cursors, and
 keypad states normal, selected and selected_pressed. The cursor tables were also
@@ -268,8 +269,7 @@ compared with the SV port in framescope (`stubs/MouseDisplay.sv`): identical.
   This leaves four stray fill pixels outside the pressed outline: (row, col) (4,4),
   (4,5), (5,4) and (23,12). Because of the colour-hold quirk, three of them show
   black, and the outline pixel (4,7) shows white.
-- Canvas: one-pixel data lag at `dx == 0` (above). Sprite row 31 and column 31 are
-  never drawn. `display_grid` is unused.
+- Canvas: sprite row 31 and column 31 are never drawn. `display_grid` is unused.
 - Toolbar icon 1 is never shown. Button 1 always uses icons 10..13, and icon 10
   has the same bitmap as icon 1.
 - Right bar grid line and fill both truncate to 0xDDD.

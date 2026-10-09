@@ -50,9 +50,9 @@ their original line numbers identify the v1 sources.
 
 The asset renderer (`src/render/assetRenderer.ts`) also uses the GM-4 files in
 `golden/assets/` (colours, bitmaps, pixel rules, validated pixel-exact against RTL
-frames). It applies the three documented RTL rendering quirks: the canvas cell-data
-lag at dx = 0, the cursor drawn 2 px right with its last column hidden, and the
-cursor colour hold (via `sprites_as_displayed`). Those files are shared with the
+frames). It applies the two documented RTL rendering quirks: the cursor drawn 2 px
+right with its last column hidden, and the cursor colour hold (via
+`sprites_as_displayed`). Those files are shared with the
 RTL on purpose (D-007) and are documented in `golden/assets/README.md`.
 
 The framescope manifest's comments also describe how the RTL rebuilds the

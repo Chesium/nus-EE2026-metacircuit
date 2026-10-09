@@ -93,7 +93,7 @@ describe('independent pixel cell decoder', () => {
     expect(decoder.decode(rgba)).toEqual(decoder.decode(frame));
   });
 
-  it('ignores RAM-lag boundary columns and grid borders', () => {
+  it('ignores cell boundary columns and grid borders', () => {
     const frame = blank();
     draw(frame, 3, 4, 15, 2);
     const before = decoder.decode(frame);

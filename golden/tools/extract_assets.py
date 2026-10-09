@@ -511,6 +511,10 @@ def extract_canvas(cc: Source, top: Source) -> dict:
         ("cell data register", "cell_data <= EmptyCellData;"),
         ("cell data register", "cell_data <= incoming_data;"),
         ("cell data register", "cell_data <= cached_data;"),
+        # The register latches the next pixel's cell, so the data lines up with x (no x-1 lag).
+        ("cell data register", "if (!required_cell_in_bounds_2) begin"),
+        ("cell data register", "end else if (returned_data_i == required_i_2 && returned_data_j == required_j_2) begin"),
+        ("cell data register", "end else if (cached_data_i == required_i_2 && cached_data_j == required_j_2) begin"),
         ("rendered", "assign rendered = x_pos >= CanvasPosX && x_pos < CanvasPosX + CanvasWidth && y_pos >= CanvasPosY && y_pos < CanvasPosY + CanvasHeight;"),
     ]
     for label, code in shapes:
@@ -614,9 +618,8 @@ def extract_canvas(cc: Source, top: Source) -> dict:
             "bg_idx = hover_bg_idx if (mouse is over the same in-bounds cell and not visible and not grid) else cell bg.",
             "colour = flow_yellow if flow-highlighted, else palette[fg] if visible, else grid colour if grid, "
             "else palette[bg_idx].",
-            "RTL timing quirk: the cell word/fg/bg are registered, so each pixel uses the cell data fetched for the "
-            "previous pixel (x-1) while dx/dy/i/j/grid/hover come from x. Only pixels with dx == 0 can differ "
-            "(they show the left neighbour cell's sprite/fg, decoded at dx = 0); at x = canvas_x0 the data is empty.",
+            "Timing: the cell word/fg/bg are registered, but the register latches the next pixel's cell, so every "
+            "pixel uses the data of its own cell (i, j), including dx == 0 and x = canvas_x0.",
         ],
         "flow_animation": {
             "note": "Animated current-flow highlight (logic, not an asset); masked in comparisons until the phase "

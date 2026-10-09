@@ -153,6 +153,7 @@ See [`src/uart_link/README.md`](src/uart_link/README.md) for packet formats and 
 - [FDP requirements](docs/EE2026%20FDP%20Requirements.pdf)
 - [Project proposal](docs/EE2026%20FDP%20Proposal.pdf)
 - [Final report](docs/EE2026%20FDP%20Final%20Report.pdf)
+- [Verification plan](docs/verification-plan.md): simulation-only testing with a golden model and framescope (progress, TODOs, decisions)
 
 ## IDE setup
 

@@ -25,3 +25,4 @@ xsim.dir
 *.pb
 *.wdb
 *.pyc
+.vscode

@@ -26,7 +26,6 @@ import argparse
 import hashlib
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -304,23 +303,9 @@ def color(v12: int, source888: int | None = None) -> dict:
 # Git provenance
 # --------------------------------------------------------------------------
 
-def git_last_commit(paths: list[str]) -> str:
-    try:
-        out = subprocess.run(["git", "log", "-1", "--format=%H", "--", *paths], cwd=REPO,
-                             capture_output=True, text=True, check=True).stdout.strip()
-    except (OSError, subprocess.CalledProcessError) as exc:
-        fail(f"git log failed: {exc}")
-    if not re.fullmatch(r"[0-9a-f]{40}", out):
-        fail(f"git log returned no commit for {paths}")
-    return out
-
-
 def source_block(sources: list[Source]) -> dict:
     return {
         "generator": GENERATOR,
-        "rtl_commit": git_last_commit([s.rel for s in sources]),
-        "rtl_commit_meaning": "last git commit that touched any of the files below "
-                              "(`git log -1 --format=%H -- <files>`); file contents are pinned by sha256",
         "files": [s.info() for s in sources],
     }
 

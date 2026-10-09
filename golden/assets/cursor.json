@@ -3,8 +3,6 @@
   "schema_version": 1,
   "source": {
     "generator": "golden/tools/extract_assets.py",
-    "rtl_commit": "2044980df64a2d08a92e315d0e713c1939322198",
-    "rtl_commit_meaning": "last git commit that touched any of the files below (`git log -1 --format=%H -- <files>`); file contents are pinned by sha256",
     "files": [
       {
         "path": "src/design/rendering/MouseDisplay.vhd",

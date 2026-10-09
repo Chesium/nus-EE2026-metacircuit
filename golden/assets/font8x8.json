@@ -3,8 +3,6 @@
   "schema_version": 1,
   "source": {
     "generator": "golden/tools/extract_assets.py",
-    "rtl_commit": "ed0616296b199da5363e7e9abb15ea8e6172b7d8",
-    "rtl_commit_meaning": "last git commit that touched any of the files below (`git log -1 --format=%H -- <files>`); file contents are pinned by sha256",
     "files": [
       {
         "path": "src/design/Dashboard/FontROM.v",

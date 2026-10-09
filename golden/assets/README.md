@@ -53,12 +53,12 @@ partial data.
   `v * 17`). Where the RTL gives a 24-bit colour and truncates it with
   `rgb888_to_444` (keeps the high nibble), the original is kept as `rtl_rgb888`.
   Always compare using `rgb12` or `rgb24`, never `rtl_rgb888`.
-- **`source`** block in every file: `generator`, `rtl_commit` (the last commit that
-  touched any listed file, `git log -1 --format=%H -- <files>`), and for each file
-  its `path`, `sha256` and `line_ranges` (named 1-based inclusive `[first, last]`
-  line ranges the extractor read). We record the last commit to touch the files,
-  not `git rev-parse HEAD`, because HEAD changes on every unrelated commit. With
-  HEAD the output would never stay byte-identical.
+- **`source`** block in every file: `generator`, and for each file its `path`,
+  `sha256` and `line_ranges` (named 1-based inclusive `[first, last]` line ranges
+  the extractor read). The sha256 pins the exact RTL. No commit hash is recorded:
+  assets are regenerated before the RTL change that needs them is committed, so
+  any commit field would lag one commit behind and make freshness checks fail
+  right after that commit.
 - **`rtl_literal_notes`** in every file: RTL literals whose digit count differs
   from their declared width (see "RTL oddities" below). The extracted data follows
   Verilog semantics: a literal with too few digits is zero-extended on the left.

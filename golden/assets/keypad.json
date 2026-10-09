@@ -3,8 +3,6 @@
   "schema_version": 1,
   "source": {
     "generator": "golden/tools/extract_assets.py",
-    "rtl_commit": "46d9e089f6321425b7bec4866cc416339b49f532",
-    "rtl_commit_meaning": "last git commit that touched any of the files below (`git log -1 --format=%H -- <files>`); file contents are pinned by sha256",
     "files": [
       {
         "path": "src/design/rendering/KeyboardVGA.v",

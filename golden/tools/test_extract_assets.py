@@ -230,7 +230,6 @@ class OtherAssets(unittest.TestCase):
     def test_source_blocks(self):
         for name in FILES:
             src = load(name)["source"]
-            self.assertRegex(src["rtl_commit"], r"^[0-9a-f]{40}$")
             for f in src["files"]:
                 self.assertTrue((ea.REPO / f["path"]).is_file(), f["path"])
                 for rng in f["line_ranges"].values():

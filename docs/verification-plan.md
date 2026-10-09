@@ -4,7 +4,7 @@ Living document for making MetaCircuit deterministically testable without hardwa
 Track progress here: tick TODOs, append to the log, and move questions from
 "to be made" to "made" when settled. IDs are stable; never reuse one.
 
-Last updated: 2026-10-09 (M2 achieved)
+Last updated: 2026-10-10 (M3 prerequisites; decisions D-015 to D-022)
 
 ## Goal
 
@@ -36,7 +36,7 @@ the same observables for comparison.
 | M0 | Harness bring-up: framescope runs metacircuit on local Verilator; VGA timing correct | done |
 | M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | done: human accepted; 267 frames / 25 checkpoints pass on native and Docker, including saved web recording |
 | M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | done: human accepted; 3 scenarios (full UI, node-colour edits, web recording) pass state, UI probes, node-colour RAM and every pixel on native and Docker |
-| M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | not started |
+| M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | in progress: FS-7, RTL-4, RTL-5, GM-7, GM-8 done; D-015..D-022 being implemented |
 | M4 | Lockstep sessions, coverage, agent interface (MCP) | not started |
 
 M1 needs FS-1..FS-3, RTL-1..RTL-3, GM-1..GM-3 and SC-1..SC-2. It does not need the renderer.
@@ -53,7 +53,7 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] FS-4 (P0) `framescope compare`: frames vs reference PNGs with region masks; diff PNG, per-region pixel counts, bounding boxes. Already listed as planned in framescope's `docs/architecture.md`.
 - [x] FS-5 (P0) Batch runner: many scenarios against one build, parallel processes, one JSON summary.
 - [ ] FS-6 (P1) Speed: checkpoint after boot (Verilator `--savable`), restore per scenario; option to skip PNG encoding; try `--threads`. Baseline: ~1.1 s per frame, so a 300-frame scenario is ~5.5 min.
-- [ ] FS-7 (P1) UART monitor (decode `RsTx` lines into the report) and RX driver (scripted lines, or a host process such as `src/uart_link`'s simulated solver).
+- [x] FS-7 (P1) UART monitor (decode `RsTx` lines into the report) and RX driver (scripted lines, or a host process such as `src/uart_link`'s simulated solver). framescope branch `m3-uart`: `protocol = "uart"` monitor, `[[uart]]` stimulus, `--host LINK=CMD` lockstep host with deterministic reply timing.
 - [ ] FS-8 (P1) Seeded X-initialisation (`+verilator+rand+reset`) to expose reset bugs that `--x-initial fast` hides.
 - [ ] FS-9 (P1) Long-lived session over stdio: step frames, poke inputs, read probes; lockstep with the golden model, stop at first divergence.
 - [ ] FS-10 (P2) PS/2 device model, plus an SV port of Digilent `Mouse_Control.vhd` / `Ps2Interface.vhd` (or GHDL-synth to Verilog), to test the real mouse path instead of the stub.
@@ -65,8 +65,8 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] RTL-1 (P0) Make `global_anim_phase` frame-locked. Today it advances every 1,000,000 pixel clocks (40 ms) while a frame is 420,000 clocks, so the phase changes mid-frame on a different line each time (`src/design/rendering/GlobalRender_top.v:1101`). Advance on VSYNC every N frames instead (D-009).
 - [x] RTL-2 (P0) Latch the cursor position once per frame for `MouseDisplay`, so an input change mid-frame cannot tear the cursor.
 - [x] RTL-3 (P0) Measure and document the input-to-effect latency (mouse change, then capture, then command, then ping-pong swap, then visible) as a spec constant the golden model uses.
-- [ ] RTL-4 (P1) Make the frontend UART path testable in simulation: it is gated by `SW[5]` and `RsRx` idles, so no solver ever replies and the voltage display is never exercised.
-- [ ] RTL-5 (P1) Make the framescope mouse stub honour `setmax_x/y` and `setx/sety` like the Digilent controller, or confirm it is out of scope for M1-M3 (D-010).
+- [x] RTL-4 (P1) Make the frontend UART path testable in simulation: it is gated by `SW[5]` and `RsRx` idles, so no solver ever replies and the voltage display is never exercised. Set `SW[5]` from the stimulus (`--set SW=32`); flooding now re-runs after edits in UART mode (`5312d7c`); `GlobalRenderUartLoop_test.sv` closes the loop.
+- [x] RTL-5 (P1) Make the framescope mouse stub honour `setmax_x/y` and `setx/sety` like the Digilent controller, or confirm it is out of scope for M1-M3 (D-010). Out of scope: the top pulses `setmax` once at boot and ties `setx/sety` to 0; no stub change needed.
 
 ### Golden model (GM)
 
@@ -76,8 +76,8 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] GM-4 (P1) Asset extraction script: sprite functions and palette in `CircuitCanvas.v`, `FontROM.v`, toolbar and keypad icons, cursor bitmaps, into JSON.
 - [x] GM-5 (P1) Renderer: `render(state, t) -> 640x480 RGB444`, pixel-exact, from the GM-4 assets. Full UI, font, flow/caret phases and independent settled node colours implemented; M2 human validation accepted.
 - [x] GM-6 (P1) Cell decoder: classify each visible grid cell of a frame into (sprite, rotation, colour) using the GM-4 assets, so mismatches read as "cell (3,4) is RL rot 1, expected RR rot 1". Preserves symmetric rotation ambiguity and cursor occlusion; corruption witnesses feed the M2 runner.
-- [ ] GM-7 (P1) Backend: flooding, component node extraction, stamping, DC solve; differential test against the simpyhls DSL kernels (`simpyhls/examples/*.dsl.py`) on random circuits. M2's settled connectivity/colour slice is implemented independently; solver and random differential coverage remain.
-- [ ] GM-8 (P1) Netlist export in the `src/uart_link` protocol format, to compare against the RTL's UART output (FS-7).
+- [x] GM-7 (P1) Backend: flooding, component node extraction, stamping, DC solve; differential test against the simpyhls DSL kernels (`simpyhls/examples/*.dsl.py`) on random circuits. M2's settled connectivity/colour slice is implemented independently; Extraction (`9709b47`) and DC solver (`fd599c0`) done; bit-exact against `frontend_tester.SimpyhlsDcSolver` on 339 netlists. Assumptions in `golden/M3_ASSUMPTIONS.md`, `golden/M3_SOLVER_ASSUMPTIONS.md`.
+- [x] GM-8 (P1) Netlist export in the `src/uart_link` protocol format, to compare against the RTL's UART output (FS-7). Byte-identical to `protocol.py`; `npm run golden -- netlist` / `uart-decode`.
 
 ### Scenarios and web shell (SC)
 
@@ -113,10 +113,23 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 | D-012 | 2026-10-09 | (Q-008) For M3 the solver is `src/uart_link`'s simulated solver, driven through a framescope UART RX driver (FS-7). Co-simulating `SolverBoard_top` (with floating-point IP models) comes later as a separate integration test. | Reuses an existing host-side model and avoids modelling the Xilinx floating-point IP up front. |
 | D-013 | 2026-10-08 | Keypad uses the cursor's frame-latched mouse; caret toggles every ten VSYNC edges. | Deterministic one-frame input latency and stable per-frame pixels replace free-running UI clocks. |
 | D-014 | 2026-10-08 | M2 colour references come from a reciprocal-port graph with row-major node numbering; default pixel masks exclude nothing. | The graph is independent of the RTL flood FSM. Stable checkpoints verify every pixel; dense-circuit flooding transients remain outside the current settled-colour regression. |
+| D-015 | 2026-10-10 | Source polarity: for a voltage source `n0` is the + terminal (`v(n0) - v(n1) = V`); a current source drives current from `n0` to `n1` through the source, and extraction makes `n0` the terminal at the arrow's tail (beyond the partner half, since the arrow points towards the anchor half). The boot voltage source is turned 180 degrees so its + half faces the right rail: anchor at (4,2) with rotation 2, partner at (3,2), value 010, so node 0 reads +10 V. | Keeps the solver kernels, `solver_tester.py` and the voltage sprite consistent; only the current-source terminal order and the boot table change. |
+| D-016 | 2026-10-10 | Snapshot id and reply acceptance: a snapshot is still sent every frame, but its frame id increments only when netlist-relevant canvas content (cell type/rotation/enable, component kind/position/rotation/value/unit) changed since the previous snapshot; the frontend accepts a reply only if its id equals the current snapshot id. | Meets the protocol's "ignore late responses", recovers from dropped lines, and makes the id predictable for the golden model (1 + number of content-changing frames since boot). |
+| D-017 | 2026-10-10 | M3's "voltage display checked" uses the 7-segment display and LEDs through probes. An on-screen voltage readout is later work (new item). | It is the only voltage display the design has today. |
+| D-018 | 2026-10-10 | Capacitors and inductors: the frontend reports a snapshot containing one as `@ER` code 81 (current RTL behaviour), and the golden model does the same. | Both the RTL and the simulated solver reject C/L today; the golden C/L DC model stays available as an option for later. |
+| D-019 | 2026-10-10 | A floating component terminal (no facing port beyond it) gets its own solver row instead of ground. These rows are numbered after all region rows, in element `idx` order, `n0` before `n1`. | Electrically correct: an open resistor end carries no current, while a dangling current source makes the system singular and is reported. |
+| D-020 | 2026-10-10 | `solve_core_dc.dsl.py`'s pivot search is fixed to compute the current U column before searching it; generated RTL and the simulated solver follow. | The as-written search pivots on stale zeros and divided by zero on 34 of 259 solvable fixture circuits. |
+| D-021 | 2026-10-10 | Extraction connects a terminal only through a facing port (M3-A002) and a region is ground only if it contains a ground cell (M3-A003). The extraction kernel and generated RTL follow the golden rules. | Matches the reciprocal-port graph accepted for M2 (D-014). |
+| D-022 | 2026-10-10 | Decision order for M3 work: each decision is written here first, then implemented independently in the golden model and in the kernels/RTL, and the M3 comparison checks that both agree (D-007). | Keeps the golden model independent of the RTL. |
 
 ## Decisions to be made
 
-None open. Add new questions here as `Q-009`, `Q-010`, ... with options and a recommendation.
+Q-009 to Q-015 (M3 prerequisites) settled with the recommendations as D-015 to D-021. Open:
+
+- Q-016: wire islands that no component touches still get a solver row (M3-A004), so a stray wire makes the system singular. Options: (A) keep; (B) number only regions touched by a component terminal. Recommendation: B, decided before the M3 scenario set.
+- Q-017: with five or more components a snapshot no longer fits in one frame; snapshots run back to back and an edit can truncate one without `@NE`. Options: (A) keep, the host discards it; (B) send `@ER` for an aborted snapshot. Recommendation: B.
+
+Add new questions here as `Q-018`, ... with options and a recommendation.
 
 ## Reference
 
@@ -156,6 +169,7 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 - 2026-10-09: Reproduced the M2 automated pass independently (native, 22/22 pixel-identical). Added `m2_node_colours.json` (connectivity edits with settled-colour checkpoints) and `m2_recorded.json` (web-shell recording of `m2_full_ui`, pinned equal to the source by a unit test and a Playwright record/download test). All three scenarios pass on native 5.046 and Docker 5.020 with zero differing pixels; frame CRCs and memory dumps are identical across runtimes, and the recording's RTL capture equals the hand-written scenario's.
 - 2026-10-09: Asset provenance fix: `extract_assets.py` no longer records an `rtl_commit` field. It was always one commit behind when assets and RTL changes are committed together, which made `--check` and the byte-identical test fail after commit `9322a76`. Per-file sha256 pins the sources. Asset bitmap/colour data unchanged.
 - 2026-10-09: M2 achieved. 130 golden unit tests, 5 Playwright tests, 20 asset tests, 3 RTL benches and 70 native framescope tests pass; typecheck and build pass. Evidence: [`m2-verification.json`](m2-verification.json).
+- 2026-10-10: M3 prerequisites with five parallel agents. framescope FS-7 (`m3-uart`): UART monitor, scripted RX and lockstep host; 93 tests pass on native and Docker. Golden extraction/UART codec (`9709b47`, 161 tests) and DC solver (`fd599c0`, 193 tests, bit-exact against the simulated solver on 339 netlists). RTL-4 (`5312d7c`): flooding re-runs after edits with `SW[5]`, full-loop UART bench; M1 25/25 and M2 22/22 + 9/9 still pass. Boot netlist matches the golden byte for byte apart from the frame id. Findings settled as D-015..D-021: source polarity (boot read -10 V), stale replies accepted, voltage only on the 7-segment display, C/L handling, floating terminals grounded, kernel pivot bug, extraction rules vs simpyhls.
 
 ## M1 acceptance and regression
 

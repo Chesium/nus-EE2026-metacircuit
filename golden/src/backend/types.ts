@@ -23,7 +23,10 @@ export interface NetlistElement {
   n1: number;
   /** 12-bit packed BCD value as stored by the frontend. */
   valueBcd: number;
-  /** 4-bit frontend unit code. */
+  /** Wire (protocol) unit code, the README's solver-board mapping: 00 base,
+   * 01 milli, 02 micro, 03 nano, 04 kilo, 05 mega, 06 giga. Extraction
+   * translates the frontend unit code (IF-016, e.g. 2 = k) into it
+   * (golden/M3_ASSUMPTIONS.md M3-A008); 0xFF marks a unit with no code. */
   unit: number;
 }
 

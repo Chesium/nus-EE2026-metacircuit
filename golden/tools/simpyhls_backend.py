@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+"""Run the simpyhls reference kernels on golden canvases (GM-7 differential test).
+
+Reads JSON from stdin:
+
+    {"cases": [{"width": W, "height": H,
+                "cells": [16-bit cell words, row-major],
+                "ports": [4-bit port masks, row-major; bit 3 down, 2 right, 1 up, 0 left],
+                "components": [{"type": sprite, "x": col, "y": row, "rotation": r}, ...]}]}
+
+and writes {"results": [{"regions": [...], "node0": [...], "node1": [...]}]}.
+
+For each case it executes simpyhls/examples/flooding_core.dsl.py to obtain the
+raw region grid, then extract_component_nodes.dsl.py over that grid, the cell
+words and the components (in the given order, which is the element idx order).
+
+Primitive models follow the kernels' own reference harnesses:
+- flooding: notebooks/flooding.ipynb (port index 0 down, 1 right, 2 up, 3 left);
+- extraction: simpyhls/tests/test_extract_component_nodes.py (direction 0 +x,
+  1 +y, 2 -x, 3 -y, i.e. the rotation codes).
+Coordinates outside the grid read as region 0 / visited, which models the
+kernels' unsigned `u8` bounds checks (plain Python ints would otherwise wrap to
+negative list indices).
+
+By default the kernels are run through simpyhls's own DSL interpreter
+(compiler.sim_runtime.run_python), which also checks that the source is valid
+DSL. --exec runs the same source with plain Python exec (much faster).
+
+simpyhls is found via --simpyhls, $SIMPYHLS_DIR, <repo>/simpyhls, or the
+nearest ancestor directory containing simpyhls/examples (for git worktrees whose
+submodule is not initialised).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+GROUND_SPRITE = 15
+TWO_TERMINAL = range(5, 15)
+
+
+def find_simpyhls(explicit: str | None) -> Path:
+    candidates = []
+    if explicit:
+        candidates.append(Path(explicit))
+    if os.environ.get("SIMPYHLS_DIR"):
+        candidates.append(Path(os.environ["SIMPYHLS_DIR"]))
+    candidates += [p / "simpyhls" for p in (REPO, *REPO.parents)]
+    for c in candidates:
+        if (c / "examples" / "flooding_core.dsl.py").is_file():
+            return c.resolve()
+    raise SystemExit("simpyhls not found (use --simpyhls or SIMPYHLS_DIR)")
+
+
+# ---------------------------------------------------------------- primitives
+# Every primitive takes the simulation context `tb` first; tb.state holds the case.
+
+def _in(tb, i, j):
+    return 0 <= i < tb.state["w"] and 0 <= j < tb.state["h"]
+
+
+FLOOD_STEP = ((0, 1), (1, 0), (0, -1), (-1, 0))  # notebook dir_nxt: down, right, up, left
+
+
+def flood_primitives():
+    def fetchP(tb, i, j):
+        return tb.state["ports"][j * tb.state["w"] + i] if _in(tb, i, j) else 0
+
+    def getVisited(tb, i, j):
+        return tb.state["visited"][j * tb.state["w"] + i] if _in(tb, i, j) else True
+
+    def setVisited(tb, i, j):
+        tb.state["visited"][j * tb.state["w"] + i] = True
+
+    def storeR(tb, i, j, v):
+        tb.state["regions"][j * tb.state["w"] + i] = v
+
+    def addQueue(tb, i, j, d):
+        tb.state["queue"].insert(0, (i, j, d))
+
+    def popQueue(tb):
+        return tb.state["queue"].pop()
+
+    def getQueueLen(tb):
+        return len(tb.state["queue"])
+
+    def getport_comb(tb, p, i):
+        return (p >> (3 - i)) & 1  # bit 3 = port index 0 (down)
+
+    def decode_iswire_comb(tb, p):
+        return p != 0
+
+    def decode_i_comb(tb, q_item):
+        return q_item[0]
+
+    def decode_j_comb(tb, q_item):
+        return q_item[1]
+
+    def decode_d_comb(tb, q_item):
+        return q_item[2]
+
+    def get_nxt_i_comb(tb, i, d):
+        return i + FLOOD_STEP[d][0]
+
+    def get_nxt_j_comb(tb, j, d):
+        return j + FLOOD_STEP[d][1]
+
+    def get_opp_dir_comb(tb, d):
+        return (2, 3, 0, 1)[d]
+
+    return {f.__name__: f for f in (
+        fetchP, getVisited, setVisited, storeR, addQueue, popQueue, getQueueLen, getport_comb,
+        decode_iswire_comb, decode_i_comb, decode_j_comb, decode_d_comb, get_nxt_i_comb,
+        get_nxt_j_comb, get_opp_dir_comb)}
+
+
+EXTRACT_STEP = ((1, 0), (0, 1), (-1, 0), (0, -1))  # rotation codes: +x, +y, -x, -y
+
+
+def extract_primitives():
+    def comp(tb, idx):
+        return tb.state["components"][idx]
+
+    def fetchComponentType(tb, idx):
+        return comp(tb, idx)["type"]
+
+    def fetchAnchorPositionX(tb, idx):
+        return comp(tb, idx)["x"]
+
+    def fetchAnchorPositionY(tb, idx):
+        return comp(tb, idx)["y"]
+
+    def fetchComponentRotation(tb, idx):
+        return comp(tb, idx)["rotation"]
+
+    def fetchR(tb, i, j):
+        return tb.state["regions"][j * tb.state["w"] + i] if _in(tb, i, j) else 0
+
+    def fetchCell(tb, i, j):
+        return tb.state["cells"][j * tb.state["w"] + i] if _in(tb, i, j) else 0
+
+    def storeNode0(tb, idx, node_i):
+        tb.state["node0"][idx] = node_i
+
+    def storeNode1(tb, idx, node_i):
+        tb.state["node1"][idx] = node_i
+
+    def is_two_terminal_component_comb(tb, t):
+        return int(t in TWO_TERMINAL)
+
+    def is_ground_cell_comb(tb, cell):
+        return int((cell & 1) == 1 and ((cell >> 1) & 0x3F) == GROUND_SPRITE)
+
+    def get_cell_rotation_comb(tb, cell):
+        return (cell >> 7) & 3
+
+    def get_opp_dir_comb(tb, d):
+        return (2, 3, 0, 1)[d]
+
+    def get_nxt_i_comb(tb, i, d):
+        return i + EXTRACT_STEP[d][0]
+
+    def get_nxt_j_comb(tb, j, d):
+        return j + EXTRACT_STEP[d][1]
+
+    return {f.__name__: f for f in (
+        fetchComponentType, fetchAnchorPositionX, fetchAnchorPositionY, fetchComponentRotation, fetchR,
+        fetchCell, storeNode0, storeNode1, is_two_terminal_component_comb, is_ground_cell_comb,
+        get_cell_rotation_comb, get_opp_dir_comb, get_nxt_i_comb, get_nxt_j_comb)}
+
+
+# ---------------------------------------------------------------- runners
+
+class _Ctx:
+    def __init__(self, state):
+        self.state = state
+
+
+def run_exec(source: str, fn_name: str, primitives, params: dict, state: dict) -> dict:
+    ctx = _Ctx(state)
+    env = {name: (lambda f: (lambda **ports: f(ctx, **ports)))(f) for name, f in primitives.items()}
+    exec(compile(source, fn_name, "exec"), env)
+    env[fn_name](**params)
+    return ctx.state
+
+
+def run_dsl(source: str, fn_name: str, primitives, params: dict, state: dict) -> dict:
+    from compiler.sim_runtime import PrimitiveModel, SimulationHarness, run_python
+
+    harness = SimulationHarness(
+        params=params,
+        primitives={n: PrimitiveModel(n, f) for n, f in primitives.items()},
+        initial_state=state,
+    )
+    return run_python(source, harness).final_state
+
+
+def run_case(case: dict, sources: dict, runner) -> dict:
+    w, h = case["width"], case["height"]
+    flood = runner(sources["flooding_core"], "flooding_core", flood_primitives(),
+                   {"grid_height": h, "grid_width": w},
+                   {"w": w, "h": h, "ports": list(case["ports"]), "visited": [False] * (w * h),
+                    "regions": [0] * (w * h), "queue": []})
+    n = len(case["components"])
+    extract = runner(sources["extract_component_nodes"], "extract_component_nodes", extract_primitives(),
+                     {"par_elem_n": n, "grid_height": h, "grid_width": w},
+                     {"w": w, "h": h, "regions": flood["regions"], "cells": list(case["cells"]),
+                      "components": case["components"], "node0": [-1] * n, "node1": [-1] * n})
+    return {"regions": flood["regions"], "node0": extract["node0"], "node1": extract["node1"]}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("--simpyhls", help="simpyhls checkout")
+    ap.add_argument("--exec", action="store_true", help="plain exec instead of the simpyhls DSL interpreter")
+    args = ap.parse_args()
+    root = find_simpyhls(args.simpyhls)
+    sys.path.insert(0, str(root))
+    sources = {name: (root / "examples" / f"{name}.dsl.py").read_text()
+               for name in ("flooding_core", "extract_component_nodes")}
+    runner = run_exec if args.exec else run_dsl
+    cases = json.load(sys.stdin)["cases"]
+    json.dump({"simpyhls": str(root), "results": [run_case(c, sources, runner) for c in cases]}, sys.stdout)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

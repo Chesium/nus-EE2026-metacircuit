@@ -78,7 +78,18 @@ npm run golden -- compare out/m1/rtl --reference out/m1/reference
 
 # Generate independent full UI checkpoint PNGs (vga/frame_NNNN.png)
 npm run golden -- render scenarios/m2_full_ui.json --out out/m2/reference
+
+# M3: golden netlist per checkpoint (or --frames 2,38), as JSON and uart_link text
+npm run golden -- netlist scenarios/m2_node_colours.json --out out/m3/netlist
+# Parse a uart_link capture (e.g. the RTL's RsTx text) into snapshots
+npm run golden -- uart-decode capture.txt -o capture.json
 ```
+
+`netlist` writes `<NN>_<label>.netlist.json` (netlist, raw regions, ground
+regions, row map, per-element terminals, issues, rejection),
+`<NN>_<label>.netlist.uart` (the exact `@NB/@NC/@NE` or `@ER` bytes, CRLF) and
+`netlists.json`. Extraction rules and open choices are in
+[`M3_ASSUMPTIONS.md`](M3_ASSUMPTIONS.md).
 
 `run` writes, per checkpoint, `<NN>_<label>.ram.json` (all memories),
 `dumps/<memory>/frame_NNNN.json` (one memory per file, the same layout as
@@ -90,11 +101,18 @@ e.g. `{"componentStore": "component_store"}`).
 ## Tests
 
 ```sh
-npm test            # Vitest unit tests (core, scenarios, stim, encodings, renderers)
+npm test            # Vitest unit tests (core, scenarios, stim, encodings, renderers, backend)
 npm run test:e2e    # Playwright smoke test (starts its own Vite server on port 5199)
 npm run typecheck   # tsc --noEmit
 npm run test:rtl    # focused interaction/controller tests, native Verilator
 ```
+
+The backend tests call `python3`: `test/uart.test.ts` checks the codec byte for
+byte against `src/uart_link/protocol.py` (`tools/uart_protocol_ref.py`), and
+`test/simpyhls-diff.test.ts` runs the simpyhls kernels on random circuits
+(`tools/simpyhls_backend.py`). simpyhls is found via `$SIMPYHLS_DIR`, the
+`simpyhls` submodule or the nearest ancestor checkout that has one. Without
+Python or simpyhls these tests are skipped.
 
 ## M1 RTL regression
 
@@ -262,6 +280,7 @@ golden/
   src/core/        constants, encodings, state, step(), export, boot circuit
   src/scenario/    format types, expander, stim compiler, headless runner
   src/render/      framebuffer, renderer interface, placeholder and asset renderers
+  src/backend/     M3: node extraction (netlist.ts), uart_link codec (uart.ts), shared types
   src/cli/         golden CLI
   src/web/         web shell
   scenarios/       hand-written scenarios (m1_canvas_tools.json)

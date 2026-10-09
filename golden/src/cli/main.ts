@@ -2,6 +2,8 @@
 //   npm run golden -- run scenarios/m1_canvas_tools.json --out out/m1
 //   npm run golden -- stim scenarios/m1_canvas_tools.json -o out/m1.stim.toml
 //   npm run golden -- expand scenarios/m1_canvas_tools.json
+//   npm run golden -- netlist scenarios/m2_node_colours.json --out out/m3/netlist
+//   npm run golden -- uart-decode capture.txt
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
@@ -15,6 +17,7 @@ import type { Scenario } from '../scenario/types.ts';
 import { compareRun } from './compare.ts';
 import { renderReferences } from './reference.ts';
 import { compareUi } from './compare-ui.ts';
+import { decodeUartCapture, netlistReferences, parseFrameList, writeNetlistReferences } from './netlist.ts';
 
 const USAGE = `usage: golden <command> <scenario.json> [options]
 
@@ -28,6 +31,10 @@ commands:
   render  generate checkpoint reference PNGs from the asset renderer into --out
   compare compare a framescope run directory with --reference golden output
   compare-ui compare property selection/value/keypad probes with pixel references
+  netlist extract the golden netlist at each checkpoint (or --frames) and write
+          <NN>_<label>.netlist.json and .netlist.uart (uart_link records, CRLF)
+          plus netlists.json into --out (default out/<scenario name>/netlist)
+  uart-decode parse a uart_link capture (NB/NC/NE, VB/VN/VE, ER) into JSON
 
 options:
   --out DIR            run: output directory
@@ -38,6 +45,7 @@ options:
   --rotate-frames N    run: frames per repeated rotation while held (default 8)
   --names FILE         run: JSON overriding memory names, e.g. {"componentStore": "component_store"}
   --reference DIR      compare: reference output from golden run
+  --frames N,M,...     netlist: frames to extract instead of the checkpoints
 `;
 
 function main(argv: string[]): number {
@@ -53,6 +61,7 @@ function main(argv: string[]): number {
       'rotate-frames': { type: 'string' },
       names: { type: 'string' },
       reference: { type: 'string' },
+      frames: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -68,6 +77,12 @@ function main(argv: string[]): number {
   if (cmd === 'compare-ui') {
     if (!values.reference) throw new Error('compare-ui requires --reference DIR');
     return compareUi(file, values.reference, values.output ?? join(file, 'ui-compare.json'));
+  }
+  if (cmd === 'uart-decode') {
+    const text = JSON.stringify(decodeUartCapture(file), null, 1) + '\n';
+    if (values.output) writeFileSync(values.output, text);
+    else process.stdout.write(text);
+    return 0;
   }
   const scenario = JSON.parse(readFileSync(file, 'utf8')) as Scenario;
   const canonical = expandScenario(scenario);
@@ -125,6 +140,21 @@ function main(argv: string[]): number {
       const outDir = values.out ?? join('out', canonical.name);
       renderReferences(canonical, outDir, cfg);
       process.stderr.write(`${canonical.name}: ${canonical.checkpoints.length} pixel checkpoints -> ${outDir}\n`);
+      return 0;
+    }
+    case 'netlist': {
+      const cfg = makeConfig({ inputLatencyFrames: int(values.latency, DEFAULT_CONFIG.inputLatencyFrames), rotateFramesPerStep: int(values['rotate-frames'], 8) });
+      const outDir = values.out ?? join('out', canonical.name || basename(file, '.json'), 'netlist');
+      const points = values.frames ? parseFrameList(values.frames) : canonical.checkpoints;
+      const refs = netlistReferences(canonical, cfg, points);
+      writeNetlistReferences(canonical, outDir, refs);
+      process.stderr.write(`${canonical.name}: ${refs.length} netlists -> ${outDir}\n`);
+      for (const r of refs) {
+        const n = r.result.netlist;
+        const tag = r.result.rejection ? `ER ${r.result.rejection.code.toString(16).toUpperCase()}` : `${n.elements.length} elements, ${n.nodeCount} nodes`;
+        const issues = r.result.issues.map((x) => x.type).join(' ');
+        process.stderr.write(`  ${r.label.padEnd(28)} frame ${String(r.frame).padStart(4)}  ${tag}${issues ? `  [${issues}]` : ''}\n`);
+      }
       return 0;
     }
     default:

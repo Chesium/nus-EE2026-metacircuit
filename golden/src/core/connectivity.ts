@@ -32,6 +32,31 @@ export interface Connectivity extends NodeMap {
   cellBgColor: Uint8Array;
 }
 
+export const PORT_DOWN = 0b1000;
+export const PORT_RIGHT = 0b0100;
+export const PORT_UP = 0b0010;
+export const PORT_LEFT = 0b0001;
+
+/** The port bit pointing from a cell toward its neighbour at (+dx, +dy). */
+export function portToward(dx: number, dy: number): number {
+  if (dx === 1 && dy === 0) return PORT_RIGHT;
+  if (dx === -1 && dy === 0) return PORT_LEFT;
+  if (dx === 0 && dy === 1) return PORT_DOWN;
+  if (dx === 0 && dy === -1) return PORT_UP;
+  throw new Error(`not a unit grid direction: (${dx}, ${dy})`);
+}
+
+/** Unit step (dx, dy) of a single-port cell's port, e.g. a ground cell's terminal. */
+export function singlePortDelta(mask: number): readonly [number, number] | null {
+  switch (mask & 15) {
+    case PORT_RIGHT: return [1, 0];
+    case PORT_LEFT: return [-1, 0];
+    case PORT_DOWN: return [0, 1];
+    case PORT_UP: return [0, -1];
+    default: return null;
+  }
+}
+
 export function cellPortMask(word: number): number {
   if (!(word & 1)) return 0;
   const base = BASE_PORTS[(word >>> 1) & 63] ?? 0;

@@ -62,16 +62,16 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 
 ### RTL design-for-test (RTL)
 
-- [ ] RTL-1 (P0) Make `global_anim_phase` frame-locked. Today it advances every 1,000,000 pixel clocks (40 ms) while a frame is 420,000 clocks, so the phase changes mid-frame on a different line each time (`src/design/rendering/GlobalRender_top.v:1101`). Advance on VSYNC every N frames instead.
+- [ ] RTL-1 (P0) Make `global_anim_phase` frame-locked. Today it advances every 1,000,000 pixel clocks (40 ms) while a frame is 420,000 clocks, so the phase changes mid-frame on a different line each time (`src/design/rendering/GlobalRender_top.v:1101`). Advance on VSYNC every N frames instead (D-009).
 - [ ] RTL-2 (P0) Latch the cursor position once per frame for `MouseDisplay`, so an input change mid-frame cannot tear the cursor.
 - [ ] RTL-3 (P0) Measure and document the input-to-effect latency (mouse change, then capture, then command, then ping-pong swap, then visible) as a spec constant the golden model uses.
 - [ ] RTL-4 (P1) Make the frontend UART path testable in simulation: it is gated by `SW[5]` and `RsRx` idles, so no solver ever replies and the voltage display is never exercised.
-- [ ] RTL-5 (P1) Make the framescope mouse stub honour `setmax_x/y` and `setx/sety` like the Digilent controller, or decide it is out of scope (see Q-006).
+- [ ] RTL-5 (P1) Make the framescope mouse stub honour `setmax_x/y` and `setx/sety` like the Digilent controller, or confirm it is out of scope for M1-M3 (D-010).
 
 ### Golden model (GM)
 
-- [ ] GM-1 (P0) Core state model: CellStore, ComponentStore, tool mode, pan offset, property-panel state; `step(state, mouse_snapshot) -> state` at frame granularity, matching the RTL's per-frame mouse capture.
-- [ ] GM-2 (P0) Interaction semantics for M1: tool selection, draw wire/junction/elbow/tee/ground, place R/L/C/V/I, rotate (incl. `RotateFramesPerStep` holdoff), delete, pan with clamping. Source of truth: `structure.md` and the final report, not a transliteration of `InteractionController.v` (see Q-003).
+- [ ] GM-1 (P0) Core state model (TypeScript, `golden/`; D-005, D-006): CellStore, ComponentStore, tool mode, pan offset, property-panel state; `step(state, mouse_snapshot) -> state` at frame granularity, matching the RTL's per-frame mouse capture.
+- [ ] GM-2 (P0) Interaction semantics for M1: tool selection, draw wire/junction/elbow/tee/ground, place R/L/C/V/I, rotate (incl. `RotateFramesPerStep` holdoff), delete, pan with clamping. Source of truth: `structure.md` and the final report, not a transliteration of `InteractionController.v` (D-007).
 - [ ] GM-3 (P0) State export in the same format as the FS-3 RAM dumps.
 - [ ] GM-4 (P1) Asset extraction script: sprite functions and palette in `CircuitCanvas.v`, `FontROM.v`, toolbar and keypad icons, cursor bitmaps, into JSON.
 - [ ] GM-5 (P1) Renderer: `render(state, t) -> 640x480 RGB444`, pixel-exact, from the GM-4 assets.
@@ -85,7 +85,7 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [ ] SC-2 (P0) One hand-written M1 scenario that exercises every canvas tool.
 - [ ] SC-3 (P1) Web shell: 640x480 canvas drawn with `putImageData`, scaled nearest-neighbour; mouse mapped to per-frame snapshots; record and replay sessions as scenario files.
 - [ ] SC-4 (P1) Playwright tests that replay scenarios in the web shell and check against the headless golden output.
-- [ ] SC-5 (P1) Human test sessions on the web shell; triage every RTL/golden mismatch (see Q-003).
+- [ ] SC-5 (P1) Human test sessions on the web shell; triage every RTL/golden mismatch (D-007).
 
 ### Infrastructure (INF)
 
@@ -101,34 +101,19 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 | D-001 | 2026-10-09 | Verification moves fully to simulation; there is no hardware target. | No Basys 3 available; focus is agentic observability and automated testing. |
 | D-002 | 2026-10-09 | framescope is the RTL observability harness, run natively on the local Verilator (5.046) as well as in its pinned container (5.020). | Port introspection now uses `--json-only` with an `--xml-only` fallback (framescope `b0cecf0`). Frame CRCs are identical under both toolchains. |
 | D-003 | 2026-10-09 | `VGAControl` produces standard 640x480@60 timing: 800x525, porches 16/96/48 and 10/2/33, sync aligned with the RGB pipeline (`RGB_LATENCY`). | Was 801 clocks per line, sync 2 px early, and column 639 always black. Fixed in `c5fee06`; frames identical otherwise. |
-| D-004 | 2026-10-09 | Ground truth comes from a golden software model of MetaCircuit, validated by humans and Playwright, that generates references for framescope comparison. | User direction. Implementation choices are open questions below. |
+| D-004 | 2026-10-09 | Ground truth comes from a golden software model of MetaCircuit, validated by humans and Playwright, that generates references for framescope comparison. | User direction. Implementation choices are D-005 to D-012. |
+| D-005 | 2026-10-09 | (Q-001) The golden core is written in TypeScript and runs headless in Node (reference generation, CI) and in the browser (web shell). | Interaction and rendering logic only exists in Verilog, so it is new code in any language; the reusable Python backend is small enough to port and differential-test (GM-7). Pyodide is heavy and lags CPython, while simpyhls targets Python 3.14. |
+| D-006 | 2026-10-09 | (Q-002) The golden model, scenarios and web shell live in this repo under `golden/`. framescope stays design-agnostic and only gains generic features (FS-*). | The golden model describes MetaCircuit specifically. |
+| D-007 | 2026-10-09 | (Q-003) Golden behaviour is derived from the spec documents and human testing, not by reading the RTL. Every RTL/golden mismatch is treated as "either side may be wrong" and its resolution is recorded in the log. Assets extracted from the RTL (GM-4) are shared on purpose. | A model transliterated from the RTL would share its bugs. Asset bugs are therefore out of scope for this check. |
+| D-008 | 2026-10-09 | (Q-004) Inputs change in the vertical back porch, after the RTL's VSYNC capture edge (needs FS-1). The input-to-effect latency measured in RTL-3 becomes a named constant in the golden model. | Changing inputs on the capture edge makes latency depend on synchroniser delays; changing them in blanking also avoids cursor tearing. |
+| D-009 | 2026-10-09 | (Q-005) `global_anim_phase` becomes frame-locked (RTL-1), advancing every N frames with N chosen to stay close to today's 25 Hz phase rate (N = 2 gives 30 Hz, N = 3 gives 20 Hz). | The small change in animation speed is acceptable in exchange for deterministic frames. |
+| D-010 | 2026-10-09 | (Q-006) Mouse input is modelled as absolute position and buttons at the `MouseCtl` outputs (the framescope stub) for M1-M3. PS/2 packets through a ported controller (FS-10) come later, as a separate test of the driver. | Keeps scenarios simple and identical across golden, framescope and web shell. |
+| D-011 | 2026-10-09 | (Q-007) Comparison order: state first (RAM dumps, probes, UART netlist), then decoded cells, then masked pixels with zero tolerance inside masks. Animation regions stay masked until RTL-1 lands. | State mismatches say what is wrong; pixel diffs only say that something is. |
+| D-012 | 2026-10-09 | (Q-008) For M3 the solver is `src/uart_link`'s simulated solver, driven through a framescope UART RX driver (FS-7). Co-simulating `SolverBoard_top` (with floating-point IP models) comes later as a separate integration test. | Reuses an existing host-side model and avoids modelling the Xilinx floating-point IP up front. |
 
 ## Decisions to be made
 
-Each has a recommendation; it becomes a D- entry once confirmed.
-
-- **Q-001 Golden core language and runtime.**
-  Options: (a) TypeScript core, runs headless in Node and in the browser; (b) Python core in the browser via Pyodide; (c) Python core headless plus a web UI talking to a local server.
-  Recommendation: (a). The interaction and rendering logic is new code either way (it exists only in Verilog); the reusable Python is the backend, a few hundred lines that GM-7 can port and differential-test. Pyodide is heavy and typically lags CPython, while simpyhls targets Python 3.14.
-- **Q-002 Where the golden model, scenarios and web shell live.**
-  Options: a directory in this repo (e.g. `golden/`), a new repo, or inside framescope.
-  Recommendation: in this repo, since it models MetaCircuit specifically; framescope stays design-agnostic and gains only generic features (FS-*).
-- **Q-003 Independence policy for the golden model.**
-  Recommendation: derive behaviour from the spec documents and human testing, not by reading the RTL; treat every mismatch as "either side may be wrong" and record the resolution in the log. Assets (GM-4) are shared on purpose, so asset bugs are out of scope for this check.
-- **Q-004 Input timing contract.**
-  When in a frame do inputs change, and after how many frames is the effect visible?
-  Recommendation: inputs change in the vertical back porch after the RTL's capture edge (needs FS-1); the latency measured in RTL-3 becomes a named constant in the golden model.
-- **Q-005 Animation fix (RTL-1) changes visible behaviour.**
-  Frame-locking `global_anim_phase` alters the animation speed slightly.
-  Recommendation: accept; pick N so the speed stays close to today's 25 Hz phase rate (e.g. one step every 2 or 3 frames).
-- **Q-006 Mouse model level.**
-  Options: absolute position at the `MouseCtl` outputs (today's stub), or PS/2 packets through a ported controller (FS-10).
-  Recommendation: absolute position for M1-M3; PS/2 later as a separate test of the driver.
-- **Q-007 Comparison tiers and tolerance.**
-  Recommendation: state first (RAM dumps, probes, UART netlist), then decoded cells, then masked pixels with zero tolerance inside masks; animation regions masked until RTL-1 lands.
-- **Q-008 Solver in the loop (M3).**
-  Options: framescope RX driver fed by `src/uart_link`'s simulated solver; or co-simulating `SolverBoard_top` in the same Verilator model, with the floating-point IP replaced by models.
-  Recommendation: simulated solver first; co-simulation later as a separate integration test.
+None open. Add new questions here as `Q-009`, `Q-010`, ... with options and a recommendation.
 
 ## Reference
 
@@ -151,3 +136,4 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 - 2026-10-09: framescope native runtime fixed for Verilator 5.046 (framescope `b0cecf0`, branch `native-verilator-json-ports`). All 32 framescope tests pass on native 5.046 and docker 5.020, including the metacircuit integration test.
 - 2026-10-09: framescope's timing report exposed the `VGAControl` off-by-one; fixed with sync/blanking alignment (`c5fee06`, branch `fix/vga-timing`). Column 639 now renders; all other pixels unchanged across a 5-frame click scenario.
 - 2026-10-09: Plan written (this document).
+- 2026-10-09: Q-001 to Q-008 settled with the recommended options (D-005 to D-012).

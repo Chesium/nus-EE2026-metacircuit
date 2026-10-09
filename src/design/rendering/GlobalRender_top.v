@@ -150,6 +150,14 @@ module GlobalRender_top (
     (* ASYNC_REG = "TRUE" *) reg         mouse_middle_pix_ff1 = 1'b0;
     (* ASYNC_REG = "TRUE" *) reg         mouse_right_pix_ff0 = 1'b0;
     (* ASYNC_REG = "TRUE" *) reg         mouse_right_pix_ff1 = 1'b0;
+    // Pixel-domain mouse, latched once per frame at the VSYNC leading edge (the
+    // same edge the InteractionController samples on), so every pixel of a
+    // frame sees the same mouse state.
+    reg  [11:0] mouse_xpos_pix_frame = 12'd0;
+    reg  [11:0] mouse_ypos_pix_frame = 12'd0;
+    reg         mouse_left_pix_frame = 1'b0;
+    reg         mouse_middle_pix_frame = 1'b0;
+    reg         mouse_right_pix_frame = 1'b0;
     (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_xpos_nav_ff0 = 12'd0;
     (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_xpos_nav_ff1 = 12'd0;
     (* ASYNC_REG = "TRUE" *) reg  [11:0] mouse_ypos_nav_ff0 = 12'd0;
@@ -186,11 +194,11 @@ module GlobalRender_top (
 
     reg         clear_canvas_active = 1'b0;
     reg  [CANVAS_ADDR_W-1:0]  clear_canvas_addr = {CANVAS_ADDR_W{1'b0}};
-    wire [11:0] mouse_xpos_pix = mouse_xpos_pix_ff1;
-    wire [11:0] mouse_ypos_pix = mouse_ypos_pix_ff1;
-    wire        mouse_left_pix = mouse_left_pix_ff1;
-    wire        mouse_middle_pix = mouse_middle_pix_ff1;
-    wire        mouse_right_pix = mouse_right_pix_ff1;
+    wire [11:0] mouse_xpos_pix = mouse_xpos_pix_frame;
+    wire [11:0] mouse_ypos_pix = mouse_ypos_pix_frame;
+    wire        mouse_left_pix = mouse_left_pix_frame;
+    wire        mouse_middle_pix = mouse_middle_pix_frame;
+    wire        mouse_right_pix = mouse_right_pix_frame;
     wire [11:0] mouse_xpos_nav = mouse_xpos_nav_ff1;
     wire [11:0] mouse_ypos_nav = mouse_ypos_nav_ff1;
     wire        mouse_left_nav = mouse_left_nav_ff1;
@@ -1051,6 +1059,13 @@ module GlobalRender_top (
         mouse_middle_pix_ff1 <= mouse_middle_pix_ff0;
         mouse_right_pix_ff0 <= mouse_right;
         mouse_right_pix_ff1 <= mouse_right_pix_ff0;
+        if (vsync_edge) begin
+            mouse_xpos_pix_frame <= mouse_xpos_pix_ff1;
+            mouse_ypos_pix_frame <= mouse_ypos_pix_ff1;
+            mouse_left_pix_frame <= mouse_left_pix_ff1;
+            mouse_middle_pix_frame <= mouse_middle_pix_ff1;
+            mouse_right_pix_frame <= mouse_right_pix_ff1;
+        end
     end
     always @(posedge clk_nav) begin
         mouse_xpos_nav_ff0 <= mouse_xpos;
@@ -1098,14 +1113,20 @@ module GlobalRender_top (
     // =========================================================
     // 鍕曟厠闆绘祦鍕曠暙鐢㈢敓鍣? (鍏у缓 1D 鐩镐綅)
     // =========================================================
-    reg [21:0] anim_tick = 0;
+    // Frame-locked: one phase step every ANIM_FRAMES_PER_STEP frames (30 Hz at
+    // 2), advanced at the VSYNC leading edge so a frame never changes phase
+    // mid-scan.
+    localparam integer ANIM_FRAMES_PER_STEP = 2;
+    reg [1:0]  anim_frame_ctr = 0;
     reg [4:0]  global_anim_phase = 0;
     always @(posedge clk_pixel) begin
-        if (anim_tick >= 22'd1000000) begin
-            anim_tick <= 0;
-            global_anim_phase <= global_anim_phase + 1;
-        end else begin
-            anim_tick <= anim_tick + 1;
+        if (vsync_edge) begin
+            if (anim_frame_ctr == ANIM_FRAMES_PER_STEP - 1) begin
+                anim_frame_ctr <= 0;
+                global_anim_phase <= global_anim_phase + 1;
+            end else begin
+                anim_frame_ctr <= anim_frame_ctr + 1;
+            end
         end
     end
 

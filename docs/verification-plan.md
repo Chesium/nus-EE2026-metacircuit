@@ -4,7 +4,7 @@ Living document for making MetaCircuit deterministically testable without hardwa
 Track progress here: tick TODOs, append to the log, and move questions from
 "to be made" to "made" when settled. IDs are stable; never reuse one.
 
-Last updated: 2026-10-08 (client date; M2 automated verification)
+Last updated: 2026-10-09 (M2 achieved)
 
 ## Goal
 
@@ -35,7 +35,7 @@ the same observables for comparison.
 |----|-----------|--------|
 | M0 | Harness bring-up: framescope runs metacircuit on local Verilator; VGA timing correct | done |
 | M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | done: human accepted; 267 frames / 25 checkpoints pass on native and Docker, including saved web recording |
-| M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | native and Docker automated regressions pass: 103 frames / 22 checkpoints, all pixels; human validation pending |
+| M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | done: human accepted; 3 scenarios (full UI, node-colour edits, web recording) pass state, UI probes, node-colour RAM and every pixel on native and Docker |
 | M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | not started |
 | M4 | Lockstep sessions, coverage, agent interface (MCP) | not started |
 
@@ -74,7 +74,7 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] GM-2 (P0) Interaction semantics for M1: tool selection, draw wire/junction/elbow/tee/ground, place R/L/C/V/I, rotate (incl. `RotateFramesPerStep` holdoff), delete, pan with clamping. Source of truth: `structure.md` and the final report, not a transliteration of `InteractionController.v` (D-007).
 - [x] GM-3 (P0) State export in the same format as the FS-3 RAM dumps.
 - [x] GM-4 (P1) Asset extraction script: sprite functions and palette in `CircuitCanvas.v`, `FontROM.v`, toolbar and keypad icons, cursor bitmaps, into JSON.
-- [x] GM-5 (P1) Renderer: `render(state, t) -> 640x480 RGB444`, pixel-exact, from the GM-4 assets. Full UI, font, flow/caret phases and independent settled node colours implemented; human M2 validation remains pending.
+- [x] GM-5 (P1) Renderer: `render(state, t) -> 640x480 RGB444`, pixel-exact, from the GM-4 assets. Full UI, font, flow/caret phases and independent settled node colours implemented; M2 human validation accepted.
 - [x] GM-6 (P1) Cell decoder: classify each visible grid cell of a frame into (sprite, rotation, colour) using the GM-4 assets, so mismatches read as "cell (3,4) is RL rot 1, expected RR rot 1". Preserves symmetric rotation ambiguity and cursor occlusion; corruption witnesses feed the M2 runner.
 - [ ] GM-7 (P1) Backend: flooding, component node extraction, stamping, DC solve; differential test against the simpyhls DSL kernels (`simpyhls/examples/*.dsl.py`) on random circuits. M2's settled connectivity/colour slice is implemented independently; solver and random differential coverage remain.
 - [ ] GM-8 (P1) Netlist export in the `src/uart_link` protocol format, to compare against the RTL's UART output (FS-7).
@@ -85,7 +85,7 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] SC-2 (P0) One hand-written M1 scenario that exercises every canvas tool.
 - [x] SC-3 (P1) Web shell: 640x480 canvas drawn with `putImageData`, scaled nearest-neighbour; mouse mapped to per-frame snapshots; record and replay sessions as scenario files.
 - [x] SC-4 (P1) Playwright tests that replay scenarios in the web shell and check against the headless golden output. Three tests pass, including full M1 recording/download and replay.
-- [x] SC-5 (P1, M1) Human test sessions on the web shell; triage every M1 RTL/golden mismatch (D-007). Human acceptance supplied by the user; all observed M1 differences resolved. M2 human validation remains future work.
+- [x] SC-5 (P1, M1) Human test sessions on the web shell; triage every M1 RTL/golden mismatch (D-007). Human acceptance supplied by the user; all observed M1 differences resolved. M2 human validation accepted by the user (2026-10-09).
 
 ### Infrastructure (INF)
 
@@ -152,6 +152,10 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 - 2026-10-08 (client date): Confirmed cursor/toolbar/pan probes against the golden at every frame on both toolchains (267/267 each). Added `m1_latency.json`, with a RAM/probe checkpoint every frame and no wait margin: native passes 11/11, proving toolbar selection and the guarded canvas write still appear exactly one frame after the back-porch input change.
 - 2026-10-08 (client date): M2 blockers implemented with three parallel agents: property/keypad core and RTL-6, full UI renderer and frame-locked caret, independent pixel cell decoder and node-colour graph. Fixed DEL removing a digit when deleting a unit suffix; `123k -> 123` now preserves BCD. Added full UI font/layout assets and blank-value rendering for newly placed components. Updated framescope's sibling checkout default and UI/text/colour probes.
 - 2026-10-08 (client date): M2 automated pass: native 5.046 and Docker 5.020 each pass 103 frames / 22 checkpoints for state, UI/text probes, node-colour RAM and all 307,200 pixels per checkpoint at zero tolerance. All 103 CRCs and 176 memory dumps agree across runtimes. M1 still passes 267 frames / 25 checkpoints. 129 golden tests, 4 Playwright tests (including real-pointer M2 full-image hashing), 20 extraction tests, 3 focused RTL benches and 70 native framescope tests (2 environment-dependent skips) pass; typecheck/build/assets pass. Evidence: [`m2-verification.json`](m2-verification.json). M2 human acceptance remains pending.
+- 2026-10-09: User accepted the M2 human validation (M2-A001..M2-A004, full-UI rendering, node colours); recorded in `golden/M2_ASSUMPTIONS.md`.
+- 2026-10-09: Reproduced the M2 automated pass independently (native, 22/22 pixel-identical). Added `m2_node_colours.json` (connectivity edits with settled-colour checkpoints) and `m2_recorded.json` (web-shell recording of `m2_full_ui`, pinned equal to the source by a unit test and a Playwright record/download test). All three scenarios pass on native 5.046 and Docker 5.020 with zero differing pixels; frame CRCs and memory dumps are identical across runtimes, and the recording's RTL capture equals the hand-written scenario's.
+- 2026-10-09: Asset provenance fix: `extract_assets.py` no longer records an `rtl_commit` field. It was always one commit behind when assets and RTL changes are committed together, which made `--check` and the byte-identical test fail after commit `9322a76`. Per-file sha256 pins the sources. Asset bitmap/colour data unchanged.
+- 2026-10-09: M2 achieved. 130 golden unit tests, 5 Playwright tests, 20 asset tests, 3 RTL benches and 70 native framescope tests pass; typecheck and build pass. Evidence: [`m2-verification.json`](m2-verification.json).
 
 ## M1 acceptance and regression
 
@@ -217,6 +221,16 @@ choices requiring that pass. Dense-circuit flooding transients and more than 255
 isolated nodes are not covered by this settled-colour regression; the independent
 graph uses wider IDs so it can expose the RTL's eight-bit node limit.
 
-M2 remains pending human acceptance of the full UI. Native and Docker automated
-verification pass all 22 checkpoints with zero differing pixels. Toolchain evidence and
-regression artifacts are recorded in [`m2-verification.json`](m2-verification.json).
+`m2_node_colours.json` (78 frames / 9 checkpoints) edits connectivity on the
+boot circuit and checks the settled colours after each edit: a rail split, an
+unjoined horizontal wire, rejoining it by rotation, ground removal, an unjoined
+re-placed ground and its rotation to join, resistor removal, and a rail short.
+`m2_recorded.json` is the web-shell recording of `m2_full_ui.json` (real pointer
+events through Playwright); its inputs and checkpoint frames equal the source,
+and its RTL capture is identical to the source's frame for frame.
+
+M2 is achieved: the user accepted the human validation of the full UI on
+2026-10-09, and all three scenarios pass state, UI probes, node-colour RAM and
+every pixel at zero tolerance on native Verilator 5.046 and Docker 5.020, with
+identical frame CRCs and memory dumps across runtimes. Evidence is recorded in
+[`m2-verification.json`](m2-verification.json).

@@ -125,6 +125,17 @@ describe('stim compiler', () => {
   });
 });
 
+describe('m2 web recording', () => {
+  it('the saved web recording preserves the full M2 sequence', () => {
+    const recorded = expandScenario(JSON.parse(readFileSync('scenarios/m2_recorded.json', 'utf8')) as Scenario);
+    const source = expandScenario(JSON.parse(readFileSync('scenarios/m2_full_ui.json', 'utf8')) as Scenario);
+    expect(recorded.frames).toEqual(source.frames);
+    expect(recorded.checkpoints.map((c) => c.frame)).toEqual(source.checkpoints.map((c) => c.frame));
+    expect(compileStim(recorded).slice(compileStim(recorded).indexOf('frames =')))
+      .toEqual(compileStim(source).slice(compileStim(source).indexOf('frames =')));
+  });
+});
+
 describe('m1_canvas_tools scenario', () => {
   const scenario = JSON.parse(readFileSync('scenarios/m1_canvas_tools.json', 'utf8')) as Scenario;
   const result = runScenario(expandScenario(scenario));

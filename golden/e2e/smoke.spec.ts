@@ -55,8 +55,10 @@ test('replaying the M1 scenario matches the headless run at every checkpoint', a
   await expect(cps.locator('li.match')).toHaveCount(25);
 });
 
-test('record and download preserves every M1 input frame and checkpoint', async ({ page }, testInfo) => {
-  const source = expandScenario(JSON.parse(readFileSync('scenarios/m1_canvas_tools.json', 'utf8')) as Scenario);
+/** Drive a scenario through real pointer events while recording, mark its
+ * checkpoints, download the recording and check it reproduces the source. */
+async function recordAndDownload(page: Page, outPath: string, scenarioPath: string): Promise<void> {
+  const source = expandScenario(JSON.parse(readFileSync(scenarioPath, 'utf8')) as Scenario);
   const expected = runScenario(source);
   await page.goto('/');
   await page.getByTestId('screen').waitFor();
@@ -83,10 +85,18 @@ test('record and download preserves every M1 input frame and checkpoint', async 
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#btn-download-rec').evaluate((el) => (el as HTMLButtonElement).click());
   const download = await downloadPromise;
-  const path = testInfo.outputPath('m1-recorded.json');
-  await download.saveAs(path);
-  const recorded = expandScenario(JSON.parse(readFileSync(path, 'utf8')) as Scenario);
+  await download.saveAs(outPath);
+  const recorded = expandScenario(JSON.parse(readFileSync(outPath, 'utf8')) as Scenario);
   expect(recorded.frames).toEqual(source.frames);
   expect(recorded.checkpoints.map((c) => c.frame)).toEqual(source.checkpoints.map((c) => c.frame));
   expect(runScenario(recorded).final).toEqual(expected.final);
+}
+
+test('record and download preserves every M1 input frame and checkpoint', async ({ page }, testInfo) => {
+  await recordAndDownload(page, testInfo.outputPath('m1-recorded.json'), 'scenarios/m1_canvas_tools.json');
+});
+
+test('record and download preserves every M2 full-UI input frame and checkpoint', async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
+  await recordAndDownload(page, testInfo.outputPath('m2-recorded.json'), 'scenarios/m2_full_ui.json');
 });

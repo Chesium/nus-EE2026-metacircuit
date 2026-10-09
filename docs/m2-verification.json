@@ -1,89 +1,870 @@
 {
   "milestone": "M2",
   "automated_ok": true,
-  "date": "2026-10-08",
-  "human_acceptance": "pending; M1 acceptance does not cover M2 properties/keypad/rendering assumptions",
-  "scenario": "golden/scenarios/m2_full_ui.json",
-  "runs": {
-    "native": {
-      "verilator": "5.046",
-      "frames": 103,
-      "state": {
-        "checkpoints": 22,
-        "passed": 22,
-        "failed": 0
+  "date": "2026-10-09",
+  "human_acceptance": "accepted by the user on 2026-10-09 (M2-A001..M2-A004, full-UI rendering and node colours)",
+  "scenarios": {
+    "m2_full_ui": {
+      "file": "golden/scenarios/m2_full_ui.json",
+      "runs": {
+        "native": {
+          "verilator": "5.046",
+          "ok": true,
+          "frames": 103,
+          "state": {
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "keypad_hover",
+                "frame": 4,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "resistor_selected",
+                "frame": 8,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "resistor_editing",
+                "frame": 12,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "value_reset",
+                "frame": 16,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "digit_press_pending",
+                "frame": 17,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "digit_pressed",
+                "frame": 18,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "digit_released",
+                "frame": 19,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "digits_123",
+                "frame": 26,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "unit_kilo",
+                "frame": 30,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "delete_unit_preserves_digits",
+                "frame": 34,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "delete_digit",
+                "frame": 38,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "literal_decimal",
+                "frame": 45,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "editing_closed",
+                "frame": 49,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_selected",
+                "frame": 53,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "voltage_micro",
+                "frame": 72,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "toolbar_selected",
+                "frame": 76,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "keypad_hover_after_toolbar",
+                "frame": 78,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "empty_selected",
+                "frame": 82,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cleared",
+                "frame": 87,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "new_resistor",
+                "frame": 95,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "new_resistor_selected",
+                "frame": 102,
+                "ok": true,
+                "differences": []
+              }
+            ]
+          },
+          "ui_ok": true,
+          "pixels": {
+            "frames": 22,
+            "passed": 22,
+            "failed": 0,
+            "identical": 22,
+            "missing": 0,
+            "diff_pixels": 0,
+            "failed_frames": []
+          },
+          "pixel_tolerance": [
+            0,
+            0,
+            0
+          ],
+          "excluded_pixels": 0,
+          "stimulus_events": 100,
+          "late_events": 0,
+          "build_key": "00f2b96f738997b6",
+          "artifacts": "golden/out/m2/20261009-053346-native"
+        },
+        "docker": {
+          "verilator": "5.020",
+          "ok": true,
+          "frames": 103,
+          "state": {
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "keypad_hover",
+                "frame": 4,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "resistor_selected",
+                "frame": 8,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "resistor_editing",
+                "frame": 12,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "value_reset",
+                "frame": 16,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "digit_press_pending",
+                "frame": 17,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "digit_pressed",
+                "frame": 18,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "digit_released",
+                "frame": 19,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "digits_123",
+                "frame": 26,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "unit_kilo",
+                "frame": 30,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "delete_unit_preserves_digits",
+                "frame": 34,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "delete_digit",
+                "frame": 38,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "literal_decimal",
+                "frame": 45,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "editing_closed",
+                "frame": 49,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_selected",
+                "frame": 53,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "voltage_micro",
+                "frame": 72,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "toolbar_selected",
+                "frame": 76,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "keypad_hover_after_toolbar",
+                "frame": 78,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "empty_selected",
+                "frame": 82,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cleared",
+                "frame": 87,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "new_resistor",
+                "frame": 95,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "new_resistor_selected",
+                "frame": 102,
+                "ok": true,
+                "differences": []
+              }
+            ]
+          },
+          "ui_ok": true,
+          "pixels": {
+            "frames": 22,
+            "passed": 22,
+            "failed": 0,
+            "identical": 22,
+            "missing": 0,
+            "diff_pixels": 0,
+            "failed_frames": []
+          },
+          "pixel_tolerance": [
+            0,
+            0,
+            0
+          ],
+          "excluded_pixels": 0,
+          "stimulus_events": 100,
+          "late_events": 0,
+          "build_key": "10e84710bfa89f49",
+          "artifacts": "golden/out/m2/full-docker"
+        }
       },
-      "ui_and_node_colour_checkpoints": 22,
-      "pixels": {
-        "frames": 22,
-        "passed": 22,
-        "failed": 0,
-        "identical": 22,
-        "missing": 0,
-        "diff_pixels": 0,
-        "failed_frames": []
-      },
-      "pixel_tolerance": [
-        0,
-        0,
-        0
-      ],
-      "compared_pixels_per_checkpoint": 307200,
-      "excluded_pixels": 0,
-      "stimulus_events": 100,
-      "late_events": 0,
-      "build_key": "00f2b96f738997b6",
-      "artifacts": "golden/out/m2/ui-final-native",
-      "capture": "golden/out/m2/ui-first-native/rtl"
+      "cross_runtime": {
+        "frames": 103,
+        "frame_crcs_identical": true,
+        "memory_dumps": 176,
+        "memory_dumps_identical": true
+      }
     },
-    "docker": {
-      "verilator": "5.020",
-      "frames": 103,
-      "state": {
-        "checkpoints": 22,
-        "passed": 22,
-        "failed": 0
+    "m2_node_colours": {
+      "file": "golden/scenarios/m2_node_colours.json",
+      "purpose": "settled node colours after connectivity edits: split, unjoined wire, rejoin by rotation, ground removal, unjoined and rotated ground, resistor removal, rail short",
+      "runs": {
+        "native": {
+          "verilator": "5.046",
+          "ok": true,
+          "frames": 78,
+          "state": {
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "right_rail_split",
+                "frame": 11,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "horizontal_wire_unjoined",
+                "frame": 20,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "rotated_wire_rejoins",
+                "frame": 29,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_removed",
+                "frame": 38,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_restored_unjoined",
+                "frame": 47,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_rotated_joins",
+                "frame": 56,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "lower_resistor_removed",
+                "frame": 65,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "rails_shorted",
+                "frame": 77,
+                "ok": true,
+                "differences": []
+              }
+            ]
+          },
+          "ui_ok": true,
+          "pixels": {
+            "frames": 9,
+            "passed": 9,
+            "failed": 0,
+            "identical": 9,
+            "missing": 0,
+            "diff_pixels": 0,
+            "failed_frames": []
+          },
+          "pixel_tolerance": [
+            0,
+            0,
+            0
+          ],
+          "excluded_pixels": 0,
+          "stimulus_events": 67,
+          "late_events": 0,
+          "build_key": "00f2b96f738997b6",
+          "artifacts": "golden/out/m2/nc-native"
+        },
+        "docker": {
+          "verilator": "5.020",
+          "ok": true,
+          "frames": 78,
+          "state": {
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "right_rail_split",
+                "frame": 11,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "horizontal_wire_unjoined",
+                "frame": 20,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "rotated_wire_rejoins",
+                "frame": 29,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_removed",
+                "frame": 38,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_restored_unjoined",
+                "frame": 47,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_rotated_joins",
+                "frame": 56,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "lower_resistor_removed",
+                "frame": 65,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "rails_shorted",
+                "frame": 77,
+                "ok": true,
+                "differences": []
+              }
+            ]
+          },
+          "ui_ok": true,
+          "pixels": {
+            "frames": 9,
+            "passed": 9,
+            "failed": 0,
+            "identical": 9,
+            "missing": 0,
+            "diff_pixels": 0,
+            "failed_frames": []
+          },
+          "pixel_tolerance": [
+            0,
+            0,
+            0
+          ],
+          "excluded_pixels": 0,
+          "stimulus_events": 67,
+          "late_events": 0,
+          "build_key": "10e84710bfa89f49",
+          "artifacts": "golden/out/m2/nc-docker"
+        }
       },
-      "ui_and_node_colour_checkpoints": 22,
-      "pixels": {
-        "frames": 22,
-        "passed": 22,
-        "failed": 0,
-        "identical": 22,
-        "missing": 0,
-        "diff_pixels": 0,
-        "failed_frames": []
+      "cross_runtime": {
+        "frames": 78,
+        "frame_crcs_identical": true,
+        "memory_dumps": 72,
+        "memory_dumps_identical": true
+      }
+    },
+    "m2_recorded": {
+      "file": "golden/scenarios/m2_recorded.json",
+      "purpose": "web-shell recording (Playwright real pointer events) of m2_full_ui; inputs and checkpoint frames identical to the source",
+      "runs": {
+        "native": {
+          "verilator": "5.046",
+          "ok": true,
+          "frames": 103,
+          "state": {
+            "checkpoints": [
+              {
+                "label": "cp1_f2",
+                "frame": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp2_f4",
+                "frame": 4,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp3_f8",
+                "frame": 8,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp4_f12",
+                "frame": 12,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp5_f16",
+                "frame": 16,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp6_f17",
+                "frame": 17,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp7_f18",
+                "frame": 18,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp8_f19",
+                "frame": 19,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp9_f26",
+                "frame": 26,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp10_f30",
+                "frame": 30,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp11_f34",
+                "frame": 34,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp12_f38",
+                "frame": 38,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp13_f45",
+                "frame": 45,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp14_f49",
+                "frame": 49,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp15_f53",
+                "frame": 53,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp16_f72",
+                "frame": 72,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp17_f76",
+                "frame": 76,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp18_f78",
+                "frame": 78,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp19_f82",
+                "frame": 82,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp20_f87",
+                "frame": 87,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp21_f95",
+                "frame": 95,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp22_f102",
+                "frame": 102,
+                "ok": true,
+                "differences": []
+              }
+            ]
+          },
+          "ui_ok": true,
+          "pixels": {
+            "frames": 22,
+            "passed": 22,
+            "failed": 0,
+            "identical": 22,
+            "missing": 0,
+            "diff_pixels": 0,
+            "failed_frames": []
+          },
+          "pixel_tolerance": [
+            0,
+            0,
+            0
+          ],
+          "excluded_pixels": 0,
+          "stimulus_events": 100,
+          "late_events": 0,
+          "build_key": "00f2b96f738997b6",
+          "artifacts": "golden/out/m2/recorded-native"
+        },
+        "docker": {
+          "verilator": "5.020",
+          "ok": true,
+          "frames": 103,
+          "state": {
+            "checkpoints": [
+              {
+                "label": "cp1_f2",
+                "frame": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp2_f4",
+                "frame": 4,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp3_f8",
+                "frame": 8,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp4_f12",
+                "frame": 12,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp5_f16",
+                "frame": 16,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp6_f17",
+                "frame": 17,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp7_f18",
+                "frame": 18,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp8_f19",
+                "frame": 19,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp9_f26",
+                "frame": 26,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp10_f30",
+                "frame": 30,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp11_f34",
+                "frame": 34,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp12_f38",
+                "frame": 38,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp13_f45",
+                "frame": 45,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp14_f49",
+                "frame": 49,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp15_f53",
+                "frame": 53,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp16_f72",
+                "frame": 72,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp17_f76",
+                "frame": 76,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp18_f78",
+                "frame": 78,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp19_f82",
+                "frame": 82,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp20_f87",
+                "frame": 87,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp21_f95",
+                "frame": 95,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "cp22_f102",
+                "frame": 102,
+                "ok": true,
+                "differences": []
+              }
+            ]
+          },
+          "ui_ok": true,
+          "pixels": {
+            "frames": 22,
+            "passed": 22,
+            "failed": 0,
+            "identical": 22,
+            "missing": 0,
+            "diff_pixels": 0,
+            "failed_frames": []
+          },
+          "pixel_tolerance": [
+            0,
+            0,
+            0
+          ],
+          "excluded_pixels": 0,
+          "stimulus_events": 100,
+          "late_events": 0,
+          "build_key": "10e84710bfa89f49",
+          "artifacts": "golden/out/m2/recorded-docker"
+        }
       },
-      "pixel_tolerance": [
-        0,
-        0,
-        0
-      ],
-      "compared_pixels_per_checkpoint": 307200,
-      "excluded_pixels": 0,
-      "stimulus_events": 100,
-      "late_events": 0,
-      "build_key": "10e84710bfa89f49",
-      "artifacts": "golden/out/m2/ui-final-docker",
-      "capture": "golden/out/m2/ui-final-docker/rtl"
+      "cross_runtime": {
+        "frames": 103,
+        "frame_crcs_identical": true,
+        "memory_dumps": 176,
+        "memory_dumps_identical": true
+      },
+      "rtl_identical_to_m2_full_ui": {
+        "frames": 103,
+        "frame_crcs_identical": true,
+        "memory_dumps": 176,
+        "memory_dumps_identical": true
+      }
     }
   },
-  "cross_runtime": {
-    "frame_crcs_identical": true,
-    "frames": 103,
-    "memory_dumps_identical": true,
-    "memory_dumps": 176
-  },
   "tests": {
-    "golden_unit_tests": 129,
-    "playwright_tests": 4,
+    "golden_unit_tests": 130,
+    "playwright_tests": 5,
     "asset_extraction_tests": 20,
+    "asset_freshness": "pass",
     "rtl_benches": 3,
-    "framescope_tests": 70,
-    "framescope_skipped": 2,
+    "framescope_tests_native": 70,
     "typecheck": "pass",
-    "build": "pass",
-    "asset_freshness": "pass"
+    "build": "pass"
   },
   "m1_regression": {
     "frames": 267,
@@ -96,21 +877,28 @@
     "status": "pass"
   },
   "limitations": [
-    "M2 human validation pending",
     "Connectivity oracle models settled node colours, not cycle-by-cycle dense-circuit flooding progress",
     "Independent graph uses 16-bit IDs; more than 255 isolated RTL nodes not accepted by this regression",
     "Expected 25 MHz versus 25.175 MHz VGA timing warning remains"
   ],
+  "history": [
+    "2026-10-08: first automated M2 pass (m2_full_ui, native and docker), human acceptance pending",
+    "2026-10-09: human acceptance; added m2_node_colours and m2_recorded; all three scenarios pass on both runtimes"
+  ],
   "source_sha256": {
     "../framescope/examples/metacircuit/framescope.toml": "704c32fd92aa3ac82ffd016ac75f851f63dc6c4c1ba7826c43bbcb48ca0d019d",
-    "golden/assets/canvas.json": "c1106c35788f0cefe787b0dad8f5a3bfc9f55084ed45154f586bf2af7ce71c59",
-    "golden/assets/cursor.json": "bf8bb03ec029af33355f05ab29a3b72158f77a3d7ffea71c11d1ca5f13506ad9",
-    "golden/assets/font8x8.json": "9aa203f4b5008fbfaeea41ca10e2edc2d0aa77d18fb4613583fac8619892144e",
-    "golden/assets/keypad.json": "25d36c07eb0c0f664a3b568088577b59bb2a1c781e3c5c5910559b2de66a7843",
-    "golden/assets/screen.json": "39e1a9cc56eefa0c0f5cf0e2768a37707de5d68a2af63f59ae98762b4848e557",
-    "golden/assets/toolbar.json": "228298d32a85747c2c573f75c2657fba98408b85f3a7af5730eedf991686e197",
+    "golden/INTERFACE_FACTS.md": "3db651cea875a56981ea205afd6e455a11166a5624e2350c28575868cd0b1476",
+    "golden/M2_ASSUMPTIONS.md": "1fc69319abf31dc69747e8092db2713e2a79e3596c77acb128d555ea020e399d",
+    "golden/README.md": "7032cfcf1aef4470484499516b0dfe1a725245b02de149edc9c8fddcaa2ef9f4",
+    "golden/assets/README.md": "4a1940032ad06fcdacd31ac0988a2f3d113c8f4508a7ecacb8301b3e5879c930",
+    "golden/assets/canvas.json": "b1595c0d5ff3171b352dce2177f14ffc5038c721d0d0e097d2fc7e804ed98997",
+    "golden/assets/cursor.json": "0d58f36c0381bd280784976d098f7aaec7dde7f35c5253e3f00fa9354c3c4b64",
+    "golden/assets/font8x8.json": "4306021bfbc205ff9fc25e70640ae96c50697da4e8fab826d569dc857ca128d5",
+    "golden/assets/keypad.json": "695bc537c02ed09b9da40b1df83d301e0a27bc916e87e6a28d0c86af347ccf71",
+    "golden/assets/screen.json": "d4ac167b8a3edcfa89b0978a74205d130a2d06d1b08cbc012db009238895aa9c",
+    "golden/assets/toolbar.json": "5dfbfac1a506ccd19fcc7ea4e9a3da092d3c38a999bf4fb1d2511ceb4e5582ae",
     "golden/e2e/m2.spec.ts": "4d0bf824a8e06182f68bbbd3ab3f94cfca6b333b23a1f7c66f2e0f6f7f8a13fd",
-    "golden/e2e/smoke.spec.ts": "9c89f3e472d3718c399abf5efc8fdf04e6010f617f4aeeb06ebe065ce0d7e6cb",
+    "golden/e2e/smoke.spec.ts": "1c86e9716614703c2d3eac64f2cf4a51e6267edef8c9c9560f31f0b27ac6f4f8",
     "golden/masks/m2_ui.toml": "46f2a842e46a83ba440c6a95667855e26e2c12637eacf662f6c339ca48f7579c",
     "golden/package.json": "f100b0b115407b57854edfe0c3fac6a9af382ca8115428c198b401fde4e5bf4d",
     "golden/scenarios/m1_canvas_tools.json": "196b9f4bdc67c24fdc5f50586aae2297053b7d840bc71663cd5bed0acaa84541",
@@ -118,6 +906,8 @@
     "golden/scenarios/m1_recorded.json": "13fa4b3c4e5ad76af0c03fdf48f8caa266169d60fd0e92529e6ebd142a950978",
     "golden/scenarios/m2_boot.json": "6f5bb443093a1f921e8cd8540ca3b570834182874bcb6ac62d05bf6833730f24",
     "golden/scenarios/m2_full_ui.json": "4ee98805407010237b569c65a5ce2ca26e7ba26d17cb4e531b81ea40bd5db638",
+    "golden/scenarios/m2_node_colours.json": "1bd6a42e6d67ee4d5dafcd94f14b057d0cf77949b19f774557dc09e202081cb1",
+    "golden/scenarios/m2_recorded.json": "1c671e4c6f06a92c07a4c0269a5cd7863e487c33e09c5de468a8b2c6318beeeb",
     "golden/src/cli/compare-ui.ts": "520263df8f94682c9fe148320cc3456297f66dd1aa4a8b66d976570165ab2c90",
     "golden/src/cli/compare.ts": "d200d348f57cad314458e5f1e890c31fbc3b8f9d663b07c95ba534d357c937cc",
     "golden/src/cli/main.ts": "5fa9fac5c535a378d8e242c7680d01a33774b3c069f12494bbe0d47d92668acf",
@@ -157,11 +947,11 @@
     "golden/test/properties.test.ts": "c08d9644cd41645da98560ac85b8f4c71f36a6408426858597356bc1aa27727c",
     "golden/test/render.test.ts": "01cc685f0afe599ca49bd69ab6b4472413c6e610c6f442129a54fff11ab78d79",
     "golden/test/rotate_delete_pan.test.ts": "1d01370525fc586cba562e0aba9c02005fb025ce1af55edfc060e68dcc3a7d6d",
-    "golden/test/scenario.test.ts": "23861cbd7f5be80ff85565d6a536b70e6fcaa5c69470eba91dc5252ae6301a04",
+    "golden/test/scenario.test.ts": "32ecbaedf8ea7c14bf8a8b29f7e4dfd264238cb52a4e68946440ef0e81040973",
     "golden/test/tools.test.ts": "a5c008ee673aa74901cb84c6bd8025f047c77812ff9e4e180aba061125bbe18b",
     "golden/tools/decode_pixels.ts": "83f1addf9972e87242f95b5762d1c4c4e59fa17a5c4c9f415be878de1eb3c034",
-    "golden/tools/extract_assets.py": "feb12789a32c7b24e79a56da659c9629d476312f48e2041b145a2e190cdf759f",
-    "golden/tools/test_extract_assets.py": "b60bd875558b15eccdf6d41909c3bb63b84150bdafbb3f80904a554d9cdc185f",
+    "golden/tools/extract_assets.py": "0722b53859ce20a0909f061ce39dd3c78801f1887ac23bdd2cab9cc238207fa8",
+    "golden/tools/test_extract_assets.py": "9b89b8f241c39ea1550cdd07219ba6d6a9afd9667b5103d79cfdf89e10db0202",
     "golden/tools/test_rtl.py": "277399dfb2787993a6f839f3516830aaf2eefd07925b7e4224a7978814953cad",
     "golden/tools/verify_m1.py": "6d7469aa8b3604819a5c8acafd17e6848d72faca8b94a64e86edb3db872fd24c",
     "golden/tools/verify_m2.py": "5d663fdfa6e681fb2764346d9c146ef34550c6e5b78da8483e144792bc80e43a",
@@ -280,8 +1070,6 @@
     "src/testbench/legacy_rtl/solve_core.sv": "3e20df4f58dfbd75614b84e4ea73be6a8188cc1e96233dad0f5997a0304ad8ac",
     "src/testbench/legacy_rtl/solve_core_transient.sv": "7824018643a1c3dd8f755e2a9a4d8f34dfb8b806669857574b3faf7af809759c",
     "src/testbench/legacy_rtl/stamping_core.sv": "d9497034b300af5de0634806979eebaa3ca9ce837cb561b9128f6b6a312db590",
-    "src/testbench/misc/CounterQuiz_test.v": "e10d1cec37ea768eb24776ead53ec580c0f21579dd21b09a71135f4cd00bee17",
-    "golden/M2_ASSUMPTIONS.md": "bb978a78619568364377681c9afb151a0437d3fd6dd481dd3c3f68b19cc70da0",
-    "golden/INTERFACE_FACTS.md": "3db651cea875a56981ea205afd6e455a11166a5624e2350c28575868cd0b1476"
+    "src/testbench/misc/CounterQuiz_test.v": "e10d1cec37ea768eb24776ead53ec580c0f21579dd21b09a71135f4cd00bee17"
   }
 }

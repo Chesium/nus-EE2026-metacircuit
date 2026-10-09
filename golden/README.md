@@ -2,7 +2,7 @@
 
 A software reference model of the MetaCircuit editor, used as ground truth when
 testing the RTL in simulation (see [`docs/verification-plan.md`](../docs/verification-plan.md),
-items GM-1..GM-6, SC-1..SC-4; M2 human validation is pending).
+items GM-1..GM-6, SC-1..SC-4; M1 and M2 human validation accepted).
 
 - **Core** (`src/core`): TypeScript, no dependencies. It runs the same way in Node and in
   the browser. `step(state, mouseSnapshot) -> state` advances one frame (D-008).
@@ -216,8 +216,8 @@ does not simulate the flooding engine's cycle-by-cycle progress. Dense circuits
 may therefore need settling frames before colour checkpoints. Backend stamping,
 DC solve and UART remain M3 work (GM-7, GM-8, FS-7).
 
-M2 assumptions are recorded in [`M2_ASSUMPTIONS.md`](M2_ASSUMPTIONS.md), and require
-human validation. The asset renderer marks its output `authoritative: true`
+M2 assumptions are recorded in [`M2_ASSUMPTIONS.md`](M2_ASSUMPTIONS.md); the user
+accepted them after human validation (2026-10-09). The asset renderer marks its output `authoritative: true`
 for the supported settled UI states. Automated agreement is evidence of consistency with the RTL, rather than human
 acceptance of the chosen property/keypad semantics.
 
@@ -227,6 +227,8 @@ acceptance of the chosen property/keypad semantics.
 npm run verify:m2
 npm run verify:m2 -- --runtime docker
 npm run verify:m2 -- --scenario scenarios/m2_boot.json
+npm run verify:m2 -- --scenario scenarios/m2_node_colours.json
+npm run verify:m2 -- --scenario scenarios/m2_recorded.json
 # Reuse a completed RTL capture while developing the independent reference
 npm run verify:m2 -- --actual out/m2/my-run/rtl --out out/m2/new-comparison
 ```
@@ -238,6 +240,14 @@ background colour RAM and enabled-sprite foreground RAM. Finally, framescope
 compares every 640x480 pixel at zero tolerance. `masks/m2_ui.toml` reports counts
 for panel, toolbar, canvas, keypad and bottom background; it excludes no pixels.
 An explicit `--masks` override supports diagnostic region comparisons.
+
+`m2_node_colours.json` (78 frames, 9 checkpoints) edits connectivity on the boot
+circuit and checks settled node colours after each edit: a rail split, a new
+horizontal wire that does not join, rotating it to rejoin, removing ground,
+re-placing it unjoined and rotating it to join, removing a resistor, and
+shorting the rails. `m2_recorded.json` was downloaded from the web shell after
+Playwright drove `m2_full_ui.json` through real pointer events; its inputs and
+checkpoint frames are identical to that scenario (a unit test pins this).
 
 Outputs include `summary.json`, `state-compare.json`, `ui-compare.json` and
 `pixels/compare.json`, with diff PNGs on failures. Failed pixel runs also get

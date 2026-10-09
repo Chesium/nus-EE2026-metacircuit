@@ -1,11 +1,15 @@
 # M2 UI assumptions
 
-These extend the M1 assumptions. M1 human acceptance does not cover them.
+These extend the M1 assumptions.
 Behavior is based on `docs/ComponentPropertyPanel_Verification.md`,
 `docs/ComponentPropertyPanel_Fix.md`, `structure.md` and the extracted keypad
 layout. The two property documents describe Enter/Escape keys and initialization
 data that the current keypad/boot interface does not expose. The choices below
-resolve that gap explicitly; they require M2 human validation.
+resolve that gap explicitly.
+
+Human validation of the M2 golden behavior (M2-A001 to M2-A004: selection,
+immediate value edits, RST and keypad frame sampling, plus the full-UI rendering
+and node colours) is accepted as passed by the user (2026-10-09).
 
 ## M2-A001 Selection and editing
 

@@ -1447,6 +1447,13 @@ module GlobalRender_top (
     reg  [15:0] flood_p_fetch_ram_rdata = 16'd0;
     reg         flood_run_pending = 1'b0;
     reg         flood_results_ready = 1'b0;
+    // Frontend UART client (SW[5]) only: a netlist snapshot is extracted from
+    // a flood that started after the canvas/ComponentStore settled.
+    // flood_run_clean: no canvas or value edit (component_store_busy) since
+    // the running flood started. netlist_flood_fresh: the last completed
+    // flood (colours applied) was clean and no snapshot has used it yet.
+    reg         flood_run_clean = 1'b0;
+    reg         netlist_flood_fresh = 1'b0;
     reg         flood_result_fetch_busy = 1'b0;
     reg         flood_p_fetch_busy_reg = 1'b0;
     reg         flood_result_value_ready = 1'b0;
@@ -1567,6 +1574,10 @@ module GlobalRender_top (
     reg  [15:0] netlist_error_arg = 16'd0;
     reg  [15:0] frontend_snapshot_frame = 16'd0;
     reg  [15:0] frontend_tx_frame = 16'd0;
+    // Observability (RTL-4): frame id of the last snapshot whose @NE line was
+    // sent completely, and the number of such snapshots (wraps).
+    reg  [15:0] netlist_last_sent_frame = 16'd0;
+    reg  [15:0] netlist_sent_count = 16'd0;
     reg         frontend_tx_start = 1'b0;
     reg  [1:0]  frontend_tx_mode = FRONTEND_NETLIST_TX_MODE_NB;
     reg  [7:0]  frontend_tx_elem_count = 8'd0;
@@ -1663,11 +1674,20 @@ module GlobalRender_top (
     wire [7:0]  flood_wrapper_fetchR_i;
     wire [7:0]  flood_wrapper_fetchR_j;
     wire        flood_color_apply_fetch_done;
+    // Hold the flood only while a snapshot is being extracted or sent, so its
+    // node indices stay consistent. (It used to hold whenever results were
+    // ready, which stopped flooding after the first run: with SW[5] = 1 the
+    // node colours and the netlist never followed a connectivity edit.)
     wire        netlist_debug_holds_flood =
         frontend_uart_client_enable &&
-        (flood_results_ready || flood_colors_ready ||
-         netlist_extract_busy || netlist_snapshot_ready || netlist_component_read_pending ||
+        (netlist_extract_busy || netlist_snapshot_ready || netlist_component_read_pending ||
          (netlist_tx_state != NETLIST_TX_IDLE));
+    // A pending snapshot request with no fresh flood asks for one at once
+    // (not only at the next frame tick), e.g. after an edit dirtied the last.
+    wire        netlist_flood_request =
+        frontend_uart_client_enable && netlist_frame_pending && !netlist_flood_fresh &&
+        (netlist_tx_state == NETLIST_TX_IDLE) && !netlist_extract_busy &&
+        !flood_wrapper_start && !flood_wrapper_done;
     wire        netlist_extract_port_active =
         frontend_uart_client_enable || netlist_extract_busy || netlist_component_read_pending ||
         (netlist_tx_state != NETLIST_TX_IDLE);
@@ -2365,9 +2385,14 @@ module GlobalRender_top (
         frontend_tx_start <= 1'b0;
 
         if (!frontend_uart_client_enable || component_store_busy) begin
+            // An edit aborts the snapshot in progress (the line being sent
+            // still completes). Keep the request, and any frame tick that
+            // arrives meanwhile, so a fresh snapshot follows once the
+            // ComponentStore and the flood have settled.
             netlist_tx_state <= NETLIST_TX_IDLE;
             netlist_snapshot_ready <= 1'b0;
-            netlist_frame_pending <= 1'b0;
+            netlist_frame_pending <= frontend_uart_client_enable &&
+                (netlist_frame_pending || interaction_frame_tick || (netlist_tx_state != NETLIST_TX_IDLE));
             netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
             netlist_dump_count <= {CANVAS_ADDR_W{1'b0}};
             netlist_component_read_pending <= 1'b0;
@@ -2383,7 +2408,8 @@ module GlobalRender_top (
                 netlist_frame_pending <= 1'b1;
             end
 
-            if (netlist_extract_done) begin
+            // Ignore the completion of an extraction that an edit aborted.
+            if (netlist_extract_done && (netlist_tx_state == NETLIST_TX_EXTRACT_WAIT)) begin
                 netlist_snapshot_ready <= 1'b1;
                 netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
                 netlist_dump_count <= component_store_count;
@@ -2453,6 +2479,7 @@ module GlobalRender_top (
             case (netlist_tx_state)
                 NETLIST_TX_IDLE: begin
                     if (netlist_frame_pending && flood_results_ready && flood_colors_ready &&
+                        netlist_flood_fresh && !flood_run_pending &&
                         !flood_wrapper_busy && !flood_color_apply_active && !flood_color_apply_fetch_busy &&
                         !netlist_extract_busy && !netlist_component_read_pending && !component_store_read_busy) begin
                         frontend_snapshot_frame <= frontend_snapshot_frame + 1'b1;
@@ -2543,6 +2570,8 @@ module GlobalRender_top (
                 NETLIST_TX_END_WAIT: begin
                     if (frontend_tx_done) begin
                         netlist_snapshot_ready <= 1'b0;
+                        netlist_last_sent_frame <= frontend_tx_frame;
+                        netlist_sent_count <= netlist_sent_count + 1'b1;
                         netlist_tx_state <= NETLIST_TX_IDLE;
                     end
                 end
@@ -2718,8 +2747,10 @@ module GlobalRender_top (
             flood_packet_last_char <= 1'b0;
             flood_uart_wait_busy <= 1'b0;
             flood_packet_index <= 6'd0;
+            flood_run_clean <= 1'b0;
+            netlist_flood_fresh <= 1'b0;
         end else begin
-            if (interaction_frame_tick && !flood_wrapper_busy && !flood_run_pending &&
+            if ((interaction_frame_tick || netlist_flood_request) && !flood_wrapper_busy && !flood_run_pending &&
                 !flood_color_apply_active && !flood_color_apply_fetch_busy &&
                 !netlist_debug_holds_flood &&
                 (!uart_flood_debug_enable || !flood_results_ready)) begin
@@ -2727,9 +2758,12 @@ module GlobalRender_top (
             end
 
             if (flood_run_pending && !flood_wrapper_busy &&
-                !flood_color_apply_active && !flood_color_apply_fetch_busy) begin
+                !flood_color_apply_active && !flood_color_apply_fetch_busy &&
+                !(frontend_uart_client_enable && component_store_busy)) begin
                 flood_wrapper_start <= 1'b1;
                 flood_run_pending <= 1'b0;
+                flood_run_clean <= 1'b1;
+                netlist_flood_fresh <= 1'b0;
                 flood_results_ready <= 1'b0;
                 flood_color_apply_active <= 1'b0;
                 flood_color_apply_fetch_busy <= 1'b0;
@@ -2769,9 +2803,19 @@ module GlobalRender_top (
                 if (flood_color_apply_addr == CANVAS_CELL_COUNT - 1) begin
                     flood_color_apply_active <= 1'b0;
                     flood_colors_ready <= 1'b1;
+                    netlist_flood_fresh <= frontend_uart_client_enable && flood_run_clean &&
+                                           !component_store_busy;
                 end else begin
                     flood_color_apply_addr <= flood_color_apply_addr + 1'b1;
                 end
+            end
+
+            if (component_store_busy) begin
+                flood_run_clean <= 1'b0;
+                netlist_flood_fresh <= 1'b0;
+            end
+            if (netlist_extract_start) begin
+                netlist_flood_fresh <= 1'b0;
             end
 
             if (!uart_flood_debug_enable) begin

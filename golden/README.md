@@ -73,6 +73,9 @@ npm run golden -- stim scenarios/m1_canvas_tools.json --line 10 --frame-offset 0
 
 # Print the canonical per-frame form
 npm run golden -- expand scenarios/m1_canvas_tools.json
+
+# Compare a completed framescope run with the reference state output
+npm run golden -- compare out/m1/rtl --reference out/m1/reference
 ```
 
 `run` writes, per checkpoint, `<NN>_<label>.ram.json` (all memories),
@@ -88,7 +91,43 @@ e.g. `{"componentStore": "component_store"}`).
 npm test            # Vitest unit tests (core, scenarios, stim, encodings, renderers)
 npm run test:e2e    # Playwright smoke test (starts its own Vite server on port 5199)
 npm run typecheck   # tsc --noEmit
+npm run test:rtl    # focused interaction/controller tests, native Verilator
 ```
+
+## M1 RTL regression
+
+With a sibling `framescope` checkout containing the `m1-harness` features,
+Python, uv and the native Verilator (or Docker):
+
+```sh
+npm run verify:m1
+npm run verify:m1 -- --runtime docker
+# The saved web-shell recording has the same inputs and checkpoint frames
+npm run verify:m1 -- --scenario scenarios/m1_recorded.json
+# Check every frame around toolbar selection and a canvas edit (no wait margin)
+npm run verify:m1 -- --scenario scenarios/m1_latency.json
+# Optional checkout/output overrides; the output directory must be new
+npm run verify:m1 -- --framescope /path/to/framescope --out out/my-m1-run
+```
+
+The runner generates reference RAM and state files, compiles the stimulus, runs
+the scenario with dumps at its checkpoints, and compares each checkpoint. The
+default M1 scenario has 267 frames and 25 checkpoints; `m1_latency.json` checks
+all 11 frames around toolbar selection and drawing to verify one-frame latency.
+It sets `METACIRCUIT` to this checkout automatically. Outputs live in a new
+`out/m1/<UTC timestamp>-<runtime>/` directory: `reference/`, `stim.toml`, `rtl/`,
+`simulation.log` and `state-compare.json`. A mismatch returns exit status 1.
+Generated stimulus includes a top-level `frames` key, so direct framescope runs
+also capture the complete scenario when `-n` is omitted.
+
+The comparison checks enabled cell sprite/rotation, component anchors/types/
+rotations/values, per-cell values and units, tool/variant/mode and pan probes,
+init/idle/busy/drop probes, mirrored cell RAM equality and the ComponentIndexMap's
+ownership of both halves. It ignores cell flow metadata, component slot ordering,
+and stale store entries beyond the `component_count` probe. Slot index fields must
+still agree with each RTL entry's own slot. Missing dumps, malformed words, late
+events, incomplete runs and invalid probes fail the check. Colour RAMs and pixels
+belong to M2.
 
 ## State and dumps
 
@@ -170,7 +209,8 @@ semantic decode, scenarios, stim compilation, the web shell.
 Out of scope for now: property panel and value editing (components carry default
 values), keypad, flooding / netlist / node colours / flow animation (GM-7, GM-8),
 pixel-exact rendering and the cell decoder (GM-5, GM-6; the asset renderer is a
-start), UART, and comparison tooling beyond `diffSemantic`.
+start), UART, and value editing. M1 includes a checkpoint comparison CLI and a
+repeatable framescope regression runner.
 
 ## Layout
 

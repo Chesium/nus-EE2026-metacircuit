@@ -114,11 +114,12 @@ module InteractionController_test ();
 
   task automatic pulse_frame;
     begin
+      @(negedge clk);
       frame_start_pulse = 1'b1;
       @(posedge clk);
       #1;
       frame_start_pulse = 1'b0;
-      @(posedge clk);
+      repeat (3) @(posedge clk);
       #1;
     end
   endtask
@@ -142,7 +143,7 @@ module InteractionController_test ();
       @(posedge clk);
       #1;
       bg_rsp_valid = 1'b0;
-      @(posedge clk);
+      repeat (4) @(posedge clk);
       #1;
     end
   endtask
@@ -173,10 +174,7 @@ module InteractionController_test ();
     mouse_x = 12'd50;
     mouse_y = 12'd40;
     pulse_frame();
-    expect_true(bg_cmd_valid, "wire mode right click should generate a command");
-    expect_addr(bg_cmd_addr, 8'd17, "wire mode right click should target cell (1,1)");
-    expect_word(bg_cmd_wdata, VerticalWire, "wire mode right click should place vertical wire");
-    accept_head_command();
+    expect_true(!bg_cmd_valid, "right-only click should leave the canvas unchanged");
 
     mouse_right = 1'b0;
     mouse_left = 1'b1;
@@ -195,6 +193,9 @@ module InteractionController_test ();
     expect_word(bg_cmd_wdata, TeeCell, "tee mode should place a tee sprite");
     accept_head_command();
 
+    mouse_left = 1'b0;
+    pulse_frame();
+    mouse_left = 1'b1;
     mode_select = 4'd4;
     mouse_x = 12'd20;
     mouse_y = 12'd20;
@@ -208,6 +209,9 @@ module InteractionController_test ();
     expect_word(bg_cmd_wdata, ResRightCell, "resistor mode should place RR second");
     accept_head_command();
 
+    mouse_left = 1'b0;
+    pulse_frame();
+    mouse_left = 1'b1;
     mode_select = 4'd5;
     pulse_frame();
     expect_word(bg_cmd_wdata, VoltLeftCell, "voltage mode should place VL first");
@@ -216,6 +220,9 @@ module InteractionController_test ();
     expect_word(bg_cmd_wdata, VoltRightCell, "voltage mode should place VR second");
     accept_head_command();
 
+    mouse_left = 1'b0;
+    pulse_frame();
+    mouse_left = 1'b1;
     mode_select = 4'd6;
     pulse_frame();
     expect_word(bg_cmd_wdata, CurrLeftCell, "current mode should place IL first");
@@ -224,6 +231,9 @@ module InteractionController_test ();
     expect_word(bg_cmd_wdata, CurrRightCell, "current mode should place IR second");
     accept_head_command();
 
+    mouse_left = 1'b0;
+    pulse_frame();
+    mouse_left = 1'b1;
     mode_select = 4'd9;
     pulse_frame();
     expect_word(bg_cmd_wdata, IndLeftCell, "inductor mode should place LL first");
@@ -232,6 +242,9 @@ module InteractionController_test ();
     expect_word(bg_cmd_wdata, IndRightCell, "inductor mode should place LR second");
     accept_head_command();
 
+    mouse_left = 1'b0;
+    pulse_frame();
+    mouse_left = 1'b1;
     mode_select = 4'd10;
     pulse_frame();
     expect_word(bg_cmd_wdata, CapLeftCell, "capacitor mode should place CL first");
@@ -392,6 +405,9 @@ module InteractionController_test ();
     expect_word(bg_cmd_wdata, 16'd0, "resumed two-cell rotate should zero the cell vacated by the second rotation");
     accept_head_command();
 
+    mouse_left = 1'b0;
+    pulse_frame();
+    mouse_left = 1'b1;
     mode_select = 4'd4;
     mouse_x = 12'd500;
     mouse_y = 12'd40;
@@ -402,18 +418,21 @@ module InteractionController_test ();
 
     mouse_x = 12'd10;
     mouse_y = 12'd10;
-    mouse_left = 1'b1;
+    mouse_left = 1'b0;
     mouse_right = 1'b1;
     pulse_frame();
-    expect_true(!bg_cmd_valid, "simultaneous left and right clicks should be ignored");
+    expect_true(!bg_cmd_valid, "right-only click should be ignored");
 
-    mouse_left = 1'b1;
+    mouse_left = 1'b0;
     mouse_right = 1'b0;
     mouse_middle = 1'b1;
     pulse_frame();
-    expect_true(!bg_cmd_valid, "middle-button press should suppress placement");
+    expect_true(!bg_cmd_valid, "middle-only press should leave the canvas unchanged");
 
     mouse_middle = 1'b0;
+    mouse_left = 1'b0;
+    pulse_frame();
+    mouse_left = 1'b1;
     mode_select = 4'd4;
     mouse_x = 12'd395;
     mouse_y = 12'd10;
@@ -422,6 +441,9 @@ module InteractionController_test ();
     pulse_frame();
     expect_true(!bg_cmd_valid, "dual-cell modes should ignore placements that would spill past the row edge");
 
+    mouse_left = 1'b0;
+    pulse_frame();
+    mouse_left = 1'b1;
     mode_select = 4'd1;
     mouse_x = 12'd10;
     mouse_y = 12'd10;
@@ -441,6 +463,9 @@ module InteractionController_test ();
     pulse_frame();
     expect_word(bg_cmd_wdata, JunctionCell, "setup frame should leave a pending command to be replaced");
 
+    mouse_left = 1'b0;
+    pulse_frame();
+    mouse_left = 1'b1;
     mode_select = 4'd5;
     pulse_frame();
     expect_word(bg_cmd_wdata, VoltLeftCell, "new frame should replace older pending work with the newest snapshot");

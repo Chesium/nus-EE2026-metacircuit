@@ -1145,6 +1145,13 @@ module GlobalRender_top (
     reg  [15:0] interaction_bg_rsp_rdata = 16'd0;
     wire        interaction_frame_done;
     wire        interaction_frame_drop_flag;
+    wire        controller_cmd_valid, controller_cmd_write, controller_cmd_ready;
+    wire [CANVAS_ADDR_W-1:0] controller_cmd_addr;
+    wire [15:0] controller_cmd_wdata, controller_rsp_rdata;
+    wire        controller_rsp_valid, controller_done, command_guard_idle;
+    wire        interaction_value_read_en, interaction_copy_value;
+    wire [CANVAS_ADDR_W-1:0] interaction_value_read_addr;
+    assign interaction_frame_done = controller_done && command_guard_idle;
 
     assign interaction_mode_select = toolbar_mode_select(selected_toolbar_idx_sys, selected_wire_variant_sys);
     assign interaction_frame_tick = interaction_frame_sync1 ^ interaction_frame_sync2;
@@ -2074,19 +2081,19 @@ module GlobalRender_top (
         (uart_flood_debug_enable ? flood_uart_tx : uart_cell_uart_tx);
     SimpleRam #( .WordWidth(12), .WordCount(CANVAS_CELL_COUNT) ) component_value_ram_inst (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
-        .r_addr(selected_value_store_addr_sys), .d_in(value_ram_w_data), .d_out(value_ram_r_data)
+        .r_addr(interaction_value_read_en ? interaction_value_read_addr : selected_value_store_addr_sys), .d_in(value_ram_w_data), .d_out(value_ram_r_data)
     );
     SimpleRam #( .WordWidth(2), .WordCount(CANVAS_CELL_COUNT) ) component_value_digit_ram_inst (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
-        .r_addr(selected_value_store_addr_sys), .d_in(value_digit_ram_w_data), .d_out(value_digit_ram_r_data)
+        .r_addr(interaction_value_read_en ? interaction_value_read_addr : selected_value_store_addr_sys), .d_in(value_digit_ram_w_data), .d_out(value_digit_ram_r_data)
     );
     SimpleRam #( .WordWidth(64), .WordCount(CANVAS_CELL_COUNT) ) component_value_text_ram_inst (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
-        .r_addr(selected_value_store_addr_sys), .d_in(value_text_ram_w_data), .d_out(value_text_ram_r_data)
+        .r_addr(interaction_value_read_en ? interaction_value_read_addr : selected_value_store_addr_sys), .d_in(value_text_ram_w_data), .d_out(value_text_ram_r_data)
     );
     SimpleRam #( .WordWidth(4), .WordCount(CANVAS_CELL_COUNT) ) component_value_text_len_ram_inst (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
-        .r_addr(selected_value_store_addr_sys), .d_in(value_text_len_ram_w_data), .d_out(value_text_len_ram_r_data)
+        .r_addr(interaction_value_read_en ? interaction_value_read_addr : selected_value_store_addr_sys), .d_in(value_text_len_ram_w_data), .d_out(value_text_len_ram_r_data)
     );
 
     always @(posedge CLK100MHZ) begin
@@ -3179,7 +3186,7 @@ module GlobalRender_top (
     ) interaction_controller_inst (
         .clk(CLK100MHZ),
         .reset(BTNC),
-        .frame_start_pulse(interaction_frame_tick && (selected_toolbar_idx_sys != 4'd0)),
+        .frame_start_pulse(interaction_frame_tick),
         .mode_select(interaction_mode_select),
         .mouse_x(mouse_xpos),
         .mouse_y(mouse_ypos),
@@ -3188,15 +3195,29 @@ module GlobalRender_top (
         .mouse_right(mouse_right),
         .grid_pos_x(circuit_canvas_grid_pos_x_sys),
         .grid_pos_y(circuit_canvas_grid_pos_y_sys),
-        .bg_cmd_ready(interaction_bg_cmd_ready),
-        .bg_rsp_valid(interaction_bg_rsp_valid),
-        .bg_rsp_rdata(interaction_bg_rsp_rdata),
-        .bg_cmd_valid(interaction_bg_cmd_valid),
-        .bg_cmd_write(interaction_bg_cmd_write),
-        .bg_cmd_addr(interaction_bg_cmd_addr),
-        .bg_cmd_wdata(interaction_bg_cmd_wdata),
-        .frame_done(interaction_frame_done),
+        .bg_cmd_ready(controller_cmd_ready),
+        .bg_rsp_valid(controller_rsp_valid),
+        .bg_rsp_rdata(controller_rsp_rdata),
+        .bg_cmd_valid(controller_cmd_valid),
+        .bg_cmd_write(controller_cmd_write),
+        .bg_cmd_addr(controller_cmd_addr),
+        .bg_cmd_wdata(controller_cmd_wdata),
+        .frame_done(controller_done),
         .frame_drop_flag(interaction_frame_drop_flag)
+    );
+
+    CanvasCommandGuard #(.AddrWidth(CANVAS_ADDR_W), .DataWidth(16)) canvas_command_guard_inst (
+        .clk(CLK100MHZ), .reset(BTNC), .mode_select(interaction_mode_select),
+        .controller_done(controller_done),
+        .cmd_valid(controller_cmd_valid), .cmd_write(controller_cmd_write),
+        .cmd_addr(controller_cmd_addr), .cmd_wdata(controller_cmd_wdata),
+        .cmd_ready(controller_cmd_ready), .rsp_valid(controller_rsp_valid), .rsp_rdata(controller_rsp_rdata),
+        .bg_cmd_valid(interaction_bg_cmd_valid), .bg_cmd_write(interaction_bg_cmd_write),
+        .bg_cmd_addr(interaction_bg_cmd_addr), .bg_cmd_wdata(interaction_bg_cmd_wdata),
+        .bg_cmd_ready(interaction_bg_cmd_ready), .bg_rsp_valid(interaction_bg_rsp_valid),
+        .bg_rsp_rdata(interaction_bg_rsp_rdata), .idle(command_guard_idle),
+        .value_read_en(interaction_value_read_en), .value_read_addr(interaction_value_read_addr),
+        .copy_value(interaction_copy_value)
     );
 
     assign backend_fetch_test_enable = ENABLE_BACKEND_FETCH_TEST && SW[2] && !frontend_uart_client_enable;
@@ -3706,7 +3727,18 @@ module GlobalRender_top (
                 circuit_canvas_ram_w_data <= interaction_bg_cmd_wdata;
                 canvas_shadow_data[interaction_bg_cmd_addr] <= interaction_bg_cmd_wdata;
                 component_store_change_this_cycle = 1'b1;
-                if (interaction_bg_cmd_wdata == 16'd0) begin
+                if (interaction_copy_value) begin
+                    // Rotation moves the partner's value, unit and display text
+                    // from the anchor before clearing the vacated cell.
+                    value_ram_w_en <= 1'b1;
+                    value_ram_w_addr <= interaction_bg_cmd_addr;
+                    value_ram_w_data <= value_ram_r_data;
+                    value_digit_ram_w_data <= value_digit_ram_r_data;
+                    value_text_ram_w_data <= value_text_ram_r_data;
+                    value_text_len_ram_w_data <= value_text_len_ram_r_data;
+                    value_shadow_data[interaction_bg_cmd_addr] <= value_shadow_data[interaction_value_read_addr];
+                    value_unit_shadow_data[interaction_bg_cmd_addr] <= value_unit_shadow_data[interaction_value_read_addr];
+                end else if (interaction_bg_cmd_wdata == 16'd0) begin
                     value_ram_w_en <= 1'b1;
                     value_ram_w_addr <= interaction_bg_cmd_addr;
                     value_ram_w_data <= 12'd0;

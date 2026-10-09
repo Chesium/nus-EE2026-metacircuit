@@ -1,0 +1,177 @@
+{
+  "milestone": "M1",
+  "ok": true,
+  "date": "2026-10-08",
+  "human_acceptance": "User accepted the M1 golden behavior, including A-019 rotation geometry.",
+  "scenarios": [
+    "golden/scenarios/m1_canvas_tools.json",
+    "golden/scenarios/m1_recorded.json"
+  ],
+  "recording": "Playwright drove all 267 mouse frames through the paused live web shell, marked all 25 checkpoints and downloaded the recording. Canonical inputs, checkpoints and headless states match the source scenario.",
+  "baseline": {
+    "passed": 12,
+    "failed": 13,
+    "first_failure": "blocked_placements"
+  },
+  "triage": [
+    "RTL allowed placement over occupied cells",
+    "RTL rotated components into occupied destinations",
+    "RTL failed to copy component values to the new partner cell"
+  ],
+  "golden_behavior_changed": false,
+  "runs": {
+    "native": {
+      "verilator": "5.046",
+      "frames": 267,
+      "checkpoints": {
+        "checkpoints": 25,
+        "passed": 25,
+        "failed": 0
+      },
+      "recorded_checkpoints": {
+        "checkpoints": 25,
+        "passed": 25,
+        "failed": 0
+      },
+      "stimulus_events": 240,
+      "late_events": 0,
+      "all_frames_initialized_idle_no_drops": true,
+      "memory_dumps": {
+        "cells_render": 25,
+        "cells_shadow": 25,
+        "cell_fg_color": 25,
+        "cell_bg_color": 25,
+        "values_shadow": 25,
+        "value_units_shadow": 25,
+        "component_store": 25,
+        "component_index_map": 25
+      },
+      "timing_violations": [
+        {
+          "field": "pixel_rate_hz",
+          "expected": 25175000.0,
+          "measured": 25000000,
+          "deviation_pct": -0.695,
+          "severity": "warning"
+        }
+      ],
+      "artifacts": "golden/out/m1/rtl-fixed-native",
+      "build_key": "18a8f08db797c235",
+      "per_frame_cursor_toolbar_pan_probe_matches": 267
+    },
+    "docker": {
+      "verilator": "5.020",
+      "frames": 267,
+      "checkpoints": {
+        "checkpoints": 25,
+        "passed": 25,
+        "failed": 0
+      },
+      "recorded_checkpoints": {
+        "checkpoints": 25,
+        "passed": 25,
+        "failed": 0
+      },
+      "stimulus_events": 240,
+      "late_events": 0,
+      "all_frames_initialized_idle_no_drops": true,
+      "memory_dumps": {
+        "cells_render": 25,
+        "cells_shadow": 25,
+        "cell_fg_color": 25,
+        "cell_bg_color": 25,
+        "values_shadow": 25,
+        "value_units_shadow": 25,
+        "component_store": 25,
+        "component_index_map": 25
+      },
+      "timing_violations": [
+        {
+          "field": "pixel_rate_hz",
+          "expected": 25175000.0,
+          "measured": 25000000,
+          "deviation_pct": -0.695,
+          "severity": "warning"
+        }
+      ],
+      "artifacts": "golden/out/m1/rtl-fixed-docker",
+      "build_key": "4ce24b40316e55a8",
+      "per_frame_cursor_toolbar_pan_probe_matches": 267
+    }
+  },
+  "cross_runtime": {
+    "identical_frame_crcs": 267,
+    "identical_memory_dumps": 200
+  },
+  "checks": {
+    "golden_unit_tests": 86,
+    "playwright_tests": 3,
+    "asset_extraction_tests": 20,
+    "focused_rtl_testbenches": 2,
+    "framescope_tests_per_runtime": 70,
+    "typecheck": true,
+    "production_build": true,
+    "asset_regeneration_check": true
+  },
+  "source_sha256": {
+    "golden/package.json": "98451c78a4a129cfd191f312281ba607e9f2a4b9bb88b8226b0335bd91ffe239",
+    "golden/scenarios/m1_canvas_tools.json": "196b9f4bdc67c24fdc5f50586aae2297053b7d840bc71663cd5bed0acaa84541",
+    "golden/scenarios/m1_recorded.json": "13fa4b3c4e5ad76af0c03fdf48f8caa266169d60fd0e92529e6ebd142a950978",
+    "golden/src/cli/compare.ts": "d200d348f57cad314458e5f1e890c31fbc3b8f9d663b07c95ba534d357c937cc",
+    "golden/src/cli/main.ts": "5509729fb0c1eef0f087589aeb01e963c0cc7ab8006579be44ae97fa202f7529",
+    "golden/src/core/bootCircuit.ts": "ea23988dfa9e10bd7873a0aa19184f9f554621b3c667eeb9a7d1317be258ec92",
+    "golden/src/core/config.ts": "388aa8ccd2ed4fd864660687add3e91d6052eacba4d922b59d7991a653972a8a",
+    "golden/src/core/constants.ts": "b431168b125b70956ed1fac751b72ee182dc84c20b1a9235d6003aadc5ec0b90",
+    "golden/src/core/encoding.ts": "8762d873906c70173c0fb253056735fdd5aa13b96a90998bbad9f42fb4b4fbff",
+    "golden/src/core/export.ts": "a55625952594b9341b55c78978b79fb9bac1976176a4ae8159596480539210f3",
+    "golden/src/core/geometry.ts": "5855a4519a34120e5121b39f52ba3929c3c56c301bff3f61c5e77b9dbe1c8e7f",
+    "golden/src/core/index.ts": "42376554cb372c08e8b8c0fabec480b8e9f072de139d535ab5b2f85d98a25e95",
+    "golden/src/core/state.ts": "a019b77e3e3131c8f316fb6534622cc4c70cfd222c32bdfb46921d9adf642605",
+    "golden/src/core/step.ts": "d2e37b2557bd32d33acfd207065b5a88f3aba7ce4803c88861d2925fd9380674",
+    "golden/src/scenario/compare.ts": "5b8f504d402a853266ac3b31b6cda5b8febe5a4d316184b1c7ade4db8cf7c25a",
+    "golden/src/scenario/expand.ts": "a14470cd196e567e906074cb8c60fcc4e3c3ff1e56f1524a91df08a40b361470",
+    "golden/src/scenario/run.ts": "042f88d57bc256be9393e09426187d95a090e9e14d9555e17308d4fd744a05cf",
+    "golden/src/scenario/stim.ts": "813db12f7350a8f1a2569dc22d2d9469c6a3877fdb1ee25c4d214f7793830b17",
+    "golden/src/scenario/types.ts": "10129a1e1faa16d8e39fad82eb35e25ebafb6dee8cbc7b2f0e8e4496368c1a12",
+    "metacircuit.tcl": "b957daf09dd040e4bdbb778a6a0338aa6abd89904480adc895a076355876e139",
+    "src/design/interaction/CanvasCommandGuard.v": "41d6a26e95d4e875a2c37756630bee141bf1917aabb382fe22993779304a78d7",
+    "src/design/interaction/InteractionController.v": "a4c7222b0034aa46555d9cc3abb8be0e2834456a349e43848b884808642cd88e",
+    "src/design/interaction/InteractionFrameCapture.v": "a3f7c7585110a7f1281825e11c0123899b1d5cd959bffcf47f76d227bf603eeb",
+    "src/design/interaction/WireDrawMode.v": "6a148e613a368af517f716dc2d5c0a8cdd1148a234e7676e7d494f8b89839090",
+    "src/design/rendering/CircuitCanvas.v": "a7317f8a9cd01b803ccb31b4774104c285e9bf1833283c9b39b83d3d455a5b98",
+    "src/design/rendering/GlobalRender_top.v": "2feda612cbee5ff1f167ba8f395eba730f93738fdacfe987ec99cd0b3747d813",
+    "src/design/rendering/ToolbarVGA.v": "739f6699ba3288a0d5067b3aa6c9f26a6a8ea46b13049b2416853ba81f7a6813",
+    "golden/tools/test_rtl.py": "3ec3384fa88a10d6be83273f940d217c1fd9ed04c30ac84bb9282a869c249d7a",
+    "golden/tools/test_extract_assets.py": "b60bd875558b15eccdf6d41909c3bb63b84150bdafbb3f80904a554d9cdc185f",
+    "golden/tools/extract_assets.py": "9024726701af7f90ac993f3a2914cddb541a9630ac70f1fd5edaf32f0068c1aa",
+    "golden/tools/verify_m1.py": "6d7469aa8b3604819a5c8acafd17e6848d72faca8b94a64e86edb3db872fd24c",
+    "golden/e2e/smoke.spec.ts": "9c89f3e472d3718c399abf5efc8fdf04e6010f617f4aeeb06ebe065ce0d7e6cb",
+    "golden/scenarios/m1_latency.json": "335e1a8d11c48c3be34e643af87d22831dfa6b340790e73b199abc52e33ff7ed"
+  },
+  "framescope": {
+    "branch": "m1-harness",
+    "commit": "77ff7aa",
+    "toolchain_image": "framescope-toolchain:6501155dc903"
+  },
+  "reproduce": [
+    "cd golden && npm ci",
+    "npm test && npm run typecheck && npm run test:rtl && npm run test:e2e",
+    "npm run verify:m1 -- --runtime native",
+    "npm run verify:m1 -- --runtime docker",
+    "npm run verify:m1 -- --scenario scenarios/m1_recorded.json",
+    "npm run verify:m1 -- --scenario scenarios/m1_latency.json"
+  ],
+  "scope": "State-level M1 acceptance. Flow metadata and slot order are ignored; live slot/index-map ownership is checked. Pixel and full UI checks remain M2.",
+  "latency_regression": {
+    "scenario": "golden/scenarios/m1_latency.json",
+    "runtime": "native",
+    "frames": 11,
+    "checkpoints": {
+      "checkpoints": 11,
+      "passed": 11,
+      "failed": 0
+    },
+    "artifacts": "golden/out/m1/latency-native",
+    "input_to_effect_frames": 1
+  }
+}

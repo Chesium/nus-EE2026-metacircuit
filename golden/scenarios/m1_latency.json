@@ -1,0 +1,17 @@
+{
+  "name": "m1_latency",
+  "description": "M1 one-frame latency regression. Unlike the full scenario's wait-2 checkpoints, every frame is checked around a wire-tool selection and a canvas press. Input changes occur in frame N's back porch and must take effect in frame N+1.",
+  "steps": [
+    "wait 1", "checkpoint boot_0",
+    "wait 1", "checkpoint boot_1",
+    "wait 1", "checkpoint boot_2",
+    "move 32 110", "wait 1", "checkpoint tool_move",
+    "down left", "wait 1", "checkpoint tool_press_not_yet_visible",
+    "up left", "wait 1", "checkpoint tool_selection_visible",
+    "move 112 112", "wait 1", "checkpoint canvas_move",
+    "down left", "wait 1", "checkpoint canvas_press_not_yet_visible",
+    "up left", "wait 1", "checkpoint canvas_edit_visible",
+    "wait 1", "checkpoint canvas_release",
+    "wait 1", "checkpoint settled"
+  ]
+}

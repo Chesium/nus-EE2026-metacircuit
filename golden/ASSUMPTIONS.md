@@ -10,6 +10,26 @@ one. Configurable choices name their `GoldenConfig` field (`src/core/config.ts`)
 When a mismatch with the RTL is triaged, record the outcome here (and in the
 verification plan's log): either the golden changes, or the RTL is filed as wrong.
 
+Human validation of the M1 golden behavior is accepted as passed by the user
+(2026-10-08). This includes A-019's geometry: rotation 0 points right, and one
+clockwise turn points down. A-011 remains a storage-layout difference accepted
+for semantic comparison; RTL slots may be packed while golden slots have holes.
+M2-only behavior (property editing, keypad and flow rendering) is not covered by
+this M1 acceptance.
+
+M1 RTL triage (2026-10-08): the first comparison passed 12/25 checkpoints and
+failed first at `blocked_placements`. The accepted golden behavior was retained.
+`CanvasCommandGuard` now checks both placement cells before writing (A-009),
+protects components and preserves same-sprite rotations during painting (A-008),
+and checks a rotation's destination before moving either half (A-012).
+`InteractionController` now starts gestures only in the canvas (A-006), stamps
+two-cell parts once per press (A-009), and ignores right/middle-only input
+(A-002). Rotating a component copies its value/unit and display text to the new
+partner before clearing the old one (A-021). All 25 native and Docker RTL checkpoints pass,
+including the boot resistor's nonzero value after rotation. Slot allocation
+(A-011) and stale trailing RTL store words (A-016) remain accepted layout
+differences; map ownership and live entry index fields are checked strictly.
+
 ---
 
 ### A-001 Frame stepping

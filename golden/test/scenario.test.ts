@@ -90,6 +90,7 @@ describe('stim compiler', () => {
   it('emits a header comment and one event per frame with changes', () => {
     const toml = compileStim(c);
     expect(toml.startsWith('# Scenario: t\n# demo\n')).toBe(true);
+    expect(toml).toContain(`frames = ${c.frameCount}`);
     expect(toml).toContain('# checkpoint placed: golden frame 5, framescope frame 5');
     const p = buttonCenter(Tool.Resistor);
     expect(toml).toContain(`[[event]]\nframe = 0\nline = 10\nset = { "mouse.x" = ${p.x}, "mouse.y" = ${p.y} }`);
@@ -99,6 +100,7 @@ describe('stim compiler', () => {
   });
 
   it('honours line and frame offset', () => {
+    expect(compileStim(c, { line: 3, frameOffset: 2 })).toContain(`frames = ${c.frameCount + 2}`);
     const ev = parseStim(compileStim(c, { line: 3, frameOffset: 2 }));
     expect(ev[0]).toMatchObject({ frame: 2, line: 3 });
   });
@@ -127,6 +129,15 @@ describe('m1_canvas_tools scenario', () => {
   const scenario = JSON.parse(readFileSync('scenarios/m1_canvas_tools.json', 'utf8')) as Scenario;
   const result = runScenario(expandScenario(scenario));
   const at = (label: string) => result.checkpoints.find((c) => c.label === label)!.semantic;
+
+  it('the saved web recording preserves the full M1 sequence', () => {
+    const recorded = expandScenario(JSON.parse(readFileSync('scenarios/m1_recorded.json', 'utf8')) as Scenario);
+    const source = expandScenario(scenario);
+    expect(recorded.frames).toEqual(source.frames);
+    expect(recorded.checkpoints.map((c) => c.frame)).toEqual(source.checkpoints.map((c) => c.frame));
+    expect(compileStim(recorded).slice(compileStim(recorded).indexOf('frames =')))
+      .toEqual(compileStim(source).slice(compileStim(source).indexOf('frames =')));
+  });
 
   it('exercises every canvas tool', () => {
     const sprites = new Set<string>();

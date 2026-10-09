@@ -12,6 +12,7 @@ import { expandScenario } from '../scenario/expand.ts';
 import { runScenario } from '../scenario/run.ts';
 import { compileStim } from '../scenario/stim.ts';
 import type { Scenario } from '../scenario/types.ts';
+import { compareRun } from './compare.ts';
 
 const USAGE = `usage: golden <command> <scenario.json> [options]
 
@@ -22,6 +23,7 @@ commands:
           --out (default out/<scenario name>)
   stim    compile the scenario to a framescope stimulus TOML (stdout or -o FILE)
   expand  print the canonical per-frame form (JSON)
+  compare compare a framescope run directory with --reference golden output
 
 options:
   --out DIR            run: output directory
@@ -31,6 +33,7 @@ options:
   --latency N          run: input-to-effect latency in frames (default 1, measured; RTL-3)
   --rotate-frames N    run: frames per repeated rotation while held (default 8)
   --names FILE         run: JSON overriding memory names, e.g. {"componentStore": "component_store"}
+  --reference DIR      compare: reference output from golden run
 `;
 
 function main(argv: string[]): number {
@@ -45,6 +48,7 @@ function main(argv: string[]): number {
       latency: { type: 'string' },
       'rotate-frames': { type: 'string' },
       names: { type: 'string' },
+      reference: { type: 'string' },
       help: { type: 'boolean', short: 'h' },
     },
   });
@@ -52,6 +56,10 @@ function main(argv: string[]): number {
   if (values.help || !cmd || !file) {
     process.stdout.write(USAGE);
     return values.help ? 0 : 2;
+  }
+  if (cmd === 'compare') {
+    if (!values.reference) throw new Error('compare requires --reference DIR');
+    return compareRun(file, values.reference, values.output);
   }
   const scenario = JSON.parse(readFileSync(file, 'utf8')) as Scenario;
   const canonical = expandScenario(scenario);

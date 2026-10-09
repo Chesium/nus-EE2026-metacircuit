@@ -1,6 +1,10 @@
 // Smoke test: load the shell, pick the resistor tool, place one on the canvas,
 // and check the side panel. Clicks go through real pointer events on the canvas.
 import { expect, test, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { expandScenario } from '../src/scenario/expand.ts';
+import { runScenario } from '../src/scenario/run.ts';
+import type { Scenario } from '../src/scenario/types.ts';
 
 /** Click at a 640x480 screen coordinate on the (scaled) canvas. */
 async function clickScreen(page: Page, x: number, y: number): Promise<void> {
@@ -49,4 +53,40 @@ test('replaying the M1 scenario matches the headless run at every checkpoint', a
   await expect(cps.locator('li.pending')).toHaveCount(0, { timeout: 15_000 });
   await expect(cps.locator('li.mismatch')).toHaveCount(0);
   await expect(cps.locator('li.match')).toHaveCount(25);
+});
+
+test('record and download preserves every M1 input frame and checkpoint', async ({ page }, testInfo) => {
+  const source = expandScenario(JSON.parse(readFileSync('scenarios/m1_canvas_tools.json', 'utf8')) as Scenario);
+  const expected = runScenario(source);
+  await page.goto('/');
+  await page.getByTestId('screen').waitFor();
+  await page.evaluate(() => {
+    window.__golden.setPaused(true);
+    (document.getElementById('btn-record') as HTMLButtonElement).click();
+  });
+  const box = (await page.getByTestId('screen').boundingBox())!;
+  let held = false;
+  for (const [frame, mouse] of source.frames.entries()) {
+    await page.mouse.move(box.x + ((mouse.x + 0.5) * box.width) / 640, box.y + ((mouse.y + 0.5) * box.height) / 480);
+    if (mouse.left !== held) {
+      if (mouse.left) await page.mouse.down();
+      else await page.mouse.up();
+      held = mouse.left;
+    }
+    await page.keyboard.press('n');
+    if (source.checkpoints.some((c) => c.frame === frame)) {
+      await page.locator('#btn-mark').evaluate((el) => (el as HTMLButtonElement).click());
+      const sem = await page.evaluate(() => window.__golden.semantic());
+      expect(sem).toEqual(expected.checkpoints.find((c) => c.frame === frame)!.semantic);
+    }
+  }
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#btn-download-rec').evaluate((el) => (el as HTMLButtonElement).click());
+  const download = await downloadPromise;
+  const path = testInfo.outputPath('m1-recorded.json');
+  await download.saveAs(path);
+  const recorded = expandScenario(JSON.parse(readFileSync(path, 'utf8')) as Scenario);
+  expect(recorded.frames).toEqual(source.frames);
+  expect(recorded.checkpoints.map((c) => c.frame)).toEqual(source.checkpoints.map((c) => c.frame));
+  expect(runScenario(recorded).final).toEqual(expected.final);
 });

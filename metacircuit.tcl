@@ -256,6 +256,7 @@ set files [list \
  [file normalize "${origin_dir}/src/design/common/FloodQueueStore.v"] \
  [file normalize "${origin_dir}/src/design/Dashboard/FontROM.v"] \
  [file normalize "${origin_dir}/src/design/interaction/InteractionController.v"] \
+ [file normalize "${origin_dir}/src/design/interaction/CanvasCommandGuard.v"] \
  [file normalize "${origin_dir}/src/design/interaction/InteractionFrameCapture.v"] \
  [file normalize "${origin_dir}/src/design/rendering/KeyboardVGA.v"] \
  [file normalize "${origin_dir}/src/design/driver/Oled_Display.v"] \

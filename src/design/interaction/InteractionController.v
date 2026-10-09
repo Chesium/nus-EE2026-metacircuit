@@ -139,6 +139,9 @@ module InteractionController #(
   wire [11:0] draw_target_cell_j;
 
   wire single_action;
+  reg previous_left = 1'b0;
+  reg canvas_gesture = 1'b0;
+  wire press_action = single_action && !previous_left;
   wire dual_cell_fits;
   wire [AddrWidth-1:0] second_cell_addr;
   reg [5:0] clicked_sprite_type;
@@ -314,7 +317,10 @@ module InteractionController #(
       .target_cell_j(draw_target_cell_j)
   );
 
-  assign single_action = (snapshot_mouse_left ^ snapshot_mouse_right) && !snapshot_mouse_middle;
+  // Only the left button edits. A gesture must begin inside the canvas;
+  // two-cell components are stamped on its press edge, while wires paint.
+  assign single_action = snapshot_mouse_left &&
+                         (canvas_gesture || (!previous_left && draw_target_cell_valid));
   assign dual_cell_fits = draw_target_cell_valid && (draw_target_cell_i < GridWidth - 1);
   assign second_cell_addr = draw_cmd_addr + 1'b1;
 
@@ -384,6 +390,8 @@ module InteractionController #(
 
   always @(posedge clk) begin
     if (reset) begin
+      previous_left <= 1'b0;
+      canvas_gesture <= 1'b0;
       decode_pending <= 1'b0;
       cmd0_valid <= 1'b0;
       cmd0_write <= 1'b1;
@@ -476,6 +484,9 @@ module InteractionController #(
         cmd_issue_pending <= 1'b0;
       end else begin
         if (decode_pending) begin
+          previous_left <= snapshot_mouse_left;
+          if (!snapshot_mouse_left) canvas_gesture <= 1'b0;
+          else if (!previous_left) canvas_gesture <= draw_target_cell_valid;
           decode_pending <= 1'b0;
           decode_issue_pending <= 1'b0;
           decode_cmd0_valid <= 1'b0;
@@ -494,7 +505,7 @@ module InteractionController #(
           decode_rotate_addr <= 0;
           decode_rotate_cell_i <= 0;
           decode_rotate_cell_j <= 0;
-          if ((mode_select == ModeRotateCell) && draw_target_cell_valid && single_action) begin
+          if ((mode_select == ModeRotateCell) && single_action) begin
             if (rotate_frame_holdoff != 0) begin
               rotate_frame_holdoff <= rotate_frame_holdoff - 1'b1;
             end else begin
@@ -506,12 +517,12 @@ module InteractionController #(
 
           case (mode_select)
             ModeDrawWires: begin
-              if (draw_cmd_valid) begin
+              if (draw_target_cell_valid && single_action) begin
                 decode_issue_pending <= 1'b1;
                 decode_cmd0_valid <= 1'b1;
                 decode_cmd0_write <= 1'b1;
                 decode_cmd0_addr <= draw_cmd_addr;
-                decode_cmd0_wdata <= draw_cmd_wdata;
+                decode_cmd0_wdata <= MakeCellData(2'b00, SpriteWire);
               end
             end
 
@@ -546,7 +557,7 @@ module InteractionController #(
             end
 
             ModeDrawResistor: begin
-              if (dual_cell_fits && single_action) begin
+              if (dual_cell_fits && press_action) begin
                 decode_issue_pending <= 1'b1;
                 decode_cmd0_valid <= 1'b1;
                 decode_cmd0_write <= 1'b1;
@@ -560,7 +571,7 @@ module InteractionController #(
             end
 
             ModeDrawVoltage: begin
-              if (dual_cell_fits && single_action) begin
+              if (dual_cell_fits && press_action) begin
                 decode_issue_pending <= 1'b1;
                 decode_cmd0_valid <= 1'b1;
                 decode_cmd0_write <= 1'b1;
@@ -574,7 +585,7 @@ module InteractionController #(
             end
 
             ModeDrawCurrent: begin
-              if (dual_cell_fits && single_action) begin
+              if (dual_cell_fits && press_action) begin
                 decode_issue_pending <= 1'b1;
                 decode_cmd0_valid <= 1'b1;
                 decode_cmd0_write <= 1'b1;
@@ -588,7 +599,7 @@ module InteractionController #(
             end
 
             ModeDrawInductor: begin
-              if (dual_cell_fits && single_action) begin
+              if (dual_cell_fits && press_action) begin
                 decode_issue_pending <= 1'b1;
                 decode_cmd0_valid <= 1'b1;
                 decode_cmd0_write <= 1'b1;
@@ -602,7 +613,7 @@ module InteractionController #(
             end
 
             ModeDrawCapacitor: begin
-              if (dual_cell_fits && single_action) begin
+              if (dual_cell_fits && press_action) begin
                 decode_issue_pending <= 1'b1;
                 decode_cmd0_valid <= 1'b1;
                 decode_cmd0_write <= 1'b1;

@@ -10,6 +10,12 @@ instantiations, instance parameter lists and the boot data table were read.
 `src/design/interaction/*` and the interaction/command/pan/hover/flood logic were
 not studied. See "Incidental exposure" at the end for what was seen by accident.
 
+That describes construction of golden v1. After human acceptance, M1 mismatch
+triage inspected the RTL interaction and command logic and corrected the RTL
+against the accepted model (see `ASSUMPTIONS.md`). No golden interaction behavior
+was changed to match those RTL failures. The interface encodings below still apply;
+their original line numbers identify the v1 sources.
+
 | ID | Fact | Value used | Source | Used in |
 |----|------|-----------|--------|---------|
 | IF-001 | Screen size and bar sizes | 640x480; top bar 64, left bar 64, right bar 156, bottom bar 128 | `GR:28-33` | `constants.ts` |

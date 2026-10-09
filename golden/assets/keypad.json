@@ -208,31 +208,31 @@
       },
       {
         "path": "src/design/rendering/GlobalRender_top.v",
-        "sha256": "5f246ec1295ffa8520706e3e8d1dda0653ccfb550ce34135b65b9c953e975ea4",
+        "sha256": "2feda612cbee5ff1f167ba8f395eba730f93738fdacfe987ec99cd0b3747d813",
         "line_ranges": {
           "SPRITE_* localparams": [
             554,
             568
           ],
           "final rgb mux": [
-            3829,
-            3846
+            3861,
+            3878
           ],
           "function toolbar_mode_select": [
             528,
             552
           ],
           "instance circuit_canvas_inst": [
-            1152,
-            1166
+            1159,
+            1173
           ],
           "instance keyboard_vga_inst": [
-            3225,
-            3239
+            3246,
+            3260
           ],
           "instance toolbar_vga_inst": [
-            3240,
-            3251
+            3261,
+            3272
           ],
           "localparam BACKGROUND": [
             27,
@@ -355,8 +355,8 @@
             30
           ],
           "ui_rgb composition": [
-            3792,
-            3829
+            3824,
+            3861
           ]
         }
       }

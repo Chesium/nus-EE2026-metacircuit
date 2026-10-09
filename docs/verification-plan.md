@@ -4,7 +4,7 @@ Living document for making MetaCircuit deterministically testable without hardwa
 Track progress here: tick TODOs, append to the log, and move questions from
 "to be made" to "made" when settled. IDs are stable; never reuse one.
 
-Last updated: 2026-10-09
+Last updated: 2026-10-08 (client date; M1 acceptance)
 
 ## Goal
 
@@ -34,7 +34,7 @@ the same observables for comparison.
 | ID | Milestone | Status |
 |----|-----------|--------|
 | M0 | Harness bring-up: framescope runs metacircuit on local Verilator; VGA timing correct | done |
-| M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | golden v1 ready for human testing; RTL comparison not run yet |
+| M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | done: human accepted; 267 frames / 25 checkpoints pass on native and Docker, including saved web recording |
 | M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | not started |
 | M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | not started |
 | M4 | Lockstep sessions, coverage, agent interface (MCP) | not started |
@@ -83,9 +83,9 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 
 - [x] SC-1 (P0) Scenario format: per-frame mouse states plus macros (`click_tool`, `click_cell`, `drag`); compilers to golden input and to framescope `stim.toml`.
 - [x] SC-2 (P0) One hand-written M1 scenario that exercises every canvas tool.
-- [ ] SC-3 (P1) Web shell: 640x480 canvas drawn with `putImageData`, scaled nearest-neighbour; mouse mapped to per-frame snapshots; record and replay sessions as scenario files.
-- [ ] SC-4 (P1) Playwright tests that replay scenarios in the web shell and check against the headless golden output.
-- [ ] SC-5 (P1) Human test sessions on the web shell; triage every RTL/golden mismatch (D-007).
+- [x] SC-3 (P1) Web shell: 640x480 canvas drawn with `putImageData`, scaled nearest-neighbour; mouse mapped to per-frame snapshots; record and replay sessions as scenario files.
+- [x] SC-4 (P1) Playwright tests that replay scenarios in the web shell and check against the headless golden output. Three tests pass, including full M1 recording/download and replay.
+- [x] SC-5 (P1, M1) Human test sessions on the web shell; triage every M1 RTL/golden mismatch (D-007). Human acceptance supplied by the user; all observed M1 differences resolved. M2 human validation remains future work.
 
 ### Infrastructure (INF)
 
@@ -143,3 +143,39 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 - 2026-10-09: RTL-3 measured: an input changed in frame N's back porch is visible in frame N+1 (cursor, hover, toolbar, canvas edits; the edit lands in vertical blanking, no tearing). Dumps at the end of frame N+1 show it.
 - 2026-10-09: framescope findings: CellStore is mirrored, not double-buffered; boot clear skips cells 1 and 2; ComponentStore entries above the count are stale; horizontal pan range is 0.
 - 2026-10-09: Golden v1 in `golden/` (GM-1..GM-4, SC-1, SC-2): 71 unit tests, 2 Playwright tests, assets pixel-exact against RTL frames. 21 assumptions in `golden/ASSUMPTIONS.md` await human testing.
+- 2026-10-08 (client date): User accepted the M1 human testing pass, including A-019's right/down/left/up rotation codes. Recorded in `golden/ASSUMPTIONS.md`.
+- 2026-10-08 (client date): First full M1 RTL comparison: 267 frames, 12/25 checkpoints pass. First divergence at `blocked_placements`. RTL allowed overlapping placements, rotation into occupied cells, and lost the partner's nonzero value when rotating a boot resistor. The accepted golden interaction model was retained.
+- 2026-10-08 (client date): Added `CanvasCommandGuard` to validate all destination cells before committing a placement or rotation. `InteractionController` now tracks canvas gesture origin, stamps components once per press and ignores right/middle-only input. Rotation copies value/unit/display text from the anchor to the new partner before clearing the old cell. Two focused RTL benches pass, including memory backpressure and rejection without partial writes. Vivado's source list includes the guard. Asset metadata regenerated; bitmap payloads unchanged.
+- 2026-10-08 (client date): M1 achieved. Native Verilator 5.046 and Docker 5.020 each pass all 25 checkpoints over 267 frames; all 267 frame CRCs and all 200 memory dumps agree across runtimes. No late stimulus events or dropped interaction frames. Both the hand-written scenario and the saved web recording pass state comparisons. 86 golden tests, 3 Playwright tests, 20 asset tests, 2 RTL benches, and 70 framescope tests per runtime pass; typecheck/build/extraction checks pass. Evidence: [`m1-verification.json`](m1-verification.json).
+- 2026-10-08 (client date): Confirmed cursor/toolbar/pan probes against the golden at every frame on both toolchains (267/267 each). Added `m1_latency.json`, with a RAM/probe checkpoint every frame and no wait margin: native passes 11/11, proving toolbar selection and the guarded canvas write still appear exactly one frame after the back-porch input change.
+
+## M1 acceptance and regression
+
+Run from `golden/`:
+
+```sh
+npm run verify:m1 -- --runtime native
+npm run verify:m1 -- --runtime docker
+npm run verify:m1 -- --scenario scenarios/m1_recorded.json
+npm run verify:m1 -- --scenario scenarios/m1_latency.json
+```
+
+The runner generates references, compiles stimulus, captures the checkpoint
+memories/probes and writes `state-compare.json`. Missing evidence, mismatched
+state, busy/drop flags or late stimulus events fail the command. The comparison
+checks cells, components, values/units, toolbar and pan probes, mirrored RAMs,
+and live slot/index-map consistency; slot ordering and flow metadata are ignored
+under A-011/A-016. No pixel comparison is used to claim M1 completion.
+
+The saved `golden/scenarios/m1_recorded.json` was downloaded from the web shell
+after Playwright drove all accepted M1 inputs through real pointer events while
+stepping frames. Its canonical inputs and checkpoint frame numbers are identical
+to `m1_canvas_tools.json`; both reference sets were compared with the same native
+and Docker RTL captures. This equivalence is also a unit regression.
+
+Local full artifacts are in `golden/out/m1/rtl-fixed-native/` and
+`golden/out/m1/rtl-fixed-docker/`, with the recorded reference/comparisons beside
+them. Generated runs are ignored by Git. The tracked evidence JSON records the
+results, toolchains and source hashes; the runner reproduces the full artifacts.
+The existing 25 MHz timing warning remains expected. Boot-clear skipped cells,
+keypad frame locking and full UI/pixel verification remain separate future work.

@@ -36,6 +36,7 @@ export function compileStim(sc: CanonicalScenario, partial: Partial<StimOptions>
   for (const c of sc.checkpoints) {
     out.push(comment(`checkpoint ${c.label}: golden frame ${c.frame}, framescope frame ${c.frame + o.frameOffset}`));
   }
+  out.push('', `frames = ${sc.frameCount + o.frameOffset}`);
   let prev = o.baseline;
   sc.frames.forEach((f, i) => {
     const set: string[] = [];
@@ -66,6 +67,7 @@ export function parseStim(toml: string, partial: Partial<StimOptions> = {}): { f
       continue;
     }
     const m = /^(\w+)\s*=\s*(.*)$/.exec(l);
+    if (m?.[1] === 'frames' && !cur) continue;
     if (!m || !cur) throw new Error(`unexpected line: ${l}`);
     if (m[1] === 'frame') cur.frame = Number(m[2]);
     else if (m[1] === 'line') cur.line = Number(m[2]);

@@ -4,18 +4,28 @@ Living document for making MetaCircuit deterministically testable without hardwa
 Track progress here: tick TODOs, append to the log, and move questions from
 "to be made" to "made" when settled. IDs are stable; never reuse one.
 
-Last updated: 2026-10-09 (client date; M3 achieved)
+Last updated: 2026-10-09 (client date; M3 achieved; M4/M5 refactor-readiness plan added)
 
 ## Goal
 
-There is no Basys 3 any more. The focus is agentic observability and automated
-testing of the RTL: an agent (or CI) should be able to drive the design with
-mouse input and decide, deterministically, whether what it shows is correct.
+There is no physical Basys 3 available. The focus is agentic observability and
+automated testing of the RTL: an agent (or CI) should be able to drive the design
+with mouse input and decide, deterministically, whether what it shows is correct.
+The Basys 3 FPGA remains the synthesis/implementation target for measuring logic
+depth, resource use and timing; AMD Vivado 2025.2 is installed locally under
+`/opt/amd/2025.2`.
 
 That needs a ground truth. The plan is a human-validated software model of
 MetaCircuit (the *golden model*) that produces reference states and frames, and
 [framescope](../../framescope) to simulate the RTL with Verilator and capture
 the same observables for comparison.
+
+The final goal is readiness for autonomous refactoring across the verified RTL
+scope: preserve the accepted functions while improving measured FPGA results.
+M1-M3 provide the behavioral baseline. M4 strengthens exploration and coverage;
+M5 combines that evidence with stable observation interfaces, continuous
+invariants and a scripted synthesis/implementation gate. Each optimization must
+produce reproducible correctness and resource/timing results.
 
 ```text
                     scenario (per-frame mouse input)
@@ -37,13 +47,16 @@ the same observables for comparison.
 | M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | done: human accepted; 267 frames / 25 checkpoints pass on native and Docker, including saved web recording |
 | M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | done: human accepted; 3 scenarios (full UI, node-colour edits, web recording) pass state, UI probes, node-colour RAM and every pixel on native and Docker |
 | M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | done: 5 scenarios / 482 frames / 42 checkpoints pass on native and Docker; UART records, ids, solver replies, voltage RAM, 7-segment display and LEDs checked |
-| M4 | Lockstep sessions, coverage, agent interface (MCP) | not started |
+| M4 | Coverage, seeded RTL stress tests and lockstep sessions; optional agent interface (MCP) | not started: prioritize FS-8/FS-11; sessions improve throughput, MCP is optional |
+| M5 | Final milestone: prepared for large-scale autonomous refactoring with preserved behavior and measured FPGA improvements | not started: requires M5-1..M5-8, FS-8/FS-11 and INF-4; readiness is scoped explicitly |
 
 M1 needs FS-1..FS-3, RTL-1..RTL-3, GM-1..GM-3 and SC-1..SC-2. It does not need the renderer.
 
 ## TODO
 
-Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
+Priority: P0 is an immediate blocker (historical M1 blockers are complete); P1
+is required for the next milestone, including M4/M5 readiness; P2 is deferred or
+conditional on the modules being changed.
 
 ### framescope (FS)
 
@@ -54,11 +67,11 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] FS-5 (P0) Batch runner: many scenarios against one build, parallel processes, one JSON summary.
 - [x] FS-6 (P1) Speed: checkpoint after boot (Verilator `--savable`), restore per scenario; option to skip PNG encoding; try `--threads`. Baseline: ~1.1 s per frame, so a 300-frame scenario is ~5.5 min. Done (framescope `m3-speed`): Verilator compiled with `-Os` by default; `-O2` is now the default (~0.72-0.85 s/frame, CRC-identical); `--checkpoint N` boot checkpoints with `--savable` (~3-4 s saved per run); `--profile`. Threads were slower.
 - [x] FS-7 (P1) UART monitor (decode `RsTx` lines into the report) and RX driver (scripted lines, or a host process such as `src/uart_link`'s simulated solver). framescope branch `m3-uart`: `protocol = "uart"` monitor, `[[uart]]` stimulus, `--host LINK=CMD` lockstep host with deterministic reply timing.
-- [ ] FS-8 (P1) Seeded X-initialisation (`+verilator+rand+reset`) to expose reset bugs that `--x-initial fast` hides.
+- [ ] FS-8 (P1, M5 prerequisite) Seeded initialization: add build/runtime options for random initial values and record the seed. A runtime seed alone is insufficient while compiling with `--x-initial fast`. Cold-boot each seed; reuse checkpoints only when their keys include the initialization mode/seed and the tested startup path is preserved.
 - [ ] FS-9 (P1) Long-lived session over stdio: step frames, poke inputs, read probes; lockstep with the golden model, stop at first divergence.
 - [ ] FS-10 (P2) PS/2 device model, plus an SV port of Digilent `Mouse_Control.vhd` / `Ps2Interface.vhd` (or GHDL-synth to Verilog), to test the real mouse path instead of the stub.
-- [ ] FS-11 (P2) Coverage: which modes and commands a scenario exercised (probes or Verilator coverage).
-- [ ] FS-12 (P2) MCP server on top of sessions.
+- [ ] FS-11 (P1, M5 prerequisite; promoted from P2) Collect RTL branch/line and toggle coverage plus explicit functional cover points. Write/merge coverage artifacts, record tool versions and distinguish boot activity from scenario activity. Produce per-module gaps and named behavior bins; do not use one overall percentage as the acceptance criterion.
+- [ ] FS-12 (P2) MCP server on top of sessions. Optional convenience; the CLI/JSON gate is sufficient for M5.
 
 ### RTL design-for-test (RTL)
 
@@ -93,7 +106,7 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] INF-2 framescope's `examples/metacircuit/framescope.toml` defaults `METACIRCUIT` to the sibling `../../../nus-EE2026-metacircuit` checkout. Environment overrides still work.
 - [ ] INF-3 One framescope test run under the docker runtime failed once with an error that did not reproduce in 10 later runs; traceback was not captured. Watch for it.
 - [x] RTL-6 (P1) Keypad uses the cursor's frame-latched mouse on `clk_pixel`; short single-frame presses and hover/pressed styling are deterministic. Caret also toggles every ten frames, replacing its free-running pixel counter.
-- [ ] INF-4 CI: framescope unit tests + metacircuit integration test on the pinned container (Verilator 5.020); native 5.046 as a second job.
+- [ ] INF-4 (P1, M5 prerequisite) One acceptance entry point used locally and by CI: framescope/golden tests, focused RTL benches and integration regressions on pinned Docker 5.020, with native 5.046 as a second job. Use fast checks during development and full checks for acceptance. Run Vivado on a runner with the installed toolchain, or consume local reports whose source/constraint/tool hashes match the candidate; missing mandatory checks fail readiness.
 
 ### M3 follow-ups (M3)
 
@@ -102,6 +115,17 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] M3-3 (P1) M3 scenarios with `SW[5]=1` and the solver host, including the D-025 out-of-order placement and slot-reuse check, and a `verify:m3` runner comparing netlist lines, snapshot ids, replies and 7-segment/voltage probes (D-017) against the golden model. Five scenarios pass all 42 checkpoints on both runtimes; evidence in `m3-verification.json`.
 - [ ] M3-4 (P2, post-M3) On-screen voltage readout with a golden renderer (D-017).
 - [x] M3-5 (P2) Restore an anchor-half selection checkpoint in `m2_full_ui`/`m2_recorded`: `voltage_anchor_selected` checks (4,2), while `voltage_micro` still uses the partner half (3,2), D-015. New web recording downloaded through real pointer events; 107 frames / 23 checkpoints pass every pixel on both runtimes.
+
+### Autonomous refactor readiness (M5)
+
+- [ ] M5-1 (P1) Freeze the accepted baseline and contract: start from metacircuit `2ff7f3a`, simpyhls `0d6f22a` and the framescope revision pinned by M3 evidence. Pin golden behavior, visual payloads, scenarios, constraints and known limitations; define exact output timing versus bounded internal latency. Record the modules and input ranges covered by readiness.
+- [ ] M5-2 (P1) Stable semantic observation adapter: expose logical cells/components, UI state, netlist events and accepted voltages independently of instance names, FSM encodings, slot packing or physical RAM banks. Validate adapters against the frozen baseline. Preserve semantic guarantees and required atomicity while allowing implementation layout to change.
+- [ ] M5-3 (P1) Seeded randomized tests against actual RTL, using FS-8/FS-11: interaction sequences, rapid edits, dense circuits, boundaries/capacity limits and configurable memory stalls. Check every frame where the contract defines a result; use continuous properties elsewhere. Save seed, inputs and first divergence, reduce failures to replayable scenarios, and require the reduced case to reproduce in a cold run.
+- [ ] M5-4 (P1) Continuous invariants and progress bounds: stalled request data stays stable, commands are neither lost nor duplicated, rejected edits produce no partial writes, cell/component maps agree, queues stay in range, replies commit atomically and accepted work finishes within specified bounds. Add targeted old/new equivalence or formal proofs for suitable modules; preserve proof assumptions and report unsupported/inconclusive checks separately from passes.
+- [ ] M5-5 (P1) Extend backend verification to the generated RTL and real solver pipeline: feed randomized extraction/solver fixtures through RTL, and exercise the frontend-to-`SolverBoard_top` UART path. Validate floating-point primitive behavior and latency against the configured IP before using stand-ins as acceptance evidence. The M3 Python-host result alone does not qualify solver datapath changes.
+- [ ] M5-6 (P1) Script Vivado 2025.2 synthesis and routed implementation for Basys 3 (`xc7a35tcpg236-1`), with explicit tops, source/IP manifests and clock/I/O constraints. Record per-module and total LUT/FF/BRAM/DSP use, critical-path logic levels, WNS/TNS, hold timing, clock/CDC checks and unconstrained paths. Preserve reports, checkpoints, warnings and exact run settings in a machine-readable summary.
+- [ ] M5-7 (P1) Unified autonomous acceptance gate: fixed regression corpus plus seeded RTL tests, invariants/equivalence, coverage requirements and Vivado deltas. Return a nonzero exit for any mandatory failure, missing/stale evidence or unexplained coverage exclusion. Record the optimization objective and allowed area/latency/timing tradeoffs before evaluating the candidate; a functional pass alone cannot qualify an optimization.
+- [ ] M5-8 (P1) Demonstrate readiness: the unchanged baseline passes the declared functional contract, its synthesis/timing status is characterized, deliberate behavioral and report/coverage corruptions fail the gate, a seeded failure is reduced and replayed, and one bounded optimization passes with a measured gain. Archive `docs/m5-verification.json` with the scope, thresholds, seeds, coverage gaps/exclusions, results and source/tool/constraint hashes.
 
 ## Decisions made
 
@@ -132,6 +156,10 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 | D-023 | 2026-10-10 | (Q-016) Solver rows are given only to regions touched by at least one component terminal, numbered by each region's first cell in row-major order; wire islands that no component touches get no row. Floating-terminal rows (D-019) follow them. Applies to the golden extraction, the extraction kernel and the generated RTL. | A stray wire would otherwise make every circuit singular. |
 | D-024 | 2026-10-10 | (Q-017) A snapshot aborted by an edit after `@NB` is closed with `@ER,<id>,85,<lines>` (frontend error code 85, `arg` = number of `@NC` lines already sent) instead of stopping silently; the next snapshot follows as usual. | The host sees why a snapshot is incomplete; long netlists (five or more components) can be aborted routinely. |
 | D-025 | 2026-10-10 | (Q-018) Element `idx` and `@NC` order are the anchor's row-major rank on both sides; the RTL ComponentStore must keep that order, as all dumps so far show. The first M3 scenario places parts out of order and reuses freed slots to check it; a divergence is an RTL bug under this decision. | One order fixes `@NC` order and floating-row numbers, and it is independent of slot allocation (A-011). |
+| D-026 | 2026-10-09 | Refactor optimization retains the Basys 3 synthesis target (`xc7a35tcpg236-1`) and uses local AMD Vivado 2025.2 under `/opt/amd/2025.2`. | User direction; clarifies D-001: physical-board testing is unavailable, while FPGA implementation remains measurable. |
+| D-027 | 2026-10-09 | Optimization runs use a frozen accepted contract and visual payloads, with semantic observation adapters that are checked against the baseline. Source-provenance metadata may change without changing reference behavior. | Prevents a renderer rewrite or adapter edit from changing both the implementation and its expected result together; permits module and memory reorganization. |
+| D-028 | 2026-10-09 | A refactor is accepted only with both functional evidence and measured FPGA results under fixed constraints. Declare the objective, budgets and permitted latency changes before evaluating it. Behavioral changes are separate decisions, not automatic oracle updates. | Agents need an executable acceptance rule for preserving functions and evaluating area/timing tradeoffs. |
+| D-029 | 2026-10-09 | M5 is the final readiness milestone. Seeded initialization, RTL/functional coverage, actual-RTL stress tests, invariants and the unified gate are prerequisites; sessions/MCP improve ergonomics but are not readiness blockers. | Strengthens evidence before broad architectural work without requiring all optional M4 tooling first. |
 
 ## Decisions to be made
 
@@ -181,6 +209,8 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 - 2026-10-10: D-015..D-021 implemented independently on both sides. Frontend RTL (`59ca445`): content-based snapshot ids, stale replies dropped and counted, boot source flipped (cells 39/40 = `0x0111`/`0x010F`, ComponentStore entry 0 = `0x0003C02044`). Kernels (`06ce3cf`, simpyhls `78efdf8` on local branch `m3-kernel-fixes`, not pushed): pivot fix in four solver kernels, facing-port terminals, ground by containment, floating-terminal rows, current-source orientation; solver RTL regenerated by `src/design/solver/regenerate_simpyhls.py` (it reproduces the old SV), and Verilator stand-ins for the floating-point IP let all five solver benches run. Golden (`7369a63`, `da6a5ff`): same decisions, independently derived boot words identical to the RTL's; bit-exact against the fixed simulated solver on 339 netlists and the fixed extraction kernel on 442 canvases. framescope `m3` (FS-6 + FS-7 merged, `m1-harness` fast-forwarded to it): 112 tests pass on native and Docker; checkpoints work with UART links. Regression on native 5.046 with the new boot circuit: M1 25/25, 25/25 (recorded), 11/11 (latency); M2 22/22, 9/9, 22/22 (recorded), 6/6 (boot), zero differing pixels; 207 golden unit tests, 5 Playwright tests, 5 RTL benches, 5 solver benches pass.
 
 - 2026-10-09 (client date): M3 achieved. Implemented D-023 independently in the golden extraction and the simpyhls kernel, regenerated the extraction RTL, and updated the kernel's independent reference tests. Implemented D-024 in the frontend transmitter and both UART codecs: finish the in-flight line, send ER 85 with the interrupted id and completed NC count, then resume fresh snapshots. Added `verify:m3` and five scenarios for ordering/slot reuse, wire islands, values/units, connectivity, C/L/pico rejection, solver errors/recovery, stale/corrupt replies, physical display controls and current-source polarity (-0.1 V at 2 mA). Native 5.046 and Docker 5.020 each pass 482 frames / 42 checkpoints: 2,265 TX lines, 442 complete netlists, 439 delivered solver replies, four explicit aborts, 36 frontend rejections and 19 stale replies. All 482 frame CRCs/probes, UART TX/RX records and timings, and 504 RAM dumps are identical across runtimes. The receive model uses independently checked header timing to witness the extraction commit; mouse capture alone does not make an id current. Restored M2 anchor selection and its web recording: 107 frames / 23 checkpoints pass state/UI/colours/every pixel on both runtimes. M1 latency 11/11, 214 golden tests, five Playwright tests, 20 UART tests, 11 extraction-kernel tests, 20 asset tests, five frontend benches and five solver benches pass; typecheck/build/assets/regeneration checks pass. Evidence: [`m3-verification.json`](m3-verification.json). The simpyhls kernel/test changes are committed at `0d6f22a`; evidence pins their hashes. The new on-screen voltage renderer remains post-M3 P2 work under D-017.
+
+- 2026-10-09 (client date): Added the final M5 milestone for large-scale autonomous refactor readiness. Promoted FS-11 to P1 and specified FS-8, frozen contracts/assets, stable semantic observations, actual-RTL stress tests with reduction, invariants/equivalence, solver-pipeline verification and a combined functional/Vivado acceptance gate. The user confirmed AMD 2025.2 is installed at `/opt/amd/2025.2`; the local Vivado executable and existing Basys 3 part selection were checked. This entry records a plan, not implementation or new verification results.
 
 ## M1 acceptance and regression
 
@@ -308,3 +338,134 @@ bytes, snapshot ids, voltage RAM, display values and missing reply evidence.
 The restored M2 recording also remains equal to its source at every input frame
 and checkpoint. On-screen voltage rendering (M3-4) is later work; the accepted
 voltage display for this milestone is the existing board display.
+
+## M4/M5 plan: autonomous refactor readiness
+
+M1-M3 support incremental refactoring today. They are not yet sufficient to
+qualify a rewrite as broad as `design2`: checkpoint comparisons can miss
+transients, randomized kernel tests execute software rather than generated RTL,
+M3 bypasses the hardware solver through its Python host, and observation paths
+encode the current hierarchy and RAM layout. There is also no combined gate for
+functional correctness, exercised RTL paths and FPGA resource/timing results.
+
+### Work order and responsibilities
+
+| Stage | Work | Output |
+|-------|------|--------|
+| 1 | M5-1/M5-2: freeze the contract and establish semantic observation adapters | Pinned baseline, immutable visual payloads, documented timing/latency rules and verified-scope manifest |
+| 2 | FS-8/FS-11 and M5-3: seeded startup, RTL coverage and reproducible stress tests | Per-module coverage gaps, named functional bins, seeded scenarios and minimized counterexamples |
+| 3 | M5-4/M5-5: invariants, targeted equivalence and actual backend RTL verification | Continuous safety/progress checks, proof results/assumptions and RTL solver evidence |
+| 4 | M5-6: automate Basys 3 implementation measurements | Reproducible baseline/candidate resource and timing reports |
+| 5 | M5-7/M5-8 and INF-4: integrate and demonstrate acceptance | One local/CI gate, negative-control results, one verified optimization and `m5-verification.json` |
+
+Generic initialization, coverage, trace and session capabilities belong in
+framescope. MetaCircuit contracts, adapters, generators, reducers, assertions
+and acceptance policy belong in this repository; kernel/compiler changes remain
+in simpyhls with regenerated RTL checked against their pinned source. FS-9 can
+accelerate stepping and first-divergence diagnosis after the basic gate works.
+FS-12/MCP and the new on-screen voltage renderer are optional for readiness.
+
+### Behavior and coverage requirements
+
+The contract must preserve the accepted interaction rules, pixel output,
+netlist content/order/ids and reply/display behavior. Distinguish semantic
+state from physical implementation details: renaming an instance, changing an
+FSM encoding or repacking RAM must not silently drop a check. Preserve
+atomicity, transaction ordering, frame-visible effects and specified progress
+bounds through the semantic adapter. Any permitted retiming must be represented
+in the contract before candidate results are evaluated; waiting arbitrarily
+longer for a settled checkpoint is not a substitute for checking latency.
+
+Freeze bitmap/font/palette/layout payloads and the accepted golden algorithms
+for an optimization run. The asset extractor can update provenance or diagnose
+the candidate, but must not replace the reference payload with candidate-derived
+data. Likewise, changes to masks, tolerances, seeds, coverage exclusions or
+observation adapters must remain visible in the acceptance report. Known
+baseline defects require separate recorded decisions and regression cases;
+old/new equivalence does not make a known defect the intended behavior.
+
+Functional coverage must name the important combinations, including component
+kind/rotation/unit, all canvas edges, blocked placements, partner selection,
+slot reuse, empty and near-capacity stores, floating/grounded terminals, held
+buttons, stalls, edits during flooding/extraction/each UART phase, stale replies
+and malformed/incomplete packets. Add continuous checks between frame samples
+for protocol and memory invariants; compare frame results wherever the contract
+defines them. Record eligible, reached, uncovered and excluded bins per module,
+with reasons for exclusions. A high aggregate line/toggle percentage alone
+cannot establish readiness.
+
+The gate must define and pin a seed corpus and runtime budget, plus a mechanism
+for adding new seeds and retaining every minimized failure as a regression.
+Use fast module benches for large fixture populations and full-frame scenarios
+for integrated behavior. The initialization mode, random seed and any checkpoint
+state must be recorded together; startup tests must not inherit a baseline's
+already-initialized RAM and thereby conceal a candidate reset bug.
+
+### AMD toolchain and FPGA measurements
+
+The locally available executable is:
+
+```text
+/opt/amd/2025.2/Vivado/bin/vivado
+```
+
+Target part: `xc7a35tcpg236-1` (Basys 3). The existing frontend is
+`GlobalRender_top`; solver-board work uses `SolverBoard_top` and its own source/IP
+manifest and constraints. Existing project Tcl and `solver_board_synth.tcl`
+provide starting points, not a completed refactor gate. The scripts must use
+portable paths, the actual synthesis sources (including VHDL/IP where needed),
+and the correct top-specific constraints. Simulation mouse/FP stand-ins are
+not substitutes for the FPGA implementation source manifest.
+
+Plan a repository-owned batch Tcl runner and report parser. For example, the
+future invocation would have this shape; the script below is **not yet
+implemented**:
+
+```sh
+/opt/amd/2025.2/Vivado/bin/vivado -mode batch \
+  -source tools/vivado_qor.tcl -tclargs GlobalRender_top golden/out/qor/baseline
+```
+
+Measure synthesis first for development feedback, then routed implementation
+for acceptance. Record clock periods/generated clocks, I/O timing, clock-domain
+crossings, unconstrained paths, critical-path logic and routing contributions,
+setup/hold timing and LUT/FF/BRAM/DSP use. Source, constraint and IP hashes,
+Vivado build, part, strategy, run seed where supported and implementation
+settings must match the recorded comparison policy. A pass cannot be produced
+by weakening clocks, adding unjustified timing exceptions or changing the
+source/top manifest. HDL line count and simulation wall time are not FPGA
+resource or timing metrics.
+
+Characterize the untouched baseline first. If it already misses timing or
+contains unresolved constraint/CDC issues, record that status explicitly and
+establish a bounded improvement target; do not call it timing-clean. Declare
+which resources or paths an optimization targets and what increases in other
+resources or internal latency are allowed. Final reports must show both the
+baseline and candidate values, their deltas, and compliance with that policy.
+
+### Final milestone acceptance and scope
+
+M5 is complete only when M5-1..M5-8, FS-8/FS-11 and INF-4 have executable evidence.
+The unified runner must emit machine-readable results, fail for missing/stale
+mandatory evidence, and preserve a replayable scenario plus a trace window for
+a simulation failure and the associated reports for a synthesis/timing failure. Validate the gate with deliberately corrupted output/adapter/coverage
+or resource-report cases, not only successful runs. Demonstrate it with one
+bounded optimization under the same frozen contract and measured objective.
+`docs/m5-verification.json` must identify the verified module/input scope and
+any outstanding limitations; the M5 status remains **not started** until work
+begins and is not declared achieved merely because tools were added.
+
+Solver datapath changes require M5-5 evidence from actual RTL, including the
+configured floating-point primitive assumptions. PS/2 driver changes require
+FS-10 or equivalent device-level verification before that scope is qualified.
+Clock/reset/CDC changes require corresponding clock-domain and timing evidence.
+Modules outside the recorded verified scope cannot inherit readiness from a
+passing frontend suite. Physical-board validation is unavailable and is not
+claimed by this milestone.
+
+Once ready, autonomous work proceeds by selecting a measured bottleneck,
+recording its objective/budgets, making a bounded change, running focused checks,
+and then passing the full gate before accepting each implementation change. The agent can
+repeat this across a large refactor without changing the accepted oracle to
+fit the candidate. Intentional functionality changes are tracked separately
+from implementation optimizations.

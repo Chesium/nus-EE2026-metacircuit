@@ -5,15 +5,19 @@
 // The testbench is the host side of src/uart_link/README.md: an independent
 // 115200-baud line decoder on RsTx and a line driver on RsRx (both timed in
 // nanoseconds, not by the DUT's clock divider). It
-//   1. captures the boot circuit's netlist snapshots (@NB/@NC/@NE),
+//   1. captures the boot circuit's netlist snapshots (@NB/@NC/@NE): one per
+//      frame, all with frame id 0001 while the canvas is idle (D-016), and the
+//      boot voltage source with its + terminal (n0) on the right rail (D-015),
 //   2. replies to one of them with @VB/@VN/@VE and checks the voltage store,
 //      the 7-segment value (both halves, via BTNU/BTND) and the LED status,
-//   3. deletes the lower resistor through the mouse (golden scenario macros
-//      "click_tool delete", "click_cell 3 6"; inputs change at line 10 of a
-//      frame, D-008) and measures, in frames, edit -> netlist TX -> reply ->
-//      voltage visible,
-//   4. documents that a stale reply (frame id of an older snapshot) is still
-//      accepted (spec: "should ignore late responses"; Q-009 in the report).
+//   3. deletes the right-rail wire at (5,5) through the mouse (golden scenario
+//      macros "click_tool delete", "click_cell 5 5"; inputs change at line 10
+//      of a frame, D-008), checks that the id increments once and then stays,
+//      and measures, in frames, edit -> netlist TX -> reply -> voltage visible,
+//   4. checks that a corrupted line sets status 83 and keeps the voltages,
+//   5. checks that stale replies (@VB..@VE and @ER with an older frame id) are
+//      dropped without touching the stored voltages or reply_valid/frame/
+//      status (D-016), and that a reply with the current id is accepted.
 // Every RsTx/RsRx line is printed as "TXLINE"/"RXLINE" so golden/tools can
 // re-check framing and checksums with src/uart_link/protocol.py.
 //
@@ -311,8 +315,8 @@ module GlobalRenderUartLoop_test;
     end
     last_store_busy <= dut.component_store_busy;
     if (dut.netlist_tx_state == 4'd1 && last_tx_state == 4'd0)
-      $display("EVENT frame=%0d line=%0d extract_start snapshot_frame=%04h", frame, line_now(),
-               dut.frontend_snapshot_frame);
+      $display("EVENT frame=%0d line=%0d extract_start id_before_commit=%04h content_dirty=%0d", frame,
+               line_now(), dut.frontend_snapshot_frame, dut.netlist_content_dirty);
     last_tx_state <= dut.netlist_tx_state;
     if (dut.frontend_reply_valid != last_reply_valid || dut.frontend_reply_frame != last_reply_frame) begin
       $display("EVENT frame=%0d line=%0d reply_valid=%0d reply_frame=%04h status=%02h nodes=%0d", frame,
@@ -382,40 +386,58 @@ module GlobalRenderUartLoop_test;
   endtask
 
   // ------------------------------------------------------------ main
-  localparam [31:0] MINUS_10V = 32'hC1200000;  // IEEE-754 -10.0
+  localparam [31:0] PLUS_10V = 32'h41200000;   // IEEE-754 10.0
   localparam [31:0] ZERO_V = 32'h00000000;
   localparam [31:0] PLUS_5V = 32'h40A00000;    // IEEE-754 5.0
 
-  integer nb0, ne0, nb1, ne1, nb2, ne2, nbe, nee, k, fid_boot, fid_edit, n_input;
-  integer tx_lines_before_edit, reply_end_frame, reply_end_line;
+  integer nb0, ne0, nb1, ne1, nb2, ne2, nbe, nee, nbi, nei, k, fid_boot, fid_edit, n_input;
+  integer tx_lines_before_edit, reply_end_frame, reply_end_line, guard;
+  integer stale_before, n_ids, n_bad_ids;
+  reg bank_before;
   string want[5];
 
+  // Count the @NB lines in TX lines [from, to) and those whose frame id is
+  // not `fid`.
+  task automatic nb_ids(input integer from, input integer to, input integer fid, output integer n,
+                        output integer bad);
+    integer j;
+    n = 0;
+    bad = 0;
+    for (j = from; j < to && j < MAX_LINES; j = j + 1)
+      if (tx_text[j].substr(0, 2) == "@NB") begin
+        n = n + 1;
+        if (hex_val(tx_text[j], 4, 4) != fid) bad = bad + 1;
+      end
+  endtask
+
   initial begin : watchdog
-    wait (frame >= 40);
+    wait (frame >= 48);
     $display("FAIL: watchdog at frame %0d", frame);
     $fatal(1, "GlobalRenderUartLoop_test timed out");
   end
 
   initial begin
-    // ---- 1. Boot circuit: three consecutive snapshots, one per frame.
+    // ---- 1. Boot circuit: three consecutive snapshots, one per frame, all
+    // with the boot id (D-016: the id moves only when the content changes).
     wait_snapshot(0, nb0, ne0);
     wait_snapshot(ne0 + 1, nb1, ne1);
     wait_snapshot(ne1 + 1, nb2, ne2);
     fid_boot = hex_val(tx_text[nb0], 4, 4);
     check(fid_boot == 1, $sformatf("first snapshot frame id is 0001 (got %04h)", fid_boot));
     check(nb0 == 0 && nb1 == ne0 + 1 && nb2 == ne1 + 1, "snapshots are back to back, no other lines");
-    check(hex_val(tx_text[nb1], 4, 4) == fid_boot + 1 && hex_val(tx_text[nb2], 4, 4) == fid_boot + 2,
-          "frame id increments by one per snapshot");
+    check(hex_val(tx_text[nb1], 4, 4) == fid_boot && hex_val(tx_text[nb2], 4, 4) == fid_boot &&
+          dut.frontend_snapshot_frame == fid_boot[15:0],
+          $sformatf("frame id stays %04h across idle frames (got %s / %s)", fid_boot,
+                    tx_text[nb1].substr(4, 7), tx_text[nb2].substr(4, 7)));
     check(tx_start_frame[nb1] == tx_start_frame[nb0] + 1 && tx_start_frame[nb2] == tx_start_frame[nb1] + 1 &&
           tx_start_line[nb1] == tx_start_line[nb2] && tx_end_frame[ne1] == tx_start_frame[nb1],
           $sformatf("one snapshot per frame, NB at the same line (lines %0d/%0d/%0d)",
                     tx_start_line[nb0], tx_start_line[nb1], tx_start_line[nb2]));
-    // Boot circuit (golden/src/core/bootCircuit.ts): 10 V source and two 100
-    // ohm resistors between the grounded left rail and the right rail.
-    // RTL-observed element order and terminal order; the golden netlist
-    // (GM-8) decides whether they are right.
+    // Boot circuit (D-015): 10 V source with its + terminal (anchor, n0) on
+    // the right rail (node 00) and - on the grounded left rail, and two 100
+    // ohm resistors between the rails. idx = anchor row-major order.
     want = '{$sformatf("NB,%04X,03,01", fid_boot),
-             $sformatf("NC,%04X,00,03,FF,00,010,00", fid_boot),
+             $sformatf("NC,%04X,00,03,00,FF,010,00", fid_boot),
              $sformatf("NC,%04X,01,01,FF,00,100,00", fid_boot),
              $sformatf("NC,%04X,02,01,FF,00,100,00", fid_boot),
              $sformatf("NE,%04X,03,01", fid_boot)};
@@ -426,18 +448,18 @@ module GlobalRenderUartLoop_test;
           "no reply yet: reply_valid 0, 7-seg 0000");
 
     // ---- 2. Reply to the boot snapshot. src/uart_link's simulated solver
-    // answers V(node 0) = -10 V for this netlist (V source n0 = ground).
-    send_reply(fid_boot, 1, MINUS_10V, ZERO_V);
+    // answers V(node 0) = +10 V for this netlist (V source n0 = node 0).
+    send_reply(fid_boot, 1, PLUS_10V, ZERO_V);
     wait_reply(fid_boot);
     check(dut.frontend_reply_valid && dut.frontend_reply_frame == fid_boot[15:0] &&
           dut.frontend_reply_status == 8'h00 && dut.frontend_reply_node_count == 8'd1,
           $sformatf("reply accepted: frame %04h status %02h nodes %0d", dut.frontend_reply_frame,
                     dut.frontend_reply_status, dut.frontend_reply_node_count));
-    check(stored_voltage(0) == MINUS_10V, $sformatf("voltage store node 0 = %08h", stored_voltage(0)));
+    check(stored_voltage(0) == PLUS_10V, $sformatf("voltage store node 0 = %08h", stored_voltage(0)));
     check(LED[7] == 1'b1 && LED[15:8] == 8'h00 && LED[6] == 1'b0, $sformatf("LED = %04h", LED));
     expect_7seg(16'h0000, "node 0 lower half");
     press_btn(0);
-    expect_7seg(16'hC120, "node 0 upper half (BTNU)");
+    expect_7seg(16'h4120, "node 0 upper half (BTNU)");
     check(LED[5] == 1'b1, "LED[5] shows the upper half");
 
     // ---- 3. Edit: delete tool, then delete the right-rail wire at (5,5)
@@ -464,18 +486,22 @@ module GlobalRenderUartLoop_test;
     end
     fid_edit = hex_val(tx_text[nbe], 4, 4);
     want = '{$sformatf("NB,%04X,03,02", fid_edit),
-             $sformatf("NC,%04X,00,03,FF,00,010,00", fid_edit),
+             $sformatf("NC,%04X,00,03,00,FF,010,00", fid_edit),
              $sformatf("NC,%04X,01,01,FF,00,100,00", fid_edit),
              $sformatf("NC,%04X,02,01,FF,01,100,00", fid_edit),
              $sformatf("NE,%04X,03,02", fid_edit)};
     for (k = 0; k < 5; k = k + 1)
       check(payload(nbe + k) == want[k].toupper(), $sformatf("split-rail line %0d: %s", k, tx_text[nbe + k]));
+    nb_ids(0, nbe, fid_boot, n_ids, n_bad_ids);
+    check(n_ids >= 5 && n_bad_ids == 0,
+          $sformatf("all %0d snapshots before the edit carry id %04h (%0d differ)", n_ids, fid_boot, n_bad_ids));
+    check(fid_edit == fid_boot + 1, $sformatf("the edit increments the id once (%04h -> %04h)", fid_boot, fid_edit));
     check(edit_frame == n_input + 1, $sformatf("edit lands in frame N+1 (N=%0d, got %0d)", n_input, edit_frame));
     check(tx_start_frame[nbe] == n_input + 1 && tx_end_frame[nee] == n_input + 1,
           $sformatf("new netlist sent in frame N+1 (NB frame %0d line %0d, NE frame %0d line %0d)",
                     tx_start_frame[nbe], tx_start_line[nbe], tx_end_frame[nee], tx_end_line[nee]));
     // Node 1 is the lower resistor's dangling terminal: 0 V.
-    send_reply(fid_edit, 2, MINUS_10V, ZERO_V);
+    send_reply(fid_edit, 2, PLUS_10V, ZERO_V);
     reply_end_frame = frame;
     reply_end_line = line_now();
     wait_reply(fid_edit);
@@ -486,7 +512,7 @@ module GlobalRenderUartLoop_test;
              n_input, edit_frame - n_input, edit_line, tx_start_frame[nbe] - n_input, tx_start_line[nbe],
              tx_end_frame[nee] - n_input, tx_end_line[nee], reply_end_frame - n_input, reply_end_line,
              reply_seen_frame - n_input, reply_seen_line);
-    expect_7seg(16'hC120, "split rail: node 0 upper half");
+    expect_7seg(16'h4120, "split rail: node 0 upper half");
     press_btn(3);
     check(LED[1:0] == 2'd1, "BTNR selects node 1");
     expect_7seg(16'h0000, "split rail: node 1 upper half");
@@ -495,22 +521,73 @@ module GlobalRenderUartLoop_test;
     press_btn(2);
     press_btn(1);
     expect_7seg(16'h0000, "node 0 lower half (BTNL, BTND)");
+    // Idle again: the next two snapshots keep the edit's id.
+    wait_snapshot(nee + 1, nbi, nei);
+    wait_snapshot(nei + 1, nbi, nei);
+    nb_ids(nee + 1, nei + 1, fid_edit, n_ids, n_bad_ids);
+    check(n_ids >= 2 && n_bad_ids == 0,
+          $sformatf("%0d idle snapshots after the edit keep id %04h (%0d differ)", n_ids, fid_edit, n_bad_ids));
 
     // ---- 4. A corrupted line raises the reply status (83) and keeps the
     // stored voltages.
     send_line_raw("@VB,0000,01,00*00");
     repeat (8) @(posedge CLK100MHZ);
     check(dut.frontend_reply_status == 8'h83 && dut.frontend_reply_valid && LED[6] == 1'b1 &&
-          stored_voltage(0) == MINUS_10V, $sformatf("bad checksum: status %02h, voltages kept", dut.frontend_reply_status));
+          stored_voltage(0) == PLUS_10V, $sformatf("bad checksum: status %02h, voltages kept", dut.frontend_reply_status));
 
-    // ---- 5. Pinned current behaviour (Q-009): a reply for an old snapshot
-    // (the boot frame id) is still accepted, although the spec says board F
-    // "should ignore late responses whose frame no longer matches the newest
-    // outstanding request".
+    // ---- 5. D-016: replies whose frame id is not the current snapshot id
+    // (here the boot id) are dropped: voltages, reply_valid, reply_frame,
+    // reply_status (still 83 from step 4) and the bank stay unchanged.
+    stale_before = dut.frontend_reply_stale_count;
+    bank_before = dut.frontend_reply_active_bank;
     send_reply(fid_boot, 1, PLUS_5V, ZERO_V);
-    wait_reply(fid_boot);
-    check(dut.frontend_reply_frame == fid_boot[15:0] && stored_voltage(0) == PLUS_5V,
-          $sformatf("stale reply (frame %04h) accepted [pinned, Q-009]", fid_boot));
+    repeat (8) @(posedge CLK100MHZ);
+    check(dut.frontend_reply_valid && dut.frontend_reply_frame == fid_edit[15:0] &&
+          dut.frontend_reply_status == 8'h83 && dut.frontend_reply_node_count == 8'd2 &&
+          dut.frontend_reply_active_bank == bank_before && stored_voltage(0) == PLUS_10V &&
+          !dut.frontend_reply_stage_active,
+          $sformatf("stale reply (frame %04h) rejected: valid %0d frame %04h status %02h node0 %08h",
+                    fid_boot, dut.frontend_reply_valid, dut.frontend_reply_frame, dut.frontend_reply_status,
+                    stored_voltage(0)));
+    check(dut.frontend_reply_stale_count == stale_before + 1 && dut.frontend_reply_stale_frame == fid_boot[15:0],
+          $sformatf("stale reply counted (count %0d, frame %04h)", dut.frontend_reply_stale_count,
+                    dut.frontend_reply_stale_frame));
+    send_line($sformatf("ER,%04X,01,0000", fid_boot));
+    repeat (8) @(posedge CLK100MHZ);
+    check(dut.frontend_reply_valid && dut.frontend_reply_frame == fid_edit[15:0] &&
+          dut.frontend_reply_status == 8'h83 && stored_voltage(0) == PLUS_10V &&
+          dut.frontend_reply_stale_count == stale_before + 2,
+          $sformatf("stale @ER (frame %04h) rejected: valid %0d status %02h", fid_boot,
+                    dut.frontend_reply_valid, dut.frontend_reply_status));
+    // A reply with the current id is accepted.
+    check(dut.frontend_snapshot_frame == fid_edit[15:0],
+          $sformatf("current snapshot id is still %04h", dut.frontend_snapshot_frame));
+    send_reply(fid_edit, 2, PLUS_5V, ZERO_V);
+    guard = frame + 4;
+    while (!(dut.frontend_reply_status == 8'h00 && stored_voltage(0) == PLUS_5V) && frame < guard)
+      @(posedge CLK100MHZ);
+    check(dut.frontend_reply_valid && dut.frontend_reply_frame == fid_edit[15:0] &&
+          dut.frontend_reply_status == 8'h00 && dut.frontend_reply_node_count == 8'd2 &&
+          stored_voltage(0) == PLUS_5V && dut.frontend_reply_stale_count == stale_before + 2,
+          $sformatf("current-id reply (frame %04h) accepted: status %02h node0 %08h", fid_edit,
+                    dut.frontend_reply_status, stored_voltage(0)));
+    expect_7seg(16'h0000, "current-id reply: node 0 lower half");
+    press_btn(0);
+    expect_7seg(16'h40A0, "current-id reply: node 0 upper half");
+
+    // ---- 6. A delete click on the empty cell (8,8) changes no netlist
+    // content (today the command is not even written, see the NOTE line):
+    // the following snapshots keep the id (D-016 content rule).
+    edit_frame = -1;
+    k = tx_count;
+    at_frame_line10(frame + 1); set_mouse(352, 352, 1);
+    at_frame_line10(frame + 1); set_mouse(352, 352, 0);
+    wait_snapshot(k, nbi, nei);
+    wait_snapshot(nei + 1, nbi, nei);
+    nb_ids(k, nei + 1, fid_edit, n_ids, n_bad_ids);
+    $display("NOTE delete on an empty cell: component_store_busy %0s", (edit_frame >= 0) ? "rose (a write happened)" : "stayed low");
+    check(n_ids >= 2 && n_bad_ids == 0 && dut.frontend_snapshot_frame == fid_edit[15:0],
+          $sformatf("delete on an empty cell keeps id %04h over %0d snapshots (%0d differ)", fid_edit, n_ids, n_bad_ids));
 
     for (k = 0; k < tx_count && k < MAX_LINES; k = k + 1)
       if (!line_ok(tx_text[k])) check(1'b0, $sformatf("checksum %s", tx_text[k]));

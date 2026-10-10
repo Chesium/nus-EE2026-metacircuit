@@ -1325,6 +1325,16 @@ module GlobalRender_top (
     reg  [CANVAS_ADDR_W-1:0] component_store_scan_addr = {CANVAS_ADDR_W{1'b0}};
     reg  [CANVAS_ADDR_W-1:0] component_store_next_index = {CANVAS_ADDR_W{1'b0}};
     reg         component_store_change_this_cycle;
+    // D-016 snapshot id: netlist-relevant content of a cell write (cell
+    // [8:0] = enable/sprite/rotation, value BCD, unit) differs from the
+    // shadow copy it replaces. Flow bit 9, [15:10], colour RAMs and the
+    // value display text are not netlist content. netlist_content_dirty: the
+    // content changed since the last snapshot was extracted (set from boot,
+    // so the first snapshot gets id 0001); cleared when an extraction commits.
+    reg         netlist_content_change_this_cycle;
+    reg         netlist_content_dirty = 1'b1;
+    reg  [3:0]  netlist_content_new_unit;
+    wire        netlist_snapshot_commit;
     wire [15:0] component_store_scan_cell = canvas_shadow_data[component_store_scan_addr];
     wire [5:0]  component_store_scan_sprite = component_store_scan_cell[6:1];
     wire [1:0]  component_store_scan_rotation = component_store_scan_cell[8:7];
@@ -1572,7 +1582,13 @@ module GlobalRender_top (
     reg         netlist_prescan_has_node = 1'b0;
     reg  [7:0]  netlist_error_code = FRONTEND_STATUS_OK;
     reg  [15:0] netlist_error_arg = 16'd0;
+    // D-016: id of the current snapshot. It increments when an extraction
+    // commits after netlist-relevant content changed (netlist_content_dirty),
+    // so idle frames resend the same id; the first snapshot after boot is
+    // 0001. frontend_snapshot_id_valid: at least one snapshot was extracted
+    // (replies before that are stale).
     reg  [15:0] frontend_snapshot_frame = 16'd0;
+    reg         frontend_snapshot_id_valid = 1'b0;
     reg  [15:0] frontend_tx_frame = 16'd0;
     // Observability (RTL-4): frame id of the last snapshot whose @NE line was
     // sent completely, and the number of such snapshots (wraps).
@@ -1642,6 +1658,10 @@ module GlobalRender_top (
     reg  [7:0]  frontend_reply_stage_status = 8'd0;
     reg  [7:0]  frontend_reply_stage_received_count = 8'd0;
     reg         frontend_reply_valid = 1'b0;
+    // D-016 observability: replies (@VB..@VE or @ER) rejected because their
+    // frame id is not the current snapshot id (wraps), and the last such id.
+    reg  [15:0] frontend_reply_stale_count = 16'd0;
+    reg  [15:0] frontend_reply_stale_frame = 16'd0;
     reg         frontend_reply_active_bank = 1'b0;
     reg  [15:0] frontend_reply_frame = 16'd0;
     reg  [7:0]  frontend_reply_node_count = 8'd0;
@@ -2379,6 +2399,12 @@ module GlobalRender_top (
         end
     end
 
+    // D-016: an extraction that completes without an edit aborting it fixes
+    // the snapshot's content; its id is decided here (before @NB or @ER).
+    assign netlist_snapshot_commit =
+        frontend_uart_client_enable && !component_store_busy &&
+        netlist_extract_done && (netlist_tx_state == NETLIST_TX_EXTRACT_WAIT);
+
     always @(posedge CLK100MHZ) begin
         netlist_extract_start <= 1'b0;
         netlist_component_read_request <= 1'b0;
@@ -2409,7 +2435,14 @@ module GlobalRender_top (
             end
 
             // Ignore the completion of an extraction that an edit aborted.
-            if (netlist_extract_done && (netlist_tx_state == NETLIST_TX_EXTRACT_WAIT)) begin
+            if (netlist_snapshot_commit) begin
+                // D-016: a new id only if the content changed since the last
+                // extracted snapshot (netlist_content_dirty is cleared by this
+                // commit in the canvas write block).
+                if (netlist_content_dirty || !frontend_snapshot_id_valid) begin
+                    frontend_snapshot_frame <= frontend_snapshot_frame + 1'b1;
+                end
+                frontend_snapshot_id_valid <= 1'b1;
                 netlist_snapshot_ready <= 1'b1;
                 netlist_dump_idx <= {CANVAS_ADDR_W{1'b0}};
                 netlist_dump_count <= component_store_count;
@@ -2482,7 +2515,6 @@ module GlobalRender_top (
                         netlist_flood_fresh && !flood_run_pending &&
                         !flood_wrapper_busy && !flood_color_apply_active && !flood_color_apply_fetch_busy &&
                         !netlist_extract_busy && !netlist_component_read_pending && !component_store_read_busy) begin
-                        frontend_snapshot_frame <= frontend_snapshot_frame + 1'b1;
                         netlist_extract_start <= 1'b1;
                         netlist_frame_pending <= 1'b0;
                         netlist_tx_state <= NETLIST_TX_EXTRACT_WAIT;
@@ -2600,6 +2632,13 @@ module GlobalRender_top (
         end
     end
 
+    wire        frontend_reply_error_current =
+        frontend_snapshot_id_valid && (frontend_error_packet_frame == frontend_snapshot_frame);
+    wire        frontend_reply_begin_current =
+        frontend_snapshot_id_valid && (frontend_voltage_begin_frame == frontend_snapshot_frame);
+    wire        frontend_reply_stage_current =
+        frontend_snapshot_id_valid && (frontend_reply_stage_frame == frontend_snapshot_frame);
+
     always @(posedge CLK100MHZ) begin
         frontend_reply_ram0_w_en <= 1'b0;
         frontend_reply_ram1_w_en <= 1'b0;
@@ -2659,14 +2698,27 @@ module GlobalRender_top (
                 frontend_reply_status <= FRONTEND_STATUS_REPLY_PARSE;
             end
 
+            // D-016: a reply is accepted only if its frame id is the current
+            // snapshot id. A stale @ER or @VB is dropped (it also cancels a
+            // staged reply) and only counted: the stored voltages,
+            // reply_valid, reply_frame and reply_status stay as they are.
             if (frontend_error_packet_valid) begin
                 frontend_reply_stage_active <= 1'b0;
-                frontend_reply_valid <= 1'b0;
-                frontend_reply_frame <= frontend_error_packet_frame;
-                frontend_reply_status <= frontend_error_packet_code;
+                if (frontend_reply_error_current) begin
+                    frontend_reply_valid <= 1'b0;
+                    frontend_reply_frame <= frontend_error_packet_frame;
+                    frontend_reply_status <= frontend_error_packet_code;
+                end else begin
+                    frontend_reply_stale_count <= frontend_reply_stale_count + 1'b1;
+                    frontend_reply_stale_frame <= frontend_error_packet_frame;
+                end
             end
 
-            if (frontend_voltage_begin_valid) begin
+            if (frontend_voltage_begin_valid && !frontend_reply_begin_current) begin
+                frontend_reply_stage_active <= 1'b0;
+                frontend_reply_stale_count <= frontend_reply_stale_count + 1'b1;
+                frontend_reply_stale_frame <= frontend_voltage_begin_frame;
+            end else if (frontend_voltage_begin_valid) begin
                 frontend_reply_stage_active <= 1'b1;
                 frontend_reply_stage_bank <= ~frontend_reply_active_bank;
                 frontend_reply_stage_frame <= frontend_voltage_begin_frame;
@@ -2689,6 +2741,17 @@ module GlobalRender_top (
             end
 
             if (frontend_reply_stage_active && frontend_voltage_end_valid &&
+                (frontend_voltage_end_frame == frontend_reply_stage_frame) &&
+                (frontend_voltage_end_node_count == frontend_reply_stage_node_count) &&
+                (frontend_voltage_end_status == frontend_reply_stage_status) &&
+                (frontend_reply_stage_received_count == frontend_reply_stage_node_count) &&
+                !frontend_reply_stage_current) begin
+                // Complete, but a newer snapshot was extracted meanwhile
+                // (D-016): stale, dropped like a stale @VB.
+                frontend_reply_stage_active <= 1'b0;
+                frontend_reply_stale_count <= frontend_reply_stale_count + 1'b1;
+                frontend_reply_stale_frame <= frontend_reply_stage_frame;
+            end else if (frontend_reply_stage_active && frontend_voltage_end_valid &&
                 (frontend_voltage_end_frame == frontend_reply_stage_frame) &&
                 (frontend_voltage_end_node_count == frontend_reply_stage_node_count) &&
                 (frontend_voltage_end_status == frontend_reply_stage_status) &&
@@ -3491,6 +3554,10 @@ module GlobalRender_top (
         keyboard_event_sync0 <= keyboard_event_toggle_pix;
         keyboard_event_sync1 <= keyboard_event_sync0;
         component_store_change_this_cycle = 1'b0;
+        // D-016: boot (init_cycles < INIT_DELAY_CYCLES) always counts as a
+        // content change; every later write compares with the shadow copies.
+        netlist_content_change_this_cycle = (init_cycles < INIT_DELAY_CYCLES);
+        netlist_content_new_unit = COMPONENT_UNIT_NONE;
 
         if (init_cycles < INIT_DELAY_CYCLES) begin
             init_cycles <= init_cycles + 1'b1;
@@ -3522,6 +3589,10 @@ module GlobalRender_top (
             value_shadow_data[clear_canvas_addr] <= 12'd0;
             value_unit_shadow_data[clear_canvas_addr] <= COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
+            // Clearing an empty cell is no content change.
+            if (canvas_shadow_data[clear_canvas_addr][8:0] != 9'd0) begin
+                netlist_content_change_this_cycle = 1'b1;
+            end
 
             if (clear_canvas_addr == CANVAS_CELL_COUNT - 1) begin
                 clear_canvas_active <= 1'b0;
@@ -3557,30 +3628,34 @@ module GlobalRender_top (
             value_unit_shadow_data[9'd38] <= COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 1) begin
+            // D-015: the boot voltage source is turned 180 degrees so its +
+            // half (the anchor, n0) faces the right rail: partner (sprite 8,
+            // rotation 2) at (3,2), anchor (sprite 7, rotation 2) at (4,2).
+            // Both cells hold the value 010; flow bit 9 stays 0 (rightward).
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd39;
-            circuit_canvas_ram_w_data <= 16'h000F;
+            circuit_canvas_ram_w_data <= 16'h0111;
             value_ram_w_en <= 1'b1;
             value_ram_w_addr <= 9'd39;
             value_ram_w_data <= 12'h010;
             value_digit_ram_w_data <= 2'd2;
             value_text_ram_w_data <= {"1", "0", 48'd0};
             value_text_len_ram_w_data <= 4'd2;
-            canvas_shadow_data[9'd39] <= 16'h000F;
+            canvas_shadow_data[9'd39] <= 16'h0111;
             value_shadow_data[9'd39] <= 12'h010;
             value_unit_shadow_data[9'd39] <= COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 2) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd40;
-            circuit_canvas_ram_w_data <= 16'h0011;
+            circuit_canvas_ram_w_data <= 16'h010F;
             value_ram_w_en <= 1'b1;
             value_ram_w_addr <= 9'd40;
             value_ram_w_data <= 12'h010;
             value_digit_ram_w_data <= 2'd2;
             value_text_ram_w_data <= {"1", "0", 48'd0};
             value_text_len_ram_w_data <= 4'd2;
-            canvas_shadow_data[9'd40] <= 16'h0011;
+            canvas_shadow_data[9'd40] <= 16'h010F;
             value_shadow_data[9'd40] <= 12'h010;
             value_unit_shadow_data[9'd40] <= COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
@@ -3721,6 +3796,14 @@ module GlobalRender_top (
             value_unit_shadow_data[9'd128] <= COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (pending_pair_value_write) begin
+            netlist_content_new_unit = component_unit_code_from_text(
+                pending_pair_value_text,
+                pending_pair_value_text_len
+            );
+            if ((value_shadow_data[pending_pair_value_addr] != pending_pair_value_data) ||
+                (value_unit_shadow_data[pending_pair_value_addr] != netlist_content_new_unit)) begin
+                netlist_content_change_this_cycle = 1'b1;
+            end
             value_ram_w_en <= 1'b1;
             value_ram_w_addr <= pending_pair_value_addr;
             value_ram_w_data <= pending_pair_value_data;
@@ -3735,6 +3818,16 @@ module GlobalRender_top (
             pending_pair_value_write <= 1'b0;
             component_store_change_this_cycle = 1'b1;
         end else if (keyboard_edit_event && edit_value_valid) begin
+            // Text-only keypad edits (e.g. a literal '.', a fourth digit, DEL
+            // of a suffix that keeps the unit) leave BCD and unit unchanged.
+            netlist_content_new_unit = component_unit_code_from_text(
+                edit_value_next_text,
+                edit_value_next_text_len
+            );
+            if ((value_shadow_data[selected_cell_addr_sys] != edit_value_next_bcd) ||
+                (value_unit_shadow_data[selected_cell_addr_sys] != netlist_content_new_unit)) begin
+                netlist_content_change_this_cycle = 1'b1;
+            end
             value_ram_w_en <= 1'b1;
             value_ram_w_addr <= selected_cell_addr_sys;
             value_ram_w_data <= edit_value_next_bcd;
@@ -3767,6 +3860,12 @@ module GlobalRender_top (
                 circuit_canvas_ram_w_data <= interaction_bg_cmd_wdata;
                 canvas_shadow_data[interaction_bg_cmd_addr] <= interaction_bg_cmd_wdata;
                 component_store_change_this_cycle = 1'b1;
+                // Only the cell word matters here: the value copied to a new
+                // partner cell or cleared with a cell is not read by the
+                // netlist (the ComponentStore takes it from the origin cell).
+                if (canvas_shadow_data[interaction_bg_cmd_addr][8:0] != interaction_bg_cmd_wdata[8:0]) begin
+                    netlist_content_change_this_cycle = 1'b1;
+                end
                 if (interaction_copy_value) begin
                     // Rotation moves the partner's value, unit and display text
                     // from the anchor before clearing the vacated cell.
@@ -3858,6 +3957,14 @@ module GlobalRender_top (
 
         if (component_store_change_this_cycle) begin
             component_store_dirty <= 1'b1;
+        end
+
+        // D-016: a change in the commit cycle wins, so the next snapshot gets
+        // a new id (the committed one is aborted by component_store_busy).
+        if (netlist_content_change_this_cycle) begin
+            netlist_content_dirty <= 1'b1;
+        end else if (netlist_snapshot_commit) begin
+            netlist_content_dirty <= 1'b0;
         end
     end
 

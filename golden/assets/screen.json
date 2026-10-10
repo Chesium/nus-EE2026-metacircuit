@@ -6,15 +6,15 @@
     "files": [
       {
         "path": "src/design/rendering/GlobalRender_top.v",
-        "sha256": "bf7a4e896affb7ae73d9471d029e24848a9beaa62efb095780f21d1f30d1783b",
+        "sha256": "d1cbc9152df23bdd8658a2584ea3a62ab74100613252f094836040bd20f5d7c7",
         "line_ranges": {
           "SPRITE_* localparams": [
             545,
             559
           ],
           "final rgb mux": [
-            3901,
-            3918
+            4008,
+            4025
           ],
           "function toolbar_mode_select": [
             519,
@@ -25,12 +25,12 @@
             1155
           ],
           "instance keyboard_vga_inst": [
-            3286,
-            3300
+            3349,
+            3363
           ],
           "instance toolbar_vga_inst": [
-            3301,
-            3312
+            3364,
+            3375
           ],
           "localparam BACKGROUND": [
             27,
@@ -153,8 +153,8 @@
             30
           ],
           "ui_rgb composition": [
-            3864,
-            3901
+            3971,
+            4008
           ]
         }
       },

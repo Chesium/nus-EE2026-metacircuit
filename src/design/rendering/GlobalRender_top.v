@@ -1333,6 +1333,14 @@ module GlobalRender_top (
     // so the first snapshot gets id 0001); cleared when an extraction commits.
     reg         netlist_content_change_this_cycle;
     reg         netlist_content_dirty = 1'b1;
+    // D-024: complete any in-flight line, then close an interrupted @NB.
+    reg         netlist_stream_open = 1'b0;
+    reg  [15:0] netlist_stream_lines = 16'd0;
+    reg         netlist_abort_pending = 1'b0;
+    reg         netlist_abort_sending = 1'b0;
+    reg  [15:0] netlist_abort_frame = 16'd0;
+    reg  [15:0] netlist_abort_lines = 16'd0;
+
     reg  [3:0]  netlist_content_new_unit;
     wire        netlist_snapshot_commit;
     wire [15:0] component_store_scan_cell = canvas_shadow_data[component_store_scan_addr];
@@ -2410,7 +2418,33 @@ module GlobalRender_top (
         netlist_component_read_request <= 1'b0;
         frontend_tx_start <= 1'b0;
 
-        if (!frontend_uart_client_enable || component_store_busy) begin
+        if (frontend_uart_client_enable && netlist_abort_pending) begin
+            // Run even during store rebuilding; retain the interrupted id.
+            if (interaction_frame_tick) netlist_frame_pending <= 1'b1;
+            if (!netlist_abort_sending && !frontend_tx_busy && !frontend_tx_start) begin
+                frontend_tx_start <= 1'b1;
+                frontend_tx_mode <= FRONTEND_NETLIST_TX_MODE_ER;
+                frontend_tx_frame <= netlist_abort_frame;
+                frontend_tx_error_code <= 8'h85;
+                frontend_tx_error_arg <= netlist_abort_lines;
+                netlist_abort_sending <= 1'b1;
+            end else if (netlist_abort_sending && frontend_tx_done) begin
+                netlist_abort_pending <= 1'b0;
+                netlist_abort_sending <= 1'b0;
+            end
+        end else if (!frontend_uart_client_enable || component_store_busy) begin
+            if (!frontend_uart_client_enable) begin
+                netlist_abort_pending <= 1'b0;
+                netlist_abort_sending <= 1'b0;
+                netlist_stream_open <= 1'b0;
+            end else if (netlist_stream_open && netlist_tx_state != NETLIST_TX_END_WAIT) begin
+                netlist_abort_pending <= 1'b1;
+                netlist_abort_frame <= frontend_snapshot_frame;
+                netlist_abort_lines <= netlist_stream_lines;
+                netlist_stream_open <= 1'b0;
+            end else begin
+                netlist_stream_open <= 1'b0;
+            end
             // An edit aborts the snapshot in progress (the line being sent
             // still completes). Keep the request, and any frame tick that
             // arrives meanwhile, so a fresh snapshot follows once the
@@ -2539,6 +2573,8 @@ module GlobalRender_top (
                     if (!frontend_tx_busy) begin
                         frontend_tx_start <= 1'b1;
                         frontend_tx_mode <= FRONTEND_NETLIST_TX_MODE_NB;
+                        netlist_stream_open <= 1'b1;
+                        netlist_stream_lines <= 16'd0;
                         frontend_tx_frame <= frontend_snapshot_frame;
                         frontend_tx_elem_count <= component_store_count[7:0];
                         frontend_tx_node_count <= netlist_protocol_node_count;
@@ -2573,6 +2609,7 @@ module GlobalRender_top (
                     if (!frontend_tx_busy) begin
                         frontend_tx_start <= 1'b1;
                         frontend_tx_mode <= FRONTEND_NETLIST_TX_MODE_NC;
+                        netlist_stream_lines <= netlist_stream_lines + 1'b1;
                         frontend_tx_frame <= frontend_snapshot_frame;
                         frontend_tx_elem_count <= component_store_count[7:0];
                         frontend_tx_node_count <= netlist_protocol_node_count;
@@ -2601,6 +2638,7 @@ module GlobalRender_top (
                 end
                 NETLIST_TX_END_WAIT: begin
                     if (frontend_tx_done) begin
+                        netlist_stream_open <= 1'b0;
                         netlist_snapshot_ready <= 1'b0;
                         netlist_last_sent_frame <= frontend_tx_frame;
                         netlist_sent_count <= netlist_sent_count + 1'b1;

@@ -12,6 +12,7 @@ if str(PACKAGE_ROOT) not in sys.path:
 
 from src.uart_link.protocol import (
     GROUND_NODE,
+    ErrorPacket,
     NetlistBegin,
     NetlistComponent,
     NetlistEnd,
@@ -88,6 +89,23 @@ class ProtocolTest(unittest.TestCase):
             if maybe is not None:
                 result = maybe
         self.assertEqual(result, snapshot)
+
+    def test_aborted_snapshot_closes_and_recovers(self) -> None:
+        assembler = SnapshotAssembler()
+        assembler.push(NetlistBegin(frame=7, elem_count=2, node_count=1))
+        assembler.push(NetlistComponent(7, 0, 1, 0, 255, 0x100, 0))
+        self.assertIsNone(assembler.push(ErrorPacket(7, 0x85, 1)))
+        with self.assertRaises(PacketError):
+            assembler.push(NetlistEnd(7, 2, 1))
+        assembler.push(NetlistBegin(8, 0, 0))
+        self.assertEqual(assembler.push(NetlistEnd(8, 0, 0)), NetlistSnapshot(8, 0, 0, ()))
+
+    def test_abort_count_and_id_are_checked(self) -> None:
+        for packet in [ErrorPacket(7, 0x85, 1), ErrorPacket(8, 0x85, 0)]:
+            assembler = SnapshotAssembler()
+            assembler.push(NetlistBegin(7, 2, 1))
+            with self.assertRaises(PacketError):
+                assembler.push(packet)
 
     def test_sequence_mismatch_is_rejected(self) -> None:
         assembler = SnapshotAssembler()

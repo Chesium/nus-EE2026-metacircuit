@@ -1,0 +1,96 @@
+{
+  "name": "m3_display",
+  "description": "Check both halves of float32 voltage and navigation between 10 V and 0 V nodes through the physical board buttons.",
+  "steps": [
+    "wait 5",
+    "checkpoint boot_lower",
+    "wait 4",
+    "checkpoint boot_upper",
+    "wait 4",
+    "checkpoint boot_lower_again",
+    "click_tool delete",
+    "click_cell 5 5",
+    "wait 7",
+    "checkpoint split_node0",
+    "wait 4",
+    "checkpoint node1_upper",
+    "wait 4",
+    "checkpoint node1_lower",
+    "wait 4",
+    "checkpoint node0_upper"
+  ],
+  "m3": {
+    "buttons": [
+      {
+        "frame": 5,
+        "input": "BTNU",
+        "value": 1
+      },
+      {
+        "frame": 6,
+        "input": "BTNU",
+        "value": 0
+      },
+      {
+        "frame": 9,
+        "input": "BTND",
+        "value": 1
+      },
+      {
+        "frame": 10,
+        "input": "BTND",
+        "value": 0
+      },
+      {
+        "frame": 26,
+        "input": "BTNR",
+        "value": 1
+      },
+      {
+        "frame": 26,
+        "input": "BTNU",
+        "value": 1
+      },
+      {
+        "frame": 27,
+        "input": "BTNR",
+        "value": 0
+      },
+      {
+        "frame": 27,
+        "input": "BTNU",
+        "value": 0
+      },
+      {
+        "frame": 30,
+        "input": "BTND",
+        "value": 1
+      },
+      {
+        "frame": 31,
+        "input": "BTND",
+        "value": 0
+      },
+      {
+        "frame": 34,
+        "input": "BTNL",
+        "value": 1
+      },
+      {
+        "frame": 34,
+        "input": "BTNU",
+        "value": 1
+      },
+      {
+        "frame": 35,
+        "input": "BTNL",
+        "value": 0
+      },
+      {
+        "frame": 35,
+        "input": "BTNU",
+        "value": 0
+      }
+    ]
+  }
+}

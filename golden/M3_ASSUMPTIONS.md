@@ -25,8 +25,8 @@ in `test/fixtures/kernels-as-written/` (simpyhls 57ffb08); the golden's
 `dslCompat` mode reproduces them exactly, and every golden-rule difference is
 explained by a decision (reciprocal terminals and grounds D-021, current-source
 terminals D-015, floating rows D-019). On the 400 mixed-size random circuits,
-94 agree and 306 differ. The live kernels of the simpyhls checkout (78efdf8,
-which implements the decisions) number regions as the golden does and agree
+91 agree and 309 differ (including D-023's untouched-region rule). The live kernels of the simpyhls checkout (78efdf8,
+which implements D-015/D-019/D-021; the M3 completion commit 0d6f22a also implements D-023) number regions as the golden does and agree
 with the golden rules exactly on the boot circuit and on 42 + 400 random
 circuits (`test/kernelStatus.ts` gates the two random-circuit tests for older
 checkouts).
@@ -72,37 +72,25 @@ checkouts).
   own region becomes an ordinary row.
 - **Decision:** D-021: the extraction kernel and generated RTL follow this rule.
 
-### M3-A004 Solver row numbering (open: Q-016)
+### M3-A004 Solver row numbering (**Settled, D-023**)
 
-- **Chosen:** every non-grounded raw region gets a row, in order of its first
-  cell in row-major order (row 0, 1, ...). Floating terminals get rows after all
-  of these (M3-A007, D-019). This includes regions that no
-  component touches, such as a lone wire. Raw regions themselves are numbered
-  row-major, so they match `flooding_core` exactly. That is checked on every
-  random circuit.
-- **Why:** this is the compaction policy written in `extract_component_nodes.dsl.py`
-  ("every other nonzero raw region is assigned in first-seen row-major order
-  starting from 0").
-- **Consequence:** a wire island earlier in row-major order than the circuit
-  leaves an empty row, which makes the matrix singular (reported as an
-  `empty-row` issue, M3-A012). Example: `m2_node_colours` checkpoint
-  `horizontal_wire_unjoined`. A possible alternative is to number only the
-  regions that element terminals touch.
-- **Check:** Q-016 (keep, or number only regions touched by a terminal) is still
-  open in the plan.
+- **Chosen:** only non-grounded regions touched by a facing component terminal
+  get solver rows. Number them by each region's first cell in row-major order.
+  Untouched wire islands keep their raw colour regions but have no solver row.
+  Floating-terminal rows (D-019) follow the touched-region rows.
+- **Why:** an unrelated wire island must not make an otherwise valid circuit
+  singular. Both golden extraction and the live kernel implement this rule;
+  `dslCompat` retains the frozen kernel's all-region policy.
+- **Check:** differential kernel tests and M3's `wire_island` checkpoint.
 
 ### M3-A005 `node_count`
 
-- **Chosen:** `node_count` is the highest row used by any element terminal plus
-  one, or 0 if no terminal uses a row. Unused rows after that are not sent. Empty
-  rows before it are kept (M3-A004). Floating-terminal rows count (D-019), so
-  with any floating terminal `node_count` = region rows + floating terminals.
-- **Why:** the README says "number of non-ground solver rows". With M3-A004's
-  numbering, that is the smallest system that holds every terminal. The RTL
-  agrees (see RTL interface facts).
-- **Check:** nothing beyond M3-A004.
+- **Chosen:** the number of terminal-touched non-ground region rows plus floating
+  terminal rows, or zero for an empty/ground-only netlist. All assigned region
+  rows are used by at least one terminal after D-023.
+- **Why:** README's "number of non-ground solver rows".
 
-### M3-A006 Element order and `idx`
+### M3-A006 Element order and `idx` (**Settled, D-025**)
 
 - **Chosen:** elements are sorted by the cell address of their anchor (left
   half), `row * 18 + col`, and `idx` = 0, 1, ... in that order. Golden
@@ -112,8 +100,8 @@ checkouts).
   the RTL's packed store (A-011). The property panel's component identifier is
   already the row-major rank of the anchors (IF-034). The kernels give each
   store index its own result, so their order is free.
-- **Check:** compare against the RTL's NC order on scenarios where components
-  were deleted and added again.
+- **Check:** `m3_backend` places parts out of order, deletes an early part and
+  reuses the slot; every NC record and extracted-node RAM word is compared.
 - **Floating rows depend on this order (D-019).** The 78efdf8 extraction kernel
   numbers floating rows in the order it visits the store, i.e. RTL
   ComponentStore order; the golden numbers them in idx order. They agree when
@@ -182,7 +170,8 @@ checkouts).
 - **Chosen:** golden region and row ids are 16-bit (up to 288 regions, as in M2).
   If `node_count` would exceed `FE`, the snapshot is rejected with the
   golden-defined code `@ER,<frame>,84,<node_count>`. This needs pathological
-  canvases, such as a checkerboard of non-joining wires.
+  canvases with more than 254 component terminal rows; untouched wire islands
+  no longer contribute after D-023.
 - **Why:** the README limits `node_count` to `00..FE`. The kernels' `u8` region
   counter would wrap and merge regions, so no faithful netlist exists.
 - **Check:** decide what the RTL should do (it has no such code).
@@ -190,9 +179,8 @@ checkouts).
 ### M3-A012 Degenerate circuits are sent unchanged
 
 - **Chosen:** an element whose two terminals are on the same node (including
-  `FF`/`FF`), a circuit where no element terminal reaches a ground, and empty
-  rows (M3-A004) are all sent as extracted. The golden reports them as issues
-  (`shorted-element`, `no-ground`, `empty-row`) so the solver's status reply can
+  `FF`/`FF`), a circuit where no element terminal reaches a ground, are all sent as extracted. The golden reports them as issues
+  (`shorted-element`, `no-ground`) so the solver's status reply can
   be explained. The netlist does not change. A `no-ground` circuit still numbers
   every node.
 - **Why:** the protocol has no way to mark them, and the kernels send them.
@@ -218,7 +206,12 @@ checkouts).
   compares the `frame` field too (`diffNetlist` without `ignoreFrame`).
   `extractNetlist(state)` alone, without the frame history, still defaults
   `frame` to the state's frame index.
-- **Not modelled:** snapshots that do not fit in one frame (Q-017).
+- **Interrupted transmission (D-024):** an edit after NB completes the current
+  line, then closes the old id with ER 85, arg = number of NC lines sent.
+  `encodeAbortedNetlist` predicts the prefix; the stream parser validates the
+  closure and `verify:m3` checks every prefix against the independent netlist.
+  Long snapshots may span frames, so stable checkpoint ids and header timing
+  govern comparison rather than assuming one complete transmission per frame.
 
 ### M3-A014 Values are passed through
 
@@ -286,7 +279,8 @@ and the netlist header sequencing (roughly lines 700-760, 1292-1295, 2370-2560).
   "unsupported" (agrees with M3-A008 and M3-A009).
 - **RF-3** Frontend ER codes `81` unsupported kind (`arg = idx`), `82`
   unsupported unit (`arg = {unit, idx}`), `83` reply parse error. Used in
-  M3-A009. `84` is golden-only (M3-A011).
+  M3-A009. `84` is golden-only (M3-A011); `85` explicitly closes an edit-aborted snapshot
+  with arg = completed NC lines (D-024).
 
 Behaviour seen while reading these (not adopted, recorded for comparison):
 

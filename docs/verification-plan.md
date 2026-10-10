@@ -4,7 +4,7 @@ Living document for making MetaCircuit deterministically testable without hardwa
 Track progress here: tick TODOs, append to the log, and move questions from
 "to be made" to "made" when settled. IDs are stable; never reuse one.
 
-Last updated: 2026-10-10 (M3 prerequisites done; decisions D-015 to D-025)
+Last updated: 2026-10-09 (client date; M3 achieved)
 
 ## Goal
 
@@ -36,7 +36,7 @@ the same observables for comparison.
 | M0 | Harness bring-up: framescope runs metacircuit on local Verilator; VGA timing correct | done |
 | M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | done: human accepted; 267 frames / 25 checkpoints pass on native and Docker, including saved web recording |
 | M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | done: human accepted; 3 scenarios (full UI, node-colour edits, web recording) pass state, UI probes, node-colour RAM and every pixel on native and Docker |
-| M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | prerequisites done: FS-6, FS-7, RTL-4, RTL-5, GM-7, GM-8, and D-015..D-021 implemented in the golden model, kernels and RTL; M3 scenarios and runner not started |
+| M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | done: 5 scenarios / 482 frames / 42 checkpoints pass on native and Docker; UART records, ids, solver replies, voltage RAM, 7-segment display and LEDs checked |
 | M4 | Lockstep sessions, coverage, agent interface (MCP) | not started |
 
 M1 needs FS-1..FS-3, RTL-1..RTL-3, GM-1..GM-3 and SC-1..SC-2. It does not need the renderer.
@@ -97,11 +97,11 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 
 ### M3 follow-ups (M3)
 
-- [ ] M3-1 (P1) Implement D-023 (rows only for terminal-touched regions) in the golden extraction, the extraction kernel and the regenerated RTL.
-- [ ] M3-2 (P1) Implement D-024 (`@ER` code 85 for an aborted snapshot) in the frontend RTL and the golden UART model.
-- [ ] M3-3 (P1) M3 scenarios with `SW[5]=1` and the solver host, including the D-025 out-of-order placement and slot-reuse check, and a `verify:m3` runner comparing netlist lines, snapshot ids, replies and 7-segment/voltage probes (D-017) against the golden model.
-- [ ] M3-4 (P2) On-screen voltage readout with a golden renderer (D-017).
-- [ ] M3-5 (P2) Restore an anchor-half selection checkpoint in `m2_full_ui`/`m2_recorded`: `voltage_micro` now clicks the boot source's partner half (D-015).
+- [x] M3-1 (P1) Implement D-023 (rows only for terminal-touched regions) in the golden extraction, the extraction kernel and the regenerated RTL. Live-kernel differential tests, 11 kernel tests and the extraction RTL bench pass; the UART wire-island checkpoint preserves the boot solve.
+- [x] M3-2 (P1) Implement D-024 (`@ER` code 85 for an aborted snapshot) in the frontend RTL and the golden UART model. Both codecs validate the abort id/count; four real interrupted snapshots close correctly on both runtimes.
+- [x] M3-3 (P1) M3 scenarios with `SW[5]=1` and the solver host, including the D-025 out-of-order placement and slot-reuse check, and a `verify:m3` runner comparing netlist lines, snapshot ids, replies and 7-segment/voltage probes (D-017) against the golden model. Five scenarios pass all 42 checkpoints on both runtimes; evidence in `m3-verification.json`.
+- [ ] M3-4 (P2, post-M3) On-screen voltage readout with a golden renderer (D-017).
+- [x] M3-5 (P2) Restore an anchor-half selection checkpoint in `m2_full_ui`/`m2_recorded`: `voltage_anchor_selected` checks (4,2), while `voltage_micro` still uses the partner half (3,2), D-015. New web recording downloaded through real pointer events; 107 frames / 23 checkpoints pass every pixel on both runtimes.
 
 ## Decisions made
 
@@ -180,6 +180,8 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 - 2026-10-10: M3 prerequisites with five parallel agents. framescope FS-7 (`m3-uart`): UART monitor, scripted RX and lockstep host; 93 tests pass on native and Docker. Golden extraction/UART codec (`9709b47`, 161 tests) and DC solver (`fd599c0`, 193 tests, bit-exact against the simulated solver on 339 netlists). RTL-4 (`5312d7c`): flooding re-runs after edits with `SW[5]`, full-loop UART bench; M1 25/25 and M2 22/22 + 9/9 still pass. Boot netlist matches the golden byte for byte apart from the frame id. Findings settled as D-015..D-021: source polarity (boot read -10 V), stale replies accepted, voltage only on the 7-segment display, C/L handling, floating terminals grounded, kernel pivot bug, extraction rules vs simpyhls.
 - 2026-10-10: D-015..D-021 implemented independently on both sides. Frontend RTL (`59ca445`): content-based snapshot ids, stale replies dropped and counted, boot source flipped (cells 39/40 = `0x0111`/`0x010F`, ComponentStore entry 0 = `0x0003C02044`). Kernels (`06ce3cf`, simpyhls `78efdf8` on local branch `m3-kernel-fixes`, not pushed): pivot fix in four solver kernels, facing-port terminals, ground by containment, floating-terminal rows, current-source orientation; solver RTL regenerated by `src/design/solver/regenerate_simpyhls.py` (it reproduces the old SV), and Verilator stand-ins for the floating-point IP let all five solver benches run. Golden (`7369a63`, `da6a5ff`): same decisions, independently derived boot words identical to the RTL's; bit-exact against the fixed simulated solver on 339 netlists and the fixed extraction kernel on 442 canvases. framescope `m3` (FS-6 + FS-7 merged, `m1-harness` fast-forwarded to it): 112 tests pass on native and Docker; checkpoints work with UART links. Regression on native 5.046 with the new boot circuit: M1 25/25, 25/25 (recorded), 11/11 (latency); M2 22/22, 9/9, 22/22 (recorded), 6/6 (boot), zero differing pixels; 207 golden unit tests, 5 Playwright tests, 5 RTL benches, 5 solver benches pass.
 
+- 2026-10-09 (client date): M3 achieved. Implemented D-023 independently in the golden extraction and the simpyhls kernel, regenerated the extraction RTL, and updated the kernel's independent reference tests. Implemented D-024 in the frontend transmitter and both UART codecs: finish the in-flight line, send ER 85 with the interrupted id and completed NC count, then resume fresh snapshots. Added `verify:m3` and five scenarios for ordering/slot reuse, wire islands, values/units, connectivity, C/L/pico rejection, solver errors/recovery, stale/corrupt replies, physical display controls and current-source polarity (-0.1 V at 2 mA). Native 5.046 and Docker 5.020 each pass 482 frames / 42 checkpoints: 2,265 TX lines, 442 complete netlists, 439 delivered solver replies, four explicit aborts, 36 frontend rejections and 19 stale replies. All 482 frame CRCs/probes, UART TX/RX records and timings, and 504 RAM dumps are identical across runtimes. The receive model uses independently checked header timing to witness the extraction commit; mouse capture alone does not make an id current. Restored M2 anchor selection and its web recording: 107 frames / 23 checkpoints pass state/UI/colours/every pixel on both runtimes. M1 latency 11/11, 214 golden tests, five Playwright tests, 20 UART tests, 11 extraction-kernel tests, 20 asset tests, five frontend benches and five solver benches pass; typecheck/build/assets/regeneration checks pass. Evidence: [`m3-verification.json`](m3-verification.json). The simpyhls kernel/test changes are committed at `0d6f22a`; evidence pins their hashes. The new on-screen voltage renderer remains post-M3 P2 work under D-017.
+
 ## M1 acceptance and regression
 
 Run from `golden/`:
@@ -257,3 +259,52 @@ M2 is achieved: the user accepted the human validation of the full UI on
 every pixel at zero tolerance on native Verilator 5.046 and Docker 5.020, with
 identical frame CRCs and memory dumps across runtimes. Evidence is recorded in
 [`m2-verification.json`](m2-verification.json).
+
+## M3 acceptance and regression
+
+Run from `golden/` with the sibling framescope checkout containing FS-6/FS-7:
+
+```sh
+npm run verify:m3
+npm run verify:m3 -- --runtime docker
+npm run verify:m3 -- --scenario scenarios/m3_backend.json
+npm run verify:m3 -- --scenario scenarios/m3_backend.json --actual out/m3/my-run/m3_backend/rtl
+```
+
+The default runs all five M3 scenarios with `SW=32` and the actual D-012
+simulated solver host. The independent golden state determines extraction,
+component order, snapshot ids, frontend rejection records and solver replies.
+The runner checks M1 state first, every complete TX line byte for byte, and every
+delivered RX reply bit for bit. At checkpoints it checks extracted-node RAM,
+active voltage RAM, accepted/stale reply state, display node/half/value and LED
+status/view bits. TX/RX activity LED bits depend on serial timing and are outside
+the semantic LED comparison; the full-loop RTL bench separately decodes the
+physical multiplexed 7-segment pins.
+
+| Scenario | Frames | Checkpoints | Checks |
+|----------|--------|-------------|--------|
+| `m3_backend` | 139 | 12 | Boot +10 V, wire island, source value/unit edits, out-of-order placement, slot reuse, four ER 85 closures |
+| `m3_connectivity` | 114 | 9 | Split/rejoin rails, reciprocal terminals, floating rows, ground removal/restoration, shorted rails, solver errors |
+| `m3_errors` | 124 | 8 | Real solve delayed past an edit, stale ER, bad checksum, C/L/pico rejection, zero resistance, recovery |
+| `m3_display` | 38 | 7 | BTNL/BTNR/BTNU/BTND; upper/lower float32 halves of 10 V and 0 V nodes |
+| `m3_current_source` | 67 | 6 | Arrow-tail n0, 2 mA toward ground gives -0.1 V (`BDCCCCCD`), both display halves |
+
+Snapshot transmission can span video frames. An edit after NB closes a prefix
+with ER 85, and all completed prefix records and the abort count are checked.
+UART header timing, after its content and id pass independent comparison,
+witnesses when extraction commits for accepting replies. A final capture
+boundary may leave a byte, snapshot or queued response pending; this is reported
+and does not excuse any complete-line mismatch or missing checkpoint evidence.
+The current scenarios end between complete TX snapshots; three final solver
+responses fall beyond the finite capture windows across the five runs.
+
+M3 is achieved under D-017: 482 frames / 42 checkpoints pass on native 5.046
+and Docker 5.020. Every frame CRC/probe, UART TX/RX line and timestamp, and all
+504 checkpoint memory dumps agree across runtimes. References, stimulus, RTL
+captures and comparison reports live in ignored `golden/out/m3/`; tracked
+[`m3-verification.json`](m3-verification.json) records results, source hashes and
+artifact paths. Corruption tests prove the runner fails changed netlist/reply
+bytes, snapshot ids, voltage RAM, display values and missing reply evidence.
+The restored M2 recording also remains equal to its source at every input frame
+and checkpoint. On-screen voltage rendering (M3-4) is later work; the accepted
+voltage display for this milestone is the existing board display.

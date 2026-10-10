@@ -110,10 +110,21 @@ Used by the relay or by either board when a snapshot is rejected:
 @ER,<frame:4>,<code:2>,<arg:4>*CC
 ```
 
+Frontend errors: `81` rejects an unsupported component kind (arg = element
+idx), `82` rejects an unsupported unit (arg = frontend unit in bits [11:8],
+element idx in [7:0]), and `85` closes a snapshot interrupted by an edit after
+`NB` (arg = number of complete `NC` lines). The in-flight line completes before
+`ER 85`; a fresh snapshot follows after rebuilding/extraction. The assembler
+validates the abort id/count and discards that prefix without invoking the solver.
+`83` is the frontend's received-reply parse status.
+
 ## Snapshot Semantics
 
-- Board `F` sends complete snapshots, not incremental edits
+- Board `F` sends complete snapshots, not incremental edits; long snapshots may
+  span video frames and edits close interrupted prefixes with `ER 85`
 - Board `S` treats each snapshot as a full solve request
+- `frame` is a content-based snapshot id: boot = `0001`, incremented on a
+  netlist-relevant content change when extraction commits (16-bit wrapping)
 - `frame` is echoed back unchanged in the response
 - Board `F` should ignore late responses whose `frame` no longer matches the
   newest outstanding request

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  decodeRecord, encodeError, encodeNetlist, encodeRecord, encodeVoltages, float32Bits, parseUartStream, xorChecksum,
+  decodeRecord, encodeAbortedNetlist, encodeError, encodeNetlist, encodeRecord, encodeVoltages, float32Bits, parseUartStream, xorChecksum,
   type UartRecord,
 } from '../src/backend/uart.ts';
 import { ElementKind, GROUND_NODE, type Netlist, type VoltageSnapshot } from '../src/backend/types.ts';
@@ -179,5 +179,25 @@ describe.skipIf(python() === null)('cross-check against src/uart_link/protocol.p
     const res = runPython('tools/uart_protocol_ref.py', [], { decode: [line] }) as Res;
     expect(res.decode[0]).toEqual({ type: 'NB', frame: 0xab, elem_count: 3, node_count: 1 });
     expect(() => decodeRecord(line)).toThrow(/uppercase/);
+  });
+});
+
+
+describe('D-024 interrupted netlists', () => {
+  const n: Netlist = { frame: 7, nodeCount: 1, elements: [
+    { idx: 0, kind: 1, n0: 0, n1: 255, valueBcd: 0x100, unit: 0 },
+  ] };
+  it('closes a prefix with ER 85 and accepts the following snapshot', () => {
+    for (const count of [0, 1]) {
+      const parsed = parseUartStream(encodeAbortedNetlist(n, count) + encodeNetlist({ ...n, frame: 8 }));
+      expect(parsed.problems).toEqual([]);
+      expect(parsed.errors).toEqual([{ type: 'ER', frame: 7, code: 0x85, arg: count }]);
+      expect(parsed.netlists).toEqual([{ ...n, frame: 8 }]);
+    }
+  });
+  it('rejects incorrect abort ids and component counts', () => {
+    const prefix = encodeNetlist(n).split('\r\n').slice(0, 2).join('\r\n') + '\r\n';
+    expect(parseUartStream(prefix + encodeError(7, 0x85, 0)).problems).toContain('line 3: abort component count mismatch');
+    expect(parseUartStream(prefix + encodeError(8, 0x85, 1)).problems).toContain('line 3: abort without matching netlist begin');
   });
 });

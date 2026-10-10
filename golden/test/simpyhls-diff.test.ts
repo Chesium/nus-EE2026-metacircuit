@@ -55,7 +55,7 @@ const kernelNodes = (d: DslResult) => ({ node0: d.node0, node1: d.node1 });
 
 /** As-written kernels: exact against dslCompat; golden-rule differences classified by decision. */
 function compareAsWritten(canvases: RandomCanvas[], dsl: DslResult[]) {
-  const stats = { cases: canvases.length, elements: 0, agree: 0, differ: 0, causeTerminal: 0, causeGround: 0, causeCurrentSource: 0, causeFloating: 0 };
+  const stats = { cases: canvases.length, elements: 0, agree: 0, differ: 0, causeTerminal: 0, causeGround: 0, causeCurrentSource: 0, causeFloating: 0, causeUntouched: 0 };
   canvases.forEach((c, i) => {
     const d = dsl[i]!;
     const golden = extractFromCanvas(c);
@@ -72,11 +72,13 @@ function compareAsWritten(canvases: RandomCanvas[], dsl: DslResult[]) {
     const ground = JSON.stringify(golden.groundRegions) !== JSON.stringify(compat.groundRegions);
     const current = golden.netlist.elements.some((e) => e.kind === ElementKind.CurrentDc);
     const floating = golden.issues.some((x) => x.type === 'floating-terminal');
-    expect(terminal || ground || current || floating, `case ${i}: disagreement not explained by D-015/D-019/D-021`).toBe(true);
+    const untouched = Object.keys(golden.rowOfRegion).length !== Object.keys(compat.rowOfRegion).length;
+    expect(terminal || ground || current || floating || untouched, `case ${i}: disagreement not explained by D-015/D-019/D-021/D-023`).toBe(true);
     stats.causeTerminal += Number(terminal);
     stats.causeGround += Number(ground);
     stats.causeCurrentSource += Number(current);
     stats.causeFloating += Number(floating);
+    stats.causeUntouched += Number(untouched);
   });
   return stats;
 }

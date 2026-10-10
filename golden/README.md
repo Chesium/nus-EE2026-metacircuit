@@ -301,6 +301,41 @@ symmetric rotation ambiguity, cursor occlusion and corruption witnesses. Its
 yellow-flow mask only aids diagnosis; the exact pixel comparison still checks
 those pixels. `VisibleCellDecoder` also accepts RGB444 arrays directly.
 
+## M3 backend verification
+
+```sh
+npm run verify:m3
+npm run verify:m3 -- --runtime docker
+npm run verify:m3 -- --scenario scenarios/m3_backend.json
+npm run verify:m3 -- --scenario scenarios/m3_backend.json --actual out/m3/my-run/m3_backend/rtl
+```
+
+The default runs all `scenarios/m3_*.json` with `SW=32` and the actual D-012
+`frontend_tester.SimpyhlsDcSolver` host. It checks golden canvas state, every
+complete UART line (including ids, component order, error/rejection records and
+ER 85 closures), every delivered solver reply bit, extracted-node RAM, both
+voltage banks' active data, stale-reply counts, 7-segment view controls and LED
+status bits. Reported TX/RX activity LED bits are timing dependent; their exact
+values are outside the semantic LED check. The full-loop RTL bench also decodes
+the multiplexed physical 7-segment pins.
+
+`m3_backend` covers wire islands, source value/unit edits, out-of-order placement,
+slot reuse and long snapshots aborted by edits. `m3_connectivity` exercises
+terminal connectivity, floating rows, grounding, shorted rails and solver errors.
+`m3_errors` delays a real solve past an edit, injects a stale error and a bad
+checksum, rejects C/L/pico and recovers from zero resistance. `m3_display` drives
+BTNL/BTNR/BTNU/BTND to view both halves of both 10 V and 0 V nodes.
+`m3_current_source` checks the arrow/terminal convention with 2 mA into the
+boot resistors, giving -0.1 V, and checks both float32 display halves.
+
+Golden inputs determine content and snapshot ids; independently checked UART
+header timing marks when extraction has committed for reply acceptance. A
+transmission still pending at the final capture boundary is reported, while
+all complete lines and checkpoint evidence remain mandatory. Missing/changed
+netlist, solver, RAM or display evidence fails the runner. Generated artifacts
+live under ignored `out/m3/`; tracked evidence is `docs/m3-verification.json`.
+The new on-screen voltage renderer remains the plan's P2 follow-up (D-017).
+
 ## Layout
 
 ```text

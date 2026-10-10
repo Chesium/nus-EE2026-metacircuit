@@ -12,9 +12,8 @@
 //     numbered 1.. by their first row-major cell (labelPortGrid; identical to
 //     flooding_core's numbering). Component halves have no ports.
 //  2. A region is grounded when it contains an enabled ground cell (M3-A003).
-//  3. Every non-grounded region gets a solver row in first-seen row-major order
-//     starting at 0, whether or not a component touches it (M3-A004, the
-//     extract_component_nodes compaction policy).
+//  3. Only terminal-touched non-grounded regions get solver rows, in first-cell
+//     row-major order (D-023). Untouched wire islands have no electrical row.
 //  4. Element idx = rank of the component's anchor (left-half) cell address,
 //     row-major, over live two-cell components (M3-A006).
 //  5. Terminal order (D-015): n0 is the terminal beyond the anchor half and n1
@@ -132,7 +131,7 @@ export interface ExtractionResult {
   regions: Uint16Array;
   regionCount: number;
   groundRegions: number[];
-  /** Raw region -> solver row, for every non-grounded region. */
+  /** Raw region -> solver row, for terminal-touched non-grounded regions (D-023). */
   rowOfRegion: Record<number, number>;
   elements: ElementTrace[];
   issues: ExtractionIssue[];
@@ -187,12 +186,27 @@ export function extractFromCanvas(input: CanvasInput, opts: ExtractOptions = {})
     if (inGrid(col + dx, row + dy) && regions[addr(col + dx, row + dy)]) grounded.add(regions[addr(col + dx, row + dy)]!);
   }
 
-  // Rule 3: compaction of non-ground regions into solver rows.
+  // D-023: discover electrical regions independently of raw colour regions.
+  const touched = new Set<number>();
+  for (const c of input.components) {
+    const [dx, dy] = PAIR_DELTA[c.rotation & 3]!;
+    for (const [col, row, facing] of [
+      [c.col - dx, c.row - dy, portToward(dx, dy)],
+      [c.col + 2 * dx, c.row + 2 * dy, portToward(-dx, -dy)],
+    ]) {
+      if (inGrid(col!, row!)) {
+        const a = addr(col!, row!);
+        if (ports[a]! & facing!) touched.add(regions[a]!);
+      }
+    }
+  }
   const rowOfRegion: Record<number, number> = {};
   let nextRow = 0;
   for (let a = 0; a < regions.length; a++) {
     const raw = regions[a]!;
-    if (raw && !grounded.has(raw) && rowOfRegion[raw] === undefined) rowOfRegion[raw] = nextRow++;
+    if (raw && (opts.dslCompat || touched.has(raw)) && !grounded.has(raw) && rowOfRegion[raw] === undefined) {
+      rowOfRegion[raw] = nextRow++;
+    }
   }
 
   // Rule 4: element order.

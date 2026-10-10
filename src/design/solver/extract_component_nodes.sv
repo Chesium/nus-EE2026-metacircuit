@@ -97,7 +97,7 @@ module extract_component_nodes (
 import ExtractComponentNodesCombPkg::*;
 
 
-typedef enum logic [6:0] {
+typedef enum logic [7:0] {
 
     S_IDLE,
 
@@ -287,37 +287,95 @@ typedef enum logic [6:0] {
 
     S_IF_END_78,
 
-    S_IF_THEN_79,
+    S_FOR_HEADER_79,
 
-    S_IF_END_80,
+    S_FOR_BODY_80,
 
-    S_IF_THEN_81,
+    S_FOR_BODY_80_WAIT,
 
-    S_IF_END_82,
+    S_FOR_END_81,
+
+    S_AFTER_CALL_82,
 
     S_IF_THEN_83,
 
+    S_IF_THEN_83_WAIT,
+
     S_IF_END_84,
 
-    S_IF_THEN_85,
+    S_AFTER_CALL_85,
 
-    S_IF_THEN_85_WAIT,
+    S_AFTER_CALL_85_WAIT,
 
-    S_IF_END_86,
+    S_AFTER_CALL_86,
 
-    S_IF_ELSE_87,
+    S_AFTER_CALL_86_WAIT,
 
-    S_IF_ELSE_87_WAIT,
+    S_AFTER_CALL_87,
 
-    S_AFTER_CALL_88,
+    S_FOR_HEADER_88,
 
-    S_AFTER_CALL_89,
+    S_FOR_BODY_89,
 
-    S_AFTER_CALL_90,
+    S_FOR_END_90,
 
-    S_AFTER_CALL_90_WAIT,
+    S_IF_THEN_91,
 
-    S_AFTER_CALL_91,
+    S_IF_END_92,
+
+    S_IF_ELSE_93,
+
+    S_IF_THEN_94,
+
+    S_IF_THEN_94_WAIT,
+
+    S_IF_END_95,
+
+    S_AFTER_CALL_96,
+
+    S_IF_THEN_97,
+
+    S_IF_THEN_97_WAIT,
+
+    S_IF_END_98,
+
+    S_AFTER_CALL_99,
+
+    S_IF_THEN_100,
+
+    S_IF_END_101,
+
+    S_IF_THEN_102,
+
+    S_IF_END_103,
+
+    S_IF_THEN_104,
+
+    S_IF_END_105,
+
+    S_IF_THEN_106,
+
+    S_IF_END_107,
+
+    S_IF_THEN_108,
+
+    S_IF_THEN_108_WAIT,
+
+    S_IF_END_109,
+
+    S_IF_ELSE_110,
+
+    S_IF_ELSE_110_WAIT,
+
+    S_AFTER_CALL_111,
+
+    S_AFTER_CALL_112,
+
+    S_AFTER_CALL_113,
+
+    S_AFTER_CALL_113_WAIT,
+
+    S_AFTER_CALL_114,
 
     S_DONE
 
@@ -387,6 +445,30 @@ logic u1_is_ground;
 
 logic u1_region_is_ground;
 
+logic u1_touched;
+
+logic [15:0] u16_touch_idx;
+
+logic [7:0] u8_touch_type;
+
+logic [7:0] u8_touch_ax;
+
+logic [7:0] u8_touch_ay;
+
+logic [1:0] u2_touch_dir;
+
+logic [1:0] u2_touch_out;
+
+logic [1:0] u2_touch_term;
+
+logic [7:0] u8_touch_x;
+
+logic [7:0] u8_touch_y;
+
+logic [15:0] u16_touch_cell;
+
+logic [7:0] u8_touch_region;
+
 
 logic [15:0] __for_idx_0;
 
@@ -407,6 +489,10 @@ logic [7:0] __for_idx_7;
 logic [7:0] __for_idx_8;
 
 logic [7:0] __for_idx_9;
+
+logic [15:0] __for_idx_10;
+
+logic [1:0] __for_idx_11;
 
 
 
@@ -470,6 +556,30 @@ logic next_u1_is_ground;
 
 logic next_u1_region_is_ground;
 
+logic next_u1_touched;
+
+logic [15:0] next_u16_touch_idx;
+
+logic [7:0] next_u8_touch_type;
+
+logic [7:0] next_u8_touch_ax;
+
+logic [7:0] next_u8_touch_ay;
+
+logic [1:0] next_u2_touch_dir;
+
+logic [1:0] next_u2_touch_out;
+
+logic [1:0] next_u2_touch_term;
+
+logic [7:0] next_u8_touch_x;
+
+logic [7:0] next_u8_touch_y;
+
+logic [15:0] next_u16_touch_cell;
+
+logic [7:0] next_u8_touch_region;
+
 logic [15:0] next___for_idx_0;
 
 logic [1:0] next___for_idx_1;
@@ -489,6 +599,10 @@ logic [7:0] next___for_idx_7;
 logic [7:0] next___for_idx_8;
 
 logic [7:0] next___for_idx_9;
+
+logic [15:0] next___for_idx_10;
+
+logic [1:0] next___for_idx_11;
 
 
 always_ff @(posedge clk or negedge rst_n) begin
@@ -555,6 +669,30 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u1_region_is_ground <=0;
 
+        u1_touched <=0;
+
+        u16_touch_idx <=0;
+
+        u8_touch_type <=0;
+
+        u8_touch_ax <=0;
+
+        u8_touch_ay <=0;
+
+        u2_touch_dir <=0;
+
+        u2_touch_out <=0;
+
+        u2_touch_term <=0;
+
+        u8_touch_x <=0;
+
+        u8_touch_y <=0;
+
+        u16_touch_cell <=0;
+
+        u8_touch_region <=0;
+
 
         __for_idx_0 <=0;
 
@@ -575,6 +713,10 @@ always_ff @(posedge clk or negedge rst_n) begin
         __for_idx_8 <=0;
 
         __for_idx_9 <=0;
+
+        __for_idx_10 <=0;
+
+        __for_idx_11 <=0;
 
 
     end else begin
@@ -640,6 +782,30 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         u1_region_is_ground <= next_u1_region_is_ground;
 
+        u1_touched <= next_u1_touched;
+
+        u16_touch_idx <= next_u16_touch_idx;
+
+        u8_touch_type <= next_u8_touch_type;
+
+        u8_touch_ax <= next_u8_touch_ax;
+
+        u8_touch_ay <= next_u8_touch_ay;
+
+        u2_touch_dir <= next_u2_touch_dir;
+
+        u2_touch_out <= next_u2_touch_out;
+
+        u2_touch_term <= next_u2_touch_term;
+
+        u8_touch_x <= next_u8_touch_x;
+
+        u8_touch_y <= next_u8_touch_y;
+
+        u16_touch_cell <= next_u16_touch_cell;
+
+        u8_touch_region <= next_u8_touch_region;
+
 
         __for_idx_0 <= next___for_idx_0;
 
@@ -660,6 +826,10 @@ always_ff @(posedge clk or negedge rst_n) begin
         __for_idx_8 <= next___for_idx_8;
 
         __for_idx_9 <= next___for_idx_9;
+
+        __for_idx_10 <= next___for_idx_10;
+
+        __for_idx_11 <= next___for_idx_11;
 
 
     end
@@ -730,6 +900,30 @@ always_comb begin
 
     next_u1_region_is_ground = u1_region_is_ground;
 
+    next_u1_touched = u1_touched;
+
+    next_u16_touch_idx = u16_touch_idx;
+
+    next_u8_touch_type = u8_touch_type;
+
+    next_u8_touch_ax = u8_touch_ax;
+
+    next_u8_touch_ay = u8_touch_ay;
+
+    next_u2_touch_dir = u2_touch_dir;
+
+    next_u2_touch_out = u2_touch_out;
+
+    next_u2_touch_term = u2_touch_term;
+
+    next_u8_touch_x = u8_touch_x;
+
+    next_u8_touch_y = u8_touch_y;
+
+    next_u16_touch_cell = u16_touch_cell;
+
+    next_u8_touch_region = u8_touch_region;
+
 
     next___for_idx_0 = __for_idx_0;
 
@@ -750,6 +944,10 @@ always_comb begin
     next___for_idx_8 = __for_idx_8;
 
     next___for_idx_9 = __for_idx_9;
+
+    next___for_idx_10 = __for_idx_10;
+
+    next___for_idx_11 = __for_idx_11;
 
 
 
@@ -886,6 +1084,30 @@ always_comb begin
 
             next_u1_region_is_ground = 1'd0;
 
+            next_u1_touched = 1'd0;
+
+            next_u16_touch_idx = 16'd0;
+
+            next_u8_touch_type = 8'd0;
+
+            next_u8_touch_ax = 8'd0;
+
+            next_u8_touch_ay = 8'd0;
+
+            next_u2_touch_dir = 2'd0;
+
+            next_u2_touch_out = 2'd0;
+
+            next_u2_touch_term = 2'd0;
+
+            next_u8_touch_x = 8'd0;
+
+            next_u8_touch_y = 8'd0;
+
+            next_u16_touch_cell = 16'd0;
+
+            next_u8_touch_region = 8'd0;
+
             next___for_idx_0 = 16'd0;
 
 
@@ -898,7 +1120,7 @@ always_comb begin
 
             // LIR block: for_header_0
 
-            // line 76: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 88: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -917,7 +1139,7 @@ always_comb begin
 
             // LIR block: for_body_1
 
-            // line 76: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 88: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -938,7 +1160,7 @@ always_comb begin
 
             // LIR block: for_body_1
 
-            // line 76: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 88: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
 
             // wait for blocking primitive: fetchComponentType
 
@@ -976,7 +1198,7 @@ always_comb begin
 
             // LIR block: after_call_3
 
-            // line 79: if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 91: if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -995,7 +1217,7 @@ always_comb begin
 
             // LIR block: if_then_4
 
-            // line 80: u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)
+            // line 92: u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)
 
 
 
@@ -1014,7 +1236,7 @@ always_comb begin
 
             // LIR block: if_then_4
 
-            // line 80: u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)
+            // line 92: u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)
 
             // wait for blocking primitive: fetchAnchorPositionX
 
@@ -1038,7 +1260,7 @@ always_comb begin
 
             // LIR block: if_end_5
 
-            // line 76: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 88: for u16_idx in range(par_elem_n):         u8_type = fetchComponentType(idx=u16_idx)          if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -1055,7 +1277,7 @@ always_comb begin
 
             // LIR block: if_else_6
 
-            // line 172: u8_node = 255
+            // line 213: u8_node = 255
 
 
 
@@ -1078,7 +1300,7 @@ always_comb begin
 
             // LIR block: if_else_6
 
-            // line 172: u8_node = 255
+            // line 213: u8_node = 255
 
             // wait for blocking primitive: storeNode0
 
@@ -1089,7 +1311,7 @@ always_comb begin
 
             if (storeNode0_done) begin
 
-                next_state = S_AFTER_CALL_90;
+                next_state = S_AFTER_CALL_113;
             end else begin
                 next_state = S_IF_ELSE_6_WAIT;
             end
@@ -1100,7 +1322,7 @@ always_comb begin
 
             // LIR block: after_call_7
 
-            // line 81: u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)
+            // line 93: u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)
 
 
 
@@ -1119,7 +1341,7 @@ always_comb begin
 
             // LIR block: after_call_7
 
-            // line 81: u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)
+            // line 93: u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)
 
             // wait for blocking primitive: fetchAnchorPositionY
 
@@ -1143,7 +1365,7 @@ always_comb begin
 
             // LIR block: after_call_8
 
-            // line 82: u2_dir = fetchComponentRotation(idx=u16_idx)
+            // line 94: u2_dir = fetchComponentRotation(idx=u16_idx)
 
 
 
@@ -1162,7 +1384,7 @@ always_comb begin
 
             // LIR block: after_call_8
 
-            // line 82: u2_dir = fetchComponentRotation(idx=u16_idx)
+            // line 94: u2_dir = fetchComponentRotation(idx=u16_idx)
 
             // wait for blocking primitive: fetchComponentRotation
 
@@ -1186,7 +1408,7 @@ always_comb begin
 
             // LIR block: after_call_9
 
-            // line 83: u2_dir = rotation_to_dir_comb(rot=u2_dir)
+            // line 95: u2_dir = rotation_to_dir_comb(rot=u2_dir)
 
 
 
@@ -1209,7 +1431,7 @@ always_comb begin
 
             // LIR block: if_then_10
 
-            // line 86: u1_is_isrc = 1
+            // line 98: u1_is_isrc = 1
 
 
 
@@ -1226,7 +1448,7 @@ always_comb begin
 
             // LIR block: if_end_11
 
-            // line 88: for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 100: for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -1243,7 +1465,7 @@ always_comb begin
 
             // LIR block: for_header_12
 
-            // line 88: for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 100: for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -1262,7 +1484,7 @@ always_comb begin
 
             // LIR block: for_body_13
 
-            // line 88: for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 100: for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -1283,7 +1505,7 @@ always_comb begin
 
             // LIR block: for_end_14
 
-            // line 79: if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 91: if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -1298,7 +1520,7 @@ always_comb begin
 
             // LIR block: if_then_15
 
-            // line 91: u1_far = u1_is_isrc
+            // line 103: u1_far = u1_is_isrc
 
 
 
@@ -1315,7 +1537,7 @@ always_comb begin
 
             // LIR block: if_end_16
 
-            // line 94: if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)
+            // line 106: if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)
 
 
 
@@ -1334,7 +1556,7 @@ always_comb begin
 
             // LIR block: if_else_17
 
-            // line 93: u1_far = 1 - u1_is_isrc
+            // line 105: u1_far = 1 - u1_is_isrc
 
 
 
@@ -1351,7 +1573,7 @@ always_comb begin
 
             // LIR block: if_then_18
 
-            // line 95: u2_out = u2_dir
+            // line 107: u2_out = u2_dir
 
 
 
@@ -1376,7 +1598,7 @@ always_comb begin
 
             // LIR block: if_end_19
 
-            // line 106: u8_raw = 0
+            // line 118: u8_raw = 0
 
 
 
@@ -1397,7 +1619,7 @@ always_comb begin
 
             // LIR block: if_else_20
 
-            // line 101: u2_out = get_opp_dir_comb(d=u2_dir)
+            // line 113: u2_out = get_opp_dir_comb(d=u2_dir)
 
 
 
@@ -1418,7 +1640,7 @@ always_comb begin
 
             // LIR block: if_then_21
 
-            // line 113: u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)
+            // line 125: u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)
 
 
 
@@ -1439,7 +1661,7 @@ always_comb begin
 
             // LIR block: if_then_21
 
-            // line 113: u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)
+            // line 125: u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)
 
             // wait for blocking primitive: fetchCell
 
@@ -1463,7 +1685,7 @@ always_comb begin
 
             // LIR block: if_end_22
 
-            // line 118: u1_is_ground = 0
+            // line 130: u1_is_ground = 0
 
 
 
@@ -1484,7 +1706,7 @@ always_comb begin
 
             // LIR block: after_call_23
 
-            // line 114: if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
+            // line 126: if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
 
 
 
@@ -1503,7 +1725,7 @@ always_comb begin
 
             // LIR block: if_then_24
 
-            // line 115: u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
+            // line 127: u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
 
 
 
@@ -1524,7 +1746,7 @@ always_comb begin
 
             // LIR block: if_then_24
 
-            // line 115: u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
+            // line 127: u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
 
             // wait for blocking primitive: fetchR
 
@@ -1548,7 +1770,7 @@ always_comb begin
 
             // LIR block: if_end_25
 
-            // line 107: if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
+            // line 119: if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
 
 
 
@@ -1563,7 +1785,7 @@ always_comb begin
 
             // LIR block: after_call_26
 
-            // line 114: if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
+            // line 126: if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)
 
 
 
@@ -1578,7 +1800,7 @@ always_comb begin
 
             // LIR block: if_then_27
 
-            // line 120: for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 132: for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1595,7 +1817,7 @@ always_comb begin
 
             // LIR block: if_end_28
 
-            // line 128: u8_node = 255
+            // line 140: u8_node = 255
 
 
 
@@ -1616,7 +1838,7 @@ always_comb begin
 
             // LIR block: for_header_29
 
-            // line 120: for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 132: for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1635,7 +1857,7 @@ always_comb begin
 
             // LIR block: for_body_30
 
-            // line 120: for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 132: for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1654,7 +1876,7 @@ always_comb begin
 
             // LIR block: for_end_31
 
-            // line 119: if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 131: if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1669,7 +1891,7 @@ always_comb begin
 
             // LIR block: for_header_32
 
-            // line 121: for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 133: for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1688,7 +1910,7 @@ always_comb begin
 
             // LIR block: for_body_33
 
-            // line 121: for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 133: for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1711,7 +1933,7 @@ always_comb begin
 
             // LIR block: for_body_33
 
-            // line 121: for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 133: for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
             // wait for blocking primitive: fetchCell
 
@@ -1735,7 +1957,7 @@ always_comb begin
 
             // LIR block: for_end_34
 
-            // line 120: for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 132: for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1752,7 +1974,7 @@ always_comb begin
 
             // LIR block: after_call_35
 
-            // line 123: if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 135: if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1771,7 +1993,7 @@ always_comb begin
 
             // LIR block: if_then_36
 
-            // line 124: u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)
+            // line 136: u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)
 
 
 
@@ -1792,7 +2014,7 @@ always_comb begin
 
             // LIR block: if_then_36
 
-            // line 124: u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)
+            // line 136: u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)
 
             // wait for blocking primitive: fetchR
 
@@ -1816,7 +2038,7 @@ always_comb begin
 
             // LIR block: if_end_37
 
-            // line 121: for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 133: for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1833,7 +2055,7 @@ always_comb begin
 
             // LIR block: after_call_38
 
-            // line 125: if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 137: if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1852,7 +2074,7 @@ always_comb begin
 
             // LIR block: if_then_39
 
-            // line 126: u1_is_ground = 1
+            // line 138: u1_is_ground = 1
 
 
 
@@ -1869,7 +2091,7 @@ always_comb begin
 
             // LIR block: if_end_40
 
-            // line 123: if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
+            // line 135: if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1
 
 
 
@@ -1884,7 +2106,7 @@ always_comb begin
 
             // LIR block: if_then_41
 
-            // line 132: if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1
+            // line 144: if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1
 
 
 
@@ -1903,7 +2125,7 @@ always_comb begin
 
             // LIR block: if_end_42
 
-            // line 167: if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 208: if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -1911,9 +2133,9 @@ always_comb begin
 
 
             if ((u2_term == 32'd0)) begin
-                next_state = S_IF_THEN_85;
+                next_state = S_IF_THEN_108;
             end else begin
-                next_state = S_IF_ELSE_87;
+                next_state = S_IF_ELSE_110;
             end
 
         end
@@ -1922,7 +2144,7 @@ always_comb begin
 
             // LIR block: if_then_43
 
-            // line 133: u8_next_node = 0
+            // line 145: u8_next_node = 0
 
 
 
@@ -1941,7 +2163,7 @@ always_comb begin
 
             // LIR block: if_end_44
 
-            // line 163: if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1
+            // line 204: if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1
 
 
 
@@ -1949,9 +2171,9 @@ always_comb begin
 
 
             if ((u8_raw == 32'd0)) begin
-                next_state = S_IF_THEN_83;
+                next_state = S_IF_THEN_106;
             end else begin
-                next_state = S_IF_END_84;
+                next_state = S_IF_END_107;
             end
 
         end
@@ -1960,7 +2182,7 @@ always_comb begin
 
             // LIR block: for_header_45
 
-            // line 134: for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 146: for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -1979,7 +2201,7 @@ always_comb begin
 
             // LIR block: for_body_46
 
-            // line 134: for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 146: for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -1998,7 +2220,7 @@ always_comb begin
 
             // LIR block: for_end_47
 
-            // line 161: u8_region_rows = u8_next_node
+            // line 202: u8_region_rows = u8_next_node
 
 
 
@@ -2017,7 +2239,7 @@ always_comb begin
 
             // LIR block: for_header_48
 
-            // line 135: for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 147: for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -2036,7 +2258,7 @@ always_comb begin
 
             // LIR block: for_body_49
 
-            // line 135: for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 147: for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -2059,7 +2281,7 @@ always_comb begin
 
             // LIR block: for_body_49
 
-            // line 135: for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 147: for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
             // wait for blocking primitive: fetchR
 
@@ -2083,7 +2305,7 @@ always_comb begin
 
             // LIR block: for_end_50
 
-            // line 134: for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 146: for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -2100,7 +2322,7 @@ always_comb begin
 
             // LIR block: after_call_51
 
-            // line 137: if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 149: if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -2119,7 +2341,7 @@ always_comb begin
 
             // LIR block: if_then_52
 
-            // line 138: u1_seen = 0
+            // line 150: u1_seen = 0
 
 
 
@@ -2138,7 +2360,7 @@ always_comb begin
 
             // LIR block: if_end_53
 
-            // line 135: for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 147: for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -2155,7 +2377,7 @@ always_comb begin
 
             // LIR block: for_header_54
 
-            // line 139: for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
+            // line 151: for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
 
 
 
@@ -2174,7 +2396,7 @@ always_comb begin
 
             // LIR block: for_body_55
 
-            // line 139: for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
+            // line 151: for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
 
 
 
@@ -2193,7 +2415,7 @@ always_comb begin
 
             // LIR block: for_end_56
 
-            // line 148: if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 160: if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -2212,7 +2434,7 @@ always_comb begin
 
             // LIR block: for_header_57
 
-            // line 140: for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
+            // line 152: for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
 
 
 
@@ -2231,7 +2453,7 @@ always_comb begin
 
             // LIR block: for_body_58
 
-            // line 140: for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
+            // line 152: for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
 
 
 
@@ -2252,7 +2474,7 @@ always_comb begin
 
             // LIR block: for_end_59
 
-            // line 139: for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
+            // line 151: for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
 
 
 
@@ -2269,7 +2491,7 @@ always_comb begin
 
             // LIR block: if_then_60
 
-            // line 145: u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)
+            // line 157: u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)
 
 
 
@@ -2290,7 +2512,7 @@ always_comb begin
 
             // LIR block: if_then_60
 
-            // line 145: u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)
+            // line 157: u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)
 
             // wait for blocking primitive: fetchR
 
@@ -2314,7 +2536,7 @@ always_comb begin
 
             // LIR block: if_end_61
 
-            // line 140: for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
+            // line 152: for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
 
 
 
@@ -2331,7 +2553,7 @@ always_comb begin
 
             // LIR block: after_call_62
 
-            // line 146: if u8_prev_region == u8_region:                                                     u1_seen = 1
+            // line 158: if u8_prev_region == u8_region:                                                     u1_seen = 1
 
 
 
@@ -2350,7 +2572,7 @@ always_comb begin
 
             // LIR block: if_then_63
 
-            // line 147: u1_seen = 1
+            // line 159: u1_seen = 1
 
 
 
@@ -2367,7 +2589,7 @@ always_comb begin
 
             // LIR block: if_end_64
 
-            // line 141: if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
+            // line 153: if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1
 
 
 
@@ -2382,7 +2604,7 @@ always_comb begin
 
             // LIR block: if_then_65
 
-            // line 149: u1_region_is_ground = 0
+            // line 161: u1_region_is_ground = 0
 
 
 
@@ -2401,7 +2623,7 @@ always_comb begin
 
             // LIR block: if_end_66
 
-            // line 137: if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 149: if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -2416,7 +2638,7 @@ always_comb begin
 
             // LIR block: for_header_67
 
-            // line 150: for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 162: for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
 
 
@@ -2435,7 +2657,7 @@ always_comb begin
 
             // LIR block: for_body_68
 
-            // line 150: for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 162: for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
 
 
@@ -2454,18 +2676,18 @@ always_comb begin
 
             // LIR block: for_end_69
 
-            // line 157: if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 170: u1_touched = 0
 
 
 
 
+            next_u1_touched = 1'd0;
+
+            next___for_idx_10 = 16'd0;
 
 
-            if ((! u1_region_is_ground)) begin
-                next_state = S_IF_THEN_79;
-            end else begin
-                next_state = S_IF_END_80;
-            end
+
+            next_state = S_FOR_HEADER_79;
 
         end
 
@@ -2473,7 +2695,7 @@ always_comb begin
 
             // LIR block: for_header_70
 
-            // line 151: for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 163: for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
 
 
@@ -2492,7 +2714,7 @@ always_comb begin
 
             // LIR block: for_body_71
 
-            // line 151: for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 163: for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
 
 
@@ -2515,7 +2737,7 @@ always_comb begin
 
             // LIR block: for_body_71
 
-            // line 151: for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 163: for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
             // wait for blocking primitive: fetchCell
 
@@ -2539,7 +2761,7 @@ always_comb begin
 
             // LIR block: for_end_72
 
-            // line 150: for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 162: for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
 
 
@@ -2556,7 +2778,7 @@ always_comb begin
 
             // LIR block: after_call_73
 
-            // line 153: if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 165: if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
 
 
@@ -2575,7 +2797,7 @@ always_comb begin
 
             // LIR block: if_then_74
 
-            // line 154: u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)
+            // line 166: u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)
 
 
 
@@ -2596,7 +2818,7 @@ always_comb begin
 
             // LIR block: if_then_74
 
-            // line 154: u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)
+            // line 166: u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)
 
             // wait for blocking primitive: fetchR
 
@@ -2620,7 +2842,7 @@ always_comb begin
 
             // LIR block: if_end_75
 
-            // line 151: for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 163: for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
 
 
@@ -2637,7 +2859,7 @@ always_comb begin
 
             // LIR block: after_call_76
 
-            // line 155: if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 167: if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
 
 
@@ -2656,7 +2878,7 @@ always_comb begin
 
             // LIR block: if_then_77
 
-            // line 156: u1_region_is_ground = 1
+            // line 168: u1_region_is_ground = 1
 
 
 
@@ -2673,7 +2895,7 @@ always_comb begin
 
             // LIR block: if_end_78
 
-            // line 153: if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
+            // line 165: if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1
 
 
 
@@ -2684,11 +2906,590 @@ always_comb begin
 
         end
 
-        S_IF_THEN_79: begin
+        S_FOR_HEADER_79: begin
 
-            // LIR block: if_then_79
+            // LIR block: for_header_79
 
-            // line 158: if u8_region == u8_raw:                                                 u8_node = u8_next_node
+            // line 171: for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+
+
+            if ((__for_idx_10 < par_elem_n)) begin
+                next_state = S_FOR_BODY_80;
+            end else begin
+                next_state = S_FOR_END_81;
+            end
+
+        end
+
+        S_FOR_BODY_80: begin
+
+            // LIR block: for_body_80
+
+            // line 171: for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+            next_u16_touch_idx = __for_idx_10;
+
+
+            fetchComponentType_idx = __for_idx_10;
+
+            fetchComponentType_start = 1'b1;
+
+
+            next_state = S_FOR_BODY_80_WAIT;
+
+        end
+
+        S_FOR_BODY_80_WAIT: begin
+
+            // LIR block: for_body_80
+
+            // line 171: for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+            // wait for blocking primitive: fetchComponentType
+
+
+
+
+
+
+            if (fetchComponentType_done) begin
+
+                next_u8_touch_type = fetchComponentType_result;
+
+                next_state = S_AFTER_CALL_82;
+            end else begin
+                next_state = S_FOR_BODY_80_WAIT;
+            end
+
+        end
+
+        S_FOR_END_81: begin
+
+            // LIR block: for_end_81
+
+            // line 198: if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+
+
+
+
+
+
+            if (((! u1_region_is_ground) && u1_touched)) begin
+                next_state = S_IF_THEN_102;
+            end else begin
+                next_state = S_IF_END_103;
+            end
+
+        end
+
+        S_AFTER_CALL_82: begin
+
+            // LIR block: after_call_82
+
+            // line 173: if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+
+
+            if (is_two_terminal_component_comb(u8_touch_type)) begin
+                next_state = S_IF_THEN_83;
+            end else begin
+                next_state = S_IF_END_84;
+            end
+
+        end
+
+        S_IF_THEN_83: begin
+
+            // LIR block: if_then_83
+
+            // line 174: u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)
+
+
+
+
+
+            fetchAnchorPositionX_idx = u16_touch_idx;
+
+            fetchAnchorPositionX_start = 1'b1;
+
+
+            next_state = S_IF_THEN_83_WAIT;
+
+        end
+
+        S_IF_THEN_83_WAIT: begin
+
+            // LIR block: if_then_83
+
+            // line 174: u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)
+
+            // wait for blocking primitive: fetchAnchorPositionX
+
+
+
+
+
+
+            if (fetchAnchorPositionX_done) begin
+
+                next_u8_touch_ax = fetchAnchorPositionX_result;
+
+                next_state = S_AFTER_CALL_85;
+            end else begin
+                next_state = S_IF_THEN_83_WAIT;
+            end
+
+        end
+
+        S_IF_END_84: begin
+
+            // LIR block: if_end_84
+
+            // line 171: for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+            next___for_idx_10 = (__for_idx_10 + 16'd1);
+
+
+
+            next_state = S_FOR_HEADER_79;
+
+        end
+
+        S_AFTER_CALL_85: begin
+
+            // LIR block: after_call_85
+
+            // line 175: u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)
+
+
+
+
+
+            fetchAnchorPositionY_idx = u16_touch_idx;
+
+            fetchAnchorPositionY_start = 1'b1;
+
+
+            next_state = S_AFTER_CALL_85_WAIT;
+
+        end
+
+        S_AFTER_CALL_85_WAIT: begin
+
+            // LIR block: after_call_85
+
+            // line 175: u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)
+
+            // wait for blocking primitive: fetchAnchorPositionY
+
+
+
+
+
+
+            if (fetchAnchorPositionY_done) begin
+
+                next_u8_touch_ay = fetchAnchorPositionY_result;
+
+                next_state = S_AFTER_CALL_86;
+            end else begin
+                next_state = S_AFTER_CALL_85_WAIT;
+            end
+
+        end
+
+        S_AFTER_CALL_86: begin
+
+            // LIR block: after_call_86
+
+            // line 176: u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)
+
+
+
+
+
+            fetchComponentRotation_idx = u16_touch_idx;
+
+            fetchComponentRotation_start = 1'b1;
+
+
+            next_state = S_AFTER_CALL_86_WAIT;
+
+        end
+
+        S_AFTER_CALL_86_WAIT: begin
+
+            // LIR block: after_call_86
+
+            // line 176: u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)
+
+            // wait for blocking primitive: fetchComponentRotation
+
+
+
+
+
+
+            if (fetchComponentRotation_done) begin
+
+                next_u2_touch_dir = fetchComponentRotation_result;
+
+                next_state = S_AFTER_CALL_87;
+            end else begin
+                next_state = S_AFTER_CALL_86_WAIT;
+            end
+
+        end
+
+        S_AFTER_CALL_87: begin
+
+            // LIR block: after_call_87
+
+            // line 177: u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)
+
+
+
+
+            next_u2_touch_dir = rotation_to_dir_comb(u2_touch_dir);
+
+            next___for_idx_11 = 2'd0;
+
+
+
+            next_state = S_FOR_HEADER_88;
+
+        end
+
+        S_FOR_HEADER_88: begin
+
+            // LIR block: for_header_88
+
+            // line 178: for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+
+
+            if ((__for_idx_11 < 2'd2)) begin
+                next_state = S_FOR_BODY_89;
+            end else begin
+                next_state = S_FOR_END_90;
+            end
+
+        end
+
+        S_FOR_BODY_89: begin
+
+            // LIR block: for_body_89
+
+            // line 178: for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+            next_u2_touch_term = __for_idx_11;
+
+
+
+            if ((__for_idx_11 == 32'd0)) begin
+                next_state = S_IF_THEN_91;
+            end else begin
+                next_state = S_IF_ELSE_93;
+            end
+
+        end
+
+        S_FOR_END_90: begin
+
+            // LIR block: for_end_90
+
+            // line 173: if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+
+
+            next_state = S_IF_END_84;
+
+        end
+
+        S_IF_THEN_91: begin
+
+            // LIR block: if_then_91
+
+            // line 180: u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)
+
+
+
+
+            next_u2_touch_out = get_opp_dir_comb(u2_touch_dir);
+
+            next_u8_touch_x = get_nxt_i_comb(u8_touch_ax, get_opp_dir_comb(u2_touch_dir));
+
+            next_u8_touch_y = get_nxt_j_comb(u8_touch_ay, get_opp_dir_comb(u2_touch_dir));
+
+
+
+            next_state = S_IF_END_92;
+
+        end
+
+        S_IF_END_92: begin
+
+            // LIR block: if_end_92
+
+            // line 189: if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+
+
+            if (((((u8_touch_x >= 32'd0) && (u8_touch_y >= 32'd0)) && (u8_touch_x < grid_width)) && (u8_touch_y < grid_height))) begin
+                next_state = S_IF_THEN_94;
+            end else begin
+                next_state = S_IF_END_95;
+            end
+
+        end
+
+        S_IF_ELSE_93: begin
+
+            // LIR block: if_else_93
+
+            // line 184: u2_touch_out = u2_touch_dir
+
+
+
+
+            next_u2_touch_out = u2_touch_dir;
+
+            next_u8_touch_x = get_nxt_i_comb(u8_touch_ax, u2_touch_dir);
+
+            next_u8_touch_y = get_nxt_j_comb(u8_touch_ay, u2_touch_dir);
+
+            next_u8_touch_x = get_nxt_i_comb(get_nxt_i_comb(u8_touch_ax, u2_touch_dir), u2_touch_dir);
+
+            next_u8_touch_y = get_nxt_j_comb(get_nxt_j_comb(u8_touch_ay, u2_touch_dir), u2_touch_dir);
+
+
+
+            next_state = S_IF_END_92;
+
+        end
+
+        S_IF_THEN_94: begin
+
+            // LIR block: if_then_94
+
+            // line 193: u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)
+
+
+
+
+
+            fetchCell_i = u8_touch_x;
+
+            fetchCell_j = u8_touch_y;
+
+            fetchCell_start = 1'b1;
+
+
+            next_state = S_IF_THEN_94_WAIT;
+
+        end
+
+        S_IF_THEN_94_WAIT: begin
+
+            // LIR block: if_then_94
+
+            // line 193: u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)
+
+            // wait for blocking primitive: fetchCell
+
+
+
+
+
+
+            if (fetchCell_done) begin
+
+                next_u16_touch_cell = fetchCell_result;
+
+                next_state = S_AFTER_CALL_96;
+            end else begin
+                next_state = S_IF_THEN_94_WAIT;
+            end
+
+        end
+
+        S_IF_END_95: begin
+
+            // LIR block: if_end_95
+
+            // line 178: for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+            next___for_idx_11 = (__for_idx_11 + 2'd1);
+
+
+
+            next_state = S_FOR_HEADER_88;
+
+        end
+
+        S_AFTER_CALL_96: begin
+
+            // LIR block: after_call_96
+
+            // line 194: if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+
+
+            if (cell_has_port_comb(u16_touch_cell, get_opp_dir_comb(u2_touch_out))) begin
+                next_state = S_IF_THEN_97;
+            end else begin
+                next_state = S_IF_END_98;
+            end
+
+        end
+
+        S_IF_THEN_97: begin
+
+            // LIR block: if_then_97
+
+            // line 195: u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)
+
+
+
+
+
+            fetchR_i = u8_touch_x;
+
+            fetchR_j = u8_touch_y;
+
+            fetchR_start = 1'b1;
+
+
+            next_state = S_IF_THEN_97_WAIT;
+
+        end
+
+        S_IF_THEN_97_WAIT: begin
+
+            // LIR block: if_then_97
+
+            // line 195: u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)
+
+            // wait for blocking primitive: fetchR
+
+
+
+
+
+
+            if (fetchR_done) begin
+
+                next_u8_touch_region = fetchR_result;
+
+                next_state = S_AFTER_CALL_99;
+            end else begin
+                next_state = S_IF_THEN_97_WAIT;
+            end
+
+        end
+
+        S_IF_END_98: begin
+
+            // LIR block: if_end_98
+
+            // line 189: if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+
+
+            next_state = S_IF_END_95;
+
+        end
+
+        S_AFTER_CALL_99: begin
+
+            // LIR block: after_call_99
+
+            // line 196: if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+
+
+            if ((u8_touch_region == u8_region)) begin
+                next_state = S_IF_THEN_100;
+            end else begin
+                next_state = S_IF_END_101;
+            end
+
+        end
+
+        S_IF_THEN_100: begin
+
+            // LIR block: if_then_100
+
+            // line 197: u1_touched = 1
+
+
+
+
+            next_u1_touched = 1'd1;
+
+
+
+            next_state = S_IF_END_101;
+
+        end
+
+        S_IF_END_101: begin
+
+            // LIR block: if_end_101
+
+            // line 194: if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1
+
+
+
+
+
+
+            next_state = S_IF_END_98;
+
+        end
+
+        S_IF_THEN_102: begin
+
+            // LIR block: if_then_102
+
+            // line 199: if u8_region == u8_raw:                                                 u8_node = u8_next_node
 
 
 
@@ -2696,18 +3497,18 @@ always_comb begin
 
 
             if ((u8_region == u8_raw)) begin
-                next_state = S_IF_THEN_81;
+                next_state = S_IF_THEN_104;
             end else begin
-                next_state = S_IF_END_82;
+                next_state = S_IF_END_105;
             end
 
         end
 
-        S_IF_END_80: begin
+        S_IF_END_103: begin
 
-            // LIR block: if_end_80
+            // LIR block: if_end_103
 
-            // line 148: if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
+            // line 160: if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1
 
 
 
@@ -2718,11 +3519,11 @@ always_comb begin
 
         end
 
-        S_IF_THEN_81: begin
+        S_IF_THEN_104: begin
 
-            // LIR block: if_then_81
+            // LIR block: if_then_104
 
-            // line 159: u8_node = u8_next_node
+            // line 200: u8_node = u8_next_node
 
 
 
@@ -2731,15 +3532,15 @@ always_comb begin
 
 
 
-            next_state = S_IF_END_82;
+            next_state = S_IF_END_105;
 
         end
 
-        S_IF_END_82: begin
+        S_IF_END_105: begin
 
-            // LIR block: if_end_82
+            // LIR block: if_end_105
 
-            // line 160: u8_next_node = u8_next_node + 1
+            // line 201: u8_next_node = u8_next_node + 1
 
 
 
@@ -2748,15 +3549,15 @@ always_comb begin
 
 
 
-            next_state = S_IF_END_80;
+            next_state = S_IF_END_103;
 
         end
 
-        S_IF_THEN_83: begin
+        S_IF_THEN_106: begin
 
-            // LIR block: if_then_83
+            // LIR block: if_then_106
 
-            // line 164: u8_node = u8_region_rows + u8_next_float
+            // line 205: u8_node = u8_region_rows + u8_next_float
 
 
 
@@ -2767,15 +3568,15 @@ always_comb begin
 
 
 
-            next_state = S_IF_END_84;
+            next_state = S_IF_END_107;
 
         end
 
-        S_IF_END_84: begin
+        S_IF_END_107: begin
 
-            // LIR block: if_end_84
+            // LIR block: if_end_107
 
-            // line 129: if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1
+            // line 141: if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1
 
 
 
@@ -2786,11 +3587,11 @@ always_comb begin
 
         end
 
-        S_IF_THEN_85: begin
+        S_IF_THEN_108: begin
 
-            // LIR block: if_then_85
+            // LIR block: if_then_108
 
-            // line 168: storeNode0(idx=u16_idx, node_i=u8_node)
+            // line 209: storeNode0(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -2803,15 +3604,15 @@ always_comb begin
             storeNode0_start = 1'b1;
 
 
-            next_state = S_IF_THEN_85_WAIT;
+            next_state = S_IF_THEN_108_WAIT;
 
         end
 
-        S_IF_THEN_85_WAIT: begin
+        S_IF_THEN_108_WAIT: begin
 
-            // LIR block: if_then_85
+            // LIR block: if_then_108
 
-            // line 168: storeNode0(idx=u16_idx, node_i=u8_node)
+            // line 209: storeNode0(idx=u16_idx, node_i=u8_node)
 
             // wait for blocking primitive: storeNode0
 
@@ -2822,18 +3623,18 @@ always_comb begin
 
             if (storeNode0_done) begin
 
-                next_state = S_AFTER_CALL_88;
+                next_state = S_AFTER_CALL_111;
             end else begin
-                next_state = S_IF_THEN_85_WAIT;
+                next_state = S_IF_THEN_108_WAIT;
             end
 
         end
 
-        S_IF_END_86: begin
+        S_IF_END_109: begin
 
-            // LIR block: if_end_86
+            // LIR block: if_end_109
 
-            // line 88: for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 100: for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -2846,84 +3647,11 @@ always_comb begin
 
         end
 
-        S_IF_ELSE_87: begin
+        S_IF_ELSE_110: begin
 
-            // LIR block: if_else_87
+            // LIR block: if_else_110
 
-            // line 170: storeNode1(idx=u16_idx, node_i=u8_node)
-
-
-
-
-
-            storeNode1_idx = u16_idx;
-
-            storeNode1_node_i = u8_node;
-
-            storeNode1_start = 1'b1;
-
-
-            next_state = S_IF_ELSE_87_WAIT;
-
-        end
-
-        S_IF_ELSE_87_WAIT: begin
-
-            // LIR block: if_else_87
-
-            // line 170: storeNode1(idx=u16_idx, node_i=u8_node)
-
-            // wait for blocking primitive: storeNode1
-
-
-
-
-
-
-            if (storeNode1_done) begin
-
-                next_state = S_AFTER_CALL_89;
-            end else begin
-                next_state = S_IF_ELSE_87_WAIT;
-            end
-
-        end
-
-        S_AFTER_CALL_88: begin
-
-            // LIR block: after_call_88
-
-            // line 167: if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
-
-
-
-
-
-
-            next_state = S_IF_END_86;
-
-        end
-
-        S_AFTER_CALL_89: begin
-
-            // LIR block: after_call_89
-
-            // line 167: if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
-
-
-
-
-
-
-            next_state = S_IF_END_86;
-
-        end
-
-        S_AFTER_CALL_90: begin
-
-            // LIR block: after_call_90
-
-            // line 174: storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 211: storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 
@@ -2936,15 +3664,15 @@ always_comb begin
             storeNode1_start = 1'b1;
 
 
-            next_state = S_AFTER_CALL_90_WAIT;
+            next_state = S_IF_ELSE_110_WAIT;
 
         end
 
-        S_AFTER_CALL_90_WAIT: begin
+        S_IF_ELSE_110_WAIT: begin
 
-            // LIR block: after_call_90
+            // LIR block: if_else_110
 
-            // line 174: storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 211: storeNode1(idx=u16_idx, node_i=u8_node)
 
             // wait for blocking primitive: storeNode1
 
@@ -2955,18 +3683,91 @@ always_comb begin
 
             if (storeNode1_done) begin
 
-                next_state = S_AFTER_CALL_91;
+                next_state = S_AFTER_CALL_112;
             end else begin
-                next_state = S_AFTER_CALL_90_WAIT;
+                next_state = S_IF_ELSE_110_WAIT;
             end
 
         end
 
-        S_AFTER_CALL_91: begin
+        S_AFTER_CALL_111: begin
 
-            // LIR block: after_call_91
+            // LIR block: after_call_111
 
-            // line 79: if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         if not u1_region_is_ground:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
+            // line 208: if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
+
+
+
+
+
+
+            next_state = S_IF_END_109;
+
+        end
+
+        S_AFTER_CALL_112: begin
+
+            // LIR block: after_call_112
+
+            // line 208: if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)
+
+
+
+
+
+
+            next_state = S_IF_END_109;
+
+        end
+
+        S_AFTER_CALL_113: begin
+
+            // LIR block: after_call_113
+
+            // line 215: storeNode1(idx=u16_idx, node_i=u8_node)
+
+
+
+
+
+            storeNode1_idx = u16_idx;
+
+            storeNode1_node_i = u8_node;
+
+            storeNode1_start = 1'b1;
+
+
+            next_state = S_AFTER_CALL_113_WAIT;
+
+        end
+
+        S_AFTER_CALL_113_WAIT: begin
+
+            // LIR block: after_call_113
+
+            // line 215: storeNode1(idx=u16_idx, node_i=u8_node)
+
+            // wait for blocking primitive: storeNode1
+
+
+
+
+
+
+            if (storeNode1_done) begin
+
+                next_state = S_AFTER_CALL_114;
+            end else begin
+                next_state = S_AFTER_CALL_113_WAIT;
+            end
+
+        end
+
+        S_AFTER_CALL_114: begin
+
+            // LIR block: after_call_114
+
+            // line 91: if is_two_terminal_component_comb(t=u8_type):             u8_anchor_x = fetchAnchorPositionX(idx=u16_idx)             u8_anchor_y = fetchAnchorPositionY(idx=u16_idx)             u2_dir = fetchComponentRotation(idx=u16_idx)             u2_dir = rotation_to_dir_comb(rot=u2_dir)             u1_is_isrc = 0             if is_current_source_comb(t=u8_type):                 u1_is_isrc = 1              for u2_term in range(2):                 # u1_far: this terminal is the one beyond the partner half.                 if u2_term == 0:                     u1_far = u1_is_isrc                 else:                     u1_far = 1 - u1_is_isrc                 if u1_far:                     u2_out = u2_dir                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_term_x, d=u2_dir)                     u8_term_y = get_nxt_j_comb(j=u8_term_y, d=u2_dir)                 else:                     u2_out = get_opp_dir_comb(d=u2_dir)                     u8_term_x = get_nxt_i_comb(i=u8_anchor_x, d=u2_out)                     u8_term_y = get_nxt_j_comb(j=u8_anchor_y, d=u2_out)                  # Raw region through a facing port, or 0 (floating).                 u8_raw = 0                 if (                     u8_term_x >= 0                     and u8_term_y >= 0                     and u8_term_x < grid_width                     and u8_term_y < grid_height                 ):                     u16_cell = fetchCell(i=u8_term_x, j=u8_term_y)                     if cell_has_port_comb(cell=u16_cell, d=get_opp_dir_comb(d=u2_out)):                         u8_raw = fetchR(i=u8_term_x, j=u8_term_y)                  # Is the terminal's region grounded?                 u1_is_ground = 0                 if u8_raw != 0:                     for u8_ground_y in range(grid_height):                         for u8_ground_x in range(grid_width):                             u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                             if is_ground_cell_comb(cell=u16_cell):                                 u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                 if u8_ground_region == u8_raw:                                     u1_is_ground = 1                  u8_node = 255                 if not u1_is_ground:                     # Row of the terminal's region; the same scan counts all                     # region rows, which a floating terminal needs.                     if u8_raw != 0 or not u1_rows_known:                         u8_next_node = 0                         for u8_scan_y in range(grid_height):                             for u8_scan_x in range(grid_width):                                 u8_region = fetchR(i=u8_scan_x, j=u8_scan_y)                                 if u8_region != 0:                                     u1_seen = 0                                     for u8_prev_y in range(u8_scan_y + 1):                                         for u8_prev_x in range(grid_width):                                             if not u1_seen and (                                                 u8_prev_y < u8_scan_y                                                 or u8_prev_x < u8_scan_x                                             ):                                                 u8_prev_region = fetchR(i=u8_prev_x, j=u8_prev_y)                                                 if u8_prev_region == u8_region:                                                     u1_seen = 1                                     if not u1_seen:                                         u1_region_is_ground = 0                                         for u8_ground_y in range(grid_height):                                             for u8_ground_x in range(grid_width):                                                 u16_cell = fetchCell(i=u8_ground_x, j=u8_ground_y)                                                 if is_ground_cell_comb(cell=u16_cell):                                                     u8_ground_region = fetchR(i=u8_ground_x, j=u8_ground_y)                                                     if u8_ground_region == u8_region:                                                         u1_region_is_ground = 1                                         # D-023: wire islands have colours, but no solver row.                                         u1_touched = 0                                         for u16_touch_idx in range(par_elem_n):                                             u8_touch_type = fetchComponentType(idx=u16_touch_idx)                                             if is_two_terminal_component_comb(t=u8_touch_type):                                                 u8_touch_ax = fetchAnchorPositionX(idx=u16_touch_idx)                                                 u8_touch_ay = fetchAnchorPositionY(idx=u16_touch_idx)                                                 u2_touch_dir = fetchComponentRotation(idx=u16_touch_idx)                                                 u2_touch_dir = rotation_to_dir_comb(rot=u2_touch_dir)                                                 for u2_touch_term in range(2):                                                     if u2_touch_term == 0:                                                         u2_touch_out = get_opp_dir_comb(d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_out)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_out)                                                     else:                                                         u2_touch_out = u2_touch_dir                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_ax, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_ay, d=u2_touch_dir)                                                         u8_touch_x = get_nxt_i_comb(i=u8_touch_x, d=u2_touch_dir)                                                         u8_touch_y = get_nxt_j_comb(j=u8_touch_y, d=u2_touch_dir)                                                     if (                                                         u8_touch_x >= 0 and u8_touch_y >= 0                                                         and u8_touch_x < grid_width and u8_touch_y < grid_height                                                     ):                                                         u16_touch_cell = fetchCell(i=u8_touch_x, j=u8_touch_y)                                                         if cell_has_port_comb(cell=u16_touch_cell, d=get_opp_dir_comb(d=u2_touch_out)):                                                             u8_touch_region = fetchR(i=u8_touch_x, j=u8_touch_y)                                                             if u8_touch_region == u8_region:                                                                 u1_touched = 1                                         if not u1_region_is_ground and u1_touched:                                             if u8_region == u8_raw:                                                 u8_node = u8_next_node                                             u8_next_node = u8_next_node + 1                         u8_region_rows = u8_next_node                         u1_rows_known = 1                     if u8_raw == 0:                         u8_node = u8_region_rows + u8_next_float                         u8_next_float = u8_next_float + 1                  if u2_term == 0:                     storeNode0(idx=u16_idx, node_i=u8_node)                 else:                     storeNode1(idx=u16_idx, node_i=u8_node)         else:             u8_node = 255             storeNode0(idx=u16_idx, node_i=u8_node)             storeNode1(idx=u16_idx, node_i=u8_node)
 
 
 

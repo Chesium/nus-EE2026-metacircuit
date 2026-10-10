@@ -232,6 +232,16 @@ class SnapshotAssembler:
         self._voltage_values: list[VoltageNode] = []
 
     def push(self, packet: Packet) -> NetlistSnapshot | VoltageSnapshot | None:
+        if isinstance(packet, ErrorPacket) and packet.code == 0x85:
+            begin = self._netlist_begin
+            self._netlist_begin = None
+            components = self._netlist_components
+            self._netlist_components = []
+            if begin is None or packet.frame != begin.frame:
+                raise PacketError("abort without matching netlist begin")
+            if packet.arg != len(components):
+                raise PacketError("abort component count mismatch")
+            return None
         if isinstance(packet, NetlistBegin):
             self._netlist_begin = packet
             self._netlist_components = []

@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-  ALL_ELEMENT_KINDS, FRONTEND_ERROR_NODE_OVERFLOW, FRONTEND_ERROR_UNSUPPORTED_KIND, FRONTEND_ERROR_UNSUPPORTED_UNIT,
-  FRONTEND_SUPPORTED_KINDS, UNIT_UNSUPPORTED,
+  ALL_ELEMENT_KINDS, FRONTEND_ERROR_UNSUPPORTED_KIND, FRONTEND_ERROR_UNSUPPORTED_UNIT,
+  FRONTEND_SUPPORTED_KINDS, UNIT_UNSUPPORTED, FRONTEND_ERROR_NODE_OVERFLOW,
   diffNetlist, extractFromCanvas, extractNetlist, protocolUnitOf, snapshotUart, type PlacedComponent,
 } from '../src/backend/netlist.ts';
 import {
@@ -126,12 +126,12 @@ describe('extraction rules', () => {
 
   it('joins a terminal only to a neighbour whose port faces the component (M3-A002)', () => {
     // R at (1,0)-(2,0); (0,0) horizontal wire faces it (region 1, row 0), (3,0)
-    // vertical wire does not (region 2, row 1, untouched), so n1 floats and
-    // gets its own row 2 after both region rows (D-019).
+    // vertical wire does not (untouched region 2), so n1 floats and
+    // gets row 1 after the single terminal-touched row (D-019/D-023).
     const r = canvas(4, 2).part(1, 0, Sprite.ResLeft).cell(0, 0, Sprite.Wire, 0).cell(3, 0, Sprite.Wire, 1).extract();
-    expect(r.netlist.elements[0]).toMatchObject({ n0: 0, n1: 2 });
-    expect(r.issues).toContainEqual({ type: 'floating-terminal', idx: 0, terminal: 1, col: 3, row: 0, node: 2 });
-    expect(r.netlist.nodeCount).toBe(3);
+    expect(r.netlist.elements[0]).toMatchObject({ n0: 0, n1: 1 });
+    expect(r.issues).toContainEqual({ type: 'floating-terminal', idx: 0, terminal: 1, col: 3, row: 0, node: 1 });
+    expect(r.netlist.nodeCount).toBe(2);
     // The as-written kernel reads the neighbour's region regardless.
     expect(canvas(4, 2).part(1, 0, Sprite.ResLeft).cell(0, 0, Sprite.Wire, 0).cell(3, 0, Sprite.Wire, 1)
       .extract({ dslCompat: true }).netlist.elements[0]).toMatchObject({ n0: 0, n1: 1 });
@@ -161,14 +161,13 @@ describe('extraction rules', () => {
   it('treats terminals off the grid as floating, without wrapping to the opposite edge', () => {
     // R at (0,1) rotation 0: n0 would be (-1,1). Column 3 holds wires facing
     // left that a wrapped index would read: (3,0) region 1 -> row 0, and
-    // (2,1)-(3,1) region 2 -> row 1, which is n1. n0 floats: row 2 (D-019).
+    // (2,1)-(3,1) region 2 -> row 0, which is n1. n0 floats: row 1 (D-019/D-023).
     const r = canvas(4, 3).part(0, 1, Sprite.ResLeft).cell(3, 0, Sprite.Wire).cell(3, 1, Sprite.Wire).cell(2, 1, Sprite.Wire).extract();
-    expect(r.netlist.elements[0]).toMatchObject({ n0: 2, n1: 1 });
-    expect(r.netlist.nodeCount).toBe(3);
+    expect(r.netlist.elements[0]).toMatchObject({ n0: 1, n1: 0 });
+    expect(r.netlist.nodeCount).toBe(2);
     expect(r.issues).toEqual([
-      { type: 'floating-terminal', idx: 0, terminal: 0, col: -1, row: 1, node: 2 },
+      { type: 'floating-terminal', idx: 0, terminal: 0, col: -1, row: 1, node: 1 },
       { type: 'no-ground' },
-      { type: 'empty-row', row: 0 },
     ]);
   });
 
@@ -206,7 +205,7 @@ describe('extraction rules', () => {
       .netlist.elements[0]).toMatchObject({ n0: 0 });
   });
 
-  it('numbers every non-ground region row-major, and sizes node_count by the rows used (M3-A004, M3-A005)', () => {
+  it('numbers only terminal-touched regions row-major (D-023), ignoring earlier and later wire islands', () => {
     // Regions: 1 isolated wire (0,0), 2 isolated junction (3,0), 3 grounded rail from
     // (5,0) down to (4,2), 4 wire (1,2) at R's n0, 5 isolated wire (0,3) after it.
     const c = canvas(6, 4).cell(0, 0, Sprite.Wire, 1).cell(3, 0, Sprite.Junction)
@@ -215,10 +214,10 @@ describe('extraction rules', () => {
       .cell(0, 3, Sprite.Wire, 1);
     const r = c.extract();
     expect(r.groundRegions).toEqual([3]);
-    expect(r.rowOfRegion).toEqual({ 1: 0, 2: 1, 4: 2, 5: 3 });
-    expect(r.netlist.elements[0]).toMatchObject({ n0: 2, n1: FF });
-    expect(r.netlist.nodeCount).toBe(3);
-    expect(r.issues).toEqual([{ type: 'empty-row', row: 0 }, { type: 'empty-row', row: 1 }]);
+    expect(r.rowOfRegion).toEqual({ 4: 0 });
+    expect(r.netlist.elements[0]).toMatchObject({ n0: 0, n1: FF });
+    expect(r.netlist.nodeCount).toBe(1);
+    expect(r.issues).toEqual([]);
   });
 
   it('orders elements by anchor address, not by store slot or partner cell (M3-A006)', () => {
@@ -250,7 +249,7 @@ describe('extraction rules', () => {
     }
   });
 
-  it('rejects more non-ground rows than the 8-bit protocol carries (M3-A011)', () => {
+  it('ignores hundreds of untouched regions when sizing the system (D-023)', () => {
     // Checkerboard of horizontal/vertical wires: no two neighbours are reciprocal,
     // so every cell is its own region; a resistor near the end lands on row > 0xFE.
     const c = canvas(GRID_W, GRID_H);
@@ -261,10 +260,19 @@ describe('extraction rules', () => {
     c.part(14, 15, Sprite.ResLeft);
     const r = c.extract();
     expect(r.regionCount).toBe(GRID_W * GRID_H - 2);
-    expect(r.netlist.elements[0]).toMatchObject({ n0: 283, n1: 286 });
-    expect(r.netlist.nodeCount).toBe(287);
-    expect(r.rejection).toMatchObject({ code: FRONTEND_ERROR_NODE_OVERFLOW, arg: 287 });
-    expect(snapshotUart(r)).toMatch(/^@ER,0000,84,011F\*[0-9A-F]{2}\r\n$/);
+    expect(r.netlist.elements[0]).toMatchObject({ n0: 0, n1: 1 });
+    expect(r.netlist.nodeCount).toBe(2);
+    expect(r.rejection).toBeNull();
+    expect(snapshotUart(r)).toMatch(/^@NB,0000,01,02\*/);
+  });
+
+  it('rejects more than FE terminal rows even after excluding wire islands', () => {
+    const c = canvas(GRID_W, GRID_H);
+    for (let row = 0; row < GRID_H; row++) for (let col = 0; col < GRID_W; col += 2) c.part(col, row, Sprite.ResLeft);
+    const r = c.extract();
+    expect(r.regionCount).toBe(0);
+    expect(r.netlist.nodeCount).toBe(288);
+    expect(r.rejection).toMatchObject({ code: FRONTEND_ERROR_NODE_OVERFLOW, arg: 288 });
   });
 
   it('extracts an empty canvas as an empty snapshot', () => {

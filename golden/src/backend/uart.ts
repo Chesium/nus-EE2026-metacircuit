@@ -210,6 +210,11 @@ export function parseUartStream(text: string): ParsedStream {
         return;
       }
       case 'ER':
+        if (rec.code === 0x85) {
+          if (!netBegin || rec.frame !== netBegin.frame) problem('abort without matching netlist begin');
+          else if (rec.arg !== netElems.length) problem('abort component count mismatch');
+          netBegin = null; netElems = [];
+        }
         out.errors.push(rec);
         return;
     }
@@ -218,4 +223,13 @@ export function parseUartStream(text: string): ParsedStream {
   if (netBegin) out.problems.push(`end of stream inside netlist ${(netBegin as { frame: number }).frame}`);
   if (voltBegin) out.problems.push(`end of stream inside voltage snapshot ${(voltBegin as { frame: number }).frame}`);
   return out;
+}
+
+/** D-024: prefix of a snapshot interrupted by an edit after its begin. */
+export function encodeAbortedNetlist(n: Netlist, completedComponents: number): string {
+  if (!Number.isInteger(completedComponents) || completedComponents < 0 || completedComponents > n.elements.length) {
+    throw new RangeError('invalid completed component count');
+  }
+  return encodeRecords(netlistRecords(n).slice(0, 1 + completedComponents))
+    + encodeError(n.frame, 0x85, completedComponents);
 }

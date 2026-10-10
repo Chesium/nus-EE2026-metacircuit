@@ -396,9 +396,9 @@ module ExtractComponentNodes_test;
 
       run_dut(2);
 
-      // Region rows 0..2 (regions 1, 2, 3); floating rows 3 and 4.
-      expect_nodes(0, 8'd3, 8'd1);
-      expect_nodes(1, 8'd2, 8'd4);
+      // D-023: region 1 is untouched; regions 2/3 get rows 0/1, floating 2/3.
+      expect_nodes(0, 8'd2, 8'd0);
+      expect_nodes(1, 8'd1, 8'd3);
       $display("run_case_non_facing_and_floating_rows passed.");
     end
   endtask
@@ -440,9 +440,9 @@ module ExtractComponentNodes_test;
 
       run_dut(2);
 
-      // Rows: 20 -> 0, 9 -> 1, 7 -> 2; floating rows 3 and 4.
-      expect_nodes(0, 8'd3, 8'd0);
-      expect_nodes(1, 8'd4, 8'd2);
+      // D-023: region 9 is untouched; rows 20 -> 0, 7 -> 1, floating 2/3.
+      expect_nodes(0, 8'd2, 8'd0);
+      expect_nodes(1, 8'd3, 8'd1);
       $display("run_case_grid_edges_and_sparse_ids passed.");
     end
   endtask

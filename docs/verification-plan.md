@@ -4,7 +4,7 @@ Living document for making MetaCircuit deterministically testable without hardwa
 Track progress here: tick TODOs, append to the log, and move questions from
 "to be made" to "made" when settled. IDs are stable; never reuse one.
 
-Last updated: 2026-10-10 (M3 prerequisites; decisions D-015 to D-022)
+Last updated: 2026-10-10 (M3 prerequisites done; decisions D-015 to D-025)
 
 ## Goal
 
@@ -95,6 +95,14 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] RTL-6 (P1) Keypad uses the cursor's frame-latched mouse on `clk_pixel`; short single-frame presses and hover/pressed styling are deterministic. Caret also toggles every ten frames, replacing its free-running pixel counter.
 - [ ] INF-4 CI: framescope unit tests + metacircuit integration test on the pinned container (Verilator 5.020); native 5.046 as a second job.
 
+### M3 follow-ups (M3)
+
+- [ ] M3-1 (P1) Implement D-023 (rows only for terminal-touched regions) in the golden extraction, the extraction kernel and the regenerated RTL.
+- [ ] M3-2 (P1) Implement D-024 (`@ER` code 85 for an aborted snapshot) in the frontend RTL and the golden UART model.
+- [ ] M3-3 (P1) M3 scenarios with `SW[5]=1` and the solver host, including the D-025 out-of-order placement and slot-reuse check, and a `verify:m3` runner comparing netlist lines, snapshot ids, replies and 7-segment/voltage probes (D-017) against the golden model.
+- [ ] M3-4 (P2) On-screen voltage readout with a golden renderer (D-017).
+- [ ] M3-5 (P2) Restore an anchor-half selection checkpoint in `m2_full_ui`/`m2_recorded`: `voltage_micro` now clicks the boot source's partner half (D-015).
+
 ## Decisions made
 
 | ID | Date | Decision | Rationale |
@@ -121,16 +129,15 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 | D-020 | 2026-10-10 | `solve_core_dc.dsl.py`'s pivot search is fixed to compute the current U column before searching it; generated RTL and the simulated solver follow. | The as-written search pivots on stale zeros and divided by zero on 34 of 259 solvable fixture circuits. |
 | D-021 | 2026-10-10 | Extraction connects a terminal only through a facing port (M3-A002) and a region is ground only if it contains a ground cell (M3-A003). The extraction kernel and generated RTL follow the golden rules. | Matches the reciprocal-port graph accepted for M2 (D-014). |
 | D-022 | 2026-10-10 | Decision order for M3 work: each decision is written here first, then implemented independently in the golden model and in the kernels/RTL, and the M3 comparison checks that both agree (D-007). | Keeps the golden model independent of the RTL. |
+| D-023 | 2026-10-10 | (Q-016) Solver rows are given only to regions touched by at least one component terminal, numbered by each region's first cell in row-major order; wire islands that no component touches get no row. Floating-terminal rows (D-019) follow them. Applies to the golden extraction, the extraction kernel and the generated RTL. | A stray wire would otherwise make every circuit singular. |
+| D-024 | 2026-10-10 | (Q-017) A snapshot aborted by an edit after `@NB` is closed with `@ER,<id>,85,<lines>` (frontend error code 85, `arg` = number of `@NC` lines already sent) instead of stopping silently; the next snapshot follows as usual. | The host sees why a snapshot is incomplete; long netlists (five or more components) can be aborted routinely. |
+| D-025 | 2026-10-10 | (Q-018) Element `idx` and `@NC` order are the anchor's row-major rank on both sides; the RTL ComponentStore must keep that order, as all dumps so far show. The first M3 scenario places parts out of order and reuses freed slots to check it; a divergence is an RTL bug under this decision. | One order fixes `@NC` order and floating-row numbers, and it is independent of slot allocation (A-011). |
 
 ## Decisions to be made
 
-Q-009 to Q-015 (M3 prerequisites) settled with the recommendations as D-015 to D-021. Open:
+Q-009 to Q-015 (M3 prerequisites) settled with the recommendations as D-015 to D-021; Q-016 to Q-018 settled as D-023 to D-025.
 
-- Q-018: element order. The golden `idx` is the anchor's row-major rank; the RTL sends ComponentStore order, which also fixes floating-row numbers (D-019). RTL dumps so far show the store kept in anchor row-major order (deletes compact, earlier anchors insert ahead), so they agree; confirm with an M3 scenario that places parts out of order and reuses freed slots before deciding.
-- Q-016: wire islands that no component touches still get a solver row (M3-A004), so a stray wire makes the system singular. Options: (A) keep; (B) number only regions touched by a component terminal. Recommendation: B, decided before the M3 scenario set.
-- Q-017: with five or more components a snapshot no longer fits in one frame; snapshots run back to back and an edit can truncate one without `@NE`. Options: (A) keep, the host discards it; (B) send `@ER` for an aborted snapshot. Recommendation: B.
-
-Add new questions here as `Q-018`, ... with options and a recommendation.
+None open. Add new questions here as `Q-019`, `Q-020`, ... with options and a recommendation.
 
 ## Reference
 

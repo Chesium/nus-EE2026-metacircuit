@@ -25,10 +25,11 @@ in `test/fixtures/kernels-as-written/` (simpyhls 57ffb08); the golden's
 `dslCompat` mode reproduces them exactly, and every golden-rule difference is
 explained by a decision (reciprocal terminals and grounds D-021, current-source
 terminals D-015, floating rows D-019). On the 400 mixed-size random circuits,
-94 agree and 306 differ. The live kernels of the simpyhls checkout must number
-regions as the golden does (passes) and, once the kernel branch implementing
-the decisions lands, agree with the golden rules exactly. Those two tests are
-expected failures until then (`test/kernelStatus.ts`).
+94 agree and 306 differ. The live kernels of the simpyhls checkout (78efdf8,
+which implements the decisions) number regions as the golden does and agree
+with the golden rules exactly on the boot circuit and on 42 + 400 random
+circuits (`test/kernelStatus.ts` gates the two random-circuit tests for older
+checkouts).
 
 ---
 
@@ -113,6 +114,19 @@ expected failures until then (`test/kernelStatus.ts`).
   store index its own result, so their order is free.
 - **Check:** compare against the RTL's NC order on scenarios where components
   were deleted and added again.
+- **Floating rows depend on this order (D-019).** The 78efdf8 extraction kernel
+  numbers floating rows in the order it visits the store, i.e. RTL
+  ComponentStore order; the golden numbers them in idx order. They agree when
+  the RTL store is in anchor row-major order. The pre-D-015 M1 RTL dumps
+  (`m1_canvas_tools`) show exactly that: placing R at (13,1) after boot put it
+  in store slot 0 ahead of the boot source, deletes compacted the store, slot
+  reuse appended R(13,7) last, and rotations (which never move the anchor)
+  kept the order. If the RTL store ever held another order (e.g. structure.md's
+  smallest-free-slot rule that the golden store uses, A-011, which diverges as
+  soon as a component is placed at an anchor earlier than an existing one, or
+  into a freed slot), the `@NC` records would come in a different idx
+  permutation and floating terminals would get the same set of rows in a
+  different assignment; node_count and region rows would not change.
 
 ### M3-A007 Floating terminals (**Settled, D-019**)
 

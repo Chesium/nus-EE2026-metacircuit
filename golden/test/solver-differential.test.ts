@@ -4,11 +4,9 @@
 // (`npm run fixtures:solver`):
 //   solver_dc_as_written.json  frozen kernel before the D-020 pivot fix; checks
 //                              the golden's { pivot: 'dsl' } option
-//   solver_dc.json             the simpyhls checkout's kernel; checks the
-//                              defaults (fixed pivot search). Until the kernel
-//                              branch lands and the fixture is regenerated it
-//                              still holds the as-written results, so those
-//                              tests are expected failures (kernelStatus.ts).
+//   solver_dc.json             the simpyhls checkout's kernel (fixed by D-020
+//                              since simpyhls 78efdf8); checks the defaults
+//                              (fixed pivot search). Gated by kernelStatus.ts.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { Netlist } from '../src/backend/types.ts';
@@ -138,8 +136,9 @@ describe('solver fixtures', () => {
     for (const f of [fx, fxAsWritten]) {
       expect(f.cases.length).toBe(f.randomCases + 39);
       expect(f.cases.filter((c) => c.dsl).length).toBeGreaterThan(250);
-      expect(f.cases.filter((c) => c.transient).length).toBeGreaterThan(30);
     }
+    expect(fx.cases.filter((c) => c.transient).length).toBeGreaterThan(30);
+    expect(fxAsWritten.cases.filter((c) => c.transient)).toEqual([]); // the transient kernel is not frozen
     expect(fx.cases.map((c) => c.netlist)).toEqual(fxAsWritten.cases.map((c) => c.netlist));
   });
 });

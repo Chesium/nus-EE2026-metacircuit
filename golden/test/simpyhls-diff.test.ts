@@ -8,9 +8,9 @@
 //    must be explained by a decision (M3-A002/D-021 reciprocal terminals,
 //    M3-A003/D-021 grounds, D-015 current-source terminals, D-019 floating rows).
 //  - the live kernels of the simpyhls checkout. Their flooding must number
-//    regions exactly as the golden does. Once the kernel branch implementing
-//    D-015/D-019/D-021 lands, their extraction must agree with the golden rules
-//    exactly; until then those tests are expected failures (kernelStatus.ts).
+//    regions exactly as the golden does, and since simpyhls 78efdf8 (D-015,
+//    D-019, D-021) their extraction must agree with the golden rules exactly
+//    (kernelStatus.ts makes those expected failures for older checkouts).
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';

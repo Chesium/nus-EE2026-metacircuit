@@ -135,13 +135,12 @@ that `npm run fixtures:solver` regenerates from the simpyhls kernels and
 `test/fixtures/solver_dc_as_written.json` from the pre-decision kernels frozen in
 `test/fixtures/kernels-as-written/`. The extraction diff runs both kernel sets too.
 
-Tests that need the D-015/D-019/D-020/D-021 kernel branch are declared as
-expected failures (`it.fails`) in `test/kernelStatus.ts` until it lands: the
-simulated solver and `solve_core_dc` (`py`, `f32`, `f32-unfused`) against
+Six tests need the D-015/D-019/D-020/D-021 kernels (simpyhls 78efdf8 or later):
+the simulated solver and `solve_core_dc` (`py`, `f32`, `f32-unfused`) against
 `solver_dc.json` with the fixed pivot search, and the live extraction kernel on
-42 and 400 random circuits. After merging the kernels, run
-`npm run fixtures:solver`, then set `KERNEL_FIX_LANDED` to true (or try first
-with `GOLDEN_KERNELS_FIXED=1 npm test`).
+42 and 400 random circuits. `test/kernelStatus.ts` gates them; with an older
+submodule run `GOLDEN_KERNELS_FIXED=0 npm test` and they become expected
+failures. After any kernel change, run `npm run fixtures:solver`.
 
 ## M1 RTL regression
 

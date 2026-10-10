@@ -30,12 +30,11 @@ same 339 netlists:
   D-020, frozen in `test/fixtures/kernels-as-written/` (simpyhls 57ffb08);
   frontend_tester is pointed at the frozen kernel for it.
 
-Each file records `kernels` and the kernel's sha256. Tests:
-`test/solver.test.ts` and `test/solver-differential.test.ts`. The comparisons
-of the defaults against `solver_dc.json` (simulated solver bit for bit, and
-`runDslDc(..., 'residual')` in the `py`, `f32`, `f32-unfused` flavours) are
-expected failures until the kernel fix lands and the fixture is regenerated
-(`test/kernelStatus.ts`).
+Each file records `kernels` and the kernel's sha256; only the live one records
+the transient kernel. Tests: `test/solver.test.ts` and
+`test/solver-differential.test.ts`. The comparisons of the defaults against
+`solver_dc.json` need the fixed kernel (simpyhls 78efdf8 or later);
+`test/kernelStatus.ts` turns them into expected failures for older checkouts.
 
 ## Value and unit table
 
@@ -97,13 +96,15 @@ Against the kernel as written (`solver_dc_as_written.json`):
   netlists, bit-identical in all three flavours (`py`, `f32` fused, `f32-unfused`).
   This includes 64 runs that raise ZeroDivisionError.
 
-Against the fixed kernel (D-020): pending. With the as-written kernel still in
-the checkout, the default `simulateUartSolver()` differs from the recorded replies
-in 47 cases and `runDslDc(..., 'residual')` from the recorded results in 87
-(`py`), 92 (`f32`) and 95 (`f32-unfused`) cases, all where the two pivot searches
-choose different rows. Agreement is expected once the fixed kernel's fixture is
-generated, provided the fix computes U(0..j-1, j) with the column loop's formula
-and primitive order (M3-S012).
+Against the fixed kernel (D-020, simpyhls 78efdf8, `solver_dc.json`):
+
+- simulated solver vs golden `simulateUartSolver()`: 339/339 replies identical:
+  262 `VB/VN/VE` bit for bit, 48 `ER 03/0001`, 29 `ER 04/0000`.
+- `solve_core_dc.dsl.py` vs golden `runDslDc(..., 'residual')`: 293 R/I/V netlists
+  bit-identical in all three flavours, including 29 ZeroDivisionError runs.
+- Against the as-written replies the fixed search changes 47 replies, and 87
+  (`py`), 92 (`f32`), 95 (`f32-unfused`) DSL results, all where the two searches
+  choose different pivot rows.
 
 Independent of the fixtures:
 

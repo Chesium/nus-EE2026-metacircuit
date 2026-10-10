@@ -154,18 +154,16 @@ module SolveCore_test;
   integer cycle_count;
   integer idx;
 
-  shortreal got_sr;
-  shortreal exp_sr;
+  real got_sr;
+  real exp_sr;
   real got_r;
   real exp_r;
   real abs_err;
   real tol;
 
   function automatic [31:0] real_to_bits(input real value);
-    shortreal value_sr;
     begin
-      value_sr = value;
-      real_to_bits = $shortrealtobits(value_sr);
+      real_to_bits = Fp32SimPkg::real_to_fp32(value);
     end
   endfunction
 
@@ -576,13 +574,13 @@ module SolveCore_test;
       input real expected_value
   );
     begin
-      got_sr = $bitstoshortreal(bits_value);
-      exp_sr = expected_value;
+      got_sr = Fp32SimPkg::fp32_to_real(bits_value);
+      exp_sr = Fp32SimPkg::fp32_to_real(Fp32SimPkg::real_to_fp32(expected_value));
       got_r = got_sr;
       exp_r = exp_sr;
       abs_err = abs_real(got_r - exp_r);
       tol = max_real(1e-4, abs_real(exp_r) * 1e-3);
-      if (abs_err > tol) begin
+      if (!(abs_err <= tol)) begin  // also fails on NaN
         $fatal(1, "%s mismatch: got=%e expected=%e abs_err=%e tol=%e",
                mem_name, got_r, exp_r, abs_err, tol);
       end

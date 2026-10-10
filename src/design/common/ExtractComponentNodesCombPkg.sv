@@ -152,4 +152,56 @@ package ExtractComponentNodesCombPkg;
     end
   endfunction
 
+  // Current source halves (IL, IR): extraction puts node0 beyond the partner
+  // half for these (D-015).
+  function automatic logic is_current_source_comb(
+      input logic [7:0] t
+  );
+    begin
+      is_current_source_comb = (t == 8'd9) || (t == 8'd10);
+    end
+  endfunction
+
+  // Whether a cell has a conducting port in flooding direction d (0 down,
+  // 1 right, 2 up, 3 left). Same port table as fetchP's decode_p_from_cell
+  // (BackendFetchers.v): {down, right, up, left}, rotated left by rotation.
+  function automatic logic [3:0] cell_ports_comb(
+      input logic [15:0] cell_data
+  );
+    logic [3:0] base;
+    begin
+      case (cell_data[6:1])
+        6'd0: base = 4'b0101;
+        6'd1: base = 4'b0110;
+        6'd2: base = 4'b0111;
+        6'd3, 6'd4: base = 4'b1111;
+        6'd15: base = 4'b0001;
+        default: base = 4'b0000;
+      endcase
+      case (cell_data[8:7])
+        2'd0: cell_ports_comb = base;
+        2'd1: cell_ports_comb = {base[2:0], base[3]};
+        2'd2: cell_ports_comb = {base[1:0], base[3:2]};
+        default: cell_ports_comb = {base[0], base[3:1]};
+      endcase
+      if (!cell_data[0]) cell_ports_comb = 4'b0000;
+    end
+  endfunction
+
+  function automatic logic cell_has_port_comb(
+      input logic [15:0] cell_data,
+      input logic [1:0] d
+  );
+    logic [3:0] p;
+    begin
+      p = cell_ports_comb(cell_data);
+      case (d)
+        2'd0: cell_has_port_comb = p[3];
+        2'd1: cell_has_port_comb = p[2];
+        2'd2: cell_has_port_comb = p[1];
+        default: cell_has_port_comb = p[0];
+      endcase
+    end
+  endfunction
+
 endpackage

@@ -99,6 +99,26 @@ class FrontendTesterTest(unittest.TestCase):
         self.assertAlmostEqual(actual[0x00], 5.0, places=3)
         self.assertAlmostEqual(actual[0x01], 2.0, places=3)
 
+    def test_simpyhls_solver_pivot_search_uses_current_u_column(self) -> None:
+        # D-020: two voltage sources in series plus a resistor. Nonsingular, but
+        # the pivot search as first written divided by an exact zero here.
+        snapshot = NetlistSnapshot(
+            frame=0x0002,
+            elem_count=3,
+            node_count=2,
+            components=(
+                make_component(0x0002, 0x00, KIND_VOLTAGE_DC, 0x01, 0x00, 0x003, 0x00),
+                make_component(0x0002, 0x01, KIND_VOLTAGE_DC, 0x00, GROUND_NODE, 0x003, 0x00),
+                make_component(0x0002, 0x02, KIND_RESISTOR, 0x01, 0x00, 0x002, 0x00),
+            ),
+        )
+
+        response = SimpyhlsDcSolver().solve_snapshot(snapshot)
+
+        self.assertEqual(response.status, 0x00)
+        actual = {item.node: bits_to_float(item.value_bits) for item in response.values}
+        self.assertEqual(actual, {0x00: 3.0, 0x01: 6.0})
+
     def test_frontend_tester_round_trips_snapshot_to_voltage_response(self) -> None:
         snapshot = NetlistSnapshot(
             frame=0x0001,

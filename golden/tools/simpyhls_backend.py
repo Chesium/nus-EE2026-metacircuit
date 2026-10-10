@@ -16,11 +16,13 @@ words and the components (in the given order, which is the element idx order).
 
 Primitive models follow the kernels' own reference harnesses:
 - flooding: notebooks/flooding.ipynb (port index 0 down, 1 right, 2 up, 3 left);
-- extraction: simpyhls/tests/test_extract_component_nodes.py (direction 0 +x,
-  1 +y, 2 -x, 3 -y, i.e. the rotation codes).
-Coordinates outside the grid read as region 0 / visited, which models the
-kernels' unsigned `u8` bounds checks (plain Python ints would otherwise wrap to
-negative list indices).
+- extraction: simpyhls/tests/test_extract_component_nodes.py, which uses the
+  hardware directions of ExtractComponentNodesCombPkg.sv (0 down, 1 right,
+  2 up, 3 left; rotation_to_dir_comb maps rotation codes onto them) and the
+  fetchP port table for cell_has_port_comb.
+Coordinates outside the grid read as region 0 / visited. Since the D-021 kernel
+fix, extract_component_nodes checks `>= 0` as well, so it never reads outside
+the grid; flooding still relies on this.
 
 By default the kernels are run through simpyhls's own DSL interpreter
 (compiler.sim_runtime.run_python), which also checks that the source is valid
@@ -119,7 +121,11 @@ def flood_primitives():
         get_nxt_j_comb, get_opp_dir_comb)}
 
 
-EXTRACT_STEP = ((1, 0), (0, 1), (-1, 0), (0, -1))  # rotation codes: +x, +y, -x, -y
+EXTRACT_STEP = ((0, 1), (1, 0), (0, -1), (-1, 0))  # hardware directions: down, right, up, left
+ROTATION_TO_DIR = (1, 0, 3, 2)  # rotation 0 (+x) -> right, 1 (+y) -> down, 2 -> left, 3 -> up
+# Port masks at rotation 0, bit 3 down, 2 right, 1 up, 0 left (BackendFetchers.v decode_p_from_cell).
+BASE_PORTS = {0: 0b0101, 1: 0b0110, 2: 0b0111, 3: 0b1111, 4: 0b1111, GROUND_SPRITE: 0b0001}
+CURRENT_SOURCE = (9, 10)
 
 
 def extract_primitives():
@@ -156,8 +162,18 @@ def extract_primitives():
     def is_ground_cell_comb(tb, cell):
         return int((cell & 1) == 1 and ((cell >> 1) & 0x3F) == GROUND_SPRITE)
 
-    def get_cell_rotation_comb(tb, cell):
-        return (cell >> 7) & 3
+    def is_current_source_comb(tb, t):
+        return int(t in CURRENT_SOURCE)
+
+    def rotation_to_dir_comb(tb, rot):
+        return ROTATION_TO_DIR[rot]
+
+    def cell_has_port_comb(tb, cell, d):
+        if not cell & 1:
+            return 0
+        base, rot = BASE_PORTS.get((cell >> 1) & 0x3F, 0), (cell >> 7) & 3
+        mask = ((base << rot) | (base >> (4 - rot))) & 15
+        return (mask >> (3 - d)) & 1
 
     def get_opp_dir_comb(tb, d):
         return (2, 3, 0, 1)[d]
@@ -171,7 +187,8 @@ def extract_primitives():
     return {f.__name__: f for f in (
         fetchComponentType, fetchAnchorPositionX, fetchAnchorPositionY, fetchComponentRotation, fetchR,
         fetchCell, storeNode0, storeNode1, is_two_terminal_component_comb, is_ground_cell_comb,
-        get_cell_rotation_comb, get_opp_dir_comb, get_nxt_i_comb, get_nxt_j_comb)}
+        is_current_source_comb, rotation_to_dir_comb, cell_has_port_comb, get_opp_dir_comb,
+        get_nxt_i_comb, get_nxt_j_comb)}
 
 
 # ---------------------------------------------------------------- runners

@@ -312,67 +312,138 @@ module ExtractComponentNodes_test;
     end
   endtask
 
-  task automatic run_case_ground_and_compaction;
+  // Cell sprites and rotations. Regions are stored by hand, numbered as
+  // flooding would (reciprocal ports), except where a case uses sparse ids.
+  localparam [5:0] SPRITE_WIRE = 6'd0;
+  localparam [5:0] SPRITE_GROUND = 6'd15;
+  localparam [3:0] TYPE_RR = 4'd6;
+  localparam [3:0] TYPE_IL = 4'd9;
+  localparam [3:0] TYPE_IR = 4'd10;
+  localparam [3:0] TYPE_VL = 4'd7;
+  localparam [3:0] TYPE_VR = 4'd8;
+  localparam [3:0] TYPE_CR = 4'd14;
+  localparam [7:0] FF = 8'hFF;
+
+  // A component's two half cells (the anchor and the partner in direction rot).
+  task automatic place_component(
+      input integer comp_idx,
+      input [3:0] left_type,
+      input [3:0] right_type,
+      input [1:0] rotation_value,
+      input [7:0] x_value,
+      input [7:0] y_value
+  );
+    reg [7:0] px;
+    reg [7:0] py;
     begin
-      reset_design();
-
-      component_store_mem[0] = make_component_store_entry(9'd0, TYPE_RL[3:0], 2'd2, 5'd2, 4'd1);
-      component_store_mem[1] = make_component_store_entry(9'd1, TYPE_CL[3:0], 2'd0, 5'd1, 4'd1);
-
-      store_region(8'd0, 8'd1, 8'd7);
-      store_region(8'd3, 8'd1, 8'd11);
-      place_cell(8'd0, 8'd2, make_cell_data(2'd1, 6'd15));
-
-      run_dut(2);
-
-      expect_nodes(0, 8'd0, 8'hFF);
-      expect_nodes(1, 8'hFF, 8'd0);
-
-      $display("run_case_ground_and_compaction passed.");
+      component_store_mem[comp_idx] =
+          make_component_store_entry(comp_idx[8:0], left_type, rotation_value, x_value[4:0], y_value[3:0]);
+      px = x_value + ((rotation_value == 2'd0) ? 8'd1 : (rotation_value == 2'd2) ? 8'hFF : 8'd0);
+      py = y_value + ((rotation_value == 2'd1) ? 8'd1 : (rotation_value == 2'd3) ? 8'hFF : 8'd0);
+      place_cell(x_value, y_value, make_cell_data(rotation_value, {2'd0, left_type}));
+      place_cell(px, py, make_cell_data(rotation_value, {2'd0, right_type}));
     end
   endtask
 
-  task automatic run_case_sparse_without_ground;
+  task automatic wire_cell(input [7:0] x_value, input [7:0] y_value, input [1:0] rotation_value,
+                           input [7:0] region_value);
+    begin
+      place_cell(x_value, y_value, make_cell_data(rotation_value, SPRITE_WIRE));
+      store_region(x_value, y_value, region_value);
+    end
+  endtask
+
+  task automatic ground_cell(input [7:0] x_value, input [7:0] y_value, input [1:0] rotation_value,
+                             input [7:0] region_value);
+    begin
+      place_cell(x_value, y_value, make_cell_data(rotation_value, SPRITE_GROUND));
+      store_region(x_value, y_value, region_value);
+    end
+  endtask
+
+  // D-021: a ground whose port faces a terminal grounds it (its own region
+  // contains the ground cell); the other end joins the facing wire.
+  task automatic run_case_ground_facing_component;
     begin
       reset_design();
+      ground_cell(8'd0, 8'd1, 2'd2, 8'd1);  // port right
+      place_component(0, TYPE_RL[3:0], TYPE_RR, 2'd0, 8'd1, 8'd1);
+      wire_cell(8'd3, 8'd1, 2'd0, 8'd2);
+      wire_cell(8'd4, 8'd1, 2'd0, 8'd2);
 
-      component_store_mem[0] = make_component_store_entry(9'd0, TYPE_RL[3:0], 2'd1, 5'd1, 4'd2);
-      component_store_mem[1] = make_component_store_entry(9'd1, TYPE_LL[3:0], 2'd0, 5'd3, 4'd3);
+      run_dut(1);
 
-      store_region(8'd1, 8'd1, 8'd9);
-      store_region(8'd1, 8'd4, 8'd25);
-      store_region(8'd2, 8'd3, 8'd25);
-      store_region(8'd5, 8'd3, 8'd44);
+      expect_nodes(0, FF, 8'd0);
+      $display("run_case_ground_facing_component passed.");
+    end
+  endtask
+
+  // D-021 / D-019 / D-015: a vertical wire running past the resistor's anchor
+  // end does not connect (floating row), and a current source's n0 is the
+  // terminal beyond its partner half.
+  task automatic run_case_non_facing_and_floating_rows;
+    begin
+      reset_design();
+      wire_cell(8'd0, 8'd0, 2'd1, 8'd1);
+      wire_cell(8'd0, 8'd1, 2'd1, 8'd1);
+      wire_cell(8'd0, 8'd2, 2'd1, 8'd1);
+      place_component(0, TYPE_RL[3:0], TYPE_RR, 2'd0, 8'd1, 8'd1);
+      wire_cell(8'd3, 8'd1, 2'd0, 8'd2);
+      wire_cell(8'd4, 8'd1, 2'd0, 8'd2);
+      place_component(1, TYPE_IL, TYPE_IR, 2'd0, 8'd2, 8'd4);
+      wire_cell(8'd4, 8'd4, 2'd0, 8'd3);
+      wire_cell(8'd5, 8'd4, 2'd0, 8'd3);
 
       run_dut(2);
 
-      expect_nodes(0, 8'd0, 8'd1);
+      // Region rows 0..2 (regions 1, 2, 3); floating rows 3 and 4.
+      expect_nodes(0, 8'd3, 8'd1);
+      expect_nodes(1, 8'd2, 8'd4);
+      $display("run_case_non_facing_and_floating_rows passed.");
+    end
+  endtask
+
+  // D-021: a ground pointing at a wire that does not point back, or at a
+  // component half, grounds nothing; it is a grounded region of its own.
+  task automatic run_case_ground_not_reciprocal;
+    begin
+      reset_design();
+      ground_cell(8'd2, 8'd0, 2'd3, 8'd1);  // port down, into a horizontal wire
+      wire_cell(8'd0, 8'd1, 2'd0, 8'd2);
+      wire_cell(8'd1, 8'd1, 2'd0, 8'd2);
+      wire_cell(8'd2, 8'd1, 2'd0, 8'd2);
+      place_component(0, TYPE_RL[3:0], TYPE_RR, 2'd0, 8'd3, 8'd1);
+      ground_cell(8'd1, 8'd3, 2'd3, 8'd3);  // port down, into the capacitor's anchor half
+      wire_cell(8'd0, 8'd4, 2'd0, 8'd4);
+      place_component(1, TYPE_CL[3:0], TYPE_CR, 2'd0, 8'd1, 8'd4);
+      wire_cell(8'd3, 8'd4, 2'd0, 8'd5);
+
+      run_dut(2);
+
+      // Region rows: 2 -> 0, 4 -> 1, 5 -> 2; the resistor's open end is row 3.
+      expect_nodes(0, 8'd0, 8'd3);
       expect_nodes(1, 8'd1, 8'd2);
-
-      $display("run_case_sparse_without_ground passed.");
+      $display("run_case_ground_not_reciprocal passed.");
     end
   endtask
 
-  task automatic run_case_multiple_ground_regions;
+  // Grid edges: x - 1 wraps to 255 and x + 1 reaches the width; neither may
+  // read a cell. Sparse raw ids are compacted in first-seen row-major order.
+  task automatic run_case_grid_edges_and_sparse_ids;
     begin
       reset_design();
-
-      component_store_mem[0] = make_component_store_entry(9'd0, TYPE_RL[3:0], 2'd2, 5'd2, 4'd1);
-      component_store_mem[1] = make_component_store_entry(9'd1, TYPE_CL[3:0], 2'd1, 5'd2, 4'd2);
-
-      store_region(8'd0, 8'd1, 8'd7);
-      store_region(8'd2, 8'd1, 8'd11);
-      store_region(8'd3, 8'd1, 8'd11);
-      store_region(8'd2, 8'd4, 8'd25);
-      place_cell(8'd0, 8'd2, make_cell_data(2'd1, 6'd15));
-      place_cell(8'd2, 8'd5, make_cell_data(2'd1, 6'd15));
+      place_component(0, TYPE_RL[3:0], TYPE_RR, 2'd0, 8'd0, 8'd0);
+      wire_cell(8'd2, 8'd0, 2'd0, 8'd20);
+      wire_cell(8'd5, 8'd0, 2'd0, 8'd9);
+      place_component(1, TYPE_VL, TYPE_VR, 2'd2, 8'd5, 8'd5);
+      wire_cell(8'd3, 8'd5, 2'd0, 8'd7);
 
       run_dut(2);
 
-      expect_nodes(0, 8'd0, 8'hFF);
-      expect_nodes(1, 8'd0, 8'hFF);
-
-      $display("run_case_multiple_ground_regions passed.");
+      // Rows: 20 -> 0, 9 -> 1, 7 -> 2; floating rows 3 and 4.
+      expect_nodes(0, 8'd3, 8'd0);
+      expect_nodes(1, 8'd4, 8'd2);
+      $display("run_case_grid_edges_and_sparse_ids passed.");
     end
   endtask
 
@@ -549,9 +620,10 @@ module ExtractComponentNodes_test;
   );
 
   initial begin
-    run_case_ground_and_compaction();
-    run_case_sparse_without_ground();
-    run_case_multiple_ground_regions();
+    run_case_ground_facing_component();
+    run_case_non_facing_and_floating_rows();
+    run_case_ground_not_reciprocal();
+    run_case_grid_edges_and_sparse_ids();
     $display("ExtractComponentNodes_test passed.");
     $finish;
   end

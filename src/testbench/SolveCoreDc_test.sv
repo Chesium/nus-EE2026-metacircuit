@@ -154,18 +154,16 @@ module SolveCoreDc_test;
   integer cycle_count;
   integer idx;
 
-  shortreal got_sr;
-  shortreal exp_sr;
+  real got_sr;
+  real exp_sr;
   real got_r;
   real exp_r;
   real abs_err;
   real tol;
 
   function automatic [31:0] real_to_bits(input real value);
-    shortreal value_sr;
     begin
-      value_sr = value;
-      real_to_bits = $shortrealtobits(value_sr);
+      real_to_bits = Fp32SimPkg::real_to_fp32(value);
     end
   endfunction
 
@@ -573,13 +571,13 @@ module SolveCoreDc_test;
       input real expected_value
   );
     begin
-      got_sr = $bitstoshortreal(bits_value);
-      exp_sr = expected_value;
+      got_sr = Fp32SimPkg::fp32_to_real(bits_value);
+      exp_sr = Fp32SimPkg::fp32_to_real(Fp32SimPkg::real_to_fp32(expected_value));
       got_r = got_sr;
       exp_r = exp_sr;
       abs_err = abs_real(got_r - exp_r);
       tol = max_real(1e-4, abs_real(exp_r) * 1e-3);
-      if (abs_err > tol) begin
+      if (!(abs_err <= tol)) begin  // also fails on NaN
         $fatal(1, "%s mismatch: got=%e expected=%e abs_err=%e tol=%e",
                mem_name, got_r, exp_r, abs_err, tol);
       end
@@ -651,10 +649,40 @@ module SolveCoreDc_test;
     end
   endtask
 
+  // D-020: nonsingular systems that the pivot search as first written (on
+  // stale zeros of the U column) answered by dividing by an exact zero.
+  task automatic run_case_pivot_needs_current_u_column;
+    begin
+      // Two voltage sources in series plus a resistor: v1 = 3 V, v2 = 6 V.
+      reset_design();
+      program_element(0, KIND_V, 2, 1, 3.0);
+      program_element(1, KIND_V, 1, 0, 3.0);
+      program_element(2, KIND_R, 2, 1, 2.0);
+      run_step(3, 2);
+      expect_x(0, 3.0);
+      expect_x(1, 6.0);
+      expect_x(2, 1.5);
+      expect_x(3, 0.0);
+
+      // A voltage source across one resistor of a grounded chain.
+      reset_design();
+      program_element(0, KIND_R, 0, 1, 2.0);
+      program_element(1, KIND_R, 1, 2, 5.0);
+      program_element(2, KIND_V, 2, 1, 2.0);
+      run_step(3, 2);
+      expect_x(0, 0.0);
+      expect_x(1, 2.0);
+      expect_x(2, 0.4);
+
+      $display("run_case_pivot_needs_current_u_column passed.");
+    end
+  endtask
+
   initial begin
     run_case_voltage_divider();
     run_case_resistor_voltage_source_network();
     run_case_current_source_network();
+    run_case_pivot_needs_current_u_column();
     $display("SolveCoreDc_test passed.");
     $finish;
   end

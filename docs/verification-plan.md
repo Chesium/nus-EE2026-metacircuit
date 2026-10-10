@@ -36,7 +36,7 @@ the same observables for comparison.
 | M0 | Harness bring-up: framescope runs metacircuit on local Verilator; VGA timing correct | done |
 | M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | done: human accepted; 267 frames / 25 checkpoints pass on native and Docker, including saved web recording |
 | M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | done: human accepted; 3 scenarios (full UI, node-colour edits, web recording) pass state, UI probes, node-colour RAM and every pixel on native and Docker |
-| M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | in progress: FS-7, RTL-4, RTL-5, GM-7, GM-8 done; D-015..D-022 being implemented |
+| M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | prerequisites done: FS-6, FS-7, RTL-4, RTL-5, GM-7, GM-8, and D-015..D-021 implemented in the golden model, kernels and RTL; M3 scenarios and runner not started |
 | M4 | Lockstep sessions, coverage, agent interface (MCP) | not started |
 
 M1 needs FS-1..FS-3, RTL-1..RTL-3, GM-1..GM-3 and SC-1..SC-2. It does not need the renderer.
@@ -52,7 +52,7 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 - [x] FS-3 (P0) Memory dumps: write CellStore / ComponentStore contents at the end of chosen frames (JSON or hex) for state-level comparison.
 - [x] FS-4 (P0) `framescope compare`: frames vs reference PNGs with region masks; diff PNG, per-region pixel counts, bounding boxes. Already listed as planned in framescope's `docs/architecture.md`.
 - [x] FS-5 (P0) Batch runner: many scenarios against one build, parallel processes, one JSON summary.
-- [ ] FS-6 (P1) Speed: checkpoint after boot (Verilator `--savable`), restore per scenario; option to skip PNG encoding; try `--threads`. Baseline: ~1.1 s per frame, so a 300-frame scenario is ~5.5 min.
+- [x] FS-6 (P1) Speed: checkpoint after boot (Verilator `--savable`), restore per scenario; option to skip PNG encoding; try `--threads`. Baseline: ~1.1 s per frame, so a 300-frame scenario is ~5.5 min. Done (framescope `m3-speed`): Verilator compiled with `-Os` by default; `-O2` is now the default (~0.72-0.85 s/frame, CRC-identical); `--checkpoint N` boot checkpoints with `--savable` (~3-4 s saved per run); `--profile`. Threads were slower.
 - [x] FS-7 (P1) UART monitor (decode `RsTx` lines into the report) and RX driver (scripted lines, or a host process such as `src/uart_link`'s simulated solver). framescope branch `m3-uart`: `protocol = "uart"` monitor, `[[uart]]` stimulus, `--host LINK=CMD` lockstep host with deterministic reply timing.
 - [ ] FS-8 (P1) Seeded X-initialisation (`+verilator+rand+reset`) to expose reset bugs that `--x-initial fast` hides.
 - [ ] FS-9 (P1) Long-lived session over stdio: step frames, poke inputs, read probes; lockstep with the golden model, stop at first divergence.
@@ -126,6 +126,7 @@ Priority: P0 blocks M1, P1 is needed by M2/M3, P2 is later.
 
 Q-009 to Q-015 (M3 prerequisites) settled with the recommendations as D-015 to D-021. Open:
 
+- Q-018: element order. The golden `idx` is the anchor's row-major rank; the RTL sends ComponentStore order, which also fixes floating-row numbers (D-019). RTL dumps so far show the store kept in anchor row-major order (deletes compact, earlier anchors insert ahead), so they agree; confirm with an M3 scenario that places parts out of order and reuses freed slots before deciding.
 - Q-016: wire islands that no component touches still get a solver row (M3-A004), so a stray wire makes the system singular. Options: (A) keep; (B) number only regions touched by a component terminal. Recommendation: B, decided before the M3 scenario set.
 - Q-017: with five or more components a snapshot no longer fits in one frame; snapshots run back to back and an edit can truncate one without `@NE`. Options: (A) keep, the host discards it; (B) send `@ER` for an aborted snapshot. Recommendation: B.
 
@@ -170,6 +171,7 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 - 2026-10-09: Asset provenance fix: `extract_assets.py` no longer records an `rtl_commit` field. It was always one commit behind when assets and RTL changes are committed together, which made `--check` and the byte-identical test fail after commit `9322a76`. Per-file sha256 pins the sources. Asset bitmap/colour data unchanged.
 - 2026-10-09: M2 achieved. 130 golden unit tests, 5 Playwright tests, 20 asset tests, 3 RTL benches and 70 native framescope tests pass; typecheck and build pass. Evidence: [`m2-verification.json`](m2-verification.json).
 - 2026-10-10: M3 prerequisites with five parallel agents. framescope FS-7 (`m3-uart`): UART monitor, scripted RX and lockstep host; 93 tests pass on native and Docker. Golden extraction/UART codec (`9709b47`, 161 tests) and DC solver (`fd599c0`, 193 tests, bit-exact against the simulated solver on 339 netlists). RTL-4 (`5312d7c`): flooding re-runs after edits with `SW[5]`, full-loop UART bench; M1 25/25 and M2 22/22 + 9/9 still pass. Boot netlist matches the golden byte for byte apart from the frame id. Findings settled as D-015..D-021: source polarity (boot read -10 V), stale replies accepted, voltage only on the 7-segment display, C/L handling, floating terminals grounded, kernel pivot bug, extraction rules vs simpyhls.
+- 2026-10-10: D-015..D-021 implemented independently on both sides. Frontend RTL (`59ca445`): content-based snapshot ids, stale replies dropped and counted, boot source flipped (cells 39/40 = `0x0111`/`0x010F`, ComponentStore entry 0 = `0x0003C02044`). Kernels (`06ce3cf`, simpyhls `78efdf8` on local branch `m3-kernel-fixes`, not pushed): pivot fix in four solver kernels, facing-port terminals, ground by containment, floating-terminal rows, current-source orientation; solver RTL regenerated by `src/design/solver/regenerate_simpyhls.py` (it reproduces the old SV), and Verilator stand-ins for the floating-point IP let all five solver benches run. Golden (`7369a63`, `da6a5ff`): same decisions, independently derived boot words identical to the RTL's; bit-exact against the fixed simulated solver on 339 netlists and the fixed extraction kernel on 442 canvases. framescope `m3` (FS-6 + FS-7 merged, `m1-harness` fast-forwarded to it): 112 tests pass on native and Docker; checkpoints work with UART links. Regression on native 5.046 with the new boot circuit: M1 25/25, 25/25 (recorded), 11/11 (latency); M2 22/22, 9/9, 22/22 (recorded), 6/6 (boot), zero differing pixels; 207 golden unit tests, 5 Playwright tests, 5 RTL benches, 5 solver benches pass.
 
 ## M1 acceptance and regression
 

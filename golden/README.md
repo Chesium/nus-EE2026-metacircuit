@@ -88,15 +88,22 @@ npm run golden -- uart-decode capture.txt -o capture.json
 `netlist` writes `<NN>_<label>.netlist.json` (netlist, raw regions, ground
 regions, row map, per-element terminals, issues, rejection),
 `<NN>_<label>.netlist.uart` (the exact `@NB/@NC/@NE` or `@ER` bytes, CRLF) and
-`netlists.json`. Extraction rules and open choices are in
+`netlists.json`. The netlist's `frame` field is the D-016 snapshot id (`0001`
+after boot, plus one per frame whose canvas content changed; `snapshotId`,
+`txFrame` in the JSON, alignment `NETLIST_SNAPSHOT_STATE_LAG_FRAMES` in
+`src/backend/snapshot.ts`), so it can be compared with the RTL's. Extraction
+rules (D-015 source terminals, D-018 C/L rejected with `@ER` 81, D-019 floating
+rows, D-021 facing ports) and open choices are in
 [`M3_ASSUMPTIONS.md`](M3_ASSUMPTIONS.md).
 
 The DC solver (`src/backend/solve.ts`) turns a `Netlist` into a `VoltageSnapshot`.
 `solveDc` is the spec solve: float32, wire unit codes, R/I/V/C/L, and a structural
 singularity check. `simulateUartSolver` predicts `src/uart_link`'s simulated solver
-(D-012) bit for bit, including its `ER` replies. Unit table, stamping conventions,
-numeric policy, differential results and open choices (including source
-polarity, Q-009) are in [`M3_SOLVER_ASSUMPTIONS.md`](M3_SOLVER_ASSUMPTIONS.md).
+(D-012) bit for bit, including its `ER` replies, with the fixed pivot search by
+default (D-020; `{ pivot: 'dsl' }` for the kernel as written). Unit table,
+stamping conventions, numeric policy, differential results and open choices are
+in [`M3_SOLVER_ASSUMPTIONS.md`](M3_SOLVER_ASSUMPTIONS.md). The boot circuit's
+netlist is `V n0=00 n1=FF` plus two resistors; node 0 solves to +10 V (D-015).
 
 `run` writes, per checkpoint, `<NN>_<label>.ram.json` (all memories),
 `dumps/<memory>/frame_NNNN.json` (one memory per file, the same layout as
@@ -122,8 +129,19 @@ byte against `src/uart_link/protocol.py` (`tools/uart_protocol_ref.py`), and
 Python or simpyhls these tests are skipped.
 
 The solver tests do not need Python. They compare against committed fixtures
-(`test/fixtures/solver_dc.json`) that `npm run fixtures:solver` regenerates from the
-simpyhls kernels and `frontend_tester.py`; append `-- --check` to verify them.
+that `npm run fixtures:solver` regenerates from the simpyhls kernels and
+`frontend_tester.py` (append `-- --check` to verify them):
+`test/fixtures/solver_dc.json` from the checkout's kernels and
+`test/fixtures/solver_dc_as_written.json` from the pre-decision kernels frozen in
+`test/fixtures/kernels-as-written/`. The extraction diff runs both kernel sets too.
+
+Tests that need the D-015/D-019/D-020/D-021 kernel branch are declared as
+expected failures (`it.fails`) in `test/kernelStatus.ts` until it lands: the
+simulated solver and `solve_core_dc` (`py`, `f32`, `f32-unfused`) against
+`solver_dc.json` with the fixed pivot search, and the live extraction kernel on
+42 and 400 random circuits. After merging the kernels, run
+`npm run fixtures:solver`, then set `KERNEL_FIX_LANDED` to true (or try first
+with `GOLDEN_KERNELS_FIXED=1 npm test`).
 
 ## M1 RTL regression
 

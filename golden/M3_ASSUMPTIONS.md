@@ -2,8 +2,9 @@
 
 These extend the M1 and M2 assumptions. They cover component node extraction
 (GM-7, extraction half: `src/backend/netlist.ts`) and the uart_link netlist
-export and parser (GM-8: `src/backend/uart.ts`). None of them has been
-validated by a human yet.
+export and parser (GM-8: `src/backend/uart.ts`). Items marked **Settled
+(D-0xx)** follow a decision in `docs/verification-plan.md`; the others have not
+been validated by a human yet.
 
 Behaviour sources (D-007): `src/uart_link/README.md` and `protocol.py` (wire
 format), `structure.md` (pipeline: flooding, then node extraction, then
@@ -19,9 +20,15 @@ under "RTL interface facts" at the end. Behaviour was not taken from it, but the
 reading exposed some of it; that is listed there too.
 
 The differential test against the simpyhls kernels (`test/simpyhls-diff.test.ts`)
-reproduces the kernels exactly with the golden's `dslCompat` mode. With the
-golden rules, the remaining differences come from M3-A002 and M3-A003 only. On
-the 400 mixed-size random circuits in the test, 198 agree and 202 differ.
+runs two kernel sets. The kernels as written before D-015/D-019/D-021 are frozen
+in `test/fixtures/kernels-as-written/` (simpyhls 57ffb08); the golden's
+`dslCompat` mode reproduces them exactly, and every golden-rule difference is
+explained by a decision (reciprocal terminals and grounds D-021, current-source
+terminals D-015, floating rows D-019). On the 400 mixed-size random circuits,
+94 agree and 306 differ. The live kernels of the simpyhls checkout must number
+regions as the golden does (passes) and, once the kernel branch implementing
+the decisions lands, agree with the golden rules exactly. Those two tests are
+expected failures until then (`test/kernelStatus.ts`).
 
 ---
 
@@ -35,12 +42,11 @@ the 400 mixed-size random circuits in the test, 198 agree and 202 differ.
   "true two-terminal components" and finds grounds in the cell grid.
 - **Check:** nothing.
 
-### M3-A002 A terminal connects only through a facing port
+### M3-A002 A terminal connects only through a facing port (**Settled, D-021**)
 
-- **Chosen:** terminal 0 is the cell beyond the anchor (left) half, and
-  terminal 1 is the cell beyond the partner half. A terminal joins the region of
-  that cell only if the cell has a port facing the component. Otherwise the
-  terminal is floating (M3-A007).
+- **Chosen:** a terminal joins the region of the cell beyond it only if that
+  cell has a port facing the component. Otherwise the terminal is floating
+  (M3-A007). Which cell is n0 and which n1 is M3-A017.
 - **Why:** the convention diagram draws every wire that ends at a resistor with
   a port pointing into the resistor. M2's accepted graph (D-014) needs
   reciprocal ports everywhere else, and a component end is drawn as a stub
@@ -48,10 +54,9 @@ the 400 mixed-size random circuits in the test, 198 agree and 202 differ.
 - **Differs from simpyhls:** `extract_component_nodes` reads `fetchR` of the
   neighbouring cell without checking its ports. A vertical wire passing the end
   of a horizontal resistor counts as connected there.
-- **Check:** draw a resistor with a vertical wire just beyond one end. Should that
-  end be connected?
+- **Decision:** D-021: the extraction kernel and generated RTL follow this rule.
 
-### M3-A003 Grounded regions
+### M3-A003 Grounded regions (**Settled, D-021**)
 
 - **Chosen:** a region is grounded when it contains an enabled ground cell. A
   ground cell joins a region only through its single reciprocal port (M2 graph).
@@ -64,13 +69,13 @@ the 400 mixed-size random circuits in the test, 198 agree and 202 differ.
   ground's port points at, whether or not that cell's port points back. If that
   cell is a component half (region 0), nothing is grounded, and the ground cell's
   own region becomes an ordinary row.
-- **Check:** place a ground that points at a wire not facing it, or at a resistor
-  end. Is that node ground?
+- **Decision:** D-021: the extraction kernel and generated RTL follow this rule.
 
-### M3-A004 Solver row numbering
+### M3-A004 Solver row numbering (open: Q-016)
 
 - **Chosen:** every non-grounded raw region gets a row, in order of its first
-  cell in row-major order (row 0, 1, ...). This includes regions that no
+  cell in row-major order (row 0, 1, ...). Floating terminals get rows after all
+  of these (M3-A007, D-019). This includes regions that no
   component touches, such as a lone wire. Raw regions themselves are numbered
   row-major, so they match `flooding_core` exactly. That is checked on every
   random circuit.
@@ -82,13 +87,15 @@ the 400 mixed-size random circuits in the test, 198 agree and 202 differ.
   `empty-row` issue, M3-A012). Example: `m2_node_colours` checkpoint
   `horizontal_wire_unjoined`. A possible alternative is to number only the
   regions that element terminals touch.
-- **Check:** decide whether wire islands may take solver rows.
+- **Check:** Q-016 (keep, or number only regions touched by a terminal) is still
+  open in the plan.
 
 ### M3-A005 `node_count`
 
 - **Chosen:** `node_count` is the highest row used by any element terminal plus
   one, or 0 if no terminal uses a row. Unused rows after that are not sent. Empty
-  rows before it are kept (M3-A004).
+  rows before it are kept (M3-A004). Floating-terminal rows count (D-019), so
+  with any floating terminal `node_count` = region rows + floating terminals.
 - **Why:** the README says "number of non-ground solver rows". With M3-A004's
   numbering, that is the smallest system that holds every terminal. The RTL
   agrees (see RTL interface facts).
@@ -107,17 +114,18 @@ the 400 mixed-size random circuits in the test, 198 agree and 202 differ.
 - **Check:** compare against the RTL's NC order on scenarios where components
   were deleted and added again.
 
-### M3-A007 Floating terminals
+### M3-A007 Floating terminals (**Settled, D-019**)
 
 - **Chosen:** a terminal with no connection (empty cell, a cell not facing the
-  component, off the grid, or another component's half) is sent as `FF`
-  (ground). The element is kept. A `floating-terminal` issue is reported.
-- **Why:** `extract_component_nodes` leaves `u8_node0/1 = 255` when the raw
-  region is 0.
-- **Concern:** this is electrically wrong. A resistor with one end open becomes
-  a load to ground, and a source with one end open drives ground. A possible
-  alternative is a new row per floating terminal, or dropping the element.
-- **Check:** human decision. This is the most consequential M3 choice.
+  component, off the grid, or another component's half) gets its own solver
+  row. These rows are numbered after all region rows (M3-A004), in element
+  `idx` order, n0 before n1 (n0/n1 as in M3-A017). The element is kept. A
+  `floating-terminal` issue is reported with the row (`node`).
+- **Why:** D-019. An open resistor end then carries no current, and a dangling
+  current source makes the system singular, which the solver reports (status
+  04 floating node in the golden spec solve). The as-written kernel sent `FF`
+  (ground), which made a resistor with one open end a load to ground; the
+  `dslCompat` mode keeps that behaviour for the frozen kernels.
 
 ### M3-A008 Unit codes on the wire
 
@@ -144,17 +152,16 @@ the 400 mixed-size random circuits in the test, 198 agree and 202 differ.
   silently wrong.
 - **Check:** confirm, or extend the protocol with a pico code.
 
-### M3-A010 Capacitors and inductors are sent
+### M3-A010 Capacitors and inductors are not sent (**Settled, D-018**)
 
-- **Chosen:** C and L elements are sent with kinds `04`/`05`, as the protocol
-  allows. The host solver rejects them, as documented in README "Notes". The
-  extraction option `supportedKinds` reproduces a frontend that rejects them
-  itself (`@ER,<frame>,81,<idx>`). It is off by default.
-- **Why:** the spec puts the rejection on the solver side.
-- **Known difference:** the RTL rejects them on the frontend (ER 81; see RTL
-  interface facts). M3 scenarios with C or L will differ until a human picks a
-  side.
-- **Check:** human decision.
+- **Chosen:** a snapshot containing a capacitor or inductor is rejected by the
+  frontend: it sends `@ER,<frame>,81,<idx>` for the first such element in idx
+  order (`FRONTEND_SUPPORTED_KINDS` = R/I/V, the default of the extraction
+  option `supportedKinds`). The netlist is still extracted, with kinds `04`/`05`,
+  and an `unsupported-kind` issue. `supportedKinds: ALL_ELEMENT_KINDS` sends C
+  and L instead, for the golden C/L DC model (M3-S008), which stays available.
+- **Why:** D-018: both the RTL frontend and the simulated solver reject C/L
+  today.
 
 ### M3-A011 More rows than the protocol can carry
 
@@ -178,15 +185,26 @@ the 400 mixed-size random circuits in the test, 198 agree and 202 differ.
 - **Check:** see what the solver replies for `m2_node_colours` checkpoints
   `ground_removed` and `rails_shorted`.
 
-### M3-A013 The `frame` field and when snapshots are sent
+### M3-A013 The `frame` field is the snapshot id (**Settled, D-016**)
 
-- **Chosen:** the golden sets `frame` to the golden frame index of the state
-  (A-001) modulo 2^16. The CLI uses each checkpoint's frame. The RTL instead
-  counts its snapshots (see RTL interface facts), so comparisons should ignore
-  `frame` (`diffNetlist(..., { ignoreFrame: true })`) and compare the newest
-  complete snapshot captured after the checkpoint's state has settled.
-- **Why:** the README only requires that `frame` is echoed.
-- **Check:** M3 runner design (FS-7).
+- **Chosen:** one snapshot per frame. Its `frame` field is a snapshot id
+  (`src/backend/snapshot.ts`): `0001` for the first snapshot after boot, plus one
+  (16 bit, wrapping) for every frame whose netlist-relevant canvas content
+  differs from the previous snapshot's. That content is every cell's type,
+  rotation and enable bits (word bits [8:0], not the flow/metadata bits) and the
+  set of components with kind, anchor position, rotation, value (BCD) and unit.
+  Store slots and literal keypad text (a `.`, a fourth digit, a DEL that keeps
+  the BCD) do not count, nor do rejected edits or rewrites of identical content.
+- **Alignment:** `NETLIST_SNAPSHOT_STATE_LAG_FRAMES = 0`: the snapshot
+  transmitted during frame k describes golden state k. An input changed in
+  frame N's back porch is in golden state N+1 (RTL-3, `inputLatencyFrames = 1`),
+  and RTL-4 measured that edit in the netlist TX during frame N+1.
+- **Use:** `golden netlist` writes the id as the netlist's `frame` (and in the
+  `.uart` text), plus `snapshotId` and `txFrame` in the JSON and the index, so M3
+  compares the `frame` field too (`diffNetlist` without `ignoreFrame`).
+  `extractNetlist(state)` alone, without the frame history, still defaults
+  `frame` to the state's frame index.
+- **Not modelled:** snapshots that do not fit in one frame (Q-017).
 
 ### M3-A014 Values are passed through
 
@@ -224,6 +242,22 @@ the 400 mixed-size random circuits in the test, 198 agree and 202 differ.
   kernel, but simpyhls's tests do not cover components on the grid edge.
 - **Check:** nothing.
 
+### M3-A017 Terminal order of sources (**Settled, D-015**)
+
+- **Chosen:** n0 is the terminal beyond the anchor half and n1 the terminal
+  beyond the partner half, except for a current source: its n0 is the arrow's
+  tail, beyond the partner half, and n1 is beyond the anchor half. The solver
+  convention is unchanged (V: `v(n0) - v(n1) = V`, n0 is "+"; I flows n0 -> n1
+  through the source), so a voltage source's "+" half and a current source's
+  arrow mean what they show.
+- **Sprites checked** (`assets/canvas.json`, rotation 0): VL (anchor) draws the
+  "+" and VR the "|"; IL (anchor) holds an arrowhead whose tip points left,
+  towards the anchor's outer edge, and IR (partner) the shaft. So the arrow
+  points towards the anchor half and its tail is beyond the partner half, as
+  D-015 states.
+- **Boot circuit:** turned 180 degrees by D-015 (anchor (4,2) rotation 2), so its
+  netlist is `V n0=00 n1=FF` and node 0 is +10 V (`bootCircuit.ts`).
+
 ## RTL interface facts (consulted 2026-10-10)
 
 Read only to settle fields the spec leaves open: the port list of
@@ -243,10 +277,11 @@ and the netlist header sequencing (roughly lines 700-760, 1292-1295, 2370-2560).
 Behaviour seen while reading these (not adopted, recorded for comparison):
 
 - **RX-1** The RTL frontend accepts only kinds 01..03 and sends ER 81 for C or L
-  (differs from M3-A010).
+  (now agrees with M3-A010, D-018).
 - **RX-2** The RTL's `node_count` is the highest terminal node index + 1, or 0
   (agrees with M3-A005, which was derived independently).
 - **RX-3** `elem_count` is the RTL component-store count. NC `idx` is the store
-  index (order unknown; see M3-A006 and X-3 in INTERFACE_FACTS.md). `frame` is a
-  snapshot counter that increments per snapshot. A snapshot starts each frame
-  once flooding and colours have settled (M3-A013).
+  index (order unknown; see M3-A006 and X-3 in INTERFACE_FACTS.md). `frame` was
+  a snapshot counter that incremented per snapshot; D-016 changes it to the
+  content-change id of M3-A013. A snapshot starts each frame once flooding and
+  colours have settled.

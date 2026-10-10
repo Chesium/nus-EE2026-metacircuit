@@ -97,24 +97,25 @@ describe('DC stamping (solve_core_dc.dsl.py layout)', () => {
 });
 
 describe('boot circuit', () => {
-  it('extracts and solves to -10 V on the right rail (V terminal n0 is the grounded rail)', () => {
+  it('extracts and solves to +10 V on the right rail (D-015: the + half faces it, so V n0 is the rail)', () => {
     const { netlist } = extractNetlist(initialState());
-    expect(netlist.elements.map((e) => [e.kind, e.n0, e.n1])).toEqual([[V, FF, 0], [R, FF, 0], [R, FF, 0]]);
+    expect(netlist.elements.map((e) => [e.kind, e.n0, e.n1])).toEqual([[V, 0, FF], [R, FF, 0], [R, FF, 0]]);
     const spec = solveDc(netlist);
     expect(spec.status).toBe(STATUS_OK);
-    expect(Array.from(spec.voltages)).toEqual([-10]);
+    expect(Array.from(spec.voltages)).toEqual([10]);
     expect(spec.x![1]).toBeCloseTo(0.2, 6); // aux current
-    const sim = simulateUartSolver(netlist);
-    expect(Array.from(sim.voltages, bits32)).toEqual(['C1200000']);
+    for (const pivot of ['residual', 'dsl'] as const) {
+      expect(Array.from(simulateUartSolver(netlist, { pivot }).voltages, bits32)).toEqual(['41200000']);
+    }
     for (const arith of ['py', 'f64', 'f32', 'f32-unfused'] as const) {
-      expect(Array.from(solveDc(netlist, { arith }).voltages)).toEqual([-10]);
+      expect(Array.from(solveDc(netlist, { arith }).voltages)).toEqual([10]);
     }
   });
 
-  it('the Q-009 source convention is one switch: n1-positive V sources give +10 V', () => {
+  it('the source convention stays the solver one (D-015) and is one switch: n1-positive V sources give -10 V', () => {
     const { netlist } = extractNetlist(initialState());
     expect(DSL_SOURCE_CONVENTION).toEqual({ voltagePositive: 'n0', currentInto: 'n1' });
-    expect(Array.from(solveDc(netlist, { sources: { voltagePositive: 'n1', currentInto: 'n1' } }).voltages)).toEqual([10]);
+    expect(Array.from(solveDc(netlist, { sources: { voltagePositive: 'n1', currentInto: 'n1' } }).voltages)).toEqual([-10]);
     const i = net(1, el(0, I, FF, 0, 0x002, 1), el(1, R, 0, FF, 0x001, 4));
     expect(solveDc(i, { sources: { voltagePositive: 'n0', currentInto: 'n0' } }).voltages[0]).toBeCloseTo(-2, 6);
   });
@@ -161,6 +162,7 @@ describe('status codes', () => {
     expect(simulateUartSolver(net(1, el(1, R, 0, FF, 1)))).toMatchObject({ status: 3, reason: 'element-index' });
     expect(simulateUartSolver(net(0x21))).toMatchObject({ status: 3, reason: 'node-count' });
     expect(simulateUartSolver(net(2, el(0, R, 0, 1, 0x100)))).toMatchObject({ status: 4, errorArg: 0, reason: 'division-by-zero' });
+    expect(simulateUartSolver(net(2, el(0, R, 0, 1, 0x100)), { pivot: 'dsl' })).toMatchObject({ status: 4, reason: 'division-by-zero' });
     expect(simulateUartSolver(net(1, el(0, V, 0, FF, 5), el(1, R, 0, FF, 0)))).toMatchObject({ status: 4, reason: 'division-by-zero' });
   });
 });
@@ -195,13 +197,16 @@ describe('solve_core_dc.dsl.py pivot search (M3-S012)', () => {
 
   it('as written it pivots on |A(i,j)| and divides by an exact zero pivot', () => {
     expect(solveDc(circuit, { pivot: 'dsl', arith: 'f64' }).reason).toBe('non-finite'); // passes the structural check
-    expect(simulateUartSolver(circuit)).toMatchObject({ status: STATUS_SOLVE_ERROR, reason: 'division-by-zero' });
+    expect(simulateUartSolver(circuit, { pivot: 'dsl' })).toMatchObject({ status: STATUS_SOLVE_ERROR, reason: 'division-by-zero' });
     expect(solveDc(circuit, { pivot: 'dsl' })).toMatchObject({ status: STATUS_SOLVE_ERROR, reason: 'non-finite' });
   });
 
-  it('with U(0..j-1, j) computed before the search it solves the circuit', () => {
+  it('with U(0..j-1, j) computed before the search it solves the circuit (the D-020 fix, simulateUartSolver default)', () => {
     const r = solveDc(circuit);
     expect(r.status).toBe(STATUS_OK);
+    const sim = simulateUartSolver(circuit);
+    expect(sim.status).toBe(STATUS_OK);
+    Array.from(sim.voltages).forEach((v, i) => expect(v).toBeCloseTo(r.voltages[i]!, -1));
     const ref = solveReference64(circuit).voltages!;
     Array.from(r.voltages).forEach((v, i) => expect(v).toBeCloseTo(ref[i]!, 2));
     expect(r.voltages[0]).toBeCloseTo(-232000, -1);

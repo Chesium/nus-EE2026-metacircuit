@@ -5,7 +5,10 @@
 //                               the kernel documents, structural singularity check)
 //   simulateUartSolver(netlist) bit-exact prediction of src/uart_link's simulated
 //                               solver (frontend_tester.SimpyhlsDcSolver, D-012),
-//                               including the ER replies it sends instead
+//                               including the ER replies it sends instead; it
+//                               runs solve_core_dc with the fixed pivot search
+//                               (D-020) unless { pivot: 'dsl' } asks for the
+//                               kernel as written before the fix
 //   solveReference64(netlist)   independent textbook float64 Gaussian elimination,
 //                               for tolerance sanity checks only
 //
@@ -65,15 +68,17 @@ export interface SolveOptions {
   structural?: boolean;
   /** LU pivot search (default 'residual'; 'dsl' is the kernel as written, M3-S012). */
   pivot?: PivotSearch;
-  /** How V/I terminals are read (default DSL_SOURCE_CONVENTION; open question Q-009, M3-S005). */
+  /** How V/I terminals are read (default DSL_SOURCE_CONVENTION, the solver convention D-015 keeps; M3-S005). */
   sources?: SourceConvention;
 }
 
 /**
- * Source polarity, the single switch for Q-009. The DSL kernels, the notebook
- * and solver_tester.py all use: V raises n0 above n1 (v(n0) - v(n1) = V), and
- * I flows n0 -> n1 through the source (it leaves the source into n1). A
- * non-default convention swaps n0/n1 of that kind before stamping.
+ * Source polarity (D-015, M3-S005). The DSL kernels, the notebook and
+ * solver_tester.py all use: V raises n0 above n1 (v(n0) - v(n1) = V), and I
+ * flows n0 -> n1 through the source (it leaves the source into n1). D-015 keeps
+ * this convention and puts the sprite's marks on the terminals in extraction
+ * instead (V: n0 = "+", I: n0 = the arrow's tail). A non-default convention
+ * swaps n0/n1 of that kind before stamping.
  */
 export interface SourceConvention {
   voltagePositive: 'n0' | 'n1';
@@ -226,15 +231,22 @@ export function solveDc(netlist: Netlist, opts: SolveOptions = {}): SolveResult 
 
 // ------------------------------------------------------------------ simulated solver
 
+export interface UartSolverOptions {
+  /** solve_core_dc's pivot search: 'residual' (default) is the kernel after the
+   * D-020 fix, 'dsl' the kernel as written before it (M3-S012). */
+  pivot?: PivotSearch;
+}
+
 /**
  * Predict frontend_tester.SimpyhlsDcSolver's reply (the D-012 simulated
  * solver): its input checks (ER 03/0001), the wire unit table, R/I/V
- * only, solve_core_dc as written (pivot 'dsl') in Python float64
- * (ZeroDivisionError and float32 pack
- * overflow -> ER 04/0000), no structural check. Voltages are the float64
- * results rounded to float32, as struct.pack('>f') does.
+ * only, solve_core_dc (fixed pivot search by default, D-020) in Python
+ * float64 (ZeroDivisionError and float32 pack overflow -> ER 04/0000), no
+ * structural check. Voltages are the float64 results rounded to float32, as
+ * struct.pack('>f') does.
  */
-export function simulateUartSolver(netlist: Netlist): SolveResult {
+export function simulateUartSolver(netlist: Netlist, opts: UartSolverOptions = {}): SolveResult {
+  const { pivot = 'residual' } = opts;
   const { frame, nodeCount } = netlist;
   if (nodeCount > UART_SIM_MAX_NODE_COUNT) return fail(frame, STATUS_BAD_FIELD, 'node-count');
   const elements: DcElement[] = [];
@@ -254,7 +266,7 @@ export function simulateUartSolver(netlist: Netlist): SolveResult {
   }
   let x: number[];
   try {
-    x = runDslDc(nodeCount, elements, 'py', 'dsl');
+    x = runDslDc(nodeCount, elements, 'py', pivot);
   } catch (err) {
     if (err instanceof DivisionByZero) return fail(frame, STATUS_SOLVE_ERROR, 'division-by-zero');
     throw err;

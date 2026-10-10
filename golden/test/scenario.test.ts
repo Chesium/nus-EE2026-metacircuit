@@ -165,7 +165,7 @@ describe('m1_canvas_tools scenario', () => {
   it('reaches the expected states at key checkpoints', () => {
     expect(at('boot').cells).toHaveLength(17);
     expect(at('boot').components.map((c) => [c.slot, c.kind, c.col, c.row, c.value])).toEqual([
-      [0, 'voltage', 3, 2, '010'], [1, 'resistor', 3, 4, '100'], [2, 'resistor', 3, 6, '100'],
+      [0, 'voltage', 4, 2, '010'], [1, 'resistor', 3, 4, '100'], [2, 'resistor', 3, 6, '100'],
     ]);
     expect(at('current').components).toHaveLength(8);
     expect(at('blocked_placements').components).toHaveLength(8);

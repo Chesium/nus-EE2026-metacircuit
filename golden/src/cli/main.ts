@@ -33,7 +33,8 @@ commands:
   compare-ui compare property selection/value/keypad probes with pixel references
   netlist extract the golden netlist at each checkpoint (or --frames) and write
           <NN>_<label>.netlist.json and .netlist.uart (uart_link records, CRLF)
-          plus netlists.json into --out (default out/<scenario name>/netlist)
+          plus netlists.json into --out (default out/<scenario name>/netlist);
+          the frame field is the D-016 snapshot id
   uart-decode parse a uart_link capture (NB/NC/NE, VB/VN/VE, ER) into JSON
 
 options:
@@ -153,7 +154,8 @@ function main(argv: string[]): number {
         const n = r.result.netlist;
         const tag = r.result.rejection ? `ER ${r.result.rejection.code.toString(16).toUpperCase()}` : `${n.elements.length} elements, ${n.nodeCount} nodes`;
         const issues = r.result.issues.map((x) => x.type).join(' ');
-        process.stderr.write(`  ${r.label.padEnd(28)} frame ${String(r.frame).padStart(4)}  ${tag}${issues ? `  [${issues}]` : ''}\n`);
+        const id = r.snapshotId.toString(16).toUpperCase().padStart(4, '0');
+        process.stderr.write(`  ${r.label.padEnd(28)} frame ${String(r.frame).padStart(4)}  id ${id}  ${tag}${issues ? `  [${issues}]` : ''}\n`);
       }
       return 0;
     }

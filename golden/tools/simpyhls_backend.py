@@ -30,7 +30,14 @@ DSL. --exec runs the same source with plain Python exec (much faster).
 
 simpyhls is found via --simpyhls, $SIMPYHLS_DIR, <repo>/simpyhls, or the
 nearest ancestor directory containing simpyhls/examples (for git worktrees whose
-submodule is not initialised).
+submodule is not initialised). Its DSL interpreter is always used from there.
+
+--kernels DIR reads the two kernel sources from DIR instead of
+<simpyhls>/examples. --as-written selects the frozen pre-decision kernels in
+golden/test/fixtures/kernels-as-written (simpyhls 57ffb08, before D-015, D-019
+and D-021) together with the primitive models of their own harness at that
+revision (extraction directions are the rotation codes 0 +x, 1 +y, 2 -x, 3 -y,
+and get_cell_rotation_comb reads a cell's rotation).
 """
 
 from __future__ import annotations
@@ -42,6 +49,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+AS_WRITTEN_KERNELS = REPO / "golden" / "test" / "fixtures" / "kernels-as-written"
 GROUND_SPRITE = 15
 TWO_TERMINAL = range(5, 15)
 
@@ -191,6 +199,30 @@ def extract_primitives():
         get_nxt_i_comb, get_nxt_j_comb)}
 
 
+AS_WRITTEN_STEP = ((1, 0), (0, 1), (-1, 0), (0, -1))  # rotation codes: +x, +y, -x, -y
+
+
+def extract_primitives_as_written():
+    """Primitive models of the frozen kernel (simpyhls 57ffb08's extraction harness)."""
+    current = extract_primitives()
+    keep = ("fetchComponentType", "fetchAnchorPositionX", "fetchAnchorPositionY", "fetchComponentRotation",
+            "fetchR", "fetchCell", "storeNode0", "storeNode1", "is_two_terminal_component_comb",
+            "is_ground_cell_comb", "get_opp_dir_comb")
+    prims = {name: current[name] for name in keep}
+
+    def get_cell_rotation_comb(tb, cell):
+        return (cell >> 7) & 3
+
+    def get_nxt_i_comb(tb, i, d):
+        return i + AS_WRITTEN_STEP[d][0]
+
+    def get_nxt_j_comb(tb, j, d):
+        return j + AS_WRITTEN_STEP[d][1]
+
+    prims.update({f.__name__: f for f in (get_cell_rotation_comb, get_nxt_i_comb, get_nxt_j_comb)})
+    return prims
+
+
 # ---------------------------------------------------------------- runners
 
 class _Ctx:
@@ -217,14 +249,14 @@ def run_dsl(source: str, fn_name: str, primitives, params: dict, state: dict) ->
     return run_python(source, harness).final_state
 
 
-def run_case(case: dict, sources: dict, runner) -> dict:
+def run_case(case: dict, sources: dict, runner, extract_prims) -> dict:
     w, h = case["width"], case["height"]
     flood = runner(sources["flooding_core"], "flooding_core", flood_primitives(),
                    {"grid_height": h, "grid_width": w},
                    {"w": w, "h": h, "ports": list(case["ports"]), "visited": [False] * (w * h),
                     "regions": [0] * (w * h), "queue": []})
     n = len(case["components"])
-    extract = runner(sources["extract_component_nodes"], "extract_component_nodes", extract_primitives(),
+    extract = runner(sources["extract_component_nodes"], "extract_component_nodes", extract_prims,
                      {"par_elem_n": n, "grid_height": h, "grid_width": w},
                      {"w": w, "h": h, "regions": flood["regions"], "cells": list(case["cells"]),
                       "components": case["components"], "node0": [-1] * n, "node1": [-1] * n})
@@ -235,14 +267,21 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--simpyhls", help="simpyhls checkout")
     ap.add_argument("--exec", action="store_true", help="plain exec instead of the simpyhls DSL interpreter")
+    ap.add_argument("--kernels", help="directory with the kernel sources (default <simpyhls>/examples)")
+    ap.add_argument("--as-written", action="store_true",
+                    help="frozen pre-decision kernels and their primitive models (default --kernels: kernels-as-written)")
     args = ap.parse_args()
     root = find_simpyhls(args.simpyhls)
     sys.path.insert(0, str(root))
-    sources = {name: (root / "examples" / f"{name}.dsl.py").read_text()
+    default_kernels = AS_WRITTEN_KERNELS if args.as_written else root / "examples"
+    kernels = Path(args.kernels).resolve() if args.kernels else default_kernels
+    sources = {name: (kernels / f"{name}.dsl.py").read_text()
                for name in ("flooding_core", "extract_component_nodes")}
     runner = run_exec if args.exec else run_dsl
+    prims = extract_primitives_as_written() if args.as_written else extract_primitives()
     cases = json.load(sys.stdin)["cases"]
-    json.dump({"simpyhls": str(root), "results": [run_case(c, sources, runner) for c in cases]}, sys.stdout)
+    json.dump({"simpyhls": str(root), "kernels": str(kernels),
+               "results": [run_case(c, sources, runner, prims) for c in cases]}, sys.stdout)
     return 0
 
 

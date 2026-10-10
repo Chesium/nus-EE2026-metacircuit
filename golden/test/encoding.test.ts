@@ -127,8 +127,16 @@ describe('boot circuit', () => {
     expect(sem.cells).toHaveLength(17);
     expect(sem.cells.find((c) => c.col === 2 && c.row === 7)).toMatchObject({ spriteName: 'Ground', rotation: 1 });
     expect(sem.cells.find((c) => c.col === 3 && c.row === 4)).toMatchObject({ spriteName: 'RL', meta: 1, componentSlot: 1 });
+    // D-015: the source is turned 180 degrees, + half (VL, anchor) at (4,2) facing the right rail.
+    expect(sem.cells.find((c) => c.col === 3 && c.row === 2)).toMatchObject({ spriteName: 'VR', rotation: 2, meta: 0, componentSlot: 0 });
+    expect(sem.cells.find((c) => c.col === 4 && c.row === 2)).toMatchObject({ spriteName: 'VL', rotation: 2, meta: 0, componentSlot: 0 });
     expect(sem.components.map((c) => [c.kind, c.col, c.row, c.rotation, c.value])).toEqual([
-      ['voltage', 3, 2, 0, '010'], ['resistor', 3, 4, 0, '100'], ['resistor', 3, 6, 0, '100'],
+      ['voltage', 4, 2, 2, '010'], ['resistor', 3, 4, 0, '100'], ['resistor', 3, 6, 0, '100'],
     ]);
+    expect([initialState().cells[39], initialState().cells[40]]).toEqual([0x0111, 0x010f]);
+    const store = exportRamDumps(initialState()).find((d) => d.name === 'component_store')!.words;
+    expect(store[0]).toBe('0x0003c02044'); // {unit 0, index 0, type 7, rot 2, value 010, y 2, x 4}
+    const values = exportRamDumps(initialState()).find((d) => d.name === 'values_shadow')!.words;
+    expect([values[39], values[40]]).toEqual(['0x010', '0x010']);
   });
 });

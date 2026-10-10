@@ -14,14 +14,21 @@
 //  2. A region is grounded when it contains an enabled ground cell (M3-A003).
 //  3. Every non-grounded region gets a solver row in first-seen row-major order
 //     starting at 0, whether or not a component touches it (M3-A004, the
-//     extract_component_nodes compaction policy). nodeCount = highest row used
-//     by an element terminal + 1, or 0 (M3-A005).
+//     extract_component_nodes compaction policy).
 //  4. Element idx = rank of the component's anchor (left-half) cell address,
 //     row-major, over live two-cell components (M3-A006).
-//  5. n0 is the terminal beyond the anchor half, n1 the terminal beyond the
-//     partner half (extract_component_nodes' term0/term1). A terminal joins the
-//     region of the cell next to it only if that cell has a port facing the
-//     component (M3-A002). Floating terminals become GROUND_NODE (M3-A007).
+//  5. Terminal order (D-015): n0 is the terminal beyond the anchor half and n1
+//     the terminal beyond the partner half, except for a current source, whose
+//     n0 is the arrow's tail, beyond the partner half (the sprite's arrow points
+//     towards the anchor half), and n1 is beyond the anchor half. A terminal
+//     joins the region of the cell next to it only if that cell has a port
+//     facing the component (M3-A002, D-021).
+//  6. A floating terminal (no facing port beyond it) gets its own solver row,
+//     numbered after all region rows, in idx order, n0 before n1 (D-019,
+//     M3-A007). nodeCount = highest row used by an element terminal + 1, or 0
+//     (M3-A005), so it includes the floating rows.
+//  7. Capacitors and inductors are not sent: a snapshot with one is rejected
+//     with `@ER` code 81 (D-018, M3-A010); `supportedKinds` can send them.
 
 import { GROUND_NODE, ElementKind, type Netlist, type NetlistElement } from './types.ts';
 import { encodeError, encodeNetlist } from './uart.ts';
@@ -43,7 +50,7 @@ export const enum ProtocolUnit {
 /** Marks an element whose frontend unit has no protocol code (pico; M3-A009). */
 export const UNIT_UNSUPPORTED = 0xff;
 
-/** Frontend error codes in `@ER` records sent instead of a netlist (M3-A009, M3-A010). */
+/** Frontend error codes in `@ER` records sent instead of a netlist (M3-A009, M3-A010, D-018). */
 export const FRONTEND_ERROR_UNSUPPORTED_KIND = 0x81;
 export const FRONTEND_ERROR_UNSUPPORTED_UNIT = 0x82;
 /** Golden-defined: more non-ground rows than the 8-bit protocol can carry. */
@@ -80,8 +87,19 @@ export function protocolUnitOf(frontendUnit: number): number {
   return PROTOCOL_UNIT[frontendUnit] ?? UNIT_UNSUPPORTED;
 }
 
+/** Kinds the frontend sends by default (D-018): C and L reject the snapshot with ER 81. */
+export const FRONTEND_SUPPORTED_KINDS: ReadonlySet<ElementKind> = new Set([
+  ElementKind.Resistor, ElementKind.CurrentDc, ElementKind.VoltageDc,
+]);
+/** Every kind the protocol defines; pass as `supportedKinds` to send C and L
+ * (the non-default C/L DC model, M3-S008). */
+export const ALL_ELEMENT_KINDS: ReadonlySet<ElementKind> = new Set([
+  ElementKind.Resistor, ElementKind.CurrentDc, ElementKind.VoltageDc, ElementKind.Capacitor, ElementKind.Inductor,
+]);
+
 export type ExtractionIssue =
-  | { type: 'floating-terminal'; idx: number; terminal: 0 | 1; col: number; row: number }
+  /** `node` is the terminal's own solver row (D-019); `col`/`row` is the grid cell beyond it. */
+  | { type: 'floating-terminal'; idx: number; terminal: 0 | 1; col: number; row: number; node: number }
   | { type: 'shorted-element'; idx: number; node: number }
   | { type: 'no-ground' }
   | { type: 'empty-row'; row: number }
@@ -101,9 +119,10 @@ export interface ElementTrace {
   row: number;
   rotation: number;
   frontendUnit: number;
-  /** Terminal cells (beyond the anchor half, beyond the partner half). */
+  /** Grid cells of terminals n0 and n1 (rule 5: for a current source n0 is
+   * beyond the partner half, otherwise beyond the anchor half). */
   terminals: [{ col: number; row: number }, { col: number; row: number }];
-  /** Raw region of each terminal (0 = floating). */
+  /** Raw region of n0 and n1 (0 = floating). */
   raw: [number, number];
 }
 
@@ -125,10 +144,14 @@ export interface PlacedComponent extends Component { slot?: number }
 export interface ExtractOptions {
   /** Netlist `frame` field (16 bit). */
   frame?: number;
-  /** Kinds the frontend sends; others reject the snapshot with 0x81 (default: all, M3-A010). */
+  /** Kinds the frontend sends; others reject the snapshot with 0x81 (default
+   * FRONTEND_SUPPORTED_KINDS = R/I/V, D-018; ALL_ELEMENT_KINDS sends C and L). */
   supportedKinds?: ReadonlySet<ElementKind>;
-  /** Differential testing only: mimic the DSL kernels' non-reciprocal terminal and
-   * ground lookups (see M3-A002, M3-A003). Never used for references. */
+  /** Differential testing only: reproduce the as-written extraction kernels
+   * (simpyhls 57ffb08, frozen in test/fixtures/kernels-as-written): terminal and
+   * ground lookups that ignore port reciprocity (before D-021), n0 beyond the
+   * anchor half for every kind (before D-015) and floating terminals sent as
+   * ground (before D-019). Never used for references. */
   dslCompat?: boolean;
 }
 
@@ -180,23 +203,32 @@ export function extractFromCanvas(input: CanvasInput, opts: ExtractOptions = {})
   let maxRow = -1;
   let grounding = false;
   const usedRows = new Set<number>();
+  let nextFloatingRow = nextRow;
   ordered.forEach((c, idx) => {
     const [dx, dy] = PAIR_DELTA[c.rotation & 3]!;
-    const terminals: ElementTrace['terminals'] = [
-      { col: c.col - dx, row: c.row - dy },
-      { col: c.col + 2 * dx, row: c.row + 2 * dy },
-    ];
-    // Port that the terminal cell must have to face the component (rule 5).
-    const facing = [portToward(dx, dy), portToward(-dx, -dy)];
-    const raw = terminals.map(({ col, row }, k) => {
+    const kind = elementKindOf(c.leftSprite);
+    // Beyond the anchor half (looking back along -d) and beyond the partner half
+    // (along +d), with the port each cell needs to face the component.
+    const anchorSide = { col: c.col - dx, row: c.row - dy, facing: portToward(dx, dy) };
+    const partnerSide = { col: c.col + 2 * dx, row: c.row + 2 * dy, facing: portToward(-dx, -dy) };
+    // Rule 5 (D-015): a current source's n0 is the arrow's tail, beyond the partner half.
+    const ends = kind === ElementKind.CurrentDc && !opts.dslCompat ? [partnerSide, anchorSide] : [anchorSide, partnerSide];
+    const terminals = ends.map(({ col, row }) => ({ col, row })) as ElementTrace['terminals'];
+    const raw = ends.map(({ col, row, facing }) => {
       if (!inGrid(col, row)) return 0;
       const a = addr(col, row);
-      return opts.dslCompat || ports[a]! & facing[k]! ? regions[a]! : 0;
+      return opts.dslCompat || ports[a]! & facing ? regions[a]! : 0;
     }) as [number, number];
     const nodes = raw.map((r, k) => {
       if (r === 0) {
-        issues.push({ type: 'floating-terminal', idx, terminal: k as 0 | 1, ...terminals[k]! });
-        return GROUND_NODE;
+        // Rule 6 (D-019): a row of its own, after every region row.
+        const node = opts.dslCompat ? GROUND_NODE : nextFloatingRow++;
+        issues.push({ type: 'floating-terminal', idx, terminal: k as 0 | 1, ...terminals[k]!, node });
+        if (node !== GROUND_NODE) {
+          maxRow = Math.max(maxRow, node);
+          usedRows.add(node);
+        }
+        return node;
       }
       if (grounded.has(r)) {
         grounding = true;
@@ -208,7 +240,6 @@ export function extractFromCanvas(input: CanvasInput, opts: ExtractOptions = {})
       return row;
     });
     if (nodes[0] === nodes[1]) issues.push({ type: 'shorted-element', idx, node: nodes[0]! });
-    const kind = elementKindOf(c.leftSprite);
     elements.push({ idx, kind, n0: nodes[0]!, n1: nodes[1]!, valueBcd: c.valueBcd & 0xfff, unit: protocolUnitOf(c.unit) });
     traces.push({
       idx, slot: c.slot ?? null, leftSprite: c.leftSprite, col: c.col, row: c.row, rotation: c.rotation,
@@ -222,8 +253,9 @@ export function extractFromCanvas(input: CanvasInput, opts: ExtractOptions = {})
 
   // Snapshot rejection, first failing element in idx order (M3-A009..A011).
   let rejection: Rejection | null = null;
+  const supportedKinds = opts.supportedKinds ?? FRONTEND_SUPPORTED_KINDS;
   for (const e of elements) {
-    if (opts.supportedKinds && !opts.supportedKinds.has(e.kind)) {
+    if (!supportedKinds.has(e.kind)) {
       issues.push({ type: 'unsupported-kind', idx: e.idx, kind: e.kind });
       rejection ??= { code: FRONTEND_ERROR_UNSUPPORTED_KIND, arg: e.idx, reason: `element ${e.idx} kind ${e.kind} not sent by the frontend` };
     }

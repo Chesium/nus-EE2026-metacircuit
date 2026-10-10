@@ -225,7 +225,8 @@ differences; map ownership and live entry index fields are checked strictly.
 ### A-017 Power-on state
 
 - **Chosen:** frame 0 starts from the RTL's boot circuit (IF-026: a voltage source,
-  two resistors, wires, tees, elbows and a ground in columns 2..5, rows 2..7).
+  two resistors, wires, tees, elbows and a ground in columns 2..5, rows 2..7;
+  since D-015 the source's anchor is (4,2) at rotation 2, "+" towards the right rail).
   Its components occupy slots 0..2 in table order. Tool = pan, wire variant 0,
   pan offset (0, 0). The RTL's init sequence finishes before the first frame.
 - **Why:** the boot table is interface data; init takes about 300 clock cycles.

@@ -8,20 +8,34 @@ documented in [`M3_ASSUMPTIONS.md`](M3_ASSUMPTIONS.md)) and returns a
 the simpyhls DSL kernels (reference algorithms), `notebooks/circuitsim.ipynb`,
 `structure.md` and the final report. The RTL was not read (D-007).
 
-Every item below awaits human validation. Items marked **open** need a decision.
+Items marked **Settled (D-0xx)** follow a decision in `docs/verification-plan.md`.
+The others await human validation; items marked **open** need a decision.
 
 ## Entry points
 
 | Function | Purpose |
 |----------|---------|
 | `solveDc(netlist, opts)` | Golden spec solve. Defaults: wire unit table, R/I/V/C/L, float32 datapath with fused fma, DSL-order LU with the residual pivot search (M3-S012), structural singularity check, DSL source polarity. |
-| `simulateUartSolver(netlist)` | Bit-exact prediction of the D-012 simulated solver's reply, including its `ER` rejections. |
+| `simulateUartSolver(netlist, opts)` | Bit-exact prediction of the D-012 simulated solver's reply, including its `ER` rejections. Default: `solve_core_dc` with the fixed pivot search (D-020); `{ pivot: 'dsl' }` predicts the kernel as written before the fix. |
 | `solveReference64(netlist)` | Independent textbook float64 MNA with Gaussian elimination. Used only for sanity checks. |
 | `runDslDc`, `stampDc`, `luSolveDsl`, `analyseStructure` | Building blocks. They are parameterised by arithmetic model (`py`, `f64`, `f32`, `f32-unfused`) and by pivot search (`dsl`, `residual`). |
 
-Fixtures: `python3 golden/tools/gen_solver_fixtures.py --simpyhls <checkout>/simpyhls`
-writes `golden/test/fixtures/solver_dc.json`, and `--check` verifies it.
-Tests: `test/solver.test.ts` and `test/solver-differential.test.ts`.
+Fixtures: `npm run fixtures:solver` (in `golden/`; `-- --check` verifies,
+`-- --simpyhls <checkout>/simpyhls` picks a checkout) writes two files from the
+same 339 netlists:
+
+- `test/fixtures/solver_dc.json` from the simpyhls checkout's `solve_core_dc.dsl.py`
+  (which frontend_tester also runs). Re-run it once the D-020 kernel fix lands.
+- `test/fixtures/solver_dc_as_written.json` from the kernel as written before
+  D-020, frozen in `test/fixtures/kernels-as-written/` (simpyhls 57ffb08);
+  frontend_tester is pointed at the frozen kernel for it.
+
+Each file records `kernels` and the kernel's sha256. Tests:
+`test/solver.test.ts` and `test/solver-differential.test.ts`. The comparisons
+of the defaults against `solver_dc.json` (simulated solver bit for bit, and
+`runDslDc(..., 'residual')` in the `py`, `f32`, `f32-unfused` flavours) are
+expected failures until the kernel fix lands and the fixture is regenerated
+(`test/kernelStatus.ts`).
 
 ## Value and unit table
 
@@ -75,32 +89,47 @@ The primitive order matches the kernel, which matters for float accumulation.
 
 ## Differential results (339 netlists: 39 hand-written, 300 random, seed 20261010)
 
-- simulated solver vs golden `simulateUartSolver`: 339/339 replies identical. That is
-  227 `VB/VN/VE` bit for bit, 48 `ER 03/0001` and 64 `ER 04/0000`.
-- `solve_core_dc.dsl.py` (`run_python`) vs golden `runDslDc`: 293 R/I/V netlists,
-  bit-identical in all three flavours (`py`, `f32` fused, `f32-unfused`). This
-  includes 64 runs that raise ZeroDivisionError.
+Against the kernel as written (`solver_dc_as_written.json`):
+
+- simulated solver vs golden `simulateUartSolver({ pivot: 'dsl' })`: 339/339 replies
+  identical. That is 227 `VB/VN/VE` bit for bit, 48 `ER 03/0001` and 64 `ER 04/0000`.
+- `solve_core_dc.dsl.py` (`run_python`) vs golden `runDslDc(..., 'dsl')`: 293 R/I/V
+  netlists, bit-identical in all three flavours (`py`, `f32` fused, `f32-unfused`).
+  This includes 64 runs that raise ZeroDivisionError.
+
+Against the fixed kernel (D-020): pending. With the as-written kernel still in
+the checkout, the default `simulateUartSolver()` differs from the recorded replies
+in 47 cases and `runDslDc(..., 'residual')` from the recorded results in 87
+(`py`), 92 (`f32`) and 95 (`f32-unfused`) cases, all where the two pivot searches
+choose different rows. Agreement is expected once the fixed kernel's fixture is
+generated, provided the fix computes U(0..j-1, j) with the column loop's formula
+and primitive order (M3-S012).
+
+Independent of the fixtures:
+
 - `solve_core_transient.dsl.py` at `dt = inf` vs golden C/L stamps: 41 netlists
-  identical (up to the sign of zero).
+  identical (up to the sign of zero). The transient kernel has the same pivot
+  search; the test accepts either search, since D-020 names only `solve_core_dc`.
 - solver_tester.py's two built-in cases (5 V into 3k/2k gives 5 V and 2 V; 2 mA into
   1k gives 2 V) pass in both `simulateUartSolver` and `solveDc`.
-- Golden spec vs simulated solver: 94 of the 339 outcomes differ. Moving from the
-  simulated solver to the spec one factor at a time, the outcome changes in:
-  43 cases from accepting C/L, idx gaps and more than 0x20 nodes (M3-S008,
-  M3-S016); 41 from the residual pivot search (M3-S012); 3 from the structural
-  check (M3-S013); 22 from float32 arithmetic (M3-S011, M3-S015). Unit tables
-  agree now that `unit` is the wire code.
-- Of 259 structurally sound R/I/V netlists that the simulated solver accepts, it
+- Golden spec vs the as-written simulated solver: 94 of the 339 outcomes differ.
+  Moving from it to the spec one factor at a time, the outcome changes in: 37
+  cases from the fixed pivot search (D-020, the `simulateUartSolver` default);
+  43 from accepting C/L, idx gaps and more than 0x20 nodes (M3-S008, M3-S016);
+  3 from the structural check (M3-S013); 22 from float32 arithmetic (M3-S011,
+  M3-S015). Unit tables agree now that `unit` is the wire code.
+- Of 259 structurally sound R/I/V netlists that the as-written simulated solver accepts, it
   answers 34 with `ER 04` and 2 with wrong voltages. All of these come from the
   pivot-search defect (M3-S012). A reference is not automatically right (D-007),
   and here the reference kernel itself is wrong.
 
 ## Boot circuit
 
-Extraction gives `V(n0=FF, n1=0, 010)` and two `R(FF, 0, 100)`. Node 0 solves to
-**-10 V** (float32 `C1200000`); the branch current is 0.2 A. The simulated solver,
-the spec solve and every arithmetic model agree. Under the flipped polarity
-(`sources: { voltagePositive: 'n1' }`), node 0 is +10 V. See M3-S005 / Q-009.
+Since D-015 the boot source is turned 180 degrees (anchor (4,2), rotation 2, "+"
+half facing the right rail). Extraction gives `V(n0=0, n1=FF, 010)` and two
+`R(FF, 0, 100)`. Node 0 solves to **+10 V** (float32 `41200000`); the branch
+current is 0.2 A. The simulated solver (both pivot searches), the spec solve and
+every arithmetic model agree. The old table gave `V(n0=FF, n1=0)` and -10 V.
 
 ## Assumptions
 
@@ -131,7 +160,13 @@ nibble still counts. Under M2-A002, digits fill the field from the left, so typi
 datapath uses `Math.fround(value)`. How board S converts BCD to float in hardware
 is not specified.
 
-### M3-S005 Source polarity (**open**, proposed Q-009)
+### M3-S005 Source polarity (**Settled, D-015**: option 2)
+
+D-015 chose option 2 below: the solver convention stays, extraction puts n0 on
+the "+" of a voltage source (unchanged) and on the arrow's tail of a current
+source (beyond the partner half, a swap; M3-A017), and the boot source is turned
+180 degrees so node 0 reads +10 V. `SolveOptions.sources` still defaults to
+`DSL_SOURCE_CONVENTION`. The analysis that led to it:
 
 Several sources bear on which terminal of a source is which:
 
@@ -185,14 +220,15 @@ The golden isolates the choice in one switch,
 Elements are stamped in ascending `idx` order (frontend_tester sorts by idx).
 Branch unknowns for V and L are numbered in that order, after the node rows.
 
-### M3-S008 C open, L short; the simulated solver rejects C/L (**open**)
+### M3-S008 C open, L short; the simulated solver rejects C/L (**Settled, D-018**)
 
 The C/L DC model is the `dt -> inf` limit of `solve_core_transient`'s companion
 models, and was checked against that kernel. frontend_tester accepts only kinds
 1..3 and replies `ER 03/0001` to any netlist containing C or L. Extraction sends C
-and L (M3-A010), so in M3 every circuit with a capacitor or inductor shows the
-receive error instead of voltages. Decide whether this is expected or whether
-frontend_tester should gain DC C/L stamps.
+and L only when asked to (M3-A010): by default (D-018) the frontend itself rejects
+a snapshot containing C or L with `@ER` code 81, as the RTL does, so the solver
+never sees one. The C/L DC model stays in `solveDc` as a non-default option, for
+`supportedKinds: ALL_ELEMENT_KINDS` netlists.
 
 ### M3-S009 `stamping_core.dsl.py` conflicts with the protocol
 
@@ -222,7 +258,7 @@ for bit. Which one board S's floating-point FMA implements is not specified in t
 spec documents. Division by zero follows IEEE in the float32 and float64 models and
 raises in the `py` model.
 
-### M3-S012 Pivot-search defect in `solve_core_dc.dsl.py` (**decision needed**)
+### M3-S012 Pivot-search defect in `solve_core_dc.dsl.py` (**Settled, D-020**)
 
 The search for column j forms `A(i,j) - sum_k LU(i,k) * LU(k,j)`. But `LU(k,j)`
 for k < j is only written by the column loop that follows the search, so it is
@@ -236,9 +272,10 @@ Board S, if generated from this kernel, would produce inf/NaN in those cases.
 
 Fix: compute `U(0..j-1, j)` before the search, using the same formula as the
 column loop. Pivot choices and bits are unchanged whenever the old search already
-picked the right row. The golden spec uses the fixed search (`pivot: 'residual'`)
-because it follows the kernel's stated intent. `pivot: 'dsl'` reproduces the
-kernel as written, which `simulateUartSolver` uses.
+picked the right row. D-020 adopts this fix for the kernel, the generated RTL and
+the simulated solver. The golden spec and, by default, `simulateUartSolver` use
+the fixed search (`pivot: 'residual'`); `pivot: 'dsl'` reproduces the kernel as
+written and is checked against the frozen copy.
 
 ### M3-S013 Status codes
 
@@ -278,15 +315,18 @@ frontend_tester rejects `node_count > 0x20` and idx sets that are not exactly
 structure.md's 8x8 matrix and the DSL's 8-bit `u8_next_aux`, which wraps when
 node_count + #V/L > 255, are not modelled.
 
-### M3-S017 Floating terminals are grounded by extraction
+### M3-S017 Floating terminals get their own rows (**Settled, D-019**)
 
-Extraction maps a terminal that touches no conductor to `FF` (M3-A007). A dangling
-component is therefore connected to ground, and the solver's floating-node check
-cannot see it. Confirm this is intended.
+Extraction gives a terminal that touches no conductor its own row (M3-A007), so
+an open resistor end carries no current and a dangling component's free node has
+no path to ground: the spec solve reports status 04 `floating-node`, and the
+simulated solver a zero pivot (`ER 04`) or, with roundoff, numbers. Before D-019
+such terminals were sent as `FF` and the floating-node check could not see them.
 
 ### M3-S018 Tooling
 
 Python 3.14 (simpyhls's `requires-python`) is not installed here. The generator and
 kernels run unchanged on the system Python 3.12, using only the stdlib (no uv
-download). Worktrees have no populated simpyhls submodule, so the generator takes
-`--simpyhls` and points frontend_tester at it.
+download). The generator finds simpyhls via `--simpyhls`, `$SIMPYHLS_DIR`, the
+submodule or the nearest ancestor checkout with a populated one (git worktrees),
+and points frontend_tester at it (or at the frozen kernel).

@@ -34,12 +34,12 @@ describe('M1 checkpoint comparison', () => {
 
   it('allows flow metadata differences while rejecting sprite and mirrored-RAM differences', () => {
     const { expected, actual, memory } = fixture();
-    for (const name of ['cells_render', 'cells_shadow']) memory(name).words[39] = '0x020f';
+    for (const name of ['cells_render', 'cells_shadow']) memory(name).words[39] = '0x0311'; // boot VR rot 2 (0x0111) with flow bit 9 set
     expect(compareCheckpoint(expected, actual)).toEqual([]);
     memory('cells_render').words[39] = '0x020b';
     const diff = compareCheckpoint(expected, actual);
     expect(diff).toContain('mirrored cell RAMs differ at address 39');
-    expect(diff).toContain('cell (3,2) is RL rot 0, expected VL rot 0');
+    expect(diff).toContain('cell (3,2) is RL rot 0, expected VR rot 2');
   });
 
   it('rejects value loss, broken components, busy checkpoints and dropped frames', () => {

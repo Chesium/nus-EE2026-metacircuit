@@ -5,6 +5,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { extractNetlist, snapshotUart, type ExtractOptions, type ExtractionResult } from '../backend/netlist.ts';
+import { NETLIST_SNAPSHOT_STATE_LAG_FRAMES, SnapshotIdTracker } from '../backend/snapshot.ts';
 import { parseUartStream } from '../backend/uart.ts';
 import { DEFAULT_CONFIG, type GoldenConfig } from '../core/config.ts';
 import { initialState } from '../core/state.ts';
@@ -14,11 +15,17 @@ import type { CanonicalScenario } from '../scenario/types.ts';
 export interface NetlistPoint { label: string; frame: number }
 
 export interface NetlistReference extends NetlistPoint {
+  /** Snapshot id (D-016), also the netlist's `frame` field unless opts.frame overrides it. */
+  snapshotId: number;
+  /** Frame during which the frontend transmits this snapshot (frame + NETLIST_SNAPSHOT_STATE_LAG_FRAMES). */
+  txFrame: number;
   result: ExtractionResult;
   uart: string;
 }
 
-/** Netlists at the given points (default: the scenario's checkpoints). */
+/** Netlists of the golden state at the given points (default: the scenario's
+ * checkpoints). The `frame` field is the snapshot id (D-016): 0001 at the first
+ * frame, plus one for every frame whose netlist-relevant content changed. */
 export function netlistReferences(
   sc: CanonicalScenario, cfg: GoldenConfig = DEFAULT_CONFIG, points: readonly NetlistPoint[] = sc.checkpoints,
   opts: ExtractOptions = {},
@@ -31,12 +38,14 @@ export function netlistReferences(
     byFrame.set(p.frame, [...(byFrame.get(p.frame) ?? []), p]);
   }
   const out: NetlistReference[] = [];
+  const ids = new SnapshotIdTracker();
   let state = initialState();
   sc.frames.forEach((mouse, frame) => {
     state = step(state, mouse, cfg);
+    const snapshotId = ids.next(state);
     for (const p of byFrame.get(frame) ?? []) {
-      const result = extractNetlist(state, { ...opts, frame: opts.frame ?? frame });
-      out.push({ ...p, result, uart: snapshotUart(result) });
+      const result = extractNetlist(state, { ...opts, frame: opts.frame ?? snapshotId });
+      out.push({ ...p, snapshotId, txFrame: frame + NETLIST_SNAPSHOT_STATE_LAG_FRAMES, result, uart: snapshotUart(result) });
     }
   });
   return out;
@@ -60,15 +69,20 @@ export function writeNetlistReferences(sc: CanonicalScenario, out: string, refs:
   mkdirSync(out, { recursive: true });
   const index = refs.map((r, i) => {
     const stem = `${String(i).padStart(2, '0')}_${r.label.replace(/[^\w.-]+/g, '_')}`;
-    writeFileSync(join(out, `${stem}.netlist.json`), JSON.stringify({ label: r.label, frame: r.frame, ...extractionJson(r.result) as object }, null, 1) + '\n');
+    writeFileSync(join(out, `${stem}.netlist.json`), JSON.stringify({
+      label: r.label, frame: r.frame, snapshotId: r.snapshotId, txFrame: r.txFrame, ...extractionJson(r.result) as object,
+    }, null, 1) + '\n');
     writeFileSync(join(out, `${stem}.netlist.uart`), r.uart);
     return {
-      label: r.label, frame: r.frame, json: `${stem}.netlist.json`, uart: `${stem}.netlist.uart`,
+      label: r.label, frame: r.frame, snapshotId: r.snapshotId, txFrame: r.txFrame,
+      json: `${stem}.netlist.json`, uart: `${stem}.netlist.uart`,
       elements: r.result.netlist.elements.length, nodeCount: r.result.netlist.nodeCount,
       rejected: r.result.rejection !== null, issues: r.result.issues.map((x) => x.type),
     };
   });
-  writeFileSync(join(out, 'netlists.json'), JSON.stringify({ scenario: sc.name, frameCount: sc.frameCount, netlists: index }, null, 1) + '\n');
+  writeFileSync(join(out, 'netlists.json'), JSON.stringify({
+    scenario: sc.name, frameCount: sc.frameCount, snapshotStateLagFrames: NETLIST_SNAPSHOT_STATE_LAG_FRAMES, netlists: index,
+  }, null, 1) + '\n');
 }
 
 /** Parse a comma-separated frame list into points labelled frame_NNNN. */

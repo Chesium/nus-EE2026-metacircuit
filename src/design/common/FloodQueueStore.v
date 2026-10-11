@@ -87,14 +87,16 @@ module FloodQueueStore #(
 
       if (do_add) begin
         mem[tail_ptr] <= {addQueue_i, addQueue_j, addQueue_d[1:0]};
-        tail_ptr <= tail_ptr + {{(PTR_WIDTH-1){1'b0}}, 1'b1};
+        tail_ptr <= (tail_ptr == DEPTH-1) ? {PTR_WIDTH{1'b0}} :
+                    tail_ptr + {{(PTR_WIDTH-1){1'b0}}, 1'b1};
       end else if (addQueue_start) begin
         overflow_seen <= 1'b1;
       end
 
       if (do_pop) begin
         captured_pop <= mem[head_ptr];
-        head_ptr <= head_ptr + {{(PTR_WIDTH-1){1'b0}}, 1'b1};
+        head_ptr <= (head_ptr == DEPTH-1) ? {PTR_WIDTH{1'b0}} :
+                    head_ptr + {{(PTR_WIDTH-1){1'b0}}, 1'b1};
       end else if (popQueue_start) begin
         captured_pop <= 18'd0;
         underflow_seen <= 1'b1;

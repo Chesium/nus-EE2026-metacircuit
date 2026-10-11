@@ -159,6 +159,7 @@ module ComponentPropertyPanel #(
     wire [11:0] cursor_x1 = cursor_x0 + 12'd2;
 
     always @(*) begin
+        coord_len = 5'd0;
         for (i = 0; i < MAX_CHARS * 8; i = i + 8) begin
             type_title_data[i +: 8] = 8'd0;
             label_data[i +: 8] = 8'd0;

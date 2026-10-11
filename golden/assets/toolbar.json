@@ -6,11 +6,11 @@
     "files": [
       {
         "path": "src/design/rendering/ToolbarVGA.v",
-        "sha256": "739f6699ba3288a0d5067b3aa6c9f26a6a8ea46b13049b2416853ba81f7a6813",
+        "sha256": "4ee00f31d426b07cb30650e01cf6c05aca41d3e6a2eb0c8f1222474a859f983b",
         "line_ranges": {
           "ButtonVGA instance": [
-            391,
-            414
+            389,
+            412
           ],
           "function button_y0": [
             44,
@@ -21,8 +21,8 @@
             51
           ],
           "icon draw": [
-            437,
-            451
+            435,
+            449
           ],
           "module ToolbarVGA parameters": [
             3,
@@ -33,8 +33,8 @@
             358
           ],
           "toolbar background": [
-            424,
-            424
+            422,
+            422
           ],
           "toolbar_bitmap_row": [
             55,
@@ -118,15 +118,15 @@
       },
       {
         "path": "src/design/rendering/GlobalRender_top.v",
-        "sha256": "78a4b971f3cc6e461e0ab359721e991595d30047d92c966de980c4f17fcd4bc1",
+        "sha256": "9b7e4d062a06142994d828d49c45feba8893fe32af7e489745f84458b82667e9",
         "line_ranges": {
           "SPRITE_* localparams": [
             545,
             559
           ],
           "final rgb mux": [
-            4046,
-            4063
+            4232,
+            4249
           ],
           "function toolbar_mode_select": [
             519,
@@ -137,12 +137,12 @@
             1155
           ],
           "instance keyboard_vga_inst": [
-            3387,
-            3401
+            3419,
+            3433
           ],
           "instance toolbar_vga_inst": [
-            3402,
-            3413
+            3434,
+            3445
           ],
           "localparam BACKGROUND": [
             27,
@@ -265,8 +265,8 @@
             30
           ],
           "ui_rgb composition": [
-            4009,
-            4046
+            4195,
+            4232
           ]
         }
       }

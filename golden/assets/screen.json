@@ -6,15 +6,15 @@
     "files": [
       {
         "path": "src/design/rendering/GlobalRender_top.v",
-        "sha256": "78a4b971f3cc6e461e0ab359721e991595d30047d92c966de980c4f17fcd4bc1",
+        "sha256": "9b7e4d062a06142994d828d49c45feba8893fe32af7e489745f84458b82667e9",
         "line_ranges": {
           "SPRITE_* localparams": [
             545,
             559
           ],
           "final rgb mux": [
-            4046,
-            4063
+            4232,
+            4249
           ],
           "function toolbar_mode_select": [
             519,
@@ -25,12 +25,12 @@
             1155
           ],
           "instance keyboard_vga_inst": [
-            3387,
-            3401
+            3419,
+            3433
           ],
           "instance toolbar_vga_inst": [
-            3402,
-            3413
+            3434,
+            3445
           ],
           "localparam BACKGROUND": [
             27,
@@ -153,14 +153,14 @@
             30
           ],
           "ui_rgb composition": [
-            4009,
-            4046
+            4195,
+            4232
           ]
         }
       },
       {
         "path": "src/design/Dashboard/ComponentPropertyPanel.v",
-        "sha256": "5880297db9a89662309c107fd25bffef7335cbf964447ebececb7b7d1c301554",
+        "sha256": "45ca2444a42286dce2cb0c71b1364762a8ec60b825277f94f086cc2337c73786",
         "line_ranges": {
           "colour constants": [
             35,

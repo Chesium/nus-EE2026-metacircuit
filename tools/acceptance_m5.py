@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_SHA = '475a48362f0f353104abfde654c25f7bdc60acc266c7a774ca6b256d315b540e'
 CONTRACT = ROOT / 'golden/verification/contracts/frontend-v1'
 IMAGE = 'framescope-toolchain:6501155dc903'
-POLICY_SHA = '33fdf52defd0b8cfd93fa8d18b3737a6e1dbf9461456b83a501753a45995cec0'
+POLICY_SHA = 'ef809ac14dacb25448639573cc72317b02e84ce1f82750c4d1df0403c5479ab2'
 
 
 def sha(path):
@@ -516,6 +516,12 @@ def main():
         if sha(policy_path) != POLICY_SHA:
             raise ValueError('acceptance policy identity changed')
         gate.policy = json.loads(policy_path.read_text())
+        if args.mode != 'baseline':
+            # Scoped proofs need Yosys; fail before any long check if it is missing.
+            from m5_tools import yosys
+            if not Path(yosys()).is_file() or 'Yosys 0.33' not in subprocess.run(
+                    [yosys(), '-V'], capture_output=True, text=True).stdout:
+                raise ValueError('pinned Yosys 0.33 not found; run tools/setup_yosys_m5.sh or set METACIRCUIT_YOSYS')
         if sha(ROOT / 'tools/m5_coverage_policy.json') != gate.policy['coverage_policy_sha256']:
             raise ValueError('coverage acceptance policy identity changed')
         for path, expected in gate.policy['tool_hashes'].items():

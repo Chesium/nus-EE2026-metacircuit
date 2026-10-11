@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Actual reply parser output exclusivity and configured node bounds."""
+import sys,pathlib;sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent));from m5_tools import yosys
 from pathlib import Path
 import argparse,datetime,hashlib,json,re,subprocess
 from formal_witness_m5 import cover
 P=argparse.ArgumentParser(description=__doc__)
 P.add_argument('--source',type=Path,default=Path(__file__).resolve().parents[1]/'src/design/uart/FrontendVoltagePacketParser.sv')
 P.add_argument('--out',type=Path,required=True)
-P.add_argument('--yosys',default='/tmp/m5-qor-yosys-tools/extracted/usr/bin/yosys')
+P.add_argument('--yosys',default=yosys())
 A=P.parse_args();O=A.out.resolve();O.mkdir(parents=True,exist_ok=False);S=A.source.resolve();source=S.read_text();Y=A.yosys;sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 assert re.search(r'MAX_LINE_BYTES\s*=\s*48\b',source) and re.search(r'MAX_NODES\s*=\s*32\b',source)
 version=subprocess.check_output([Y,'-V'],text=True).strip();assert version.startswith('Yosys 0.33 ')

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
+import sys,pathlib;sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent));from m5_tools import yosys
 from pathlib import Path
 import datetime, hashlib, json, subprocess
 
 import argparse
 P=argparse.ArgumentParser(description='Actual-source FIFO reset base and one-step range/count induction; original-source counterexamples required.')
-P.add_argument('--source',type=Path,required=True);P.add_argument('--reference',type=Path,required=True);P.add_argument('--out',type=Path,required=True);P.add_argument('--yosys',default='/tmp/m5-qor-yosys-tools/extracted/usr/bin/yosys')
+P.add_argument('--source',type=Path,required=True);P.add_argument('--reference',type=Path,required=True);P.add_argument('--out',type=Path,required=True);P.add_argument('--yosys',default=yosys())
 A=P.parse_args();O=A.out.resolve();O.mkdir(parents=True,exist_ok=False);Y=A.yosys
 (O/'reference.v').write_bytes(A.reference.read_bytes());(O/'FloodQueueStore.v').write_bytes(A.source.read_bytes());(O/'prove.py').write_bytes(Path(__file__).read_bytes())
 version=subprocess.check_output([Y,'-V'],text=True).strip()

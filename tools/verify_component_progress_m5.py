@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Prove quiescent component-rebuild completion from the actual control cone."""
+import sys,pathlib;sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent));from m5_tools import yosys
 from pathlib import Path
 import argparse, datetime, hashlib, json, re, subprocess
 from verify_address_m5 import extract_functions
@@ -8,7 +9,7 @@ from formal_witness_m5 import cover
 P=argparse.ArgumentParser(description=__doc__)
 P.add_argument('--source',type=Path,default=Path(__file__).resolve().parents[1]/'src/design/rendering/GlobalRender_top.v')
 P.add_argument('--out',type=Path,required=True)
-P.add_argument('--yosys',default='/tmp/m5-qor-yosys-tools/extracted/usr/bin/yosys')
+P.add_argument('--yosys',default=yosys())
 A=P.parse_args();O=A.out.resolve();O.mkdir(parents=True,exist_ok=False);S=A.source.resolve();Y=A.yosys
 source=S.read_text();sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 version=subprocess.check_output([Y,'-V'],text=True).strip()

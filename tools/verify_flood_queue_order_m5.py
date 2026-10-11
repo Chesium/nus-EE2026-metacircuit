@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Actual-source scoped formal verification; assumptions and unsupported scope remain explicit."""
+import sys,pathlib;sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent));from m5_tools import yosys
 from pathlib import Path
 import argparse,datetime,hashlib,json,subprocess,sys
 from formal_witness_m5 import cover, FIFO_OBSERVER, GUARD_OBSERVER
 P=argparse.ArgumentParser(description=__doc__)
 P.add_argument('--source',type=Path,default=Path(__file__).resolve().parents[1]/'src/design/common/FloodQueueStore.v')
 P.add_argument('--out',type=Path,required=True)
-P.add_argument('--yosys',default='/tmp/m5-qor-yosys-tools/extracted/usr/bin/yosys')
+P.add_argument('--yosys',default=yosys())
 A=P.parse_args();O=A.out.resolve();O.mkdir(parents=True,exist_ok=False)
 R=Path(__file__).resolve().parents[1];Y=A.yosys;S=A.source.resolve()
 version=subprocess.check_output([Y,'-V'],text=True).strip()

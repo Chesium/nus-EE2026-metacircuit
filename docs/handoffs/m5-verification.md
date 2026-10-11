@@ -11,6 +11,25 @@ timing/resource optimization experiments (D-030, D-031 in
 `docs/verification-plan.md`). It does not require timing closure, a defect-free
 design, 100% structural coverage or global formal proofs.
 
+## Setup on a fresh machine
+
+- Sibling checkouts `../framescope` (with its `.venv`) and `golden/node_modules`.
+- Vivado 2025.2 at `/opt/amd/2025.2` with the generated FP IP products in `src/ip/`.
+- Yosys 0.33 for the scoped proofs: `tools/setup_yosys_m5.sh` unpacks the Ubuntu
+  package into `~/.cache/metacircuit-m5` without root (or set `METACIRCUIT_YOSYS`).
+  The gate stops at startup if it is missing. An earlier copy under `/tmp` was lost
+  on a host restart.
+
+## Optimization experiment checklist
+
+1. Declare the objective JSON before measuring.
+2. Make the RTL change on a branch. If `GlobalRender_top.v`, `ToolbarVGA.v` or
+   `ComponentPropertyPanel.v` changed, run `python3 golden/tools/extract_assets.py`
+   (only source hashes/line ranges change) and commit it with the candidate.
+3. `tools/qor_root_m5.py --out <root>` then `tools/vivado_qor.py --root <root> --out <qor>`.
+4. Run `tools/acceptance_m5.py --mode full` per runtime. Do not edit the checkout
+   while any run is going: the gate fails on input or tool changes during checks.
+
 ## Gate rules now in force
 
 `tools/acceptance_m5.py` (fast / baseline / full modes, native and Docker):

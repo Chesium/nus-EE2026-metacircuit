@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """FIFO safety: reset-free lifetime, independent overlapping ledger, actual-source range/count induction."""
+import sys,pathlib;sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent));from m5_tools import yosys
 import argparse
 import hashlib
 import json
@@ -16,7 +17,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--runtime', choices=('native', 'docker'), required=True)
     parser.add_argument('--out', type=Path, required=True)
-    parser.add_argument('--yosys',default='/tmp/m5-qor-yosys-tools/extracted/usr/bin/yosys')
+    parser.add_argument('--yosys',default=yosys())
     args = parser.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)

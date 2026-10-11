@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Actual receiver cone: distinct declared nodes and conditional bank commit safety."""
+import sys,pathlib;sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent));from m5_tools import yosys
 from pathlib import Path
 import argparse,datetime,hashlib,json,re,subprocess
 P=argparse.ArgumentParser(description=__doc__)
 P.add_argument('--source',type=Path,required=True)
 P.add_argument('--out',type=Path,required=True)
-P.add_argument('--yosys',default='/tmp/m5-qor-yosys-tools/extracted/usr/bin/yosys')
+P.add_argument('--yosys',default=yosys())
 A=P.parse_args();O=A.out.resolve();O.mkdir(parents=True,exist_ok=False);S=A.source.resolve();source=S.read_text();Y=A.yosys;sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 version=subprocess.check_output([Y,'-V'],text=True).strip();assert version.startswith('Yosys 0.33 ')
 assert 'frontend_reply_stage_seen' in source,'requires explicit distinct-node correction'

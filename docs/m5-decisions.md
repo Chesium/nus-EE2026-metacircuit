@@ -203,3 +203,35 @@ Candidates previously rejected only against self-declared setup floors
 (selected-address, valid-only epoch, row-valid, unit-tree) are not re-labelled;
 they can be re-measured and judged under this rule. Accepting a candidate moves
 the recorded baseline, which requires a policy update.
+
+## M5 harness scope (2026-10-11 client date)
+
+Plan decision D-031. M5 delivers the verification/observability harness for
+later autonomous timing/resource optimization experiments. Readiness comes only
+from checks that run; the acceptance gate no longer appends unconditional
+readiness failures.
+
+- Coverage: the acceptance gate requires all 64 functional bins. The coverage
+  policy (schema 2) still validates provenance, both runtimes, raw artifacts and
+  required module instrumentation, but structural gaps are reported rather than
+  failed. A module instance whose source hash differs from the recorded
+  baseline (`tools/m5_coverage_baseline.json`) may not reach a smaller fraction
+  of its eligible line, branch or toggle points. The previous zero-gap rule with
+  manual per-module review is withdrawn. Structural coverage is measured on the
+  native runtime only: with coverage enabled, Verilator 5.020 in the pinned
+  container ran at about 17 s/frame (native about 2 s/frame), so the 3784-frame
+  seeded corpus would take about 18 hours per Docker run. Docker runs the same
+  corpus uninstrumented for cross-runtime agreement, and `--peer-coverage` is
+  removed.
+- M5-4: the gate's continuous invariant observers and the six scoped proofs are
+  the M5 scope. Global atomicity/progress theorems and general formal proofs are
+  out of scope.
+- M5-5: SolverBoard synthesis and the original-XCI upgrade move to QOR-2. The
+  near-singular accuracy gap is BUG-2; `verify_solver_xsim_m5.py
+  --accuracy-baseline` logs out-of-tolerance results with `+ACCURACY_PROBE`
+  instead of stopping, requires that only the declared near-singular case
+  misses, and fails if its relative error exceeds the recorded baseline.
+- Design defects (epoch alias BUG-1, BUG-2, coverage corpus limits BUG-3) are
+  tracked as BUG items and fixed through the rebaseline path in the plan.
+- An optimization objective may declare `setup_wns_tolerance_ns` (finite,
+  nonnegative) before measurement; without it the policy default is 0 ns.

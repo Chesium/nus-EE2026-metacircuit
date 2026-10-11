@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "milestone": "M5",
-  "status": "in_progress_paused_for_quota",
+  "status": "in_progress",
   "recorded_at_utc": "2026-10-11T01:34:48.037818+00:00",
   "m4_prerequisite": "docs/m4-verification.json",
   "scope": "Frozen frontend contract and settled adapters qualified; real synthesis baseline characterized; scoped invariant/actual-IP evidence added; full refactor readiness remains incomplete.",
@@ -1470,5 +1470,75 @@
       "production XDC not qualified"
     ],
     "follow_up": "TIM-1"
+  },
+  "harness_scope_20261012": {
+    "decision": "docs/verification-plan.md:D-031; docs/m5-decisions.md:M5 harness scope",
+    "goal": "verification/observability harness for later autonomous timing/resource optimization experiments",
+    "gate_changes": [
+      "no unconditional readiness failures",
+      "coverage: 64/64 functional bins required; native structural coverage reported with changed-module no-regression",
+      "solver near-singular accuracy no-regression",
+      "optimization objective may declare setup_wns_tolerance_ns (default 0)",
+      "--peer-coverage removed"
+    ],
+    "current_source_corpus": {
+      "native_with_coverage": {
+        "report": "golden/out/m5-coverage-baseline-20261011f/native/summary.json",
+        "seeds": [
+          1,
+          7,
+          2026,
+          11,
+          12
+        ],
+        "frames": 3784,
+        "checkpoints": 325,
+        "ok": true
+      },
+      "docker_uninstrumented": {
+        "report_dir": "golden/out/m5-current-corpus-docker-20261012/docker",
+        "seeds_passed": [
+          1,
+          7,
+          2026,
+          11
+        ],
+        "frames": 2990,
+        "checkpoints": 260,
+        "seed_12": "not run: Docker daemon stuck creating its container during a host kernel DRM hang; driver stopped, container f67baec20f75 left in Created state"
+      },
+      "docker_coverage_attempt": "stopped after seed 1 reached frame 192 in 55 min (~17 s/frame); structural coverage moved to native only"
+    },
+    "coverage_baseline": {
+      "file": "tools/m5_coverage_baseline.json",
+      "instances": 100,
+      "branch": [
+        932,
+        2114
+      ],
+      "line": [
+        2333,
+        10047
+      ],
+      "toggle": [
+        18377,
+        45704
+      ],
+      "audit_with_baseline": "golden/out/m5-coverage-baseline-20261011f/audit-with-baseline/summary.json",
+      "ready": true,
+      "negative_control": "changed GlobalRender_top instance with one fewer line reached fails"
+    },
+    "solver_accuracy_baseline": {
+      "report": "golden/out/m5-solver-accuracy-baseline-20261011g/probe/report.json",
+      "max_relative_error": 0.03717903549630604,
+      "only_declared_case_missed": true,
+      "negative_control": "golden/out/m5-solver-accuracy-baseline-20261011g/probe-negative (baseline 0.037 -> exit 1)"
+    },
+    "remaining": [
+      "Docker seed 12 on current source once the Docker daemon is healthy",
+      "one full-mode gate run per runtime on current source (observers, proofs, regressions, coverage, accuracy)",
+      "M5-8: one bounded optimization through full mode with routed QoR and a declared objective",
+      "archive final scope/results here"
+    ]
   }
 }

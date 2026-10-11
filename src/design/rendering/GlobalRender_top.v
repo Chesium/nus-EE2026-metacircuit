@@ -1679,6 +1679,8 @@ module GlobalRender_top (
     reg  [7:0]  frontend_reply_stage_node_count = 8'd0;
     reg  [7:0]  frontend_reply_stage_status = 8'd0;
     reg  [7:0]  frontend_reply_stage_received_count = 8'd0;
+    // Each declared node must arrive once before a staged reply can commit.
+    reg  [31:0] frontend_reply_stage_seen = 32'd0;
     reg         frontend_reply_valid = 1'b0;
     // D-016 observability: replies (@VB..@VE or @ER) rejected because their
     // frame id is not the current snapshot id (wraps), and the last such id.
@@ -2727,6 +2729,7 @@ module GlobalRender_top (
             frontend_reply_stage_node_count <= 8'd0;
             frontend_reply_stage_status <= 8'd0;
             frontend_reply_stage_received_count <= 8'd0;
+            frontend_reply_stage_seen <= 32'd0;
             frontend_reply_valid <= 1'b0;
             frontend_reply_active_bank <= 1'b0;
             frontend_reply_frame <= 16'd0;
@@ -2741,7 +2744,7 @@ module GlobalRender_top (
                 end
             end
             if (frontend_btnr_rise) begin
-                if (frontend_reply_view_node + 1'b1 < frontend_reply_node_count[4:0]) begin
+                if ({3'd0, frontend_reply_view_node} + 8'd1 < frontend_reply_node_count) begin
                     frontend_reply_view_node <= frontend_reply_view_node + 1'b1;
                 end
             end
@@ -2784,19 +2787,27 @@ module GlobalRender_top (
                 frontend_reply_stage_node_count <= frontend_voltage_begin_node_count;
                 frontend_reply_stage_status <= frontend_voltage_begin_status;
                 frontend_reply_stage_received_count <= 8'd0;
+                frontend_reply_stage_seen <= 32'd0;
             end
 
             if (frontend_reply_stage_active && frontend_voltage_node_valid &&
-                (frontend_voltage_node_frame == frontend_reply_stage_frame) &&
-                (frontend_voltage_node_idx < 8'd32)) begin
-                frontend_reply_ram_w_addr <= frontend_voltage_node_idx[4:0];
-                frontend_reply_ram_w_data <= frontend_voltage_node_value_bits;
-                if (frontend_reply_stage_bank) begin
-                    frontend_reply_ram1_w_en <= 1'b1;
+                (frontend_voltage_node_frame == frontend_reply_stage_frame)) begin
+                if ((frontend_voltage_node_idx < 8'd32) &&
+                    (frontend_voltage_node_idx < frontend_reply_stage_node_count) &&
+                    !frontend_reply_stage_seen[frontend_voltage_node_idx[4:0]]) begin
+                    frontend_reply_ram_w_addr <= frontend_voltage_node_idx[4:0];
+                    frontend_reply_ram_w_data <= frontend_voltage_node_value_bits;
+                    if (frontend_reply_stage_bank) begin
+                        frontend_reply_ram1_w_en <= 1'b1;
+                    end else begin
+                        frontend_reply_ram0_w_en <= 1'b1;
+                    end
+                    frontend_reply_stage_seen[frontend_voltage_node_idx[4:0]] <= 1'b1;
+                    frontend_reply_stage_received_count <= frontend_reply_stage_received_count + 1'b1;
                 end else begin
-                    frontend_reply_ram0_w_en <= 1'b1;
+                    frontend_reply_stage_active <= 1'b0;
+                    frontend_reply_status <= FRONTEND_STATUS_REPLY_PARSE;
                 end
-                frontend_reply_stage_received_count <= frontend_reply_stage_received_count + 1'b1;
             end
 
             if (frontend_reply_stage_active && frontend_voltage_end_valid &&
@@ -2821,7 +2832,7 @@ module GlobalRender_top (
                 frontend_reply_frame <= frontend_reply_stage_frame;
                 frontend_reply_node_count <= frontend_reply_stage_node_count;
                 frontend_reply_status <= frontend_reply_stage_status;
-                if (frontend_reply_view_node >= frontend_reply_stage_node_count[4:0] &&
+                if ({3'd0, frontend_reply_view_node} >= frontend_reply_stage_node_count &&
                     frontend_reply_stage_node_count != 8'd0) begin
                     frontend_reply_view_node <= 5'd0;
                 end

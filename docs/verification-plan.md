@@ -4,7 +4,7 @@ Living document for making MetaCircuit deterministically testable without hardwa
 Track progress here: tick TODOs, append to the log, and move questions from
 "to be made" to "made" when settled. IDs are stable; never reuse one.
 
-Last updated: 2026-10-09 (client date; M3 achieved; M4/M5 refactor-readiness plan added)
+Last updated: 2026-10-10 (client date; M4 accepted baseline complete)
 
 ## Goal
 
@@ -47,7 +47,7 @@ produce reproducible correctness and resource/timing results.
 | M1 | Canvas-only slice: select tool, place, rotate, delete, pan; RAM state matches golden on one recorded scenario | done: human accepted; 267 frames / 25 checkpoints pass on native and Docker, including saved web recording |
 | M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | done: human accepted; 3 scenarios (full UI, node-colour edits, web recording) pass state, UI probes, node-colour RAM and every pixel on native and Docker |
 | M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | done: 5 scenarios / 482 frames / 42 checkpoints pass on native and Docker; UART records, ids, solver replies, voltage RAM, 7-segment display and LEDs checked |
-| M4 | Coverage, seeded RTL stress tests and lockstep sessions; optional agent interface (MCP) | not started: prioritize FS-8/FS-11; sessions improve throughput, MCP is optional |
+| M4 | Coverage, seeded RTL stress tests and lockstep sessions; optional agent interface (MCP) | done in declared settled frontend scope: 64/64 bins per runtime, 1,946 directed frames/158 checkpoints; seeded regressions, coverage and persistent negative replay pass; MCP optional |
 | M5 | Final milestone: prepared for large-scale autonomous refactoring with preserved behavior and measured FPGA improvements | not started: requires M5-1..M5-8, FS-8/FS-11 and INF-4; readiness is scoped explicitly |
 
 M1 needs FS-1..FS-3, RTL-1..RTL-3, GM-1..GM-3 and SC-1..SC-2. It does not need the renderer.
@@ -67,10 +67,10 @@ conditional on the modules being changed.
 - [x] FS-5 (P0) Batch runner: many scenarios against one build, parallel processes, one JSON summary.
 - [x] FS-6 (P1) Speed: checkpoint after boot (Verilator `--savable`), restore per scenario; option to skip PNG encoding; try `--threads`. Baseline: ~1.1 s per frame, so a 300-frame scenario is ~5.5 min. Done (framescope `m3-speed`): Verilator compiled with `-Os` by default; `-O2` is now the default (~0.72-0.85 s/frame, CRC-identical); `--checkpoint N` boot checkpoints with `--savable` (~3-4 s saved per run); `--profile`. Threads were slower.
 - [x] FS-7 (P1) UART monitor (decode `RsTx` lines into the report) and RX driver (scripted lines, or a host process such as `src/uart_link`'s simulated solver). framescope branch `m3-uart`: `protocol = "uart"` monitor, `[[uart]]` stimulus, `--host LINK=CMD` lockstep host with deterministic reply timing.
-- [ ] FS-8 (P1, M5 prerequisite) Seeded initialization: add build/runtime options for random initial values and record the seed. A runtime seed alone is insufficient while compiling with `--x-initial fast`. Cold-boot each seed; reuse checkpoints only when their keys include the initialization mode/seed and the tested startup path is preserved.
-- [ ] FS-9 (P1) Long-lived session over stdio: step frames, poke inputs, read probes; lockstep with the golden model, stop at first divergence.
+- [x] FS-8 (P1, M5 prerequisite) Seeded initialization: validated `[build] x_initial/x_assign` modes and `run/batch --seed`, pre-construction Verilator random reset, recorded `sim.initialization`, separate build keys and conservative checkpoint bypass. Tiny native 5.046 and Docker 5.020 seeded suites pass (8 tests each). Cold MetaCircuit seeds exposed skipped startup clear at cells 1/2; reduced/replayed witness and fix recorded under M4. Checkpoint reuse for seeded runs remains deliberately disabled.
+- [x] FS-9 (P1) Long-lived JSON-lines session over stdio: frame steps, immediate/timed atomic input pokes, signed probes, memory reads and stop. Six tiny-design tests pass on native/Docker; main-checkout native tests also pass after FS-8 integration. `golden/tools/lockstep_m4.py` uses line-10 pokes and the unchanged comparator, stops at first divergent settled checkpoint and saves replay/trace metadata. Cold seed-1 MetaCircuit boot passes; longer editing sessions remain M4 expansion.
 - [ ] FS-10 (P2) PS/2 device model, plus an SV port of Digilent `Mouse_Control.vhd` / `Ps2Interface.vhd` (or GHDL-synth to Verilog), to test the real mouse path instead of the stub.
-- [ ] FS-11 (P1, M5 prerequisite; promoted from P2) Collect RTL branch/line and toggle coverage plus explicit functional cover points. Write/merge coverage artifacts, record tool versions and distinguish boot activity from scenario activity. Produce per-module gaps and named behavior bins; do not use one overall percentage as the acceptance criterion.
+- [x] FS-11 (P1, M5 prerequisite; promoted from P2) Verilator branch/line flow, toggle and explicit user coverage: `[build] coverage=true`, `run --coverage-from`, compatible artifact merges, tool/source provenance, boot/scenario split and bounded per-module gap reports. Five tests pass on each native/Docker runtime and the merged native checkout; an actual 11-frame MetaCircuit seeded run passes two state checkpoints with complete coverage. Initial named functional bins are reported by the canvas stress runner; systematic behavior-bin expansion and acceptance policy remain M4/M5 work. Sessions currently reject coverage-enabled manifests; use batch runs for artifacts.
 - [ ] FS-12 (P2) MCP server on top of sessions. Optional convenience; the CLI/JSON gate is sufficient for M5.
 
 ### RTL design-for-test (RTL)
@@ -212,6 +212,8 @@ Baseline numbers (2026-10-09, native Verilator 5.046):
 
 - 2026-10-09 (client date): Added the final M5 milestone for large-scale autonomous refactor readiness. Promoted FS-11 to P1 and specified FS-8, frozen contracts/assets, stable semantic observations, actual-RTL stress tests with reduction, invariants/equivalence, solver-pipeline verification and a combined functional/Vivado acceptance gate. The user confirmed AMD 2025.2 is installed at `/opt/amd/2025.2`; the local Vivado executable and existing Basys 3 part selection were checked. This entry records a plan, not implementation or new verification results.
 
+- 2026-10-10 (client date): Resumed M4 in parallel under default Codex quota guard. Added directed rotations/properties/boundaries/dense cases while retaining pinned v1/v2 generator bytes. Seed12x64 exposed the accepted A-007 wire reselection rule missing in ToolbarVGA; retained23frame witness, verified independent cold/FST failure and matching6RAMs, corrected RTL without changing golden. Native/Docker reduced fixed cases pass. Functional classifier now records64eligible bins and actual physical slot evidence. Golden224tests/17Python checks and framescope135tests per runtime pass(7opt-in skips). Final M2 passes298frames/61checkpoints per runtime with every pixel/CRC/probe/dump matching; six new cold seeds pass234frames/30checkpoints per runtime. Long/dense runs and M3 remain pending, so M4 is not yet marked complete.
+
 ## M1 acceptance and regression
 
 Run from `golden/`:
@@ -340,6 +342,18 @@ and checkpoint. On-screen voltage rendering (M3-4) is later work; the accepted
 voltage display for this milestone is the existing board display.
 
 ## M4/M5 plan: autonomous refactor readiness
+
+M4 is complete in its declared settled frontend scope. Evidence is recorded in
+[m4-verification.json](m4-verification.json), with commands and exclusions in
+[M4_ASSUMPTIONS.md](../golden/M4_ASSUMPTIONS.md). Each runtime reaches64/64 named
+functional bins; directed cases pass973frames/79checkpoints per runtime, six new
+cold seeds pass234frames/30checkpoints per runtime, and fixed seed12x64 passes
+794frames/65checkpoints natively. Native/Docker coverage artifacts validate five
+checkpoints and report gaps for101module/hierarchy groups. Both complete M2/M3
+regressions pass on final source, preserving pixels/UART/semantic state.
+The startup clear and A-007 toolbar defects have retained reduced cold-replayed
+witnesses; accepted golden behavior was preserved. Continuous transients,
+stalls, actual solver RTL and FPGA optimization acceptance remain M5 work.
 
 M1-M3 support incremental refactoring today. They are not yet sufficient to
 qualify a rewrite as broad as `design2`: checkpoint comparisons can miss

@@ -1263,6 +1263,18 @@ module GlobalRender_top (
     reg  [15:0] canvas_shadow_data [0:CANVAS_CELL_COUNT-1];
     reg  [11:0] value_shadow_data [0:CANVAS_CELL_COUNT-1];
     reg  [3:0]  value_unit_shadow_data [0:CANVAS_CELL_COUNT-1];
+    // One same-edge shadow write port; selectors are blocking temporaries.
+    reg canvas_shadow_data_we;
+    reg [CANVAS_ADDR_W-1:0] canvas_shadow_data_wa;
+    reg [15:0] canvas_shadow_data_wd;
+    // One same-edge shadow write port; selectors are blocking temporaries.
+    reg value_shadow_data_we;
+    reg [CANVAS_ADDR_W-1:0] value_shadow_data_wa;
+    reg [11:0] value_shadow_data_wd;
+    // One same-edge shadow write port; selectors are blocking temporaries.
+    reg value_unit_shadow_data_we;
+    reg [CANVAS_ADDR_W-1:0] value_unit_shadow_data_wa;
+    reg [3:0] value_unit_shadow_data_wd;
     // component_store entry = {unit[3:0], index[8:0], type[3:0], rotation[1:0], value[11:0], position[8:0]}
     // position[8:5] = y, position[4:0] = x
     localparam integer BACKEND_FRAME_CYCLE_BUDGET = 10000;
@@ -3582,6 +3594,15 @@ module GlobalRender_top (
 
     // RAM 鍒濆鍖栬垏婊戦紶閲嶇疆
     always @(posedge CLK100MHZ) begin
+        canvas_shadow_data_we = 1'b0;
+        canvas_shadow_data_wa = {CANVAS_ADDR_W{1'b0}};
+        canvas_shadow_data_wd = 16'd0;
+        value_shadow_data_we = 1'b0;
+        value_shadow_data_wa = {CANVAS_ADDR_W{1'b0}};
+        value_shadow_data_wd = 12'd0;
+        value_unit_shadow_data_we = 1'b0;
+        value_unit_shadow_data_wa = {CANVAS_ADDR_W{1'b0}};
+        value_unit_shadow_data_wd = 4'd0;
         mouse_set_value <= 12'h000;
         mouse_set_max_x <= 1'b0;
         mouse_set_max_y <= 1'b0;
@@ -3642,9 +3663,15 @@ module GlobalRender_top (
             value_digit_ram_w_data <= 2'd0;
             value_text_ram_w_data <= 64'd0;
             value_text_len_ram_w_data <= 4'd0;
-            canvas_shadow_data[clear_canvas_addr] <= 16'd0;
-            value_shadow_data[clear_canvas_addr] <= 12'd0;
-            value_unit_shadow_data[clear_canvas_addr] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = clear_canvas_addr;
+            canvas_shadow_data_wd = 16'd0;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = clear_canvas_addr;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = clear_canvas_addr;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
             // Clearing an empty cell is no content change.
             if (canvas_shadow_data[clear_canvas_addr][8:0] != 9'd0) begin
@@ -3666,17 +3693,29 @@ module GlobalRender_top (
             value_digit_ram_w_data <= 2'd0;
             value_text_ram_w_data <= 64'd0;
             value_text_len_ram_w_data <= 4'd0;
-            canvas_shadow_data[init_cycles[CANVAS_ADDR_W-1:0]] <= 16'd0;
-            value_shadow_data[init_cycles[CANVAS_ADDR_W-1:0]] <= 12'd0;
-            value_unit_shadow_data[init_cycles[CANVAS_ADDR_W-1:0]] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = init_cycles[CANVAS_ADDR_W-1:0];
+            canvas_shadow_data_wd = 16'd0;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = init_cycles[CANVAS_ADDR_W-1:0];
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = init_cycles[CANVAS_ADDR_W-1:0];
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 0) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd38;
             circuit_canvas_ram_w_data <= 16'h0083;
-            canvas_shadow_data[9'd38] <= 16'h0083;
-            value_shadow_data[9'd38] <= 12'd0;
-            value_unit_shadow_data[9'd38] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd38;
+            canvas_shadow_data_wd = 16'h0083;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd38;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd38;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 1) begin
             // D-015: the boot voltage source is turned 180 degrees so its +
@@ -3692,9 +3731,15 @@ module GlobalRender_top (
             value_digit_ram_w_data <= 2'd2;
             value_text_ram_w_data <= {"1", "0", 48'd0};
             value_text_len_ram_w_data <= 4'd2;
-            canvas_shadow_data[9'd39] <= 16'h0111;
-            value_shadow_data[9'd39] <= 12'h010;
-            value_unit_shadow_data[9'd39] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd39;
+            canvas_shadow_data_wd = 16'h0111;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd39;
+            value_shadow_data_wd = 12'h010;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd39;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 2) begin
             circuit_canvas_ram_w_en <= 1'b1;
@@ -3706,41 +3751,71 @@ module GlobalRender_top (
             value_digit_ram_w_data <= 2'd2;
             value_text_ram_w_data <= {"1", "0", 48'd0};
             value_text_len_ram_w_data <= 4'd2;
-            canvas_shadow_data[9'd40] <= 16'h010F;
-            value_shadow_data[9'd40] <= 12'h010;
-            value_unit_shadow_data[9'd40] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd40;
+            canvas_shadow_data_wd = 16'h010F;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd40;
+            value_shadow_data_wd = 12'h010;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd40;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 3) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd41;
             circuit_canvas_ram_w_data <= 16'h0103;
-            canvas_shadow_data[9'd41] <= 16'h0103;
-            value_shadow_data[9'd41] <= 12'd0;
-            value_unit_shadow_data[9'd41] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd41;
+            canvas_shadow_data_wd = 16'h0103;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd41;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd41;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 4) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd56;
             circuit_canvas_ram_w_data <= 16'h0281;
-            canvas_shadow_data[9'd56] <= 16'h0281;
-            value_shadow_data[9'd56] <= 12'd0;
-            value_unit_shadow_data[9'd56] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd56;
+            canvas_shadow_data_wd = 16'h0281;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd56;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd56;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 5) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd59;
             circuit_canvas_ram_w_data <= 16'h0081;
-            canvas_shadow_data[9'd59] <= 16'h0081;
-            value_shadow_data[9'd59] <= 12'd0;
-            value_unit_shadow_data[9'd59] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd59;
+            canvas_shadow_data_wd = 16'h0081;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd59;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd59;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 6) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd74;
             circuit_canvas_ram_w_data <= 16'h0285;
-            canvas_shadow_data[9'd74] <= 16'h0285;
-            value_shadow_data[9'd74] <= 12'd0;
-            value_unit_shadow_data[9'd74] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd74;
+            canvas_shadow_data_wd = 16'h0285;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd74;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd74;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 7) begin
             circuit_canvas_ram_w_en <= 1'b1;
@@ -3752,9 +3827,15 @@ module GlobalRender_top (
             value_digit_ram_w_data <= 2'd3;
             value_text_ram_w_data <= {"1", "0", "0", 40'd0};
             value_text_len_ram_w_data <= 4'd3;
-            canvas_shadow_data[9'd75] <= 16'h020B;
-            value_shadow_data[9'd75] <= 12'h100;
-            value_unit_shadow_data[9'd75] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd75;
+            canvas_shadow_data_wd = 16'h020B;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd75;
+            value_shadow_data_wd = 12'h100;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd75;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 8) begin
             circuit_canvas_ram_w_en <= 1'b1;
@@ -3766,41 +3847,71 @@ module GlobalRender_top (
             value_digit_ram_w_data <= 2'd3;
             value_text_ram_w_data <= {"1", "0", "0", 40'd0};
             value_text_len_ram_w_data <= 4'd3;
-            canvas_shadow_data[9'd76] <= 16'h020D;
-            value_shadow_data[9'd76] <= 12'h100;
-            value_unit_shadow_data[9'd76] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd76;
+            canvas_shadow_data_wd = 16'h020D;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd76;
+            value_shadow_data_wd = 12'h100;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd76;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 9) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd77;
             circuit_canvas_ram_w_data <= 16'h0185;
-            canvas_shadow_data[9'd77] <= 16'h0185;
-            value_shadow_data[9'd77] <= 12'd0;
-            value_unit_shadow_data[9'd77] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd77;
+            canvas_shadow_data_wd = 16'h0185;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd77;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd77;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 10) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd92;
             circuit_canvas_ram_w_data <= 16'h0281;
-            canvas_shadow_data[9'd92] <= 16'h0281;
-            value_shadow_data[9'd92] <= 12'd0;
-            value_unit_shadow_data[9'd92] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd92;
+            canvas_shadow_data_wd = 16'h0281;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd92;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd92;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 11) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd95;
             circuit_canvas_ram_w_data <= 16'h0081;
-            canvas_shadow_data[9'd95] <= 16'h0081;
-            value_shadow_data[9'd95] <= 12'd0;
-            value_unit_shadow_data[9'd95] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd95;
+            canvas_shadow_data_wd = 16'h0081;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd95;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd95;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 12) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd110;
             circuit_canvas_ram_w_data <= 16'h0085;
-            canvas_shadow_data[9'd110] <= 16'h0085;
-            value_shadow_data[9'd110] <= 12'd0;
-            value_unit_shadow_data[9'd110] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd110;
+            canvas_shadow_data_wd = 16'h0085;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd110;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd110;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 13) begin
             circuit_canvas_ram_w_en <= 1'b1;
@@ -3812,9 +3923,15 @@ module GlobalRender_top (
             value_digit_ram_w_data <= 2'd3;
             value_text_ram_w_data <= {"1", "0", "0", 40'd0};
             value_text_len_ram_w_data <= 4'd3;
-            canvas_shadow_data[9'd111] <= 16'h020B;
-            value_shadow_data[9'd111] <= 12'h100;
-            value_unit_shadow_data[9'd111] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd111;
+            canvas_shadow_data_wd = 16'h020B;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd111;
+            value_shadow_data_wd = 12'h100;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd111;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 14) begin
             circuit_canvas_ram_w_en <= 1'b1;
@@ -3826,25 +3943,43 @@ module GlobalRender_top (
             value_digit_ram_w_data <= 2'd3;
             value_text_ram_w_data <= {"1", "0", "0", 40'd0};
             value_text_len_ram_w_data <= 4'd3;
-            canvas_shadow_data[9'd112] <= 16'h020D;
-            value_shadow_data[9'd112] <= 12'h100;
-            value_unit_shadow_data[9'd112] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd112;
+            canvas_shadow_data_wd = 16'h020D;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd112;
+            value_shadow_data_wd = 12'h100;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd112;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 15) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd113;
             circuit_canvas_ram_w_data <= 16'h0183;
-            canvas_shadow_data[9'd113] <= 16'h0183;
-            value_shadow_data[9'd113] <= 12'd0;
-            value_unit_shadow_data[9'd113] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd113;
+            canvas_shadow_data_wd = 16'h0183;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd113;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd113;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (init_cycles == CANVAS_CELL_COUNT + 16) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= 9'd128;
             circuit_canvas_ram_w_data <= 16'h009F;
-            canvas_shadow_data[9'd128] <= 16'h009F;
-            value_shadow_data[9'd128] <= 12'd0;
-            value_unit_shadow_data[9'd128] <= COMPONENT_UNIT_NONE;
+            canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = 9'd128;
+            canvas_shadow_data_wd = 16'h009F;
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = 9'd128;
+            value_shadow_data_wd = 12'd0;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = 9'd128;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
             component_store_change_this_cycle = 1'b1;
         end else if (pending_pair_value_write) begin
             netlist_content_new_unit = component_unit_code_from_text(
@@ -3861,8 +3996,12 @@ module GlobalRender_top (
             value_digit_ram_w_data <= pending_pair_value_digits;
             value_text_ram_w_data <= pending_pair_value_text;
             value_text_len_ram_w_data <= pending_pair_value_text_len;
-            value_shadow_data[pending_pair_value_addr] <= pending_pair_value_data;
-            value_unit_shadow_data[pending_pair_value_addr] <= component_unit_code_from_text(
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = pending_pair_value_addr;
+            value_shadow_data_wd = pending_pair_value_data;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = pending_pair_value_addr;
+            value_unit_shadow_data_wd = component_unit_code_from_text(
                 pending_pair_value_text,
                 pending_pair_value_text_len
             );
@@ -3885,8 +4024,12 @@ module GlobalRender_top (
             value_digit_ram_w_data <= edit_value_next_digits;
             value_text_ram_w_data <= edit_value_next_text;
             value_text_len_ram_w_data <= edit_value_next_text_len;
-            value_shadow_data[selected_cell_addr_sys] <= edit_value_next_bcd;
-            value_unit_shadow_data[selected_cell_addr_sys] <= component_unit_code_from_text(
+            value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = selected_cell_addr_sys;
+            value_shadow_data_wd = edit_value_next_bcd;
+            value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = selected_cell_addr_sys;
+            value_unit_shadow_data_wd = component_unit_code_from_text(
                 edit_value_next_text,
                 edit_value_next_text_len
             );
@@ -3909,7 +4052,9 @@ module GlobalRender_top (
                 circuit_canvas_ram_w_en <= 1'b1;
                 circuit_canvas_ram_w_addr <= interaction_bg_cmd_addr;
                 circuit_canvas_ram_w_data <= interaction_bg_cmd_wdata;
-                canvas_shadow_data[interaction_bg_cmd_addr] <= interaction_bg_cmd_wdata;
+                canvas_shadow_data_we = 1'b1;
+            canvas_shadow_data_wa = interaction_bg_cmd_addr;
+            canvas_shadow_data_wd = interaction_bg_cmd_wdata;
                 component_store_change_this_cycle = 1'b1;
                 // Only the cell word matters here: the value copied to a new
                 // partner cell or cleared with a cell is not read by the
@@ -3926,8 +4071,12 @@ module GlobalRender_top (
                     value_digit_ram_w_data <= value_digit_ram_r_data;
                     value_text_ram_w_data <= value_text_ram_r_data;
                     value_text_len_ram_w_data <= value_text_len_ram_r_data;
-                    value_shadow_data[interaction_bg_cmd_addr] <= value_shadow_data[interaction_value_read_addr];
-                    value_unit_shadow_data[interaction_bg_cmd_addr] <= value_unit_shadow_data[interaction_value_read_addr];
+                    value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = interaction_bg_cmd_addr;
+            value_shadow_data_wd = value_shadow_data[interaction_value_read_addr];
+                    value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = interaction_bg_cmd_addr;
+            value_unit_shadow_data_wd = value_unit_shadow_data[interaction_value_read_addr];
                 end else if (interaction_bg_cmd_wdata == 16'd0) begin
                     value_ram_w_en <= 1'b1;
                     value_ram_w_addr <= interaction_bg_cmd_addr;
@@ -3935,14 +4084,27 @@ module GlobalRender_top (
                     value_digit_ram_w_data <= 2'd0;
                     value_text_ram_w_data <= 64'd0;
                     value_text_len_ram_w_data <= 4'd0;
-                    value_shadow_data[interaction_bg_cmd_addr] <= 12'd0;
-                    value_unit_shadow_data[interaction_bg_cmd_addr] <= COMPONENT_UNIT_NONE;
+                    value_shadow_data_we = 1'b1;
+            value_shadow_data_wa = interaction_bg_cmd_addr;
+            value_shadow_data_wd = 12'd0;
+                    value_unit_shadow_data_we = 1'b1;
+            value_unit_shadow_data_wa = interaction_bg_cmd_addr;
+            value_unit_shadow_data_wd = COMPONENT_UNIT_NONE;
                 end
             end else begin
                 interaction_bg_rsp_valid <= 1'b1;
                 interaction_bg_rsp_rdata <= canvas_shadow_data[interaction_bg_cmd_addr];
             end
         end
+
+        if (canvas_shadow_data_we)
+            canvas_shadow_data[canvas_shadow_data_wa] <= canvas_shadow_data_wd;
+
+        if (value_shadow_data_we)
+            value_shadow_data[value_shadow_data_wa] <= value_shadow_data_wd;
+
+        if (value_unit_shadow_data_we)
+            value_unit_shadow_data[value_unit_shadow_data_wa] <= value_unit_shadow_data_wd;
 
         if (component_index_map_pending_pair_write) begin
             component_index_map_w_en <= 1'b1;

@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -7,11 +8,12 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from acceptance_m5 import Gate, baseline_identity, inventory, verification_inventory, validate_objective, validate_qor_pair, validate_capacity_failure
+from acceptance_m5 import (Gate, baseline_identity, cdc_findings, inventory, verification_inventory, validate_objective,
+                           validate_qor_pair, validate_capacity_failure, validate_timing_policy)
 
 
 def qor(lut=100, wns=1):
-    return {'evidence_status': 'complete', 'errors': [], 'timing_clean': True,
+    return {'evidence_status': 'complete', 'errors': [],
             'stages': {'routed': {'resources': {'lut': lut, 'ff': 50, 'bram': 2, 'dsp': 0},
                                   'timing': {'wns_ns': wns, 'whs_ns': 0.1}}}}
 
@@ -28,8 +30,7 @@ class AcceptanceControls(unittest.TestCase):
         self.assertEqual(result['gain'], 10)
 
     def test_behavioral_pass_cannot_substitute_for_report(self):
-        for mutation in ({'evidence_status': 'incomplete'}, {'errors': ['corrupt report']}, {'stages': {}},
-                         {'timing_clean': False}):
+        for mutation in ({'evidence_status': 'incomplete'}, {'errors': ['corrupt report']}, {'stages': {}}):
             candidate = qor(90); candidate.update(mutation)
             self.assertFalse(validate_objective(self.objective, qor(), candidate)['ok'])
 
@@ -298,6 +299,81 @@ class AcceptanceControls(unittest.TestCase):
                 gate.command('not-started', [sys.executable, '-c',
                              'from pathlib import Path; Path(' + repr(str(marker)) + ').touch()'])
             self.assertFalse(marker.exists())
+
+
+CDC_SAFE = 'CDC Report\n\nAll paths are Safely Timed.\n'
+CDC_UNSAFE = 'CDC Report\n\nSeverity  ID     Count  Description\nCritical  CDC-1  3      1-bit unknown CDC circuitry\n'
+
+
+def routed_qor(wns=-1.953, whs=0.027, no_output_delay=44, drc=('CFGBVS-1',), xdc='frozen', top='top-hash'):
+    return {'manifest': {'hashes': {'src/design/top.v': top, 'clock.xdc': xdc}},
+            'stages': {'routed': {
+                'resources': {'lut': 100.0, 'ff': 50.0, 'bram': 2.0, 'dsp': 0.0},
+                'timing': {'wns_ns': wns, 'whs_ns': whs, 'hold_failing_endpoints': 0 if whs >= 0 else 4},
+                'constraint_checks': {'no_clock': 0, 'unconstrained_internal_endpoints': 0,
+                                      'no_input_delay': 10, 'no_output_delay': no_output_delay},
+                'drc': {'findings': [{'rule': rule} for rule in drc]}}}}
+
+
+class TimingNoRegressionControls(unittest.TestCase):
+    """Timing closure is not required, but no candidate may make timing worse."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        self.root, self.b, self.c = root / 'checkout', root / 'b', root / 'c'
+        for folder in (self.root / 'src/design', self.b, self.c):
+            folder.mkdir(parents=True)
+        (self.root / 'src/design/top.v').write_text('module top; endmodule\n')
+        top = hashlib.sha256(b'module top; endmodule\n').hexdigest()
+        for folder in (self.b, self.c):
+            (folder / 'routed_cdc.rpt').write_text(CDC_SAFE)
+        self.baseline = routed_qor(top='baseline-source')
+        self.candidate = lambda **kw: routed_qor(top=top, **kw)
+        recorded = self.baseline['stages']['routed']
+        self.policy = {'comparison_constraint': {'path': 'clock.xdc', 'sha256': 'frozen'},
+                       'setup_wns_tolerance_ns': 0,
+                       'baseline': {'resources': recorded['resources'], 'timing': dict(recorded['timing']),
+                                    'constraint_checks': recorded['constraint_checks']}}
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def check(self, candidate, baseline=None):
+        return validate_timing_policy(self.policy, baseline or self.baseline, candidate, self.b, self.c, self.root)
+
+    def test_negative_baseline_slack_is_not_a_failure(self):
+        self.assertEqual(self.check(self.candidate()), [])
+        self.assertEqual(self.check(self.candidate(wns=-1.2)), [])
+
+    def test_setup_regression_fails_with_zero_tolerance(self):
+        errors = self.check(self.candidate(wns=-1.954))
+        self.assertTrue(any('setup WNS' in e for e in errors), errors)
+
+    def test_hold_violation_fails(self):
+        self.assertTrue(self.check(self.candidate(whs=-0.01)))
+
+    def test_new_constraint_drc_and_cdc_findings_fail(self):
+        self.assertTrue(self.check(self.candidate(no_output_delay=45)))
+        self.assertTrue(self.check(self.candidate(drc=('CFGBVS-1', 'TIMING-6'))))
+        (self.c / 'routed_cdc.rpt').write_text(CDC_UNSAFE)
+        self.assertTrue(self.check(self.candidate()))
+        (self.c / 'routed_cdc.rpt').write_text('CDC Report\n\nunparsed\n')
+        self.assertTrue(self.check(self.candidate()))
+
+    def test_measurement_scope_cannot_be_swapped(self):
+        self.assertTrue(self.check(self.candidate(xdc='production')))
+        self.assertTrue(self.check(self.candidate(), routed_qor(wns=-3.0, top='baseline-source')))
+        stale = self.candidate(); stale['manifest']['hashes']['src/design/top.v'] = 'not-the-checkout'
+        self.assertTrue(self.check(stale))
+        unrouted = self.candidate(); unrouted['stages'].pop('routed')
+        self.assertTrue(self.check(unrouted))
+
+    def test_cdc_summary_parser(self):
+        self.assertEqual(cdc_findings(CDC_SAFE), {})
+        self.assertEqual(cdc_findings(CDC_UNSAFE), {'CDC-1': 3})
+        with self.assertRaises(ValueError):
+            cdc_findings('no summary')
 
 
 if __name__ == '__main__':

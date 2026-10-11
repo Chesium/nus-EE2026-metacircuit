@@ -1443,5 +1443,32 @@
       "handoff": "docs/handoffs/m5-verification.md",
       "next_step": "Freshquota read; replayonlyseed12x64bothruntimes withcurrentpins, thenauditcomplete5casecorpus; M5 stillincomplete."
     }
+  },
+  "timing_scope_20261011": {
+    "decision": "docs/verification-plan.md:D-030; docs/m5-decisions.md:M5 timing scope",
+    "timing_closure_required": false,
+    "gate_rule": "no regression vs recorded baseline: hold>=0, setup WNS tolerance 0 ns, no new check_timing/DRC/CDC findings",
+    "comparison_xdc": {
+      "path": "tools/qor/basys3_m5_timing.xdc",
+      "sha256": "d96ce92d4add6f8944f6761f2c4f3bc1b199a090151022b27769d52750cf7593"
+    },
+    "baseline_report": "golden/out/qor/reply-integrity-view32-candidate-routed-20261011e",
+    "baseline": {
+      "lut": 10149,
+      "ff": 4197,
+      "bram": 10,
+      "dsp": 0,
+      "wns_ns": -1.953,
+      "tns_ns": -582.452,
+      "setup_failing_endpoints": 791,
+      "whs_ns": 0.027
+    },
+    "known_timing_debt": [
+      "negative setup slack",
+      "10 inputs without input delay",
+      "44 outputs without output delay",
+      "production XDC not qualified"
+    ],
+    "follow_up": "TIM-1"
   }
 }

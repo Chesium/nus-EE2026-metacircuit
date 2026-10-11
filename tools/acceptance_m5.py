@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_SHA = '475a48362f0f353104abfde654c25f7bdc60acc266c7a774ca6b256d315b540e'
 CONTRACT = ROOT / 'golden/verification/contracts/frontend-v1'
 IMAGE = 'framescope-toolchain:6501155dc903'
-POLICY_SHA = 'd56ba58df6043437a2a948650e2831a94f9ba52f0fbe626f9e2d9961612a40b6'
+POLICY_SHA = '4e9f1904331da1eb7ab41bded60922d2944d6052918ef9923d34e89b6f9cfab7'
 
 
 def sha(path):
@@ -96,10 +96,70 @@ def validate_objective(objective, baseline, candidate, baseline_capacity_verifie
             else number(b['resources'][metric]) - number(c['resources'][metric]))
     if gain < gain_floor:
         errors.append('declared optimization gain not achieved')
-    # Waiver policy is deliberately absent until actual baseline findings are reviewed.
-    if candidate.get('timing_clean') is not True:
-        errors.append('candidate timing/CDC/DRC readiness remains unqualified')
+    # Timing closure is not required; validate_timing_policy forbids regressions instead.
     return {'ok': not errors, 'errors': errors, 'metric': metric, 'gain': gain, 'objective': objective}
+
+
+def cdc_findings(text):
+    """Critical/warning CDC rule counts; an all-safe report has none."""
+    if 'All paths are Safely Timed' in text:
+        return {}
+    rows = re.findall(r'^\s*(?:Critical|Warning)\s+(CDC-\d+)\s+(\d+)', text, re.M)
+    if not rows:
+        raise ValueError('unrecognized CDC report summary')
+    found = {}
+    for rule, count in rows:
+        found[rule] = found.get(rule, 0) + int(count)
+    return found
+
+
+def validate_timing_policy(policy, baseline, candidate, baseline_dir, candidate_dir, root=ROOT):
+    """No timing regression against the recorded baseline under the frozen comparison XDC.
+
+    Timing closure is out of M5 scope: the baseline's own setup violations and
+    missing I/O delays are recorded debt. A candidate must keep hold clean and
+    must not worsen setup WNS, check_timing, DRC or CDC findings.
+    """
+    b, c = baseline['stages'].get('routed'), candidate['stages'].get('routed')
+    if not b or not c:
+        return ['timing policy requires routed baseline and candidate']
+    errors = []
+    recorded = policy['baseline']
+    for key in ('resources', 'constraint_checks'):
+        if b[key] != recorded[key]:
+            errors.append('baseline QoR is not the recorded timing baseline: ' + key)
+    for key in ('wns_ns', 'whs_ns'):
+        if b['timing'][key] != recorded['timing'][key]:
+            errors.append('baseline QoR is not the recorded timing baseline: ' + key)
+    xdc = policy['comparison_constraint']
+    for name, result in (('baseline', baseline), ('candidate', candidate)):
+        if result['manifest']['hashes'].get(xdc['path']) != xdc['sha256']:
+            errors.append(name + ' was not measured with the frozen comparison constraints')
+    for path, expected in candidate['manifest']['hashes'].items():
+        if path != xdc['path'] and sha(root / path) != expected:
+            errors.append('candidate QoR input differs from the checkout under test: ' + path)
+    timing = c['timing']
+    if timing['whs_ns'] < 0 or timing['hold_failing_endpoints'] != 0:
+        errors.append('candidate has hold violations')
+    if timing['wns_ns'] < b['timing']['wns_ns'] - policy['setup_wns_tolerance_ns']:
+        errors.append('candidate setup WNS %.3f ns is worse than baseline %.3f ns'
+                      % (timing['wns_ns'], b['timing']['wns_ns']))
+    for check, count in c['constraint_checks'].items():
+        if count > b['constraint_checks'].get(check, 0):
+            errors.append('candidate adds check_timing findings: ' + check)
+    known = {finding['rule'] for finding in b['drc']['findings']}
+    for finding in c['drc']['findings']:
+        if finding['rule'] not in known:
+            errors.append('candidate adds DRC rule: ' + finding['rule'])
+    try:
+        before = cdc_findings((Path(baseline_dir) / 'routed_cdc.rpt').read_text())
+        after = cdc_findings((Path(candidate_dir) / 'routed_cdc.rpt').read_text())
+        for rule, count in after.items():
+            if count > before.get(rule, 0):
+                errors.append('candidate adds CDC findings: ' + rule)
+    except (OSError, ValueError) as exc:
+        errors.append('CDC comparison failed: ' + str(exc))
+    return errors
 
 
 def validate_qor_pair(baseline, candidate, baseline_dir, candidate_dir, capacity_comparison=False):
@@ -153,11 +213,12 @@ def validate_capacity_failure(baseline, failure, baseline_dir, failure_dir):
 
 
 def qor_preflight(baseline_dir, candidate_dir, objective_path, root=ROOT, baseline_failure_dir=None,
-                  baseline_corrections=None):
+                  baseline_corrections=None, timing_policy=None):
     """Validate real reports before launching the expensive candidate corpus."""
     from vivado_qor import summarize
     baseline = summarize(Path(baseline_dir).resolve())
-    candidate = summarize(Path(candidate_dir).resolve(), root)
+    # Inputs are checked against the checkout in validate_timing_policy, except the comparison XDC.
+    candidate = summarize(Path(candidate_dir).resolve())
     objective = json.loads(Path(objective_path).read_text())
     capacity = objective.get('comparison_stage') == 'synth'
     capacity_errors = []
@@ -175,6 +236,11 @@ def qor_preflight(baseline_dir, candidate_dir, objective_path, root=ROOT, baseli
                                                'routed_capacity_verified': not capacity_errors}
     if result['ok']:
         result['errors'].extend(validate_qor_pair(baseline, candidate, baseline_dir, candidate_dir, capacity))
+        if timing_policy is None:
+            result['errors'].append('missing timing no-regression policy')
+        else:
+            result['errors'].extend(validate_timing_policy(timing_policy, baseline, candidate,
+                                                           baseline_dir, candidate_dir, root))
         frozen = json.loads((CONTRACT / 'contract.json').read_text())
         accepted = {e['path']: e['sha256'] for e in frozen['entries'] if e['group'] == 'baseline_rtl'}
         for path, expected in (baseline_corrections or {}).items():
@@ -451,7 +517,8 @@ def main():
         if args.mode == 'full':
             comparison = qor_preflight(args.baseline_qor, args.qor, args.objective,
                                        baseline_failure_dir=args.baseline_route_attempt,
-                                       baseline_corrections=gate.policy.get('qor_baseline_corrections'))
+                                       baseline_corrections=gate.policy.get('qor_baseline_corrections'),
+                                       timing_policy=gate.policy.get('qor_timing_policy'))
             (out / 'optimization-preflight.json').write_text(json.dumps(comparison, indent=2) + '\n')
             if comparison['ok'] is not True:
                 raise ValueError('QoR preflight rejected; full regression batch not started: ' + '; '.join(comparison['errors']))
@@ -480,7 +547,8 @@ def main():
             else:
                 comparison = qor_preflight(args.baseline_qor, args.qor, args.objective,
                                            baseline_failure_dir=args.baseline_route_attempt,
-                                           baseline_corrections=gate.policy.get('qor_baseline_corrections'))
+                                           baseline_corrections=gate.policy.get('qor_baseline_corrections'),
+                                           timing_policy=gate.policy.get('qor_timing_policy'))
                 (out / 'optimization.json').write_text(json.dumps(comparison, indent=2) + '\n')
                 readiness_errors.extend(comparison['errors'])
         if before != inventory(ROOT):

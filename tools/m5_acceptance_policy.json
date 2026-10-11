@@ -48,7 +48,7 @@
   "docker_image": "framescope-toolchain:6501155dc903",
   "functional_bins_required": 64,
   "coverage_policy": "All named functional bins required; line/toggle exclusions not yet reviewed, so full readiness fails.",
-  "mandatory_scope": "Frontend frozen contract plus continuous global and capacity/value/unit/selection domain invariants, configured actual FP pipeline and augmented-capacity recovery, routed timing/CDC and positive objective gain. FIFO reset-base/range-count induction and lifetime/overlap ledger on both runtimes. Actual-source watched FIFO order, conditional guard completion, quiescent rebuild ranking, parser control/range and reply bank integrity proofs, cold real-UART malformed rejection/recovery and32node view checks.",
+  "mandatory_scope": "Frontend frozen contract plus continuous global and capacity/value/unit/selection domain invariants, configured actual FP pipeline and augmented-capacity recovery, routed no-regression timing/CDC/DRC against the recorded baseline under the frozen comparison XDC and positive objective gain. FIFO reset-base/range-count induction and lifetime/overlap ledger on both runtimes. Actual-source watched FIFO order, conditional guard completion, quiescent rebuild ranking, parser control/range and reply bank integrity proofs, cold real-UART malformed rejection/recovery and32node view checks.",
   "seed_corpus": [
     1,
     7,
@@ -61,10 +61,59 @@
   "command_timeout_seconds": 3600,
   "total_timeout_seconds": 21600,
   "qor_baseline_corrections": {
-    "src/design/rendering/GlobalRender_top.v": "4e62e63dd68ba9e946006a86129d48c39dd7570710a73451f0fd1fba68c2bb16"
+    "src/design/rendering/GlobalRender_top.v": "9b7e4d062a06142994d828d49c45feba8893fe32af7e489745f84458b82667e9",
+    "src/design/common/FloodQueueStore.v": "6e80cfbf5b6b456462822014b15808814b2c6b0208ad7ef0bbd4da4c664adfb8",
+    "src/design/Dashboard/ComponentPropertyPanel.v": "45ca2444a42286dce2cb0c71b1364762a8ec60b825277f94f086cc2337c73786"
   },
   "qor_baseline_correction_decisions": [
-    "docs/m5-decisions.md:A-008"
+    "docs/m5-decisions.md:A-008",
+    "docs/m5-decisions.md:Adopted shadow write normalization",
+    "docs/m5-decisions.md:Integrated FIFO wrap and panel latch corrections",
+    "docs/m5-decisions.md:A-009",
+    "docs/m5-decisions.md:A-010"
   ],
-  "coverage_policy_sha256": "f88e8509d4f37db7615628a2a30f7a2033485480bcc0133d5400eae610ca15a8"
+  "coverage_policy_sha256": "f88e8509d4f37db7615628a2a30f7a2033485480bcc0133d5400eae610ca15a8",
+  "qor_timing_policy": {
+    "decision": "docs/m5-decisions.md:M5 timing scope",
+    "scope": "Timing closure is out of M5 scope (TIM-1). Candidates may not regress timing against the recorded baseline; the baseline setup violations and missing I/O delays are recorded debt.",
+    "comparison_constraint": {
+      "path": "src/constraint/basys3.xdc",
+      "frozen_copy": "tools/qor/basys3_m5_timing.xdc",
+      "sha256": "d96ce92d4add6f8944f6761f2c4f3bc1b199a090151022b27769d52750cf7593"
+    },
+    "setup_wns_tolerance_ns": 0,
+    "hold": "whs_ns >= 0 with no failing hold endpoints",
+    "baseline": {
+      "report": "golden/out/qor/reply-integrity-view32-candidate-routed-20261011e",
+      "resources": {
+        "lut": 10149.0,
+        "ff": 4197.0,
+        "bram": 10.0,
+        "dsp": 0.0
+      },
+      "timing": {
+        "wns_ns": -1.953,
+        "tns_ns": -582.452,
+        "setup_failing_endpoints": 791,
+        "setup_total_endpoints": 15247,
+        "whs_ns": 0.027,
+        "ths_ns": 0.0,
+        "hold_failing_endpoints": 0,
+        "hold_total_endpoints": 15247
+      },
+      "constraint_checks": {
+        "no_clock": 0,
+        "unconstrained_internal_endpoints": 0,
+        "no_input_delay": 10,
+        "no_output_delay": 44
+      },
+      "drc_rules": [
+        "CFGBVS-1",
+        "CHECK-3",
+        "REQP-1839",
+        "REQP-1840"
+      ],
+      "cdc": "All paths are Safely Timed"
+    }
+  }
 }

@@ -175,3 +175,31 @@ Compared with10092/4157/9.5/-1.333, increases+57LUT/+40FF/+0.5BRAM and setup
 degradation0.620ns are retained honestly within unchanged12000/4500/10/0 and
 -2.0/0 caps/floors. This is correctness qualification, not a positive-area or
 full100MHz/IO/CDC acceptance claim. The combined correction is integrated under this scoped correctness qualification; fullM5 readiness remains incomplete.
+
+## M5 timing scope (2026-10-11 client date)
+
+Plan decision D-030. M5 characterizes timing and forbids regressions; it does
+not require timing closure. The acceptance gate no longer requires
+`timing_clean` (which the QoR runner never set, so full mode could not pass).
+
+- Comparison constraints: `tools/qor/basys3_m5_timing.xdc`
+  (`d96ce92d…`), the production XDC plus the generated 25 MHz pixel clock,
+  related to the 100 MHz master with no exceptions. Create a measurement root
+  with `tools/qor_root_m5.py`. The production XDC is unchanged.
+- Recorded baseline: current production, report
+  `golden/out/qor/reply-integrity-view32-candidate-routed-20261011e`:
+  10149 LUT / 4197 FF / 10 BRAM / 0 DSP, setup WNS -1.953 ns (TNS -582.452,
+  791 failing endpoints), hold +0.027 ns, check_timing no_clock 0 /
+  unconstrained internal 0 / no_input_delay 10 / no_output_delay 44, CDC all
+  paths safely timed, DRC warnings CFGBVS-1, CHECK-3, REQP-1839, REQP-1840.
+- Candidate rule: hold WNS >= 0 with no failing hold endpoints; setup WNS no
+  worse than baseline (0 ns tolerance); no increase in any check_timing count,
+  no new DRC rule and no new or increased CDC finding. Objective resource
+  limits and gain still apply.
+- Known timing debt (TIM-1): negative setup slack, the 10 input / 44 output
+  ports without I/O delays, and production XDC qualification.
+
+Candidates previously rejected only against self-declared setup floors
+(selected-address, valid-only epoch, row-valid, unit-tree) are not re-labelled;
+they can be re-measured and judged under this rule. Accepting a candidate moves
+the recorded baseline, which requires a policy update.

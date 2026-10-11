@@ -1322,6 +1322,7 @@ module GlobalRender_top (
     reg  [CANVAS_ADDR_W-1:0] component_index_map_pending_pair_addr = {CANVAS_ADDR_W{1'b0}};
     reg  [CANVAS_ADDR_W-1:0] component_index_map_pending_pair_data = COMPONENT_INDEX_INVALID;
     reg         component_store_rebuild_active = 1'b0;
+    reg         component_store_write_drain = 1'b0;
     reg  [CANVAS_ADDR_W-1:0] component_store_scan_addr = {CANVAS_ADDR_W{1'b0}};
     reg  [CANVAS_ADDR_W-1:0] component_store_next_index = {CANVAS_ADDR_W{1'b0}};
     reg         component_store_change_this_cycle;
@@ -1359,7 +1360,8 @@ module GlobalRender_top (
     wire [CANVAS_ADDR_W-1:0] selected_component_index_map_data;
     wire        component_store_busy =
         component_index_map_pending_pair_write || component_index_map_clear_active ||
-        component_store_rebuild_active || component_store_dirty;
+        component_store_rebuild_active || component_store_dirty ||
+        component_index_map_w_en || component_store_w_en || component_store_write_drain;
     wire        backend_fetch_test_enable;
     reg         backend_frame_pending = 1'b0;
     reg         backend_test_active = 1'b0;
@@ -2125,6 +2127,13 @@ module GlobalRender_top (
         .clk(CLK100MHZ), .w_en(value_ram_w_en), .w_addr(value_ram_w_addr),
         .r_addr(interaction_value_read_en ? interaction_value_read_addr : selected_value_store_addr_sys), .d_in(value_text_len_ram_w_data), .d_out(value_text_len_ram_r_data)
     );
+
+    // A-008: registered write strobes retire one edge after rebuild schedules
+    // them. SimpleRam reads old data on that write edge, so keep consumers busy
+    // for the following read-refresh edge as well.
+    always @(posedge CLK100MHZ) begin
+        component_store_write_drain <= component_index_map_w_en || component_store_w_en;
+    end
 
     always @(posedge CLK100MHZ) begin
         if (component_store_read_snapshot_pending) begin

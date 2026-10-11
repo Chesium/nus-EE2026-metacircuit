@@ -118,6 +118,8 @@ module SolverBoard_top #(
     reg [7:0]  current_elem_count = 8'd0;
     reg [7:0]  current_node_count = 8'd0;
     reg [7:0]  loaded_elem_count = 8'd0;
+    reg [7:0]  voltage_source_count = 8'd0;
+    wire [8:0] augmented_dimension = {1'b0, snapshot_end_node_count} + {1'b0, voltage_source_count};
     reg [7:0]  current_status = STATUS_OK;
     reg [31:0] tx_result_value_latched = 32'd0;
 
@@ -295,6 +297,7 @@ module SolverBoard_top #(
             current_elem_count <= 8'd0;
             current_node_count <= 8'd0;
             loaded_elem_count <= 8'd0;
+            voltage_source_count <= 8'd0;
             current_status <= STATUS_OK;
             tx_result_value_latched <= 32'd0;
             staged_idx <= 8'd0;
@@ -344,6 +347,7 @@ module SolverBoard_top #(
                         current_node_count <= snapshot_begin_node_count;
                         current_status <= STATUS_OK;
                         loaded_elem_count <= 8'd0;
+                        voltage_source_count <= 8'd0;
                         clear_netlist_start <= 1'b1;
                         state <= S_CLEAR_WAIT;
                     end
@@ -371,6 +375,7 @@ module SolverBoard_top #(
                         error_latched <= 1'b1;
                         state <= S_TX_ERROR_START;
                     end else if (component_valid) begin
+                        if (component_kind == 8'h03) voltage_source_count <= voltage_source_count + 1'b1;
                         staged_idx <= component_idx;
                         staged_kind <= component_kind;
                         staged_n0 <= component_n0;
@@ -382,10 +387,19 @@ module SolverBoard_top #(
                         converter_start <= 1'b1;
                         state <= S_CONVERT_WAIT;
                     end else if (snapshot_end_valid) begin
-                        solver_elem_count <= {24'd0, snapshot_end_elem_count};
-                        solver_node_count <= {24'd0, snapshot_end_node_count};
-                        solver_start <= 1'b1;
-                        state <= S_SOLVER_WAIT;
+                        if (augmented_dimension > MAX_NODES) begin
+                            current_status <= STATUS_CAPACITY;
+                            tx_frame <= current_frame;
+                            tx_error_code <= STATUS_CAPACITY;
+                            tx_error_arg <= {7'd0, augmented_dimension};
+                            error_latched <= 1'b1;
+                            state <= S_TX_ERROR_START;
+                        end else begin
+                            solver_elem_count <= {24'd0, snapshot_end_elem_count};
+                            solver_node_count <= {24'd0, snapshot_end_node_count};
+                            solver_start <= 1'b1;
+                            state <= S_SOLVER_WAIT;
+                        end
                     end
                 end
 

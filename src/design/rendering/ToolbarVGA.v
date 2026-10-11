@@ -377,8 +377,6 @@ module ToolbarVGA #(
             if (hovered_tool_idx == 4'd1) begin
                 if (selected_tool_idx == 4'd1) begin
                     selected_wire_variant <= selected_wire_variant + 1'b1;
-                end else begin
-                    selected_wire_variant <= 2'd0;
                 end
             end
             selected_tool_idx <= hovered_tool_idx;

@@ -3601,6 +3601,16 @@ module GlobalRender_top (
             init_cycles <= init_cycles + 1'b1;
         end
 
+        // Mouse setup must run alongside the RAM clear: using these cycles as
+        // exclusive branches leaves cells 1 and 2 uninitialized at cold boot.
+        if (!clear_canvas_active && init_cycles == 10'd1) begin
+            mouse_set_max_x <= 1'b1;
+            mouse_set_value <= 12'd639;
+        end else if (!clear_canvas_active && init_cycles == 10'd2) begin
+            mouse_set_max_y <= 1'b1;
+            mouse_set_value <= 12'd479;
+        end
+
         if (keyboard_edit_event) begin
             keyboard_event_seen <= keyboard_event_sync1;
         end
@@ -3637,12 +3647,6 @@ module GlobalRender_top (
             end else begin
                 clear_canvas_addr <= clear_canvas_addr + 1'b1;
             end
-        end else if (init_cycles == 10'd1) begin
-            mouse_set_max_x <= 1'b1;
-            mouse_set_value <= 12'd639;
-        end else if (init_cycles == 10'd2) begin
-            mouse_set_max_y <= 1'b1;
-            mouse_set_value <= 12'd479;
         end else if (init_cycles < CANVAS_CELL_COUNT) begin
             circuit_canvas_ram_w_en <= 1'b1;
             circuit_canvas_ram_w_addr <= init_cycles[CANVAS_ADDR_W-1:0];

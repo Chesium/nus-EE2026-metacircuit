@@ -1,0 +1,5 @@
+{
+  "name": "m2_boot",
+  "description": "Initial full UI and three frame-locked animation phases.",
+  "steps": ["wait 1", "checkpoint boot_0", "wait 1", "checkpoint boot_1", "wait 1", "checkpoint boot_2", "wait 1", "checkpoint boot_3", "wait 1", "checkpoint boot_4", "wait 1", "checkpoint boot_5"]
+}

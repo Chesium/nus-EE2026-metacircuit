@@ -1,0 +1,745 @@
+{
+  "version": 2,
+  "seed": 2026,
+  "corpus": "rotations",
+  "blocks": [
+    [
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "capacitor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "voltage"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "current"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          13,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          13,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          13,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          13,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "resistor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          6
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          6
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          6
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          6
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "inductor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      }
+    ]
+  ],
+  "scenario": {
+    "name": "m4_directed_rotations_seed_2026",
+    "description": "M4 directed rotations corpus, seed 2026; accepted settled canvas state contract. No solver/stall/PS2 qualification.",
+    "steps": [
+      {
+        "op": "wait",
+        "frames": 3
+      },
+      {
+        "op": "checkpoint",
+        "label": "boot"
+      },
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_0"
+      },
+      {
+        "op": "click_tool",
+        "tool": "capacitor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_1"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_2"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_3"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_4"
+      },
+      {
+        "op": "click_tool",
+        "tool": "voltage"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_5"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_6"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_7"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_8"
+      },
+      {
+        "op": "click_tool",
+        "tool": "current"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          13,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_9"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          13,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_10"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          13,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_11"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          13,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_12"
+      },
+      {
+        "op": "click_tool",
+        "tool": "resistor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_13"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_14"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_15"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          3,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_16"
+      },
+      {
+        "op": "click_tool",
+        "tool": "inductor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_17"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_18"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_19"
+      },
+      {
+        "op": "click_tool",
+        "tool": "rotate"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_20"
+      }
+    ]
+  }
+}

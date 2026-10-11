@@ -1,0 +1,94 @@
+{
+  "name": "m4_v2_seed_12",
+  "description": "M4 v2 cold-start canvas stress; settled state checks use the accepted M1 latency. No solver/stall/PS2 qualification.",
+  "steps": [
+    {
+      "op": "wait",
+      "frames": 3
+    },
+    {
+      "op": "checkpoint",
+      "label": "boot"
+    },
+    {
+      "op": "click_tool",
+      "tool": "wire"
+    },
+    {
+      "op": "click_cell",
+      "cell": [
+        0,
+        15
+      ],
+      "hold": 1
+    },
+    {
+      "op": "wait",
+      "frames": 2
+    },
+    {
+      "op": "checkpoint",
+      "label": "operation_0"
+    },
+    {
+      "op": "click_tool",
+      "tool": "wire"
+    },
+    {
+      "op": "click_cell",
+      "cell": [
+        0,
+        12
+      ],
+      "hold": 1
+    },
+    {
+      "op": "wait",
+      "frames": 2
+    },
+    {
+      "op": "checkpoint",
+      "label": "operation_1"
+    },
+    {
+      "op": "click_tool",
+      "tool": "current"
+    },
+    {
+      "op": "click_cell",
+      "cell": [
+        17,
+        8
+      ],
+      "hold": 1
+    },
+    {
+      "op": "wait",
+      "frames": 2
+    },
+    {
+      "op": "checkpoint",
+      "label": "operation_2"
+    },
+    {
+      "op": "click_tool",
+      "tool": "wire"
+    },
+    {
+      "op": "click_cell",
+      "cell": [
+        17,
+        5
+      ],
+      "hold": 9
+    },
+    {
+      "op": "wait",
+      "frames": 2
+    },
+    {
+      "op": "checkpoint",
+      "label": "operation_3"
+    }
+  ]
+}

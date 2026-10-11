@@ -1,0 +1,1091 @@
+{
+  "milestone": "M3",
+  "automated_ok": true,
+  "date": "2026-10-09",
+  "decisions": [
+    "D-015",
+    "D-016",
+    "D-017",
+    "D-018",
+    "D-019",
+    "D-020",
+    "D-021",
+    "D-023",
+    "D-024",
+    "D-025"
+  ],
+  "toolchains": {
+    "native": "Verilator 5.046 2026-02-28 rev v5.046-55-g1264184fb",
+    "docker": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+    "image": "framescope-toolchain:6501155dc903"
+  },
+  "scenarios": {
+    "m3_backend": {
+      "file": "golden/scenarios/m3_backend.json",
+      "frames": 139,
+      "runs": {
+        "native": {
+          "ok": true,
+          "state": {
+            "checkpoints": 12,
+            "passed": 12,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 4,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "display_upper",
+                "frame": 8,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "display_lower",
+                "frame": 12,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "wire_island",
+                "frame": 24,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "source_21",
+                "frame": 48,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "source_micro",
+                "frame": 57,
+                "snapshotId": 6,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "placed_late",
+                "frame": 73,
+                "snapshotId": 7,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "placed_early",
+                "frame": 83,
+                "snapshotId": 8,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "placed_middle",
+                "frame": 93,
+                "snapshotId": 9,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "freed_early",
+                "frame": 106,
+                "snapshotId": 10,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "reused_slot",
+                "frame": 119,
+                "snapshotId": 11,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "recovered",
+                "frame": 138,
+                "snapshotId": 14,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 12,
+              "passed": 12,
+              "txLines": 793,
+              "completed": 131,
+              "aborted": 4,
+              "rejected": 0,
+              "solverReplies": 130,
+              "staleReplies": 8,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/reviewed-native-m3_backend/m3_backend/summary.json",
+          "actual": "golden/out/m3/first-native/m3_backend/rtl"
+        },
+        "docker": {
+          "ok": true,
+          "state": {
+            "checkpoints": 12,
+            "passed": 12,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 4,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "display_upper",
+                "frame": 8,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "display_lower",
+                "frame": 12,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "wire_island",
+                "frame": 24,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "source_21",
+                "frame": 48,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "source_micro",
+                "frame": 57,
+                "snapshotId": 6,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "placed_late",
+                "frame": 73,
+                "snapshotId": 7,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "placed_early",
+                "frame": 83,
+                "snapshotId": 8,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "placed_middle",
+                "frame": 93,
+                "snapshotId": 9,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "freed_early",
+                "frame": 106,
+                "snapshotId": 10,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "reused_slot",
+                "frame": 119,
+                "snapshotId": 11,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "recovered",
+                "frame": 138,
+                "snapshotId": 14,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 12,
+              "passed": 12,
+              "txLines": 793,
+              "completed": 131,
+              "aborted": 4,
+              "rejected": 0,
+              "solverReplies": 130,
+              "staleReplies": 8,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/final-docker/m3_backend/summary.json",
+          "actual": "golden/out/m3/final-docker/m3_backend/rtl"
+        }
+      },
+      "cross_runtime_equal": {
+        "all_frame_crcs": true,
+        "all_frame_probes": true,
+        "uart_tx_lines_and_timing": true,
+        "uart_rx_replies_and_timing": true,
+        "memory_dumps": true
+      },
+      "compared_memory_dumps": 144
+    },
+    "m3_connectivity": {
+      "file": "golden/scenarios/m3_connectivity.json",
+      "frames": 114,
+      "runs": {
+        "native": {
+          "ok": true,
+          "state": {
+            "checkpoints": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 6,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "right_rail_split",
+                "frame": 19,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "horizontal_wire_unjoined",
+                "frame": 32,
+                "snapshotId": 3,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "rotated_wire_rejoins",
+                "frame": 45,
+                "snapshotId": 4,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_removed",
+                "frame": 58,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_restored_unjoined",
+                "frame": 71,
+                "snapshotId": 6,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_rotated_joins",
+                "frame": 84,
+                "snapshotId": 7,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "lower_resistor_removed",
+                "frame": 97,
+                "snapshotId": 8,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "rails_shorted",
+                "frame": 113,
+                "snapshotId": 10,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 9,
+              "passed": 9,
+              "txLines": 551,
+              "completed": 115,
+              "aborted": 0,
+              "rejected": 0,
+              "solverReplies": 115,
+              "staleReplies": 4,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/reviewed-native-m3_connectivity/m3_connectivity/summary.json",
+          "actual": "golden/out/m3/first-native/m3_connectivity/rtl"
+        },
+        "docker": {
+          "ok": true,
+          "state": {
+            "checkpoints": 9,
+            "passed": 9,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 6,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "right_rail_split",
+                "frame": 19,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "horizontal_wire_unjoined",
+                "frame": 32,
+                "snapshotId": 3,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "rotated_wire_rejoins",
+                "frame": 45,
+                "snapshotId": 4,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_removed",
+                "frame": 58,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_restored_unjoined",
+                "frame": 71,
+                "snapshotId": 6,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "ground_rotated_joins",
+                "frame": 84,
+                "snapshotId": 7,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "lower_resistor_removed",
+                "frame": 97,
+                "snapshotId": 8,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "rails_shorted",
+                "frame": 113,
+                "snapshotId": 10,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 9,
+              "passed": 9,
+              "txLines": 551,
+              "completed": 115,
+              "aborted": 0,
+              "rejected": 0,
+              "solverReplies": 115,
+              "staleReplies": 4,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/final-docker/m3_connectivity/summary.json",
+          "actual": "golden/out/m3/final-docker/m3_connectivity/rtl"
+        }
+      },
+      "cross_runtime_equal": {
+        "all_frame_crcs": true,
+        "all_frame_probes": true,
+        "uart_tx_lines_and_timing": true,
+        "uart_rx_replies_and_timing": true,
+        "memory_dumps": true
+      },
+      "compared_memory_dumps": 108
+    },
+    "m3_errors": {
+      "file": "golden/scenarios/m3_errors.json",
+      "frames": 124,
+      "runs": {
+        "native": {
+          "ok": true,
+          "state": {
+            "checkpoints": 8,
+            "passed": 8,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "stale_recovered",
+                "frame": 14,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "capacitor_rejected",
+                "frame": 27,
+                "snapshotId": 3,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "capacitor_removed",
+                "frame": 40,
+                "snapshotId": 4,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "inductor_rejected",
+                "frame": 53,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "inductor_removed",
+                "frame": 66,
+                "snapshotId": 6,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "pico_rejected",
+                "frame": 97,
+                "snapshotId": 9,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "zero_resistance",
+                "frame": 107,
+                "snapshotId": 10,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "recovered",
+                "frame": 123,
+                "snapshotId": 11,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 8,
+              "passed": 8,
+              "txLines": 399,
+              "completed": 89,
+              "aborted": 0,
+              "rejected": 36,
+              "solverReplies": 89,
+              "staleReplies": 3,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/reviewed-native-m3_errors/m3_errors/summary.json",
+          "actual": "golden/out/m3/first-native/m3_errors/rtl"
+        },
+        "docker": {
+          "ok": true,
+          "state": {
+            "checkpoints": 8,
+            "passed": 8,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "stale_recovered",
+                "frame": 14,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "capacitor_rejected",
+                "frame": 27,
+                "snapshotId": 3,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "capacitor_removed",
+                "frame": 40,
+                "snapshotId": 4,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "inductor_rejected",
+                "frame": 53,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "inductor_removed",
+                "frame": 66,
+                "snapshotId": 6,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "pico_rejected",
+                "frame": 97,
+                "snapshotId": 9,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "zero_resistance",
+                "frame": 107,
+                "snapshotId": 10,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "recovered",
+                "frame": 123,
+                "snapshotId": 11,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 8,
+              "passed": 8,
+              "txLines": 399,
+              "completed": 89,
+              "aborted": 0,
+              "rejected": 36,
+              "solverReplies": 89,
+              "staleReplies": 3,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/final-docker/m3_errors/summary.json",
+          "actual": "golden/out/m3/final-docker/m3_errors/rtl"
+        }
+      },
+      "cross_runtime_equal": {
+        "all_frame_crcs": true,
+        "all_frame_probes": true,
+        "uart_tx_lines_and_timing": true,
+        "uart_rx_replies_and_timing": true,
+        "memory_dumps": true
+      },
+      "compared_memory_dumps": 96
+    },
+    "m3_display": {
+      "file": "golden/scenarios/m3_display.json",
+      "frames": 38,
+      "runs": {
+        "native": {
+          "ok": true,
+          "state": {
+            "checkpoints": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "boot_lower",
+                "frame": 4,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "boot_upper",
+                "frame": 8,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "boot_lower_again",
+                "frame": 12,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "split_node0",
+                "frame": 25,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "node1_upper",
+                "frame": 29,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "node1_lower",
+                "frame": 33,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "node0_upper",
+                "frame": 37,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 7,
+              "passed": 7,
+              "txLines": 195,
+              "completed": 39,
+              "aborted": 0,
+              "rejected": 0,
+              "solverReplies": 38,
+              "staleReplies": 1,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/reviewed-native-m3_display/m3_display/summary.json",
+          "actual": "golden/out/m3/display-native/m3_display/rtl"
+        },
+        "docker": {
+          "ok": true,
+          "state": {
+            "checkpoints": 7,
+            "passed": 7,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "boot_lower",
+                "frame": 4,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "boot_upper",
+                "frame": 8,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "boot_lower_again",
+                "frame": 12,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "split_node0",
+                "frame": 25,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "node1_upper",
+                "frame": 29,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "node1_lower",
+                "frame": 33,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "node0_upper",
+                "frame": 37,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 7,
+              "passed": 7,
+              "txLines": 195,
+              "completed": 39,
+              "aborted": 0,
+              "rejected": 0,
+              "solverReplies": 38,
+              "staleReplies": 1,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/display-docker/m3_display/summary.json",
+          "actual": "golden/out/m3/display-docker/m3_display/rtl"
+        }
+      },
+      "cross_runtime_equal": {
+        "all_frame_crcs": true,
+        "all_frame_probes": true,
+        "uart_tx_lines_and_timing": true,
+        "uart_rx_replies_and_timing": true,
+        "memory_dumps": true
+      },
+      "compared_memory_dumps": 84
+    },
+    "m3_current_source": {
+      "file": "golden/scenarios/m3_current_source.json",
+      "frames": 67,
+      "runs": {
+        "native": {
+          "ok": true,
+          "state": {
+            "checkpoints": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 4,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "source_removed",
+                "frame": 17,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "blank_current_source",
+                "frame": 30,
+                "snapshotId": 3,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "current_2mA",
+                "frame": 58,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "current_upper",
+                "frame": 62,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "current_lower",
+                "frame": 66,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 6,
+              "passed": 6,
+              "txLines": 327,
+              "completed": 68,
+              "aborted": 0,
+              "rejected": 0,
+              "solverReplies": 67,
+              "staleReplies": 3,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/current-source-native/m3_current_source/summary.json",
+          "actual": "golden/out/m3/current-source-native/m3_current_source/rtl"
+        },
+        "docker": {
+          "ok": true,
+          "state": {
+            "checkpoints": 6,
+            "passed": 6,
+            "failed": 0
+          },
+          "backend": {
+            "ok": true,
+            "errors": [],
+            "checkpoints": [
+              {
+                "label": "boot",
+                "frame": 4,
+                "snapshotId": 1,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "source_removed",
+                "frame": 17,
+                "snapshotId": 2,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "blank_current_source",
+                "frame": 30,
+                "snapshotId": 3,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "current_2mA",
+                "frame": 58,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "current_upper",
+                "frame": 62,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              },
+              {
+                "label": "current_lower",
+                "frame": 66,
+                "snapshotId": 5,
+                "ok": true,
+                "differences": []
+              }
+            ],
+            "summary": {
+              "checkpoints": 6,
+              "passed": 6,
+              "txLines": 327,
+              "completed": 68,
+              "aborted": 0,
+              "rejected": 0,
+              "solverReplies": 67,
+              "staleReplies": 3,
+              "captureEndedInsideSnapshot": false,
+              "pendingUart": false
+            }
+          },
+          "artifact": "golden/out/m3/current-source-docker/m3_current_source/summary.json",
+          "actual": "golden/out/m3/current-source-docker/m3_current_source/rtl"
+        }
+      },
+      "cross_runtime_equal": {
+        "all_frame_crcs": true,
+        "all_frame_probes": true,
+        "uart_tx_lines_and_timing": true,
+        "uart_rx_replies_and_timing": true,
+        "memory_dumps": true
+      },
+      "compared_memory_dumps": 72
+    }
+  },
+  "summary_per_runtime": {
+    "checkpoints": 42,
+    "passed": 42,
+    "txLines": 2265,
+    "completed": 442,
+    "aborted": 4,
+    "rejected": 36,
+    "solverReplies": 439,
+    "staleReplies": 19,
+    "frames": 482,
+    "memory_dumps": 504
+  },
+  "regressions": {
+    "m2_native": {
+      "frames": 107,
+      "state": {
+        "checkpoints": 23,
+        "passed": 23,
+        "failed": 0
+      },
+      "ui": {
+        "ok": true,
+        "checkpoints": 23
+      },
+      "pixels": {
+        "frames": 23,
+        "passed": 23,
+        "failed": 0,
+        "identical": 23,
+        "missing": 0,
+        "diff_pixels": 0,
+        "failed_frames": []
+      },
+      "recorded_ok": true
+    },
+    "m2_docker": {
+      "frames": 107,
+      "state": {
+        "checkpoints": 23,
+        "passed": 23,
+        "failed": 0
+      },
+      "ui": {
+        "ok": true,
+        "checkpoints": 23
+      },
+      "pixels": {
+        "frames": 23,
+        "passed": 23,
+        "failed": 0,
+        "identical": 23,
+        "missing": 0,
+        "diff_pixels": 0,
+        "failed_frames": []
+      },
+      "recorded_ok": true
+    },
+    "m1_latency_native": {
+      "checkpoints": 11,
+      "passed": 11,
+      "failed": 0
+    }
+  },
+  "checks": {
+    "golden_unit_tests": 214,
+    "playwright_tests": 5,
+    "uart_link_tests": 20,
+    "simpyhls_extraction_tests": 11,
+    "asset_tests": 20,
+    "frontend_rtl_benches": 5,
+    "solver_rtl_benches": 5,
+    "typecheck": true,
+    "build": true,
+    "assets_check": true,
+    "regenerated_rtl_check": true
+  },
+  "provenance": {
+    ".": "2a93353dac4d9fdff435948e9d614acf6b3f616f",
+    "simpyhls": "0d6f22a8051bf6ff5af8e4f603d50603e33ac261",
+    "../framescope": "de04a24f8212eedf218040dcc923daff2d7b857b"
+  },
+  "source_sha256": {
+    "golden/scenarios/m2_full_ui.json": "1852af694e2f0145afb65b588a4fcef5dbf654aaa10e4aa2a16fa1601a72844e",
+    "golden/scenarios/m2_recorded.json": "7b7bc005eda96575b75aeac953e79bf98dd857c9fd348ce0c05892477c14893d",
+    "golden/scenarios/m3_backend.json": "9c8977b636585a41a79564f6d9100529b09eeb87c6729262c874bbed1a158b68",
+    "golden/scenarios/m3_connectivity.json": "3f19004b8afc37caf9fbd6819a740b1aed72b4309857e928f94202be5914a368",
+    "golden/scenarios/m3_current_source.json": "5c0be156e4cb3fbdba62793873c6fda87887ebb0870694d2bec24fc7a6e654e4",
+    "golden/scenarios/m3_display.json": "6af36ef9dafb16db069a431f72e685f0794f2c637a077b64c5fb89646bce796c",
+    "golden/scenarios/m3_errors.json": "67cbbfca8d9fbbb84303b13f1df81bea6e213152187433ad85bf720586db1e1a",
+    "golden/src/backend/arith.ts": "39b9b33d0b9a94bf238c6c6cf005ae0029450058e1b299a7ec2171149abfb46f",
+    "golden/src/backend/lu.ts": "fa2c6737c3a9037298adda05f66a949508154ccd01c732d3096fcf8d7320c072",
+    "golden/src/backend/netlist.ts": "7d5cd6d979e7955138ed751661a4217a96eec028d987090b389b16ec65d003cc",
+    "golden/src/backend/snapshot.ts": "20fd9fe8829a68f719232dda48f7059ce470f5962675e0ddb037f7fd419d0947",
+    "golden/src/backend/solve.ts": "351c1fd038c48f4347c18fce980a2fbabbbe180985b79adc546b6f9c9d751cd9",
+    "golden/src/backend/stamp.ts": "290fc240d0d2a50e34ee75d0440ae8857b6f87578bfef1d01cbc9130ed5a7e7e",
+    "golden/src/backend/types.ts": "813391da4341ddd2d3bdfc098476a0dbb93026c2efe897a4b16ffd9da4842a0f",
+    "golden/src/backend/uart.ts": "39ae7ccd12f13fc444ac53f5535cf74e4faa081fa6ca83cb867f85644db1e068",
+    "golden/src/backend/value.ts": "0a8080926eb3c22b0fd568f0de793bddf52f6257512aa3511360785b2aceb0da",
+    "golden/src/cli/compare-backend.ts": "0d1b262fc7181bef67b7d47fd6ece61a807a5c6d84ee2cba35eb31bfd5f38212",
+    "golden/src/core/bootCircuit.ts": "ebecee0dcb46172bc9dabadc43d2cd8497c5657aa864d42a9ac567ea00fb8799",
+    "golden/src/core/config.ts": "388aa8ccd2ed4fd864660687add3e91d6052eacba4d922b59d7991a653972a8a",
+    "golden/src/core/connectivity.ts": "39860979bf4ec39a41fcc7828ac57a1e8dff33dab78b25e16191ba9ac959e8b0",
+    "golden/src/core/constants.ts": "b431168b125b70956ed1fac751b72ee182dc84c20b1a9235d6003aadc5ec0b90",
+    "golden/src/core/encoding.ts": "8762d873906c70173c0fb253056735fdd5aa13b96a90998bbad9f42fb4b4fbff",
+    "golden/src/core/export.ts": "a55625952594b9341b55c78978b79fb9bac1976176a4ae8159596480539210f3",
+    "golden/src/core/geometry.ts": "5855a4519a34120e5121b39f52ba3929c3c56c301bff3f61c5e77b9dbe1c8e7f",
+    "golden/src/core/index.ts": "ad35ddb232ea349073b4efeede1d5ac6f46815cab1694b88d0ffdf6a5b054fb2",
+    "golden/src/core/properties.ts": "48a999216e307c5f08b660e3b631bdedb4edc7cde0dcc933695eb989d14658e7",
+    "golden/src/core/state.ts": "9e7a8a8292f638fac2ce6f7d8c80747619c53a185d9baa405686c71c5ad0fdc1",
+    "golden/src/core/step.ts": "0aa12fff4567f252dec076a67fdd978a5fe943e5d2a506c75cd3fcc1b29770fa",
+    "golden/tools/m3_compare.ts": "09509077731d4d803142859d3f6f2b901215b5b3e8ad2247785d3ad75a3fe5b1",
+    "golden/tools/m3_solver_host.py": "22e1cc27b3ef5a5f79149ad1e1f6156f89bc685f817f9bd5fd7b3ee4363a2f54",
+    "golden/tools/verify_m3.py": "2ec91a8a725a10b143748c136ab830b8c7352485705428f03dcf72f19f3356a9",
+    "simpyhls/examples/extract_component_nodes.dsl.py": "7a8228b99c612194e2de375c1225c57c078f32a3e559f4199393080f3cd6c01d",
+    "simpyhls/examples/solve_core_dc.dsl.py": "6d91010d154038f90f8e36213cbe0b10405be35edc9dcccc77cb224367976102",
+    "simpyhls/tests/test_extract_component_nodes.py": "e524104db101bb5463f9e1f5e8328cb2adfb19af99a14d8a46342fca155ddd1c",
+    "src/design/rendering/GlobalRender_top.v": "78a4b971f3cc6e461e0ab359721e991595d30047d92c966de980c4f17fcd4bc1",
+    "src/design/solver/extract_component_nodes.sv": "b8fea465c372050b2dab0dd8501b86463dd7267444a22bdb5a77765b1cd658e0",
+    "src/uart_link/frontend_tester.py": "1291f1db4350cff6ab7fe2896c3cf15a26410d53ad34512293aac700608b3f6e",
+    "src/uart_link/protocol.py": "d63fc4d0935a157941d9c2b6d4f13e7c02f29b425c0319cd0fa0a8ea70a15f75"
+  },
+  "notes": [
+    "D-017 acceptance uses voltage RAM, display probes and LEDs; the full-loop bench also decodes physical 7-segment pins.",
+    "All complete UART records are checked. Pending final capture-boundary bytes/snapshots/replies are reported and do not imply a protocol abort.",
+    "Reply acceptance uses independently verified UART header timing to witness extraction commits; mouse capture alone does not commit a snapshot id.",
+    "LED status/view bits are checked; transient TX/RX activity bits are outside the semantic LED comparison.",
+    "The simpyhls D-023 kernel and test changes are committed at 0d6f22a8051bf6ff5af8e4f603d50603e33ac261; source hashes above identify the verified content.",
+    "On-screen voltage rendering (M3-4) remains a P2 follow-up under D-017."
+  ]
+}

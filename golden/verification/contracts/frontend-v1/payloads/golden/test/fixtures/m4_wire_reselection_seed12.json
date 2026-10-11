@@ -1,0 +1,92 @@
+{
+  "version": 2,
+  "seed": 12,
+  "blocks": [
+    [
+      {
+        "op": "click_tool",
+        "tool": "wire"
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "wire"
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "resistor"
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "wire"
+      }
+    ]
+  ],
+  "scenario": {
+    "name": "m4_wire_reselection",
+    "description": "A-007 retained wire variant when returning from another tool; reduced seed12 divergence.",
+    "steps": [
+      {
+        "op": "wait",
+        "frames": 3
+      },
+      {
+        "op": "checkpoint",
+        "label": "boot"
+      },
+      {
+        "op": "click_tool",
+        "tool": "wire"
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_0"
+      },
+      {
+        "op": "click_tool",
+        "tool": "wire"
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_1"
+      },
+      {
+        "op": "click_tool",
+        "tool": "resistor"
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_2"
+      },
+      {
+        "op": "click_tool",
+        "tool": "wire"
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_3"
+      }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+# Move onto the resistor tool, click it, then move into the canvas.
+#   framescope run -c examples/metacircuit -n 5 -s examples/metacircuit/stim_click.toml
+# Inputs change at line 10 of a frame: in the vertical back porch (VSYNC is
+# lines 0-1, the back porch lines 2-34), after the design has captured the
+# mouse on the VSYNC edge (D-008 in metacircuit's docs/verification-plan.md).
+[[event]]
+frame = 1
+line = 10
+set = { "mouse.x" = 32, "mouse.y" = 134 }
+
+[[event]]
+frame = 2
+line = 10
+set = { "mouse.left" = 1 }
+
+[[event]]
+frame = 3
+line = 10
+set = { "mouse.left" = 0 }
+
+[[event]]
+frame = 4
+line = 10
+set = { "mouse.x" = 400, "mouse.y" = 300 }

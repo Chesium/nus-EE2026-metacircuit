@@ -1,0 +1,2258 @@
+{
+  "comparison": {
+    "adapter_schema": "metacircuit-semantic/v1",
+    "adapter_status": "M5-2 separately validated; adapter implementation/config hashes must be pinned by acceptance evidence",
+    "default_pixel_exclusions": [],
+    "legacy_m2_pixels_and_m3_oracles_required": true,
+    "order": [
+      "semantic state",
+      "decoded cells",
+      "pixels"
+    ],
+    "pixel_tolerance": 0
+  },
+  "created_at_utc": "2026-10-10T06:57:56.440608+00:00",
+  "entries": [
+    {
+      "behavior_sha256": "39b9b33d0b9a94bf238c6c6cf005ae0029450058e1b299a7ec2171149abfb46f",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/backend/arith.ts",
+      "sha256": "39b9b33d0b9a94bf238c6c6cf005ae0029450058e1b299a7ec2171149abfb46f",
+      "stored": "payloads/golden/src/backend/arith.ts"
+    },
+    {
+      "behavior_sha256": "fa2c6737c3a9037298adda05f66a949508154ccd01c732d3096fcf8d7320c072",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/backend/lu.ts",
+      "sha256": "fa2c6737c3a9037298adda05f66a949508154ccd01c732d3096fcf8d7320c072",
+      "stored": "payloads/golden/src/backend/lu.ts"
+    },
+    {
+      "behavior_sha256": "7d5cd6d979e7955138ed751661a4217a96eec028d987090b389b16ec65d003cc",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/backend/netlist.ts",
+      "sha256": "7d5cd6d979e7955138ed751661a4217a96eec028d987090b389b16ec65d003cc",
+      "stored": "payloads/golden/src/backend/netlist.ts"
+    },
+    {
+      "behavior_sha256": "20fd9fe8829a68f719232dda48f7059ce470f5962675e0ddb037f7fd419d0947",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/backend/snapshot.ts",
+      "sha256": "20fd9fe8829a68f719232dda48f7059ce470f5962675e0ddb037f7fd419d0947",
+      "stored": "payloads/golden/src/backend/snapshot.ts"
+    },
+    {
+      "behavior_sha256": "351c1fd038c48f4347c18fce980a2fbabbbe180985b79adc546b6f9c9d751cd9",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/backend/solve.ts",
+      "sha256": "351c1fd038c48f4347c18fce980a2fbabbbe180985b79adc546b6f9c9d751cd9",
+      "stored": "payloads/golden/src/backend/solve.ts"
+    },
+    {
+      "behavior_sha256": "290fc240d0d2a50e34ee75d0440ae8857b6f87578bfef1d01cbc9130ed5a7e7e",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/backend/stamp.ts",
+      "sha256": "290fc240d0d2a50e34ee75d0440ae8857b6f87578bfef1d01cbc9130ed5a7e7e",
+      "stored": "payloads/golden/src/backend/stamp.ts"
+    },
+    {
+      "behavior_sha256": "813391da4341ddd2d3bdfc098476a0dbb93026c2efe897a4b16ffd9da4842a0f",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/backend/types.ts",
+      "sha256": "813391da4341ddd2d3bdfc098476a0dbb93026c2efe897a4b16ffd9da4842a0f",
+      "stored": "payloads/golden/src/backend/types.ts"
+    },
+    {
+      "behavior_sha256": "39ae7ccd12f13fc444ac53f5535cf74e4faa081fa6ca83cb867f85644db1e068",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/backend/uart.ts",
+      "sha256": "39ae7ccd12f13fc444ac53f5535cf74e4faa081fa6ca83cb867f85644db1e068",
+      "stored": "payloads/golden/src/backend/uart.ts"
+    },
+    {
+      "behavior_sha256": "0a8080926eb3c22b0fd568f0de793bddf52f6257512aa3511360785b2aceb0da",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/backend/value.ts",
+      "sha256": "0a8080926eb3c22b0fd568f0de793bddf52f6257512aa3511360785b2aceb0da",
+      "stored": "payloads/golden/src/backend/value.ts"
+    },
+    {
+      "behavior_sha256": "0d1b262fc7181bef67b7d47fd6ece61a807a5c6d84ee2cba35eb31bfd5f38212",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/cli/compare-backend.ts",
+      "sha256": "0d1b262fc7181bef67b7d47fd6ece61a807a5c6d84ee2cba35eb31bfd5f38212",
+      "stored": "payloads/golden/src/cli/compare-backend.ts"
+    },
+    {
+      "behavior_sha256": "520263df8f94682c9fe148320cc3456297f66dd1aa4a8b66d976570165ab2c90",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/cli/compare-ui.ts",
+      "sha256": "520263df8f94682c9fe148320cc3456297f66dd1aa4a8b66d976570165ab2c90",
+      "stored": "payloads/golden/src/cli/compare-ui.ts"
+    },
+    {
+      "behavior_sha256": "d200d348f57cad314458e5f1e890c31fbc3b8f9d663b07c95ba534d357c937cc",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/cli/compare.ts",
+      "sha256": "d200d348f57cad314458e5f1e890c31fbc3b8f9d663b07c95ba534d357c937cc",
+      "stored": "payloads/golden/src/cli/compare.ts"
+    },
+    {
+      "behavior_sha256": "6c8a61ab65aa44ccf1f4f8a0a8c05b710697472de2e56f2cf658e5b495a645b3",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/cli/main.ts",
+      "sha256": "6c8a61ab65aa44ccf1f4f8a0a8c05b710697472de2e56f2cf658e5b495a645b3",
+      "stored": "payloads/golden/src/cli/main.ts"
+    },
+    {
+      "behavior_sha256": "a0f70cf387ce5add9bbc3cabbeeaf058295a2df66c62874cfb3e5a3ce10ffa5a",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/cli/netlist.ts",
+      "sha256": "a0f70cf387ce5add9bbc3cabbeeaf058295a2df66c62874cfb3e5a3ce10ffa5a",
+      "stored": "payloads/golden/src/cli/netlist.ts"
+    },
+    {
+      "behavior_sha256": "981dff9bd77036845acc38b442d91459e2e18ef54fdb8f0e89072b43a6dff82e",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/cli/png.ts",
+      "sha256": "981dff9bd77036845acc38b442d91459e2e18ef54fdb8f0e89072b43a6dff82e",
+      "stored": "payloads/golden/src/cli/png.ts"
+    },
+    {
+      "behavior_sha256": "0da296b36c5031d58c319ab01f125bac23a356b43ecfe84e63b22e47867c6494",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/cli/reference.ts",
+      "sha256": "0da296b36c5031d58c319ab01f125bac23a356b43ecfe84e63b22e47867c6494",
+      "stored": "payloads/golden/src/cli/reference.ts"
+    },
+    {
+      "behavior_sha256": "a6abd0c993afa5a9cde9b277e226765928ce399554f97f33540f85c39bf45ea1",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/cli/stress.ts",
+      "sha256": "a6abd0c993afa5a9cde9b277e226765928ce399554f97f33540f85c39bf45ea1",
+      "stored": "payloads/golden/src/cli/stress.ts"
+    },
+    {
+      "behavior_sha256": "ebecee0dcb46172bc9dabadc43d2cd8497c5657aa864d42a9ac567ea00fb8799",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/bootCircuit.ts",
+      "sha256": "ebecee0dcb46172bc9dabadc43d2cd8497c5657aa864d42a9ac567ea00fb8799",
+      "stored": "payloads/golden/src/core/bootCircuit.ts"
+    },
+    {
+      "behavior_sha256": "388aa8ccd2ed4fd864660687add3e91d6052eacba4d922b59d7991a653972a8a",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/config.ts",
+      "sha256": "388aa8ccd2ed4fd864660687add3e91d6052eacba4d922b59d7991a653972a8a",
+      "stored": "payloads/golden/src/core/config.ts"
+    },
+    {
+      "behavior_sha256": "39860979bf4ec39a41fcc7828ac57a1e8dff33dab78b25e16191ba9ac959e8b0",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/connectivity.ts",
+      "sha256": "39860979bf4ec39a41fcc7828ac57a1e8dff33dab78b25e16191ba9ac959e8b0",
+      "stored": "payloads/golden/src/core/connectivity.ts"
+    },
+    {
+      "behavior_sha256": "b431168b125b70956ed1fac751b72ee182dc84c20b1a9235d6003aadc5ec0b90",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/constants.ts",
+      "sha256": "b431168b125b70956ed1fac751b72ee182dc84c20b1a9235d6003aadc5ec0b90",
+      "stored": "payloads/golden/src/core/constants.ts"
+    },
+    {
+      "behavior_sha256": "8762d873906c70173c0fb253056735fdd5aa13b96a90998bbad9f42fb4b4fbff",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/encoding.ts",
+      "sha256": "8762d873906c70173c0fb253056735fdd5aa13b96a90998bbad9f42fb4b4fbff",
+      "stored": "payloads/golden/src/core/encoding.ts"
+    },
+    {
+      "behavior_sha256": "a55625952594b9341b55c78978b79fb9bac1976176a4ae8159596480539210f3",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/export.ts",
+      "sha256": "a55625952594b9341b55c78978b79fb9bac1976176a4ae8159596480539210f3",
+      "stored": "payloads/golden/src/core/export.ts"
+    },
+    {
+      "behavior_sha256": "5855a4519a34120e5121b39f52ba3929c3c56c301bff3f61c5e77b9dbe1c8e7f",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/geometry.ts",
+      "sha256": "5855a4519a34120e5121b39f52ba3929c3c56c301bff3f61c5e77b9dbe1c8e7f",
+      "stored": "payloads/golden/src/core/geometry.ts"
+    },
+    {
+      "behavior_sha256": "ad35ddb232ea349073b4efeede1d5ac6f46815cab1694b88d0ffdf6a5b054fb2",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/index.ts",
+      "sha256": "ad35ddb232ea349073b4efeede1d5ac6f46815cab1694b88d0ffdf6a5b054fb2",
+      "stored": "payloads/golden/src/core/index.ts"
+    },
+    {
+      "behavior_sha256": "48a999216e307c5f08b660e3b631bdedb4edc7cde0dcc933695eb989d14658e7",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/properties.ts",
+      "sha256": "48a999216e307c5f08b660e3b631bdedb4edc7cde0dcc933695eb989d14658e7",
+      "stored": "payloads/golden/src/core/properties.ts"
+    },
+    {
+      "behavior_sha256": "9e7a8a8292f638fac2ce6f7d8c80747619c53a185d9baa405686c71c5ad0fdc1",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/state.ts",
+      "sha256": "9e7a8a8292f638fac2ce6f7d8c80747619c53a185d9baa405686c71c5ad0fdc1",
+      "stored": "payloads/golden/src/core/state.ts"
+    },
+    {
+      "behavior_sha256": "0aa12fff4567f252dec076a67fdd978a5fe943e5d2a506c75cd3fcc1b29770fa",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/core/step.ts",
+      "sha256": "0aa12fff4567f252dec076a67fdd978a5fe943e5d2a506c75cd3fcc1b29770fa",
+      "stored": "payloads/golden/src/core/step.ts"
+    },
+    {
+      "behavior_sha256": "33eaf6850b3f920ef6eebc698a6a5ff350a3d4512d2808a06e1bee1d73f75a78",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/render/assetRenderer.ts",
+      "sha256": "33eaf6850b3f920ef6eebc698a6a5ff350a3d4512d2808a06e1bee1d73f75a78",
+      "stored": "payloads/golden/src/render/assetRenderer.ts"
+    },
+    {
+      "behavior_sha256": "8db2fa69f21d341259854b14cebac622bf12c87f4be19fe11e661d15b9c08ccf",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/render/decoder.ts",
+      "sha256": "8db2fa69f21d341259854b14cebac622bf12c87f4be19fe11e661d15b9c08ccf",
+      "stored": "payloads/golden/src/render/decoder.ts"
+    },
+    {
+      "behavior_sha256": "b6038c1cba1ef4b9dd10868512eaf55e45a6f7f86fa01cfff98c0873b0e3fe3c",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/render/framebuffer.ts",
+      "sha256": "b6038c1cba1ef4b9dd10868512eaf55e45a6f7f86fa01cfff98c0873b0e3fe3c",
+      "stored": "payloads/golden/src/render/framebuffer.ts"
+    },
+    {
+      "behavior_sha256": "f6b6116893765f6260185a689fdc20e4209d983b29e4752dc40ee8f045db25e8",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/render/placeholder.ts",
+      "sha256": "f6b6116893765f6260185a689fdc20e4209d983b29e4752dc40ee8f045db25e8",
+      "stored": "payloads/golden/src/render/placeholder.ts"
+    },
+    {
+      "behavior_sha256": "071b5a88d0e6d4cb03d7ac3b382bf11d6fd301d3471a2fd1535af51d2a937efd",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/render/renderer.ts",
+      "sha256": "071b5a88d0e6d4cb03d7ac3b382bf11d6fd301d3471a2fd1535af51d2a937efd",
+      "stored": "payloads/golden/src/render/renderer.ts"
+    },
+    {
+      "behavior_sha256": "5b8f504d402a853266ac3b31b6cda5b8febe5a4d316184b1c7ade4db8cf7c25a",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/scenario/compare.ts",
+      "sha256": "5b8f504d402a853266ac3b31b6cda5b8febe5a4d316184b1c7ade4db8cf7c25a",
+      "stored": "payloads/golden/src/scenario/compare.ts"
+    },
+    {
+      "behavior_sha256": "a14470cd196e567e906074cb8c60fcc4e3c3ff1e56f1524a91df08a40b361470",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/scenario/expand.ts",
+      "sha256": "a14470cd196e567e906074cb8c60fcc4e3c3ff1e56f1524a91df08a40b361470",
+      "stored": "payloads/golden/src/scenario/expand.ts"
+    },
+    {
+      "behavior_sha256": "042f88d57bc256be9393e09426187d95a090e9e14d9555e17308d4fd744a05cf",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/scenario/run.ts",
+      "sha256": "042f88d57bc256be9393e09426187d95a090e9e14d9555e17308d4fd744a05cf",
+      "stored": "payloads/golden/src/scenario/run.ts"
+    },
+    {
+      "behavior_sha256": "813db12f7350a8f1a2569dc22d2d9469c6a3877fdb1ee25c4d214f7793830b17",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/scenario/stim.ts",
+      "sha256": "813db12f7350a8f1a2569dc22d2d9469c6a3877fdb1ee25c4d214f7793830b17",
+      "stored": "payloads/golden/src/scenario/stim.ts"
+    },
+    {
+      "behavior_sha256": "bbc914190dc79e9a3550247278a4f389788f6353a78723e1a8b4bdd122fa09af",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/scenario/stress.ts",
+      "sha256": "bbc914190dc79e9a3550247278a4f389788f6353a78723e1a8b4bdd122fa09af",
+      "stored": "payloads/golden/src/scenario/stress.ts"
+    },
+    {
+      "behavior_sha256": "10129a1e1faa16d8e39fad82eb35e25ebafb6dee8cbc7b2f0e8e4496368c1a12",
+      "current_required": true,
+      "group": "oracle",
+      "path": "golden/src/scenario/types.ts",
+      "sha256": "10129a1e1faa16d8e39fad82eb35e25ebafb6dee8cbc7b2f0e8e4496368c1a12",
+      "stored": "payloads/golden/src/scenario/types.ts"
+    },
+    {
+      "behavior_sha256": "c809beec3e5c3e641e681d8140500e399930026c3576cad4915031dc9783ec99",
+      "current_required": true,
+      "group": "visual",
+      "path": "golden/assets/canvas.json",
+      "sha256": "3d4bbfab5bac3c4780dfebb4970c8ccfffdfba9ea4e8f01935ba16d473b3f7b0",
+      "stored": "payloads/golden/assets/canvas.json"
+    },
+    {
+      "behavior_sha256": "8512b64544eec394a0cba8ae21a9b8ae5e6e52d5172a763f578b041f8124732b",
+      "current_required": true,
+      "group": "visual",
+      "path": "golden/assets/cursor.json",
+      "sha256": "0d58f36c0381bd280784976d098f7aaec7dde7f35c5253e3f00fa9354c3c4b64",
+      "stored": "payloads/golden/assets/cursor.json"
+    },
+    {
+      "behavior_sha256": "d057b48beef4961086511f198b1be2a7c60fd3585ed5b01f4744fe02dec617e7",
+      "current_required": true,
+      "group": "visual",
+      "path": "golden/assets/font8x8.json",
+      "sha256": "4306021bfbc205ff9fc25e70640ae96c50697da4e8fab826d569dc857ca128d5",
+      "stored": "payloads/golden/assets/font8x8.json"
+    },
+    {
+      "behavior_sha256": "6e2c7e1ba072c9fcfd5a85e8c632d47236245da9bee15f7d07b1d24d42272c28",
+      "current_required": true,
+      "group": "visual",
+      "path": "golden/assets/keypad.json",
+      "sha256": "9f252757b1aa4463ed956c4ca75db5784857bae1cb35084c34184551d252ff86",
+      "stored": "payloads/golden/assets/keypad.json"
+    },
+    {
+      "behavior_sha256": "6ed4be0ea4c09a05ae2b5edb0a5fcb07934b656ddf58628893ff9b968a0b3a5d",
+      "current_required": true,
+      "group": "visual",
+      "path": "golden/assets/screen.json",
+      "sha256": "5bbc8c8f62fbd96bd8680ccabc2fd33d00e5885cfd1659b48a0253a7ed456a95",
+      "stored": "payloads/golden/assets/screen.json"
+    },
+    {
+      "behavior_sha256": "af5ece6a83f0b10772c81986374fa3ce88eacd51a06051f6da950fe2598ebcee",
+      "current_required": true,
+      "group": "visual",
+      "path": "golden/assets/toolbar.json",
+      "sha256": "703efc4afe5506baa901729befd2f6d695675a354c1a89f790a4a96997ce0d56",
+      "stored": "payloads/golden/assets/toolbar.json"
+    },
+    {
+      "behavior_sha256": "196b9f4bdc67c24fdc5f50586aae2297053b7d840bc71663cd5bed0acaa84541",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m1_canvas_tools.json",
+      "sha256": "196b9f4bdc67c24fdc5f50586aae2297053b7d840bc71663cd5bed0acaa84541",
+      "stored": "payloads/golden/scenarios/m1_canvas_tools.json"
+    },
+    {
+      "behavior_sha256": "335e1a8d11c48c3be34e643af87d22831dfa6b340790e73b199abc52e33ff7ed",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m1_latency.json",
+      "sha256": "335e1a8d11c48c3be34e643af87d22831dfa6b340790e73b199abc52e33ff7ed",
+      "stored": "payloads/golden/scenarios/m1_latency.json"
+    },
+    {
+      "behavior_sha256": "13fa4b3c4e5ad76af0c03fdf48f8caa266169d60fd0e92529e6ebd142a950978",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m1_recorded.json",
+      "sha256": "13fa4b3c4e5ad76af0c03fdf48f8caa266169d60fd0e92529e6ebd142a950978",
+      "stored": "payloads/golden/scenarios/m1_recorded.json"
+    },
+    {
+      "behavior_sha256": "6f5bb443093a1f921e8cd8540ca3b570834182874bcb6ac62d05bf6833730f24",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m2_boot.json",
+      "sha256": "6f5bb443093a1f921e8cd8540ca3b570834182874bcb6ac62d05bf6833730f24",
+      "stored": "payloads/golden/scenarios/m2_boot.json"
+    },
+    {
+      "behavior_sha256": "1852af694e2f0145afb65b588a4fcef5dbf654aaa10e4aa2a16fa1601a72844e",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m2_full_ui.json",
+      "sha256": "1852af694e2f0145afb65b588a4fcef5dbf654aaa10e4aa2a16fa1601a72844e",
+      "stored": "payloads/golden/scenarios/m2_full_ui.json"
+    },
+    {
+      "behavior_sha256": "1bd6a42e6d67ee4d5dafcd94f14b057d0cf77949b19f774557dc09e202081cb1",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m2_node_colours.json",
+      "sha256": "1bd6a42e6d67ee4d5dafcd94f14b057d0cf77949b19f774557dc09e202081cb1",
+      "stored": "payloads/golden/scenarios/m2_node_colours.json"
+    },
+    {
+      "behavior_sha256": "7b7bc005eda96575b75aeac953e79bf98dd857c9fd348ce0c05892477c14893d",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m2_recorded.json",
+      "sha256": "7b7bc005eda96575b75aeac953e79bf98dd857c9fd348ce0c05892477c14893d",
+      "stored": "payloads/golden/scenarios/m2_recorded.json"
+    },
+    {
+      "behavior_sha256": "9c8977b636585a41a79564f6d9100529b09eeb87c6729262c874bbed1a158b68",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m3_backend.json",
+      "sha256": "9c8977b636585a41a79564f6d9100529b09eeb87c6729262c874bbed1a158b68",
+      "stored": "payloads/golden/scenarios/m3_backend.json"
+    },
+    {
+      "behavior_sha256": "3f19004b8afc37caf9fbd6819a740b1aed72b4309857e928f94202be5914a368",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m3_connectivity.json",
+      "sha256": "3f19004b8afc37caf9fbd6819a740b1aed72b4309857e928f94202be5914a368",
+      "stored": "payloads/golden/scenarios/m3_connectivity.json"
+    },
+    {
+      "behavior_sha256": "5c0be156e4cb3fbdba62793873c6fda87887ebb0870694d2bec24fc7a6e654e4",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m3_current_source.json",
+      "sha256": "5c0be156e4cb3fbdba62793873c6fda87887ebb0870694d2bec24fc7a6e654e4",
+      "stored": "payloads/golden/scenarios/m3_current_source.json"
+    },
+    {
+      "behavior_sha256": "6af36ef9dafb16db069a431f72e685f0794f2c637a077b64c5fb89646bce796c",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m3_display.json",
+      "sha256": "6af36ef9dafb16db069a431f72e685f0794f2c637a077b64c5fb89646bce796c",
+      "stored": "payloads/golden/scenarios/m3_display.json"
+    },
+    {
+      "behavior_sha256": "67cbbfca8d9fbbb84303b13f1df81bea6e213152187433ad85bf720586db1e1a",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/scenarios/m3_errors.json",
+      "sha256": "67cbbfca8d9fbbb84303b13f1df81bea6e213152187433ad85bf720586db1e1a",
+      "stored": "payloads/golden/scenarios/m3_errors.json"
+    },
+    {
+      "behavior_sha256": "dcd3f8076d57a7ffab292b34ec507b084bc7cb977882a4385caffff77d66d4aa",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/test/fixtures/m4_boot_seed1.json",
+      "sha256": "dcd3f8076d57a7ffab292b34ec507b084bc7cb977882a4385caffff77d66d4aa",
+      "stored": "payloads/golden/test/fixtures/m4_boot_seed1.json"
+    },
+    {
+      "behavior_sha256": "013f96df6bf58e0685938d7c6e49a4fa1197c060af6964e27e2bbac0fb1be4f4",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/test/fixtures/m4_wire_reselection_seed12.json",
+      "sha256": "013f96df6bf58e0685938d7c6e49a4fa1197c060af6964e27e2bbac0fb1be4f4",
+      "stored": "payloads/golden/test/fixtures/m4_wire_reselection_seed12.json"
+    },
+    {
+      "behavior_sha256": "27aa0e5919f87e50ccf41b081fe12aed04abf0e79dd61f079480c41ff953f256",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/test/fixtures/m4_wire_variant_reselect_seed12.scenario.json",
+      "sha256": "27aa0e5919f87e50ccf41b081fe12aed04abf0e79dd61f079480c41ff953f256",
+      "stored": "payloads/golden/test/fixtures/m4_wire_variant_reselect_seed12.scenario.json"
+    },
+    {
+      "behavior_sha256": "b98b2f7f4f4e4e64f54332ac710d3c3bf45a0bd8fc4e5436c1ff5790d4423c15",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/test/fixtures/m4_wire_variant_seed12.json",
+      "sha256": "b98b2f7f4f4e4e64f54332ac710d3c3bf45a0bd8fc4e5436c1ff5790d4423c15",
+      "stored": "payloads/golden/test/fixtures/m4_wire_variant_seed12.json"
+    },
+    {
+      "behavior_sha256": "27aa0e5919f87e50ccf41b081fe12aed04abf0e79dd61f079480c41ff953f256",
+      "current_required": true,
+      "group": "scenarios",
+      "path": "golden/test/fixtures/m4_wire_variant_seed12.scenario.json",
+      "sha256": "27aa0e5919f87e50ccf41b081fe12aed04abf0e79dd61f079480c41ff953f256",
+      "stored": "payloads/golden/test/fixtures/m4_wire_variant_seed12.scenario.json"
+    },
+    {
+      "behavior_sha256": "46f2a842e46a83ba440c6a95667855e26e2c12637eacf662f6c339ca48f7579c",
+      "current_required": true,
+      "group": "masks",
+      "path": "golden/masks/m2_ui.toml",
+      "sha256": "46f2a842e46a83ba440c6a95667855e26e2c12637eacf662f6c339ca48f7579c",
+      "stored": "payloads/golden/masks/m2_ui.toml"
+    },
+    {
+      "behavior_sha256": "3e28c7534b6cd8d0503530b76270f93d790ccf4f1536e9b3f3f12e5876b19801",
+      "current_required": true,
+      "group": "constraints",
+      "path": "src/constraint/basys3.xdc",
+      "sha256": "3e28c7534b6cd8d0503530b76270f93d790ccf4f1536e9b3f3f12e5876b19801",
+      "stored": "payloads/src/constraint/basys3.xdc"
+    },
+    {
+      "behavior_sha256": "c2f86675cfe117c82b5b4012c37fbdfb0d91d3ff17bd0325f05f402ab48feccf",
+      "current_required": true,
+      "group": "constraints",
+      "path": "src/constraint/basys3_solver_board.xdc",
+      "sha256": "c2f86675cfe117c82b5b4012c37fbdfb0d91d3ff17bd0325f05f402ab48feccf",
+      "stored": "payloads/src/constraint/basys3_solver_board.xdc"
+    },
+    {
+      "behavior_sha256": "7a3af913f50010aaeb93f267851d2110648c913ae7724ab92b0ff1393d7d24ab",
+      "current_required": true,
+      "group": "constraints",
+      "path": "src/constraint/basys3_uart_demo.xdc",
+      "sha256": "7a3af913f50010aaeb93f267851d2110648c913ae7724ab92b0ff1393d7d24ab",
+      "stored": "payloads/src/constraint/basys3_uart_demo.xdc"
+    },
+    {
+      "behavior_sha256": "e840010226de2096d1e09d0eb9907a44d2578529c6686b2e9e4287097be64d81",
+      "current_required": true,
+      "group": "assumptions",
+      "path": "golden/ASSUMPTIONS.md",
+      "sha256": "e840010226de2096d1e09d0eb9907a44d2578529c6686b2e9e4287097be64d81",
+      "stored": "payloads/golden/ASSUMPTIONS.md"
+    },
+    {
+      "behavior_sha256": "3d7dfdbb2ac4005b92fa89ab70497a7bd3fdb9fed2c8d66e6c69e7ebc3a67c9d",
+      "current_required": true,
+      "group": "assumptions",
+      "path": "golden/INTERFACE_FACTS.md",
+      "sha256": "3d7dfdbb2ac4005b92fa89ab70497a7bd3fdb9fed2c8d66e6c69e7ebc3a67c9d",
+      "stored": "payloads/golden/INTERFACE_FACTS.md"
+    },
+    {
+      "behavior_sha256": "1fc69319abf31dc69747e8092db2713e2a79e3596c77acb128d555ea020e399d",
+      "current_required": true,
+      "group": "assumptions",
+      "path": "golden/M2_ASSUMPTIONS.md",
+      "sha256": "1fc69319abf31dc69747e8092db2713e2a79e3596c77acb128d555ea020e399d",
+      "stored": "payloads/golden/M2_ASSUMPTIONS.md"
+    },
+    {
+      "behavior_sha256": "feb46b7beba865f07135f1efef0feee2442edf772ff1967ffcf6aad401da29d0",
+      "current_required": true,
+      "group": "assumptions",
+      "path": "golden/M3_ASSUMPTIONS.md",
+      "sha256": "feb46b7beba865f07135f1efef0feee2442edf772ff1967ffcf6aad401da29d0",
+      "stored": "payloads/golden/M3_ASSUMPTIONS.md"
+    },
+    {
+      "behavior_sha256": "49efd4f8c1d30c24c4aa166fbb6a72959b52643dfd1e6ba344ef989d6c9987d9",
+      "current_required": true,
+      "group": "assumptions",
+      "path": "golden/M3_SOLVER_ASSUMPTIONS.md",
+      "sha256": "49efd4f8c1d30c24c4aa166fbb6a72959b52643dfd1e6ba344ef989d6c9987d9",
+      "stored": "payloads/golden/M3_SOLVER_ASSUMPTIONS.md"
+    },
+    {
+      "behavior_sha256": "a42c8343ab2599b655e5ff8f6f73970834cf1235ecf691c1f69be8dabcb8455d",
+      "current_required": true,
+      "group": "assumptions",
+      "path": "golden/M4_ASSUMPTIONS.md",
+      "sha256": "a42c8343ab2599b655e5ff8f6f73970834cf1235ecf691c1f69be8dabcb8455d",
+      "stored": "payloads/golden/M4_ASSUMPTIONS.md"
+    },
+    {
+      "behavior_sha256": "2e06497846556bf86a824c0175cc76a928bf6729dac837dd023eeb907d821620",
+      "current_required": true,
+      "group": "dependencies",
+      "path": "golden/package.json",
+      "sha256": "2e06497846556bf86a824c0175cc76a928bf6729dac837dd023eeb907d821620",
+      "stored": "payloads/golden/package.json"
+    },
+    {
+      "behavior_sha256": "a397817bf0fbe39a7b7a394a9047ee950fd1fa362101c700a4fe950f2a3b6478",
+      "current_required": true,
+      "group": "dependencies",
+      "path": "golden/package-lock.json",
+      "sha256": "a397817bf0fbe39a7b7a394a9047ee950fd1fa362101c700a4fe950f2a3b6478",
+      "stored": "payloads/golden/package-lock.json"
+    },
+    {
+      "behavior_sha256": "bfdcbbd98adb021755d9c415cdd5a6a868c1fbdf94c07a736489876899e81d34",
+      "current_required": true,
+      "group": "dependencies",
+      "path": "golden/tsconfig.json",
+      "sha256": "bfdcbbd98adb021755d9c415cdd5a6a868c1fbdf94c07a736489876899e81d34",
+      "stored": "payloads/golden/tsconfig.json"
+    },
+    {
+      "behavior_sha256": "6d7469aa8b3604819a5c8acafd17e6848d72faca8b94a64e86edb3db872fd24c",
+      "current_required": true,
+      "group": "comparators",
+      "path": "golden/tools/verify_m1.py",
+      "sha256": "6d7469aa8b3604819a5c8acafd17e6848d72faca8b94a64e86edb3db872fd24c",
+      "stored": "payloads/golden/tools/verify_m1.py"
+    },
+    {
+      "behavior_sha256": "5d663fdfa6e681fb2764346d9c146ef34550c6e5b78da8483e144792bc80e43a",
+      "current_required": true,
+      "group": "comparators",
+      "path": "golden/tools/verify_m2.py",
+      "sha256": "5d663fdfa6e681fb2764346d9c146ef34550c6e5b78da8483e144792bc80e43a",
+      "stored": "payloads/golden/tools/verify_m2.py"
+    },
+    {
+      "behavior_sha256": "2ec91a8a725a10b143748c136ab830b8c7352485705428f03dcf72f19f3356a9",
+      "current_required": true,
+      "group": "comparators",
+      "path": "golden/tools/verify_m3.py",
+      "sha256": "2ec91a8a725a10b143748c136ab830b8c7352485705428f03dcf72f19f3356a9",
+      "stored": "payloads/golden/tools/verify_m3.py"
+    },
+    {
+      "behavior_sha256": "c8fc264a3aa93a141aa8038369ee17c4c0778fd11d475c6ef218e896ba4db561",
+      "current_required": true,
+      "group": "comparators",
+      "path": "golden/tools/verify_m4.py",
+      "sha256": "c8fc264a3aa93a141aa8038369ee17c4c0778fd11d475c6ef218e896ba4db561",
+      "stored": "payloads/golden/tools/verify_m4.py"
+    },
+    {
+      "behavior_sha256": "dadd5ce7ffb7f85951dbb9a0f5b3ad653e952e36aedbe9fb56e063a2603088e1",
+      "current_required": true,
+      "group": "comparators",
+      "path": "golden/tools/lockstep_m4.py",
+      "sha256": "dadd5ce7ffb7f85951dbb9a0f5b3ad653e952e36aedbe9fb56e063a2603088e1",
+      "stored": "payloads/golden/tools/lockstep_m4.py"
+    },
+    {
+      "behavior_sha256": "58254ebedcb50e0e678742df2f141db6ba42cd56992b64044ec620acf5379347",
+      "current_required": true,
+      "group": "comparators",
+      "path": "golden/tools/functional_m4.py",
+      "sha256": "58254ebedcb50e0e678742df2f141db6ba42cd56992b64044ec620acf5379347",
+      "stored": "payloads/golden/tools/functional_m4.py"
+    },
+    {
+      "behavior_sha256": "b2f734f9f394b3a50900335abbc61c155a18103d1f5e7f77c59c05f609e7b63a",
+      "current_required": true,
+      "group": "implementation_settings",
+      "path": "metacircuit-2025.2.tcl",
+      "sha256": "b2f734f9f394b3a50900335abbc61c155a18103d1f5e7f77c59c05f609e7b63a",
+      "stored": "payloads/metacircuit-2025.2.tcl"
+    },
+    {
+      "behavior_sha256": "b957daf09dd040e4bdbb778a6a0338aa6abd89904480adc895a076355876e139",
+      "current_required": true,
+      "group": "implementation_settings",
+      "path": "metacircuit.tcl",
+      "sha256": "b957daf09dd040e4bdbb778a6a0338aa6abd89904480adc895a076355876e139",
+      "stored": "payloads/metacircuit.tcl"
+    },
+    {
+      "behavior_sha256": "7db56e1696d01d1e5f41ea34c6cbfb4f6f7ea43beed7aa4776aa0c9ff7f0c45f",
+      "current_required": true,
+      "group": "implementation_settings",
+      "path": "solver_board_synth.tcl",
+      "sha256": "7db56e1696d01d1e5f41ea34c6cbfb4f6f7ea43beed7aa4776aa0c9ff7f0c45f",
+      "stored": "payloads/solver_board_synth.tcl"
+    },
+    {
+      "behavior_sha256": "735a5eb0ca08af4d02afc3697b4009219dc9aa69c8f9f22f3ea32ec148a8119d",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/cases16/seed-1.json",
+      "sha256": "735a5eb0ca08af4d02afc3697b4009219dc9aa69c8f9f22f3ea32ec148a8119d",
+      "stored": "payloads/golden/out/m4-lockstep/cases16/seed-1.json"
+    },
+    {
+      "behavior_sha256": "39bc270942158de464c637d27a38cdf2d1896d07edc359ed25e05b51cc5ea19f",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/cases16/seed-7.json",
+      "sha256": "39bc270942158de464c637d27a38cdf2d1896d07edc359ed25e05b51cc5ea19f",
+      "stored": "payloads/golden/out/m4-lockstep/cases16/seed-7.json"
+    },
+    {
+      "behavior_sha256": "44471f979855e1aad7cf0b3801a44c3752bcb317cda537841d1c7cab8a7467da",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/cases16/seed-2026.json",
+      "sha256": "44471f979855e1aad7cf0b3801a44c3752bcb317cda537841d1c7cab8a7467da",
+      "stored": "payloads/golden/out/m4-lockstep/cases16/seed-2026.json"
+    },
+    {
+      "behavior_sha256": "d679bdd27c01cdc69a23c0134ee75dce2fa6f3478c7171b0584b5b327ab98894",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/cases16-v2/seed-1.json",
+      "sha256": "d679bdd27c01cdc69a23c0134ee75dce2fa6f3478c7171b0584b5b327ab98894",
+      "stored": "payloads/golden/out/m4-lockstep/cases16-v2/seed-1.json"
+    },
+    {
+      "behavior_sha256": "718e64a45e70b3facef52ef2b297affcce208b6090bdfed42f818eafcc8cce3e",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/cases16-v2/seed-7.json",
+      "sha256": "718e64a45e70b3facef52ef2b297affcce208b6090bdfed42f818eafcc8cce3e",
+      "stored": "payloads/golden/out/m4-lockstep/cases16-v2/seed-7.json"
+    },
+    {
+      "behavior_sha256": "2d6add1758798593c7f1647bb3d72cc0ba40b2de7e9c5c79e1bfcc9731aad801",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/cases16-v2/seed-2026.json",
+      "sha256": "2d6add1758798593c7f1647bb3d72cc0ba40b2de7e9c5c79e1bfcc9731aad801",
+      "stored": "payloads/golden/out/m4-lockstep/cases16-v2/seed-2026.json"
+    },
+    {
+      "behavior_sha256": "d2f223dded1bc57b9c2419bf7cd266c9159a928a82048eed182ecc0409839cf1",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/cases64-v2/seed-11.json",
+      "sha256": "d2f223dded1bc57b9c2419bf7cd266c9159a928a82048eed182ecc0409839cf1",
+      "stored": "payloads/golden/out/m4-lockstep/cases64-v2/seed-11.json"
+    },
+    {
+      "behavior_sha256": "765d6c8a0efc8494e6ac333b0712c53019398163f7bdea0af07f30d80b2981a3",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/cases64-v2/seed-12.json",
+      "sha256": "765d6c8a0efc8494e6ac333b0712c53019398163f7bdea0af07f30d80b2981a3",
+      "stored": "payloads/golden/out/m4-lockstep/cases64-v2/seed-12.json"
+    },
+    {
+      "behavior_sha256": "7670fdf781e726346474864052c0055257632d4d935c839f34e071c871fa1b99",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/corpus-agent-cases/rotations-2026.json",
+      "sha256": "7670fdf781e726346474864052c0055257632d4d935c839f34e071c871fa1b99",
+      "stored": "payloads/golden/out/m4-lockstep/corpus-agent-cases/rotations-2026.json"
+    },
+    {
+      "behavior_sha256": "499b1aa8d31265b5db76264a853ad6cc48616b552d70fbcab9398dbb19d2ec39",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/corpus-agent-cases/properties-2026.json",
+      "sha256": "499b1aa8d31265b5db76264a853ad6cc48616b552d70fbcab9398dbb19d2ec39",
+      "stored": "payloads/golden/out/m4-lockstep/corpus-agent-cases/properties-2026.json"
+    },
+    {
+      "behavior_sha256": "9a1bffbbc931cca8edf52f9941779d17749e5cb8d01984807197e44fb25b3a14",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/corpus-agent-cases/boundaries-2026.json",
+      "sha256": "9a1bffbbc931cca8edf52f9941779d17749e5cb8d01984807197e44fb25b3a14",
+      "stored": "payloads/golden/out/m4-lockstep/corpus-agent-cases/boundaries-2026.json"
+    },
+    {
+      "behavior_sha256": "4f2b7b6991ab0e871e74427125df9bc29c29edc3e025469bcde82b6ad910e4c8",
+      "current_required": false,
+      "group": "saved_corpus",
+      "path": "golden/out/m4-lockstep/corpus-agent-cases/dense-2026-compact.json",
+      "sha256": "4f2b7b6991ab0e871e74427125df9bc29c29edc3e025469bcde82b6ad910e4c8",
+      "stored": "payloads/golden/out/m4-lockstep/corpus-agent-cases/dense-2026-compact.json"
+    },
+    {
+      "behavior_sha256": "155f02a20c40ffb2ca8b45f81da9be5bacb542e937231b0dc0603d7e94e48130",
+      "current_required": false,
+      "group": "accepted_evidence",
+      "path": "docs/m3-verification.json",
+      "sha256": "155f02a20c40ffb2ca8b45f81da9be5bacb542e937231b0dc0603d7e94e48130",
+      "stored": "payloads/docs/m3-verification.json"
+    },
+    {
+      "behavior_sha256": "133ad4a9a35c55ec4d3b19d0977109a73e7692c2a08db40fd7bde67bc3a4ee91",
+      "current_required": false,
+      "group": "accepted_evidence",
+      "path": "docs/m4-verification.json",
+      "sha256": "133ad4a9a35c55ec4d3b19d0977109a73e7692c2a08db40fd7bde67bc3a4ee91",
+      "stored": "payloads/docs/m4-verification.json"
+    },
+    {
+      "behavior_sha256": "2fa52850dbde85eff792d4bd24e60521d65cfa139ada8246b6abc25ecd61adff",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Dashboard/CompactDigitROM.v",
+      "sha256": "2fa52850dbde85eff792d4bd24e60521d65cfa139ada8246b6abc25ecd61adff",
+      "stored": "payloads/src/design/Dashboard/CompactDigitROM.v"
+    },
+    {
+      "behavior_sha256": "5880297db9a89662309c107fd25bffef7335cbf964447ebececb7b7d1c301554",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Dashboard/ComponentPropertyPanel.v",
+      "sha256": "5880297db9a89662309c107fd25bffef7335cbf964447ebececb7b7d1c301554",
+      "stored": "payloads/src/design/Dashboard/ComponentPropertyPanel.v"
+    },
+    {
+      "behavior_sha256": "988d24a33f8ae6472591475953731e10c02f35e4bcdd80646c38a5d35e2b1769",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Dashboard/DynamicTextBox.v",
+      "sha256": "988d24a33f8ae6472591475953731e10c02f35e4bcdd80646c38a5d35e2b1769",
+      "stored": "payloads/src/design/Dashboard/DynamicTextBox.v"
+    },
+    {
+      "behavior_sha256": "327cc353b6e522215a21faf132bee138fda3cc395df657b99907205f0763227a",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Dashboard/DynamicTextDisplay.v",
+      "sha256": "327cc353b6e522215a21faf132bee138fda3cc395df657b99907205f0763227a",
+      "stored": "payloads/src/design/Dashboard/DynamicTextDisplay.v"
+    },
+    {
+      "behavior_sha256": "3969458efdd55181812b73b46995e161ed4ee0ff00454339b47d1d5b12971ae4",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Dashboard/FontROM.v",
+      "sha256": "3969458efdd55181812b73b46995e161ed4ee0ff00454339b47d1d5b12971ae4",
+      "stored": "payloads/src/design/Dashboard/FontROM.v"
+    },
+    {
+      "behavior_sha256": "b887fbcc8248ce272b71fed8332ddfb5747544ff9a0b2c1dce46efa533f3a408",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Dashboard/MatrixDisplay.v",
+      "sha256": "b887fbcc8248ce272b71fed8332ddfb5747544ff9a0b2c1dce46efa533f3a408",
+      "stored": "payloads/src/design/Dashboard/MatrixDisplay.v"
+    },
+    {
+      "behavior_sha256": "5c42c2745a493ff68055b5c46dca47f1260046fee303ffeb3c484d22c7bb1194",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Dashboard/TextBox.v",
+      "sha256": "5c42c2745a493ff68055b5c46dca47f1260046fee303ffeb3c484d22c7bb1194",
+      "stored": "payloads/src/design/Dashboard/TextBox.v"
+    },
+    {
+      "behavior_sha256": "cf87de669f0c1264c887669cabcbf3a4d145a5c24319dc4d68a4e9cc60975014",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Dashboard/TextDisplay.v",
+      "sha256": "cf87de669f0c1264c887669cabcbf3a4d145a5c24319dc4d68a4e9cc60975014",
+      "stored": "payloads/src/design/Dashboard/TextDisplay.v"
+    },
+    {
+      "behavior_sha256": "59b2d12c0bffdb5623fc46a46a61669b3c1081a7221191a0bf467d7506e109d8",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Keyboard/Calculator.v",
+      "sha256": "59b2d12c0bffdb5623fc46a46a61669b3c1081a7221191a0bf467d7506e109d8",
+      "stored": "payloads/src/design/Keyboard/Calculator.v"
+    },
+    {
+      "behavior_sha256": "26770d0a42052075697d51eb4097d2ff46c03bc9d51ff6f82da6e09a5baebf44",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Keyboard/Keyboard.v",
+      "sha256": "26770d0a42052075697d51eb4097d2ff46c03bc9d51ff6f82da6e09a5baebf44",
+      "stored": "payloads/src/design/Keyboard/Keyboard.v"
+    },
+    {
+      "behavior_sha256": "56ce32cf1e5437d7a6141dcb6742820ae0d4d7c0a84d0a9df6aadfb67d102d4f",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/Keyboard/one_bit_adder.v",
+      "sha256": "56ce32cf1e5437d7a6141dcb6742820ae0d4d7c0a84d0a9df6aadfb67d102d4f",
+      "stored": "payloads/src/design/Keyboard/one_bit_adder.v"
+    },
+    {
+      "behavior_sha256": "08ec153fd9e5e33558a2a927e23e025b58208d7eb402eba77460456455ba57da",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/CanvasBufferRam.v",
+      "sha256": "08ec153fd9e5e33558a2a927e23e025b58208d7eb402eba77460456455ba57da",
+      "stored": "payloads/src/design/common/CanvasBufferRam.v"
+    },
+    {
+      "behavior_sha256": "834229ac133a512b34016668eeabc3d881b95c90e567624540dd6baad7a8a4e3",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/ClockDivider.v",
+      "sha256": "834229ac133a512b34016668eeabc3d881b95c90e567624540dd6baad7a8a4e3",
+      "stored": "payloads/src/design/common/ClockDivider.v"
+    },
+    {
+      "behavior_sha256": "a9b98aeb1bb4dea75393adc4fad5a39b5157e3fbd4a5a751170ac803ae8cdda2",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/ClockDividerMs.v",
+      "sha256": "a9b98aeb1bb4dea75393adc4fad5a39b5157e3fbd4a5a751170ac803ae8cdda2",
+      "stored": "payloads/src/design/common/ClockDividerMs.v"
+    },
+    {
+      "behavior_sha256": "338f5641e430c5d6bf077cab8bcf3697b62b1cb99fe3033c470b61a3da429834",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/ExtractComponentNodesCombPkg.sv",
+      "sha256": "338f5641e430c5d6bf077cab8bcf3697b62b1cb99fe3033c470b61a3da429834",
+      "stored": "payloads/src/design/common/ExtractComponentNodesCombPkg.sv"
+    },
+    {
+      "behavior_sha256": "16cdebf7a03ce1b212c25f27a6ececa91b2ceb2850809295d05fb983b00e41ba",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/FloodQueueStore.v",
+      "sha256": "16cdebf7a03ce1b212c25f27a6ececa91b2ceb2850809295d05fb983b00e41ba",
+      "stored": "payloads/src/design/common/FloodQueueStore.v"
+    },
+    {
+      "behavior_sha256": "60cbd2fcb410042c506219b80669e0b7129a95ff3e8d01b20b747aef65f600d6",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/FloodingCombPkg.sv",
+      "sha256": "60cbd2fcb410042c506219b80669e0b7129a95ff3e8d01b20b747aef65f600d6",
+      "stored": "payloads/src/design/common/FloodingCombPkg.sv"
+    },
+    {
+      "behavior_sha256": "3c454204bac63ce06d16d53ca354f7a2416cdb34ceb47135ceec14ac5ba779e5",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/PingPongBuffer.v",
+      "sha256": "3c454204bac63ce06d16d53ca354f7a2416cdb34ceb47135ceec14ac5ba779e5",
+      "stored": "payloads/src/design/common/PingPongBuffer.v"
+    },
+    {
+      "behavior_sha256": "b3fbe6488b06093ed9c76aa8bae2e2bc07ae8328328404533b3c9cc3ac57f2ef",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/SimpleDualRam.v",
+      "sha256": "b3fbe6488b06093ed9c76aa8bae2e2bc07ae8328328404533b3c9cc3ac57f2ef",
+      "stored": "payloads/src/design/common/SimpleDualRam.v"
+    },
+    {
+      "behavior_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/SimpleRam.v",
+      "sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+      "stored": "payloads/src/design/common/SimpleRam.v"
+    },
+    {
+      "behavior_sha256": "6aebae14601683d732939886c77d8c717a8db92cb694dc76a74087ca414c9fc1",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/StampingCombPkg.sv",
+      "sha256": "6aebae14601683d732939886c77d8c717a8db92cb694dc76a74087ca414c9fc1",
+      "stored": "payloads/src/design/common/StampingCombPkg.sv"
+    },
+    {
+      "behavior_sha256": "6679c3b5019381b46b8d21f13c0431365eee1446a16791b12bd8ff1a603a4014",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/common/StampingNetlistStore.sv",
+      "sha256": "6679c3b5019381b46b8d21f13c0431365eee1446a16791b12bd8ff1a603a4014",
+      "stored": "payloads/src/design/common/StampingNetlistStore.sv"
+    },
+    {
+      "behavior_sha256": "0f22345c473059ec9cc8196483f8bd4d5245b2e3ea76813b62ed882181f97eeb",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/driver/Mouse_Control.vhd",
+      "sha256": "0f22345c473059ec9cc8196483f8bd4d5245b2e3ea76813b62ed882181f97eeb",
+      "stored": "payloads/src/design/driver/Mouse_Control.vhd"
+    },
+    {
+      "behavior_sha256": "c2ee74702ca14cc3952823dcf213e31f69c9b5013e6d88346403c6831156dede",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/driver/Oled_Display.v",
+      "sha256": "c2ee74702ca14cc3952823dcf213e31f69c9b5013e6d88346403c6831156dede",
+      "stored": "payloads/src/design/driver/Oled_Display.v"
+    },
+    {
+      "behavior_sha256": "036aa48a7336db5bb694b0390c71c847fd5cecd5f877750ad3dffade6798c7ce",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/driver/Ps2Interface.vhd",
+      "sha256": "036aa48a7336db5bb694b0390c71c847fd5cecd5f877750ad3dffade6798c7ce",
+      "stored": "payloads/src/design/driver/Ps2Interface.vhd"
+    },
+    {
+      "behavior_sha256": "794dd15ea2a2e80aeb275e1840c349b6d32b29f25256d035b1d06ff44abe0d87",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/driver/VGAControl.v",
+      "sha256": "794dd15ea2a2e80aeb275e1840c349b6d32b29f25256d035b1d06ff44abe0d87",
+      "stored": "payloads/src/design/driver/VGAControl.v"
+    },
+    {
+      "behavior_sha256": "96b9e0a1b94c4a887a8c756a8ecfae1f1a23868190924cbeaac77559a33f8423",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/floating_point/fpo_div.v",
+      "sha256": "96b9e0a1b94c4a887a8c756a8ecfae1f1a23868190924cbeaac77559a33f8423",
+      "stored": "payloads/src/design/floating_point/fpo_div.v"
+    },
+    {
+      "behavior_sha256": "b623a6ab1db3cd99c906ac27d7da4be41b74756418cdad3c3928c29193f9cdf8",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/floating_point/fpo_fma.v",
+      "sha256": "b623a6ab1db3cd99c906ac27d7da4be41b74756418cdad3c3928c29193f9cdf8",
+      "stored": "payloads/src/design/floating_point/fpo_fma.v"
+    },
+    {
+      "behavior_sha256": "30cd71e52131497941b4497d30316829d624cba9e33a9e2ed69fef2b215a13ba",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/floating_point/fpo_tofixed.v",
+      "sha256": "30cd71e52131497941b4497d30316829d624cba9e33a9e2ed69fef2b215a13ba",
+      "stored": "payloads/src/design/floating_point/fpo_tofixed.v"
+    },
+    {
+      "behavior_sha256": "41d6a26e95d4e875a2c37756630bee141bf1917aabb382fe22993779304a78d7",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/interaction/CanvasCommandGuard.v",
+      "sha256": "41d6a26e95d4e875a2c37756630bee141bf1917aabb382fe22993779304a78d7",
+      "stored": "payloads/src/design/interaction/CanvasCommandGuard.v"
+    },
+    {
+      "behavior_sha256": "a4c7222b0034aa46555d9cc3abb8be0e2834456a349e43848b884808642cd88e",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/interaction/InteractionController.v",
+      "sha256": "a4c7222b0034aa46555d9cc3abb8be0e2834456a349e43848b884808642cd88e",
+      "stored": "payloads/src/design/interaction/InteractionController.v"
+    },
+    {
+      "behavior_sha256": "a3f7c7585110a7f1281825e11c0123899b1d5cd959bffcf47f76d227bf603eeb",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/interaction/InteractionFrameCapture.v",
+      "sha256": "a3f7c7585110a7f1281825e11c0123899b1d5cd959bffcf47f76d227bf603eeb",
+      "stored": "payloads/src/design/interaction/InteractionFrameCapture.v"
+    },
+    {
+      "behavior_sha256": "6a148e613a368af517f716dc2d5c0a8cdd1148a234e7676e7d494f8b89839090",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/interaction/WireDrawMode.v",
+      "sha256": "6a148e613a368af517f716dc2d5c0a8cdd1148a234e7676e7d494f8b89839090",
+      "stored": "payloads/src/design/interaction/WireDrawMode.v"
+    },
+    {
+      "behavior_sha256": "6096cc01ec2e5745563c93d53f3264978fc5fd3ad578c383b5ad1fdf7298a926",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/matrix/LUdecomp.v",
+      "sha256": "6096cc01ec2e5745563c93d53f3264978fc5fd3ad578c383b5ad1fdf7298a926",
+      "stored": "payloads/src/design/matrix/LUdecomp.v"
+    },
+    {
+      "behavior_sha256": "4028b2347b8c506ba49dd35afcfbbdb8e57e7316481661f731a822ad757c04f6",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/matrix/PortGridStore.v",
+      "sha256": "4028b2347b8c506ba49dd35afcfbbdb8e57e7316481661f731a822ad757c04f6",
+      "stored": "payloads/src/design/matrix/PortGridStore.v"
+    },
+    {
+      "behavior_sha256": "23829a5220eb7d3ad01d87a894da4ea92587e8b86cf98de77231b890904e13cf",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/matrix/ResultMatrixStore.v",
+      "sha256": "23829a5220eb7d3ad01d87a894da4ea92587e8b86cf98de77231b890904e13cf",
+      "stored": "payloads/src/design/matrix/ResultMatrixStore.v"
+    },
+    {
+      "behavior_sha256": "7fea8857a2f667d04925a96094856fa031fc2ebd56aae3822e7221f59aeba896",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/matrix/SolverMatrixStore.sv",
+      "sha256": "7fea8857a2f667d04925a96094856fa031fc2ebd56aae3822e7221f59aeba896",
+      "stored": "payloads/src/design/matrix/SolverMatrixStore.sv"
+    },
+    {
+      "behavior_sha256": "7be2dc13ff437ec165a41aa6f114b13882c90c8474faaa56335b4a452c06a162",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/matrix/SolverVectorStore.sv",
+      "sha256": "7be2dc13ff437ec165a41aa6f114b13882c90c8474faaa56335b4a452c06a162",
+      "stored": "payloads/src/design/matrix/SolverVectorStore.sv"
+    },
+    {
+      "behavior_sha256": "106aad11ab4a418787ea2ae6bb3b48baa26c1ea174bd7a2c3874e31a53fa7c56",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/matrix/VisitedMatrixStore.v",
+      "sha256": "106aad11ab4a418787ea2ae6bb3b48baa26c1ea174bd7a2c3874e31a53fa7c56",
+      "stored": "payloads/src/design/matrix/VisitedMatrixStore.v"
+    },
+    {
+      "behavior_sha256": "9ad7e6c4e4e7a0e80de38d2ae924ea49a4d94ef210a1554996fd765010b165f4",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/matrix/bmatrixStore.v",
+      "sha256": "9ad7e6c4e4e7a0e80de38d2ae924ea49a4d94ef210a1554996fd765010b165f4",
+      "stored": "payloads/src/design/matrix/bmatrixStore.v"
+    },
+    {
+      "behavior_sha256": "0156e46523fae22be98a1ce65c84d8f43be576200b69739fe04adb2d15013326",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/matrix/lu_core.sv",
+      "sha256": "0156e46523fae22be98a1ce65c84d8f43be576200b69739fe04adb2d15013326",
+      "stored": "payloads/src/design/matrix/lu_core.sv"
+    },
+    {
+      "behavior_sha256": "dfde515dbe24d12e86b4acaceaca8c07e4adc5512615abcb7ec039439f033290",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/matrix/matrixStore.v",
+      "sha256": "dfde515dbe24d12e86b4acaceaca8c07e4adc5512615abcb7ec039439f033290",
+      "stored": "payloads/src/design/matrix/matrixStore.v"
+    },
+    {
+      "behavior_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/rendering/ButtonVGA.v",
+      "sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+      "stored": "payloads/src/design/rendering/ButtonVGA.v"
+    },
+    {
+      "behavior_sha256": "6d6b45b6faf2a07029b2b43d857320dd2ea143d0e7b630dad684022adba4027a",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/rendering/CircuitCanvas.v",
+      "sha256": "6d6b45b6faf2a07029b2b43d857320dd2ea143d0e7b630dad684022adba4027a",
+      "stored": "payloads/src/design/rendering/CircuitCanvas.v"
+    },
+    {
+      "behavior_sha256": "1d75f7bf6fbe26da16995887a03321998ff8ddafd57ae981bce7a5bb85fa9e51",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/rendering/DummyDataGenerate.v",
+      "sha256": "1d75f7bf6fbe26da16995887a03321998ff8ddafd57ae981bce7a5bb85fa9e51",
+      "stored": "payloads/src/design/rendering/DummyDataGenerate.v"
+    },
+    {
+      "behavior_sha256": "254c8842d72c6c4801ef015c8c3274687a970c8794f9d09e6d966ced42657a66",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/rendering/GlobalRender_top.v",
+      "sha256": "254c8842d72c6c4801ef015c8c3274687a970c8794f9d09e6d966ced42657a66",
+      "stored": "payloads/src/design/rendering/GlobalRender_top.v"
+    },
+    {
+      "behavior_sha256": "47e9bebd27d49c2d27e17c165db5468482130ff6f9cd436728e288d0c80651b9",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/rendering/KeyboardVGA.v",
+      "sha256": "47e9bebd27d49c2d27e17c165db5468482130ff6f9cd436728e288d0c80651b9",
+      "stored": "payloads/src/design/rendering/KeyboardVGA.v"
+    },
+    {
+      "behavior_sha256": "110ca59e31f7b5a4440be51a6a7b5b47e8ea2d572014f0ae9e21842855d4c5c7",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/rendering/MouseDisplay.vhd",
+      "sha256": "110ca59e31f7b5a4440be51a6a7b5b47e8ea2d572014f0ae9e21842855d4c5c7",
+      "stored": "payloads/src/design/rendering/MouseDisplay.vhd"
+    },
+    {
+      "behavior_sha256": "4ee00f31d426b07cb30650e01cf6c05aca41d3e6a2eb0c8f1222474a859f983b",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/rendering/ToolbarVGA.v",
+      "sha256": "4ee00f31d426b07cb30650e01cf6c05aca41d3e6a2eb0c8f1222474a859f983b",
+      "stored": "payloads/src/design/rendering/ToolbarVGA.v"
+    },
+    {
+      "behavior_sha256": "9510a79fb5bd31a703550a27c6ce3cf8172fc6afc1fcea845a689933a5e19f76",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/rendering/WaveformPlot.v",
+      "sha256": "9510a79fb5bd31a703550a27c6ce3cf8172fc6afc1fcea845a689933a5e19f76",
+      "stored": "payloads/src/design/rendering/WaveformPlot.v"
+    },
+    {
+      "behavior_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver/BackendFetchers.v",
+      "sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+      "stored": "payloads/src/design/solver/BackendFetchers.v"
+    },
+    {
+      "behavior_sha256": "74590ccdc3e32e943498f2a75c5b5898d02da7122d9ea79317ee7c06384c6a36",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver/FloodingBackendWrapper.sv",
+      "sha256": "74590ccdc3e32e943498f2a75c5b5898d02da7122d9ea79317ee7c06384c6a36",
+      "stored": "payloads/src/design/solver/FloodingBackendWrapper.sv"
+    },
+    {
+      "behavior_sha256": "b8fea465c372050b2dab0dd8501b86463dd7267444a22bdb5a77765b1cd658e0",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver/extract_component_nodes.sv",
+      "sha256": "b8fea465c372050b2dab0dd8501b86463dd7267444a22bdb5a77765b1cd658e0",
+      "stored": "payloads/src/design/solver/extract_component_nodes.sv"
+    },
+    {
+      "behavior_sha256": "2abb9d7b416ad1b45269b0d86166f5c47b5f2954fd275b4e1dea7296afbc6ff1",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver/flooding_core.sv",
+      "sha256": "2abb9d7b416ad1b45269b0d86166f5c47b5f2954fd275b4e1dea7296afbc6ff1",
+      "stored": "payloads/src/design/solver/flooding_core.sv"
+    },
+    {
+      "behavior_sha256": "f620083cb4eb58f29e2c9dce8f4c6ab5702e0893a301c7f3d27d125407820db5",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver/solve_core_dc.sv",
+      "sha256": "f620083cb4eb58f29e2c9dce8f4c6ab5702e0893a301c7f3d27d125407820db5",
+      "stored": "payloads/src/design/solver/solve_core_dc.sv"
+    },
+    {
+      "behavior_sha256": "b4e237a0b191be44a3d40edba3a38ecea8bd4f064e277b9ec72407c1b9ff44c3",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver_board/BcdUnitToFp32Rom.sv",
+      "sha256": "b4e237a0b191be44a3d40edba3a38ecea8bd4f064e277b9ec72407c1b9ff44c3",
+      "stored": "payloads/src/design/solver_board/BcdUnitToFp32Rom.sv"
+    },
+    {
+      "behavior_sha256": "760ab046c59809d7796f26d7a1c6814c821f9bae2fc4fd2e5358eadd0ead8233",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver_board/SolverBoard_top.sv",
+      "sha256": "760ab046c59809d7796f26d7a1c6814c821f9bae2fc4fd2e5358eadd0ead8233",
+      "stored": "payloads/src/design/solver_board/SolverBoard_top.sv"
+    },
+    {
+      "behavior_sha256": "d2e2054db49d707575c6fe748467013240bc4455c236fcc0f16155c9a0eeec75",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver_board/SolverDcPipeline.sv",
+      "sha256": "d2e2054db49d707575c6fe748467013240bc4455c236fcc0f16155c9a0eeec75",
+      "stored": "payloads/src/design/solver_board/SolverDcPipeline.sv"
+    },
+    {
+      "behavior_sha256": "b0d442d4f5a9cede5370131aa7e4a6139550256ea515f98ffff2b7b8ee992908",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver_board/SolverUartLineTransmitter.sv",
+      "sha256": "b0d442d4f5a9cede5370131aa7e4a6139550256ea515f98ffff2b7b8ee992908",
+      "stored": "payloads/src/design/solver_board/SolverUartLineTransmitter.sv"
+    },
+    {
+      "behavior_sha256": "4bcb05c69620c20074711b70cd1896552d62ed0a2cc0fa8882bdeacf71ccaaf3",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver_board/UartLineAssembler.sv",
+      "sha256": "4bcb05c69620c20074711b70cd1896552d62ed0a2cc0fa8882bdeacf71ccaaf3",
+      "stored": "payloads/src/design/solver_board/UartLineAssembler.sv"
+    },
+    {
+      "behavior_sha256": "1e0e9eb9f57a20d57b5d69fdf3e2114396bd7bc393c088af7c13551ced97df87",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver_board/UartPacketParser.sv",
+      "sha256": "1e0e9eb9f57a20d57b5d69fdf3e2114396bd7bc393c088af7c13551ced97df87",
+      "stored": "payloads/src/design/solver_board/UartPacketParser.sv"
+    },
+    {
+      "behavior_sha256": "6738df782ee5ff926458b92421f3aceb0a8f7a20849772f625688b32d21bf4a3",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/solver_board/UartRx.v",
+      "sha256": "6738df782ee5ff926458b92421f3aceb0a8f7a20849772f625688b32d21bf4a3",
+      "stored": "payloads/src/design/solver_board/UartRx.v"
+    },
+    {
+      "behavior_sha256": "15b376f6040814aa41a6654d72c258af2c088f5df1e1b350a7317708c6734823",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/uart/FrontendNetlistLineTransmitter.sv",
+      "sha256": "15b376f6040814aa41a6654d72c258af2c088f5df1e1b350a7317708c6734823",
+      "stored": "payloads/src/design/uart/FrontendNetlistLineTransmitter.sv"
+    },
+    {
+      "behavior_sha256": "ec61eaf4e151cf4e027f8a5f885b88c35867341d253e85afc15982c43cb2c2d7",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/uart/FrontendVoltagePacketParser.sv",
+      "sha256": "ec61eaf4e151cf4e027f8a5f885b88c35867341d253e85afc15982c43cb2c2d7",
+      "stored": "payloads/src/design/uart/FrontendVoltagePacketParser.sv"
+    },
+    {
+      "behavior_sha256": "a6ac74cc6851f85e7bd9875ac07097e2da7652a4ac8a2fdf1c4840a8aff28a86",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/uart/Hex7SegMux.v",
+      "sha256": "a6ac74cc6851f85e7bd9875ac07097e2da7652a4ac8a2fdf1c4840a8aff28a86",
+      "stored": "payloads/src/design/uart/Hex7SegMux.v"
+    },
+    {
+      "behavior_sha256": "43cd776cf23a7e9f96ec37638571a4dbabfb7259e2b0f66234206a5aa08f81e1",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/uart/UART_FrameDemo_top.v",
+      "sha256": "43cd776cf23a7e9f96ec37638571a4dbabfb7259e2b0f66234206a5aa08f81e1",
+      "stored": "payloads/src/design/uart/UART_FrameDemo_top.v"
+    },
+    {
+      "behavior_sha256": "06e864767bac4f2906a2f87696c63d61d1d119d6a12968cc3a015a9cff612d7c",
+      "current_required": false,
+      "group": "baseline_rtl",
+      "path": "src/design/uart/UartTx.v",
+      "sha256": "06e864767bac4f2906a2f87696c63d61d1d119d6a12968cc3a015a9cff612d7c",
+      "stored": "payloads/src/design/uart/UartTx.v"
+    },
+    {
+      "behavior_sha256": "7e3bd3c5c6514f345709855c950bdd0c0124053d94a372b52c0dacd3c2d5fd4a",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/__init__.py",
+      "sha256": "7e3bd3c5c6514f345709855c950bdd0c0124053d94a372b52c0dacd3c2d5fd4a",
+      "stored": "baseline/framescope/src/framescope/__init__.py"
+    },
+    {
+      "behavior_sha256": "13a1a5b340cdcfc1902b62be90e508c7c71886000d5bf087e7854aadf09fb35e",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/__main__.py",
+      "sha256": "13a1a5b340cdcfc1902b62be90e508c7c71886000d5bf087e7854aadf09fb35e",
+      "stored": "baseline/framescope/src/framescope/__main__.py"
+    },
+    {
+      "behavior_sha256": "05e13a8d30815d872db832f0e7a89e4c2f2d4d6c48f9419d7b06550bbed2e3f5",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/batch.py",
+      "sha256": "05e13a8d30815d872db832f0e7a89e4c2f2d4d6c48f9419d7b06550bbed2e3f5",
+      "stored": "baseline/framescope/src/framescope/batch.py"
+    },
+    {
+      "behavior_sha256": "9f8480e0af06150eaa5f1fe2cd05d1acd050d66ab7052a56691954fb8408f613",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/build.py",
+      "sha256": "9f8480e0af06150eaa5f1fe2cd05d1acd050d66ab7052a56691954fb8408f613",
+      "stored": "baseline/framescope/src/framescope/build.py"
+    },
+    {
+      "behavior_sha256": "16b69209b694ce99621ea4a11536c8df943943360e2a92343c92513fa6dc14db",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/checkpoint.py",
+      "sha256": "16b69209b694ce99621ea4a11536c8df943943360e2a92343c92513fa6dc14db",
+      "stored": "baseline/framescope/src/framescope/checkpoint.py"
+    },
+    {
+      "behavior_sha256": "e92e429eec7f4c807de225c818357916969dd358182ba7435e40f8b5f7172500",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/cli.py",
+      "sha256": "e92e429eec7f4c807de225c818357916969dd358182ba7435e40f8b5f7172500",
+      "stored": "baseline/framescope/src/framescope/cli.py"
+    },
+    {
+      "behavior_sha256": "b05a8f5dc69c56329f13dda1150ee902128c08498d61bbc2352c35362f9b3388",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/codegen.py",
+      "sha256": "b05a8f5dc69c56329f13dda1150ee902128c08498d61bbc2352c35362f9b3388",
+      "stored": "baseline/framescope/src/framescope/codegen.py"
+    },
+    {
+      "behavior_sha256": "eb30970eeee9823360124506bce80b9295c5491087f804e3bfb3da1a9d1c8065",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/compare.py",
+      "sha256": "eb30970eeee9823360124506bce80b9295c5491087f804e3bfb3da1a9d1c8065",
+      "stored": "baseline/framescope/src/framescope/compare.py"
+    },
+    {
+      "behavior_sha256": "8ee2b546f94d623ab91355e8a4628d68d372cd063323c38538d4d0b84692b52e",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/coverage.py",
+      "sha256": "8ee2b546f94d623ab91355e8a4628d68d372cd063323c38538d4d0b84692b52e",
+      "stored": "baseline/framescope/src/framescope/coverage.py"
+    },
+    {
+      "behavior_sha256": "98c55b4eb0043b8c39a8aa33097d22da2737b939f3721c3eb0dd059ece255039",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/checkpoint.cpp",
+      "sha256": "98c55b4eb0043b8c39a8aa33097d22da2737b939f3721c3eb0dd059ece255039",
+      "stored": "baseline/framescope/src/framescope/harness/checkpoint.cpp"
+    },
+    {
+      "behavior_sha256": "5a86e68930989dcb4ccbb5420c2a43b2043dbc3d2b5111d47254151368f36800",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/dpi.cpp",
+      "sha256": "5a86e68930989dcb4ccbb5420c2a43b2043dbc3d2b5111d47254151368f36800",
+      "stored": "baseline/framescope/src/framescope/harness/dpi.cpp"
+    },
+    {
+      "behavior_sha256": "25a58c5283524e88b48dfddc226fde45bff858719be3600cc01e44f9efffbd24",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/framescope.hpp",
+      "sha256": "25a58c5283524e88b48dfddc226fde45bff858719be3600cc01e44f9efffbd24",
+      "stored": "baseline/framescope/src/framescope/harness/framescope.hpp"
+    },
+    {
+      "behavior_sha256": "45bb182e54a69e524587859a27f00a6865d08b4c8dc12c758fade5b01212c660",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/harness.cpp",
+      "sha256": "45bb182e54a69e524587859a27f00a6865d08b4c8dc12c758fade5b01212c660",
+      "stored": "baseline/framescope/src/framescope/harness/harness.cpp"
+    },
+    {
+      "behavior_sha256": "04a6eb4f088a2e9fc19d67bf31fdf19f5a3f5b73e09c39f76f46cd2841b7f98c",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/json.hpp",
+      "sha256": "04a6eb4f088a2e9fc19d67bf31fdf19f5a3f5b73e09c39f76f46cd2841b7f98c",
+      "stored": "baseline/framescope/src/framescope/harness/json.hpp"
+    },
+    {
+      "behavior_sha256": "a29be06c5e704ae7fe31f0229af26463eefa52e4ce040572b8faf37ee421e10c",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/main.cpp",
+      "sha256": "a29be06c5e704ae7fe31f0229af26463eefa52e4ce040572b8faf37ee421e10c",
+      "stored": "baseline/framescope/src/framescope/harness/main.cpp"
+    },
+    {
+      "behavior_sha256": "c244600fa02dc7c17ddf70f8a03039a26b2bc560e86cc2a3c9c0f5ea732d415b",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/png.cpp",
+      "sha256": "c244600fa02dc7c17ddf70f8a03039a26b2bc560e86cc2a3c9c0f5ea732d415b",
+      "stored": "baseline/framescope/src/framescope/harness/png.cpp"
+    },
+    {
+      "behavior_sha256": "82a59bacf07ab8d1add5860c366be31faf034df7c90292815b1171ee0d347cc8",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/png.hpp",
+      "sha256": "82a59bacf07ab8d1add5860c366be31faf034df7c90292815b1171ee0d347cc8",
+      "stored": "baseline/framescope/src/framescope/harness/png.hpp"
+    },
+    {
+      "behavior_sha256": "95c6ab971c56aae8326592e2691792a3ca9ac9412567f2028b5fd0aa5a4598bb",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/profile.hpp",
+      "sha256": "95c6ab971c56aae8326592e2691792a3ca9ac9412567f2028b5fd0aa5a4598bb",
+      "stored": "baseline/framescope/src/framescope/harness/profile.hpp"
+    },
+    {
+      "behavior_sha256": "e92600fdcc7ea0112725926a692305f989ced9a61b79991ae7562be113afd21e",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/state.hpp",
+      "sha256": "e92600fdcc7ea0112725926a692305f989ced9a61b79991ae7562be113afd21e",
+      "stored": "baseline/framescope/src/framescope/harness/state.hpp"
+    },
+    {
+      "behavior_sha256": "d3a6bfb16a7f3e30a073e3da72269880df6d2556907b4df232d4fd1509c36c98",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/uart_monitor.cpp",
+      "sha256": "d3a6bfb16a7f3e30a073e3da72269880df6d2556907b4df232d4fd1509c36c98",
+      "stored": "baseline/framescope/src/framescope/harness/uart_monitor.cpp"
+    },
+    {
+      "behavior_sha256": "723ee2d3dd0561d912127aa8ae5c13077ea6dad483178946182b15d8f1c1bc74",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/uart_monitor.hpp",
+      "sha256": "723ee2d3dd0561d912127aa8ae5c13077ea6dad483178946182b15d8f1c1bc74",
+      "stored": "baseline/framescope/src/framescope/harness/uart_monitor.hpp"
+    },
+    {
+      "behavior_sha256": "efa73098a93db57f60f4aa879d028b9640a524daa7603158a4c145809b7f1ea3",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/vga_monitor.cpp",
+      "sha256": "efa73098a93db57f60f4aa879d028b9640a524daa7603158a4c145809b7f1ea3",
+      "stored": "baseline/framescope/src/framescope/harness/vga_monitor.cpp"
+    },
+    {
+      "behavior_sha256": "ca681d61147efed9a9c706fb276633653fd7c2bf63941a6d045f6fbb70e92c1a",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/harness/vga_monitor.hpp",
+      "sha256": "ca681d61147efed9a9c706fb276633653fd7c2bf63941a6d045f6fbb70e92c1a",
+      "stored": "baseline/framescope/src/framescope/harness/vga_monitor.hpp"
+    },
+    {
+      "behavior_sha256": "c919277afe9f73f448c723d1f6513e0c4515faaf7648864b461714e03ddbec40",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/host.py",
+      "sha256": "c919277afe9f73f448c723d1f6513e0c4515faaf7648864b461714e03ddbec40",
+      "stored": "baseline/framescope/src/framescope/host.py"
+    },
+    {
+      "behavior_sha256": "c1fccb373452b2080e79d8ddd3efb11b31d44c5e9e721b1cb92e1c00c39b2847",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/manifest.py",
+      "sha256": "c1fccb373452b2080e79d8ddd3efb11b31d44c5e9e721b1cb92e1c00c39b2847",
+      "stored": "baseline/framescope/src/framescope/manifest.py"
+    },
+    {
+      "behavior_sha256": "40fd8be1fa8a5e7df56671916624b87472e3e94bb46a0a8d8c3c3e0f046ebd61",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/png.py",
+      "sha256": "40fd8be1fa8a5e7df56671916624b87472e3e94bb46a0a8d8c3c3e0f046ebd61",
+      "stored": "baseline/framescope/src/framescope/png.py"
+    },
+    {
+      "behavior_sha256": "b7b63064d6035d75eb9e6ffce52773d30cbb52921a97b950df6099133caeb482",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/ports.py",
+      "sha256": "b7b63064d6035d75eb9e6ffce52773d30cbb52921a97b950df6099133caeb482",
+      "stored": "baseline/framescope/src/framescope/ports.py"
+    },
+    {
+      "behavior_sha256": "c1aa9d64f0c8ffc10300a3e748468881c00d2340b52f3c590a97139847ed7976",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/protocols/__init__.py",
+      "sha256": "c1aa9d64f0c8ffc10300a3e748468881c00d2340b52f3c590a97139847ed7976",
+      "stored": "baseline/framescope/src/framescope/protocols/__init__.py"
+    },
+    {
+      "behavior_sha256": "7be919595fbe128301070819adb06a660c03b1c02b10ccab5c4b21efdc25dffd",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/protocols/base.py",
+      "sha256": "7be919595fbe128301070819adb06a660c03b1c02b10ccab5c4b21efdc25dffd",
+      "stored": "baseline/framescope/src/framescope/protocols/base.py"
+    },
+    {
+      "behavior_sha256": "bb55d1944a9c5219d8ac33657363a222afed30cd4d4e4f559c89fc2f4cdadc81",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/protocols/uart.py",
+      "sha256": "bb55d1944a9c5219d8ac33657363a222afed30cd4d4e4f559c89fc2f4cdadc81",
+      "stored": "baseline/framescope/src/framescope/protocols/uart.py"
+    },
+    {
+      "behavior_sha256": "0da02c5a28eb8aad465439003ef2a5c9a9e8fc824e98993e31dff69f140fca61",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/protocols/vga.py",
+      "sha256": "0da02c5a28eb8aad465439003ef2a5c9a9e8fc824e98993e31dff69f140fca61",
+      "stored": "baseline/framescope/src/framescope/protocols/vga.py"
+    },
+    {
+      "behavior_sha256": "4338a84538ef2b1258fdffee8593d72786d7fbda0a883597875aa4c479c85f11",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/rtl/framescope_dpi_pkg.sv",
+      "sha256": "4338a84538ef2b1258fdffee8593d72786d7fbda0a883597875aa4c479c85f11",
+      "stored": "baseline/framescope/src/framescope/rtl/framescope_dpi_pkg.sv"
+    },
+    {
+      "behavior_sha256": "a3bba8aefa93b305bbc07f75fae31eaedd021080fb21734a9082be1790053547",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/run.py",
+      "sha256": "a3bba8aefa93b305bbc07f75fae31eaedd021080fb21734a9082be1790053547",
+      "stored": "baseline/framescope/src/framescope/run.py"
+    },
+    {
+      "behavior_sha256": "44f892cc296ceade681f6814311e3f79a00a2eaa821fa6044de56d7aacaa20e8",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/rundir.py",
+      "sha256": "44f892cc296ceade681f6814311e3f79a00a2eaa821fa6044de56d7aacaa20e8",
+      "stored": "baseline/framescope/src/framescope/rundir.py"
+    },
+    {
+      "behavior_sha256": "27ed967875ade35b8598770d91d2578657ca8fb752cd7c2532a3a370e099e48d",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/runtime.py",
+      "sha256": "27ed967875ade35b8598770d91d2578657ca8fb752cd7c2532a3a370e099e48d",
+      "stored": "baseline/framescope/src/framescope/runtime.py"
+    },
+    {
+      "behavior_sha256": "0d1e6071c184eca504d9696b85a9c751177115402a38d9338375cdf46c2de175",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/scenario.py",
+      "sha256": "0d1e6071c184eca504d9696b85a9c751177115402a38d9338375cdf46c2de175",
+      "stored": "baseline/framescope/src/framescope/scenario.py"
+    },
+    {
+      "behavior_sha256": "76ced2e08f47c84daeec9093c257c6c1da4874d308cff6290635c61638318cb8",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/session.py",
+      "sha256": "76ced2e08f47c84daeec9093c257c6c1da4874d308cff6290635c61638318cb8",
+      "stored": "baseline/framescope/src/framescope/session.py"
+    },
+    {
+      "behavior_sha256": "a4566a67e01c8f44a7792213295786e47c3dff370d40436459288bb3606c85e5",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/stimulus.py",
+      "sha256": "a4566a67e01c8f44a7792213295786e47c3dff370d40436459288bb3606c85e5",
+      "stored": "baseline/framescope/src/framescope/stimulus.py"
+    },
+    {
+      "behavior_sha256": "47472bf00263e5ec9bb1f2a6c93fbcbc3693f952fd6bb1b5d714585393c60ac7",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "src/framescope/timing.py",
+      "sha256": "47472bf00263e5ec9bb1f2a6c93fbcbc3693f952fd6bb1b5d714585393c60ac7",
+      "stored": "baseline/framescope/src/framescope/timing.py"
+    },
+    {
+      "behavior_sha256": "c51a244da181382e6363c4e017b1e97dac5f07a832ce90cc47c1e212e88de000",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/helpers.py",
+      "sha256": "c51a244da181382e6363c4e017b1e97dac5f07a832ce90cc47c1e212e88de000",
+      "stored": "baseline/framescope/tests/helpers.py"
+    },
+    {
+      "behavior_sha256": "142a9c41d1cd774c9b5263f7f4cf0b6d1eb747796db3baff41a16523fc36896e",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/pngread.py",
+      "sha256": "142a9c41d1cd774c9b5263f7f4cf0b6d1eb747796db3baff41a16523fc36896e",
+      "stored": "baseline/framescope/tests/pngread.py"
+    },
+    {
+      "behavior_sha256": "616a6e52f0ec01f28b30aa17c7c5be3b0c9fae9bd77cb69d71da2ed096998215",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_batch.py",
+      "sha256": "616a6e52f0ec01f28b30aa17c7c5be3b0c9fae9bd77cb69d71da2ed096998215",
+      "stored": "baseline/framescope/tests/test_batch.py"
+    },
+    {
+      "behavior_sha256": "8c4cb39ea52133fb291e91221611e30a46c56e47f6283d28b53c7de31106f1f3",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_build_concurrency.py",
+      "sha256": "8c4cb39ea52133fb291e91221611e30a46c56e47f6283d28b53c7de31106f1f3",
+      "stored": "baseline/framescope/tests/test_build_concurrency.py"
+    },
+    {
+      "behavior_sha256": "53e62ef384b31af75d9cc87cc01de78ef489135a2430703380aecedc8fc94086",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_checkpoint.py",
+      "sha256": "53e62ef384b31af75d9cc87cc01de78ef489135a2430703380aecedc8fc94086",
+      "stored": "baseline/framescope/tests/test_checkpoint.py"
+    },
+    {
+      "behavior_sha256": "88b61054d83743c5d16ca37983c0d5c8bfcb700928cd553b0443dc62f93555ae",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_codegen.py",
+      "sha256": "88b61054d83743c5d16ca37983c0d5c8bfcb700928cd553b0443dc62f93555ae",
+      "stored": "baseline/framescope/tests/test_codegen.py"
+    },
+    {
+      "behavior_sha256": "7a83738407c54c22d95447b8f900ce7a91c432185338cbe583a71ffc578ad1c7",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_compare.py",
+      "sha256": "7a83738407c54c22d95447b8f900ce7a91c432185338cbe583a71ffc578ad1c7",
+      "stored": "baseline/framescope/tests/test_compare.py"
+    },
+    {
+      "behavior_sha256": "6e5cd1c3c2cf7bcc983600cd3ed27ca4d37692b3e7032f91c73609fe62d8cfe4",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_coverage.py",
+      "sha256": "6e5cd1c3c2cf7bcc983600cd3ed27ca4d37692b3e7032f91c73609fe62d8cfe4",
+      "stored": "baseline/framescope/tests/test_coverage.py"
+    },
+    {
+      "behavior_sha256": "971c21cfe9e8c719acdb25dfc9d4e9602f7f928f715097f686ab44d0aadce2f2",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_integration.py",
+      "sha256": "971c21cfe9e8c719acdb25dfc9d4e9602f7f928f715097f686ab44d0aadce2f2",
+      "stored": "baseline/framescope/tests/test_integration.py"
+    },
+    {
+      "behavior_sha256": "0b27f478822d55f1fc4e6e6d6666cec122377cb22c4ff084cd98b4b6895da066",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_manifest.py",
+      "sha256": "0b27f478822d55f1fc4e6e6d6666cec122377cb22c4ff084cd98b4b6895da066",
+      "stored": "baseline/framescope/tests/test_manifest.py"
+    },
+    {
+      "behavior_sha256": "a646128c9f129725c620a7181c1fcb4d1ee5024974a6f9918418ef7407cce312",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_png.py",
+      "sha256": "a646128c9f129725c620a7181c1fcb4d1ee5024974a6f9918418ef7407cce312",
+      "stored": "baseline/framescope/tests/test_png.py"
+    },
+    {
+      "behavior_sha256": "51969b3a7225f5041a9f1867f9c67e8a0909782307cdb7cdd3755461b2134936",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_ports.py",
+      "sha256": "51969b3a7225f5041a9f1867f9c67e8a0909782307cdb7cdd3755461b2134936",
+      "stored": "baseline/framescope/tests/test_ports.py"
+    },
+    {
+      "behavior_sha256": "739fae9c5a30844e6457ed7e4c2617fc9e7eab589bbd4dea1418e7a2a593fdd1",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_run.py",
+      "sha256": "739fae9c5a30844e6457ed7e4c2617fc9e7eab589bbd4dea1418e7a2a593fdd1",
+      "stored": "baseline/framescope/tests/test_run.py"
+    },
+    {
+      "behavior_sha256": "7884e5c9118e56343fdedba115261b103fd585eb8929439be342e07cc5541fe2",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_runtime.py",
+      "sha256": "7884e5c9118e56343fdedba115261b103fd585eb8929439be342e07cc5541fe2",
+      "stored": "baseline/framescope/tests/test_runtime.py"
+    },
+    {
+      "behavior_sha256": "073e99c3beb5aa5357c2cceab622274f7abc1db0f825cdb9edb24aca56b845e4",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_seed.py",
+      "sha256": "073e99c3beb5aa5357c2cceab622274f7abc1db0f825cdb9edb24aca56b845e4",
+      "stored": "baseline/framescope/tests/test_seed.py"
+    },
+    {
+      "behavior_sha256": "26340218dc8019f33b7ec8c1dbf1500f443053d276078281ea1e9df02171a5f2",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_session.py",
+      "sha256": "26340218dc8019f33b7ec8c1dbf1500f443053d276078281ea1e9df02171a5f2",
+      "stored": "baseline/framescope/tests/test_session.py"
+    },
+    {
+      "behavior_sha256": "356bb3b33284b9e29bedb3bc3994a3f488056af1d4ff616fbdea64a6e209d728",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_stimulus.py",
+      "sha256": "356bb3b33284b9e29bedb3bc3994a3f488056af1d4ff616fbdea64a6e209d728",
+      "stored": "baseline/framescope/tests/test_stimulus.py"
+    },
+    {
+      "behavior_sha256": "f59baad7d595bd6a9c3ccff7525b58efebc3a02f6a41e59a9e6686e9c0eced23",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_timing.py",
+      "sha256": "f59baad7d595bd6a9c3ccff7525b58efebc3a02f6a41e59a9e6686e9c0eced23",
+      "stored": "baseline/framescope/tests/test_timing.py"
+    },
+    {
+      "behavior_sha256": "749c2f376b6cb0e2e32b9eb9d53c0d5176ba4265d500b0b98fdeea8ea56781ba",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_uart.py",
+      "sha256": "749c2f376b6cb0e2e32b9eb9d53c0d5176ba4265d500b0b98fdeea8ea56781ba",
+      "stored": "baseline/framescope/tests/test_uart.py"
+    },
+    {
+      "behavior_sha256": "40a1d65f7eff0fac4840fc150b70a9dce338952f1b7d2b4f9ca3401ac5a493e2",
+      "current_required": false,
+      "group": "baseline_harness",
+      "path": "tests/test_uart_integration.py",
+      "sha256": "40a1d65f7eff0fac4840fc150b70a9dce338952f1b7d2b4f9ca3401ac5a493e2",
+      "stored": "baseline/framescope/tests/test_uart_integration.py"
+    },
+    {
+      "behavior_sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/00f2b96f738997b6/framescope_top.sv",
+      "sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/00f2b96f738997b6/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/056ac045919b90d4/framescope_top.sv",
+      "sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/056ac045919b90d4/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "82cc0f0951cc8ad5ad07e02091ba22ff6f73e253ce91e6604309711509ab6c01",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/0afe511f97270d10/framescope_top.sv",
+      "sha256": "82cc0f0951cc8ad5ad07e02091ba22ff6f73e253ce91e6604309711509ab6c01",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/0afe511f97270d10/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/0bad90e1e5b3ceb3/framescope_top.sv",
+      "sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/0bad90e1e5b3ceb3/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/10e84710bfa89f49/framescope_top.sv",
+      "sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/10e84710bfa89f49/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/137394f562080e54/framescope_top.sv",
+      "sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/137394f562080e54/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "ee36dbe72a49e6bea1ca1f47ecd853ada3574ec73429ab8fff3e4a8eccd25d60",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/18a8f08db797c235/framescope_top.sv",
+      "sha256": "ee36dbe72a49e6bea1ca1f47ecd853ada3574ec73429ab8fff3e4a8eccd25d60",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/18a8f08db797c235/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/1a5bf9d96b074c0d/framescope_top.sv",
+      "sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/1a5bf9d96b074c0d/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "ee36dbe72a49e6bea1ca1f47ecd853ada3574ec73429ab8fff3e4a8eccd25d60",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/220296a25eb16446/framescope_top.sv",
+      "sha256": "ee36dbe72a49e6bea1ca1f47ecd853ada3574ec73429ab8fff3e4a8eccd25d60",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/220296a25eb16446/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/227232b1fed6389b/framescope_top.sv",
+      "sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/227232b1fed6389b/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/2304c1c8689a6b81/framescope_top.sv",
+      "sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/2304c1c8689a6b81/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "82cc0f0951cc8ad5ad07e02091ba22ff6f73e253ce91e6604309711509ab6c01",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/2670afab6eb6484a/framescope_top.sv",
+      "sha256": "82cc0f0951cc8ad5ad07e02091ba22ff6f73e253ce91e6604309711509ab6c01",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/2670afab6eb6484a/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "ee36dbe72a49e6bea1ca1f47ecd853ada3574ec73429ab8fff3e4a8eccd25d60",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/4ce24b40316e55a8/framescope_top.sv",
+      "sha256": "ee36dbe72a49e6bea1ca1f47ecd853ada3574ec73429ab8fff3e4a8eccd25d60",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/4ce24b40316e55a8/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/4fc62f319dbc4e34/framescope_top.sv",
+      "sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/4fc62f319dbc4e34/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "82cc0f0951cc8ad5ad07e02091ba22ff6f73e253ce91e6604309711509ab6c01",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/69b56b8f5d94753d/framescope_top.sv",
+      "sha256": "82cc0f0951cc8ad5ad07e02091ba22ff6f73e253ce91e6604309711509ab6c01",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/69b56b8f5d94753d/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/6d0ae1419807f519/framescope_top.sv",
+      "sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/6d0ae1419807f519/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/73b84a13fba0ede4/framescope_top.sv",
+      "sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/73b84a13fba0ede4/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/761d4ec114f25928/framescope_top.sv",
+      "sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/761d4ec114f25928/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "007cf0cf134cbaf5b38c6bff46d5ff068e9eeb7e3317bc77844dc2da1c4a5284",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/9c22d7c78f0a8ffc/framescope_top.sv",
+      "sha256": "007cf0cf134cbaf5b38c6bff46d5ff068e9eeb7e3317bc77844dc2da1c4a5284",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/9c22d7c78f0a8ffc/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "ee36dbe72a49e6bea1ca1f47ecd853ada3574ec73429ab8fff3e4a8eccd25d60",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/b94cd1b3f8f23321/framescope_top.sv",
+      "sha256": "ee36dbe72a49e6bea1ca1f47ecd853ada3574ec73429ab8fff3e4a8eccd25d60",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/b94cd1b3f8f23321/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/c1c53fa7f2aa67e2/framescope_top.sv",
+      "sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/c1c53fa7f2aa67e2/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/d2076133c35b5b1d/framescope_top.sv",
+      "sha256": "4d4d82ee4b5fc4094d519fe7e9c82505a3fbed95eab1566975653590d9861503",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/d2076133c35b5b1d/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "007cf0cf134cbaf5b38c6bff46d5ff068e9eeb7e3317bc77844dc2da1c4a5284",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/d389ff7052e90e74/framescope_top.sv",
+      "sha256": "007cf0cf134cbaf5b38c6bff46d5ff068e9eeb7e3317bc77844dc2da1c4a5284",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/d389ff7052e90e74/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "82cc0f0951cc8ad5ad07e02091ba22ff6f73e253ce91e6604309711509ab6c01",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/d942fa15d9aba281/framescope_top.sv",
+      "sha256": "82cc0f0951cc8ad5ad07e02091ba22ff6f73e253ce91e6604309711509ab6c01",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/d942fa15d9aba281/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/.framescope/build/dfa4ab6ab3f8708c/framescope_top.sv",
+      "sha256": "aaa43775afc90ddc8b616b921d710936aac7bf91543cf4e58091fb2486564571",
+      "stored": "baseline/framescope/examples/metacircuit/.framescope/build/dfa4ab6ab3f8708c/framescope_top.sv"
+    },
+    {
+      "behavior_sha256": "3d0b67b88c009af4ab7c611bca0786d861d09962443ef60a696a6ea323ac0014",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/framescope.toml",
+      "sha256": "3d0b67b88c009af4ab7c611bca0786d861d09962443ef60a696a6ea323ac0014",
+      "stored": "baseline/framescope/examples/metacircuit/framescope.toml"
+    },
+    {
+      "behavior_sha256": "e90c88c2457886264f563fe6e813e4698aa6675eb68b66adfa83e36f7476a74f",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/stim_click.toml",
+      "sha256": "e90c88c2457886264f563fe6e813e4698aa6675eb68b66adfa83e36f7476a74f",
+      "stored": "baseline/framescope/examples/metacircuit/stim_click.toml"
+    },
+    {
+      "behavior_sha256": "90b1f65c3b3a6cac735dc1af986427a14b70e079f19d020b00b2bc17237bf0fc",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/stim_uart_reply.toml",
+      "sha256": "90b1f65c3b3a6cac735dc1af986427a14b70e079f19d020b00b2bc17237bf0fc",
+      "stored": "baseline/framescope/examples/metacircuit/stim_uart_reply.toml"
+    },
+    {
+      "behavior_sha256": "874ed88de9b43b192a07b66a8504436da0368e36ef8405fb348bd0527e3447b0",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/stubs/MouseCtl.sv",
+      "sha256": "874ed88de9b43b192a07b66a8504436da0368e36ef8405fb348bd0527e3447b0",
+      "stored": "baseline/framescope/examples/metacircuit/stubs/MouseCtl.sv"
+    },
+    {
+      "behavior_sha256": "0ed1435ed0f1a158b797e7343b44a22c36828e2a8a8ac0a6d5bd77b033a888f9",
+      "current_required": false,
+      "group": "baseline_harness_manifest",
+      "path": "examples/metacircuit/stubs/MouseDisplay.sv",
+      "sha256": "0ed1435ed0f1a158b797e7343b44a22c36828e2a8a8ac0a6d5bd77b033a888f9",
+      "stored": "baseline/framescope/examples/metacircuit/stubs/MouseDisplay.sv"
+    }
+  ],
+  "mandatory_inventory": {
+    "assumptions": [
+      "golden/ASSUMPTIONS.md",
+      "golden/INTERFACE_FACTS.md",
+      "golden/M2_ASSUMPTIONS.md",
+      "golden/M3_ASSUMPTIONS.md",
+      "golden/M3_SOLVER_ASSUMPTIONS.md",
+      "golden/M4_ASSUMPTIONS.md"
+    ],
+    "comparators": [
+      "golden/tools/verify_m1.py",
+      "golden/tools/verify_m2.py",
+      "golden/tools/verify_m3.py",
+      "golden/tools/verify_m4.py",
+      "golden/tools/lockstep_m4.py",
+      "golden/tools/functional_m4.py"
+    ],
+    "constraints": [
+      "src/constraint/basys3.xdc",
+      "src/constraint/basys3_solver_board.xdc",
+      "src/constraint/basys3_uart_demo.xdc"
+    ],
+    "dependencies": [
+      "golden/package.json",
+      "golden/package-lock.json",
+      "golden/tsconfig.json"
+    ],
+    "implementation_settings": [
+      "metacircuit-2025.2.tcl",
+      "metacircuit.tcl",
+      "solver_board_synth.tcl"
+    ],
+    "masks": [
+      "golden/masks/m2_ui.toml"
+    ],
+    "oracle": [
+      "golden/src/backend/arith.ts",
+      "golden/src/backend/lu.ts",
+      "golden/src/backend/netlist.ts",
+      "golden/src/backend/snapshot.ts",
+      "golden/src/backend/solve.ts",
+      "golden/src/backend/stamp.ts",
+      "golden/src/backend/types.ts",
+      "golden/src/backend/uart.ts",
+      "golden/src/backend/value.ts",
+      "golden/src/cli/compare-backend.ts",
+      "golden/src/cli/compare-ui.ts",
+      "golden/src/cli/compare.ts",
+      "golden/src/cli/main.ts",
+      "golden/src/cli/netlist.ts",
+      "golden/src/cli/png.ts",
+      "golden/src/cli/reference.ts",
+      "golden/src/cli/stress.ts",
+      "golden/src/core/bootCircuit.ts",
+      "golden/src/core/config.ts",
+      "golden/src/core/connectivity.ts",
+      "golden/src/core/constants.ts",
+      "golden/src/core/encoding.ts",
+      "golden/src/core/export.ts",
+      "golden/src/core/geometry.ts",
+      "golden/src/core/index.ts",
+      "golden/src/core/properties.ts",
+      "golden/src/core/state.ts",
+      "golden/src/core/step.ts",
+      "golden/src/render/assetRenderer.ts",
+      "golden/src/render/decoder.ts",
+      "golden/src/render/framebuffer.ts",
+      "golden/src/render/placeholder.ts",
+      "golden/src/render/renderer.ts",
+      "golden/src/scenario/compare.ts",
+      "golden/src/scenario/expand.ts",
+      "golden/src/scenario/run.ts",
+      "golden/src/scenario/stim.ts",
+      "golden/src/scenario/stress.ts",
+      "golden/src/scenario/types.ts"
+    ],
+    "scenarios": [
+      "golden/scenarios/m1_canvas_tools.json",
+      "golden/scenarios/m1_latency.json",
+      "golden/scenarios/m1_recorded.json",
+      "golden/scenarios/m2_boot.json",
+      "golden/scenarios/m2_full_ui.json",
+      "golden/scenarios/m2_node_colours.json",
+      "golden/scenarios/m2_recorded.json",
+      "golden/scenarios/m3_backend.json",
+      "golden/scenarios/m3_connectivity.json",
+      "golden/scenarios/m3_current_source.json",
+      "golden/scenarios/m3_display.json",
+      "golden/scenarios/m3_errors.json",
+      "golden/test/fixtures/m4_boot_seed1.json",
+      "golden/test/fixtures/m4_wire_reselection_seed12.json",
+      "golden/test/fixtures/m4_wire_variant_reselect_seed12.scenario.json",
+      "golden/test/fixtures/m4_wire_variant_seed12.json",
+      "golden/test/fixtures/m4_wire_variant_seed12.scenario.json"
+    ],
+    "visual": [
+      "golden/assets/canvas.json",
+      "golden/assets/cursor.json",
+      "golden/assets/font8x8.json",
+      "golden/assets/keypad.json",
+      "golden/assets/screen.json",
+      "golden/assets/toolbar.json"
+    ]
+  },
+  "name": "frontend-v1",
+  "provenance": {
+    "accepted": {
+      "framescope_dirty": true,
+      "framescope_head": "de04a24f8212eedf218040dcc923daff2d7b857b",
+      "metacircuit_branch": "verification",
+      "metacircuit_dirty": true,
+      "metacircuit_head": "f894fa8dcb487ff02c8f671e4126cc84cf169363",
+      "simpyhls_head": "0d6f22a8051bf6ff5af8e4f603d50603e33ac261"
+    },
+    "decisions": [
+      "M4 startup clears cells 1/2 alongside mouse setup",
+      "A-007 preserves selected wire variant when returning to wire tool"
+    ],
+    "old_baseline_status": "Historical plan baseline is not the corrected accepted source; reduced startup/A-007 cases exposed defects. No old-baseline M5 pass is claimed.",
+    "plan_start": {
+      "framescope": "de04a24f8212eedf218040dcc923daff2d7b857b",
+      "metacircuit": "2ff7f3a",
+      "simpyhls": "0d6f22a"
+    }
+  },
+  "readiness": "baseline freeze only; M5 acceptance not established",
+  "schema": "metacircuit-frozen-contract/v1",
+  "scope": {
+    "exclusions": [
+      "device-level PS/2",
+      "physical board",
+      "real SolverBoard_top datapath and configured floating-point IP",
+      "arbitrary memory stalls and continuous progress/atomicity",
+      "transient flooding pixels and every intermediate canvas transaction",
+      "physical component-store exhaustion (legal grid fits at most 144 two-cell components)",
+      "clock/reset/CDC refactors without additional evidence"
+    ],
+    "inputs": {
+      "backend": "fixed M3 UART/host fixtures; accepted M3 assumptions define numeric scope",
+      "logical_grid": [
+        18,
+        16
+      ],
+      "mouse": "absolute MouseCtl output coordinates and buttons, not PS/2 packets",
+      "pan_x": [
+        0,
+        0
+      ],
+      "pan_y": [
+        -224,
+        0
+      ],
+      "rotations": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "screen": [
+        640,
+        480
+      ],
+      "tools": "all ten tools and four wire variants"
+    },
+    "modules": [
+      "frontend interaction and command guard",
+      "cell/component/property stores",
+      "toolbar, canvas, cursor, keypad and property-panel rendering",
+      "settled flooding colours and extraction",
+      "frontend UART TX/RX snapshot protocol",
+      "accepted voltage RAM, seven-segment display and LEDs"
+    ],
+    "qualification": "M1/M2/M3 fixed regressions and M4 cold seeded settled endpoint exploration, not exhaustive combinations",
+    "top": "GlobalRender_top"
+  },
+  "seed_policy": {
+    "budget_status": "frozen M4 exploratory corpus; M5 gate runtime budget not yet accepted",
+    "checkpoint_reuse": false,
+    "directed_seed": 2026,
+    "initialization": {
+      "rand_reset": 2,
+      "x_assign": "unique",
+      "x_initial": "unique"
+    },
+    "v1_v2_seeds": [
+      1,
+      7,
+      2026
+    ],
+    "v2_long_operations": 64,
+    "v2_long_seeds": [
+      11,
+      12
+    ]
+  },
+  "timing": {
+    "caret_toggle_frames": 10,
+    "flow_phase_frames": 2,
+    "frame_rule": "Back-porch input change in frame N first appears in frame N+1; m1_latency checks RAM/probes every frame without extra wait.",
+    "input_latency_frames": 1,
+    "input_line": 10,
+    "internal_progress_bounds": null,
+    "internal_progress_status": "Not yet specified/qualified under configurable stalls; M5-4 must establish bounds before stall/retiming acceptance.",
+    "permitted_retiming": "none for already specified observable frame effects; any change requires a new accepted contract",
+    "rotate_frames_per_step": 8,
+    "settled_m4_extra_wait_frames": 2,
+    "settled_wait_is_progress_bound": false,
+    "uart": "M3 frozen codec/comparator defines ordered records, content snapshot ids, stale rejection, ER85 abort and reply/display rules; recorded UART timing is preserved by the legacy regression."
+  }
+}

@@ -1,0 +1,273 @@
+# metacircuit's VGA frontend (GlobalRender_top) on the Basys 3.
+#   framescope run -c examples/metacircuit -n 2
+# Set METACIRCUIT to the checkout if it is not at the default relative path.
+
+[vars]
+METACIRCUIT = "../../../nus-EE2026-metacircuit"
+
+[design]
+top = "GlobalRender_top"
+root = "${METACIRCUIT}"
+sources = [
+    "src/design/**/*Pkg.sv",  # packages first
+    "src/design/**/*.v",
+    "src/design/**/*.sv",
+]
+# Xilinx floating-point IP wrappers: only the solver board needs them.
+exclude = ["src/design/floating_point/**"]
+# Verilog/SV stand-ins for the Digilent VHDL mouse modules.
+extra_sources = ["stubs/*.sv"]
+verilator_args = ["-Wno-MULTIDRIVEN"]
+
+[clocks]
+CLK100MHZ = { freq_hz = 100_000_000 }
+
+[inputs]
+RsRx = 1  # UART line idles high
+
+[virtual_inputs]  # read by stubs/MouseCtl.sv
+"mouse.x" = 320
+"mouse.y" = 240
+"mouse.left" = 0
+"mouse.middle" = 0
+"mouse.right" = 0
+
+[[monitor]]
+name = "vga"
+protocol = "vga"
+timing = "640x480@60"
+# The RGB pins lag video_on by two pixel clocks: the top's `rgb` register,
+# then VGAControl's output register.
+de_delay = 2
+
+[monitor.signals]
+pclk = "dut.clk_pixel"
+hsync = "HSYNC"
+vsync = "VSYNC"
+red = "VGARED"
+green = "VGAGREEN"
+blue = "VGABLUE"
+de = "dut.video_on"
+
+# The USB-UART link (115200 8N1). RsTx carries the frontend UART client's
+# netlist snapshots (@NB/@NC/@NE lines, src/uart_link/protocol.py) only while
+# SW[5] = 1 (frontend_uart_client_enable); RsRx takes the solver's
+# @VB/@VN/@VE reply. Drive it with [[uart]] stimulus or a host process:
+#   framescope run -c examples/metacircuit -n 6 --set SW=32 \
+#     --host "python3 examples/metacircuit/uart_solver_host.py"
+[[monitor]]
+name = "uart"
+protocol = "uart"
+baud = 115200
+drive = "RsRx"            # idles high until something is sent
+reply_delay_bits = 10
+
+[monitor.signals]
+tx = "RsTx"
+
+# --------------------------------------------------------------------------
+# Probes: sampled at the VSYNC leading edge that ends each frame, before any
+# stimulus for the next frame (frames[i].probes in the report). Paths are in
+# src/design/rendering/GlobalRender_top.v unless noted.
+[probes]
+# Toolbar selection (ToolbarVGA, pixel clock, driven by the pixel-domain mouse
+# below). 0 select/pan, 1 wire family, 2 resistor, 3 inductor, 4 capacitor,
+# 5 voltage source, 6 current source, 7 ground, 8 rotate, 9 delete.
+tool_idx = "dut.selected_toolbar_idx"
+# Variant of tool 1 (cycles on repeated clicks): 0 wire, 1 junction, 2 elbow, 3 tee.
+wire_variant = "dut.selected_wire_variant"
+# InteractionController mode (toolbar_mode_select of the 100 MHz-synchronised
+# tool_idx/wire_variant): 0 wire, 1 junction, 2 elbow, 3 tee, 4 resistor,
+# 5 voltage, 6 current, 7 rotate, 8 delete, 9 inductor, 10 capacitor,
+# 11 ground, 15 none (select/pan tool).
+mode_select = "dut.interaction_mode_select"
+# Canvas pan offset in pixels (CircuitCanvas grid_pos_x/y, pixel clock, driven
+# by the pixel-domain mouse while dragging with the select tool): <= 0,
+# clamped to [CanvasWidth - 18*32, 0] x [CanvasHeight - 16*32, 0] = [0, 0] x [-224, 0].
+grid_pos_x = { expr = "dut.circuit_canvas_grid_pos_x", signed = true }
+grid_pos_y = { expr = "dut.circuit_canvas_grid_pos_y", signed = true }
+# Flips on every VSYNC edge (vsync_edge, pixel clock); its 100 MHz-synchronised
+# edge is interaction_frame_tick, which starts one interaction step. At the
+# sampling instant this frame's flip has not happened yet.
+frame_toggle = "dut.interaction_frame_toggle_pix"
+# 1 once the boot sequence (init_cycles >= INIT_DELAY_CYCLES, which also writes
+# the default circuit) is over and no canvas clear is running: the
+# InteractionController's commands are accepted (interaction_bg_cmd_ready).
+init_done = "dut.interaction_bg_cmd_ready"
+# InteractionController idle (no decoded or queued commands) and its sticky
+# "frame tick arrived while busy" flag.
+interaction_idle = "dut.interaction_frame_done"
+interaction_frame_drop = "dut.interaction_frame_drop_flag"
+# 1 while the ComponentStore is dirty or being rebuilt from the cells; its
+# dump is only consistent with the cell dumps when this is 0.
+component_store_busy = "dut.component_store_busy"
+# Valid ComponentStore entries: words 0..count-1 (entries above are stale).
+component_count = "dut.component_store_count"
+# Animation phase of the current-flow arrows (frame-locked since metacircuit
+# 34dc50e: one step every 2 frames at the VSYNC leading edge).
+anim_phase = "dut.global_anim_phase"
+# Mouse at the MouseCtl outputs (the stub's registers, 100 MHz): what the
+# InteractionController captures on the frame tick.
+mouse_x = "dut.mouse_xpos"
+mouse_y = "dut.mouse_ypos"
+mouse_left = "dut.mouse_left"
+# Pixel-domain mouse seen by the cursor, toolbar, hover and panning. Since
+# metacircuit 34dc50e it is latched once per frame on vsync_edge (one pixel
+# clock after the sampling instant), so frame i's sample holds the mouse
+# latched when frame i started.
+mouse_x_pix = "dut.mouse_xpos_pix"
+mouse_y_pix = "dut.mouse_ypos_pix"
+mouse_left_pix = "dut.mouse_left_pix"
+# Property-panel selection (select tool): selected cell (i, j) and its flag.
+has_selection = "dut.has_selection"
+selected_cell_i = "dut.selected_cell_i"
+selected_cell_j = "dut.selected_cell_j"
+value_edit_active = "dut.value_edit_active"
+selected_value_bcd = "dut.selected_component_value_ui"
+selected_value_unit = "dut.selected_component_unit_ui"
+selected_component_type = "dut.selected_component_type_ui"
+selected_component_valid = "dut.selected_component_index_valid_ui"
+selected_value_text_len = "dut.selected_value_text_len_ui_ff1"
+selected_value_text = "dut.selected_value_text_ui_ff1"
+# Split ASCII text for consumers whose JSON numbers cannot exactly hold uint64.
+selected_value_text_hi = "dut.selected_value_text_ui_ff1[63:32]"
+selected_value_text_lo = "dut.selected_value_text_ui_ff1[31:0]"
+flood_colors_ready = "dut.flood_colors_ready"
+# Frontend UART client (RTL-4). Only active with SW[5] = 1 (`--set SW=32`);
+# otherwise these stay at their reset values.
+uart_client = "dut.frontend_uart_client_enable"
+# Netlist transmitter FSM: 0 idle, 1 extract, 2/3 prescan, 4/5 @NB,
+# 6/7 read component, 8/9 @NC, 10/11 @NE, 12/13 @ER.
+netlist_tx_state = "dut.netlist_tx_state"
+# Snapshot id (the @NB..@NE frame field): it increments only when an
+# extraction commits after netlist content changed (netlist_content_dirty), so
+# an unchanged circuit keeps its id; snapshot_id_valid once a snapshot exists
+# (metacircuit 59ca445, D-016). Then the id of the last snapshot fully sent
+# (@NE or @ER) and how many were sent (5312d7c).
+snapshot_id = "dut.frontend_snapshot_frame"
+snapshot_id_valid = "dut.frontend_snapshot_id_valid"
+netlist_content_dirty = "dut.netlist_content_dirty"
+netlist_last_sent_frame = "dut.netlist_last_sent_frame"
+netlist_sent_count = "dut.netlist_sent_count"
+# 0 ok, 0x81 unsupported kind, 0x82 unsupported unit (sent as @ER instead).
+netlist_error_code = "dut.netlist_error_code"
+# Solver reply after FrontendVoltagePacketParser: valid/frame/node_count/status
+# latch on a complete, consistent VB..VN..VE snapshot; status 0x83 = reply
+# parse error, other nonzero codes come from @ER. reply_receiving is high
+# between @VB and @VE; reply_bank selects voltages_bank0/1.
+reply_valid = "dut.frontend_reply_valid"
+reply_frame = "dut.frontend_reply_frame"
+reply_status = "dut.frontend_reply_status"
+reply_node_count = "dut.frontend_reply_node_count"
+reply_bank = "dut.frontend_reply_active_bank"
+reply_receiving = "dut.frontend_reply_stage_active"
+# Replies whose id is not the current snapshot id are dropped: how many, and
+# the id of the last dropped one.
+reply_stale_count = "dut.frontend_reply_stale_count"
+reply_stale_frame = "dut.frontend_reply_stale_frame"
+# Node shown on the 7-segment display (BTNL/BTNR) and which half (BTNU upper,
+# BTND lower) of its float32 bits; seg_value is the displayed 16-bit value.
+reply_view_node = "dut.frontend_reply_view_node"
+reply_view_upper = "dut.frontend_reply_view_upper"
+seg_value = "dut.hex_display_value"
+leds = "LED"
+# float32 bits of node 0's voltage in the active reply bank.
+voltage_node0 = "dut.frontend_reply_active_bank ? dut.frontend_reply_ram1_inst.mem[0] : dut.frontend_reply_ram0_inst.mem[0]"
+
+# --------------------------------------------------------------------------
+# Memory dumps: `run --dump all|last|0,3` writes <run>/dumps/<name>/frame_NNNN.json
+# at the same instant as the probes, as {"name","frame","width","depth","words"}
+# with words[addr] as zero-padded hex.
+#
+# All canvas memories have 288 words, one per grid cell:
+#   addr = i + 18 * j,  i = column 0..17, j = row 0..15  (CANVAS_GRID_W = 18).
+#
+# The CellStore exists twice, but NOT as a ping-pong buffer: every write
+# (boot, clear, InteractionController command) goes to both copies in the same
+# 100 MHz cycle, so there is no front/back selector to probe. cells_render is
+# what CircuitCanvas draws (read on the pixel clock); cells_shadow is the
+# system-clock copy that the InteractionController, the ComponentStore rebuild
+# and the flood fill read. They should always be equal.
+#
+# Cell word (16 bits; CircuitCanvas.v, MakeCellData in InteractionController.v):
+#   [0]     E  occupied (0x0000 = empty cell)
+#   [6:1]   T  sprite: 0 wire, 1 elbow, 2 tee, 3 junction, 5/6 resistor
+#              left/right half, 7/8 voltage source L/R, 9/10 current source L/R,
+#              11/12 inductor L/R, 13/14 capacitor L/R, 15 ground
+#   [8:7]   R  rotation in quarter turns; for two-cell components the right
+#              half sits at +1 cell (R=0), +18 (R=1), -1 (R=2), -18 (R=3)
+#   [9]        current-flow arrow direction (CircuitCanvas flow_bit:
+#              0 right/down, 1 left/up); set by the default circuit only
+#   [15:10]    unused (CircuitCanvas decodes [15:9] as "mode" and ignores it)
+[[dump]]
+name = "cells_render"
+path = "dut.circuit_canvas_ram_inst.mem"
+
+[[dump]]
+name = "cells_shadow"
+path = "dut.canvas_shadow_data"
+
+# Per-cell palette indices (4 bits) for the cell's foreground and background.
+# Every cell write resets them to fg 0xF / bg 0x0; flood colouring overrides them.
+[[dump]]
+name = "cell_fg_color"
+path = "dut.circuit_canvas_fg_color_ram_inst.mem"
+
+[[dump]]
+name = "cell_bg_color"
+path = "dut.circuit_canvas_bg_color_ram_inst.mem"
+
+# Component values per cell, system-clock copies (both cells of a two-cell
+# component hold the same value):
+#   values_shadow: 12 bits, three BCD digits [11:8] [7:4] [3:0]
+#   value_units_shadow: 4 bits, 0 none, 1 M, 2 k, 3 m, 4 u, 5 n, 6 p
+[[dump]]
+name = "values_shadow"
+path = "dut.value_shadow_data"
+
+[[dump]]
+name = "value_units_shadow"
+path = "dut.value_unit_shadow_data"
+
+# ComponentStore (component_store_ram_inst, 40 bits, make_component_store_entry).
+# Rebuilt from cells_shadow by a scan in address order whenever cells change:
+# one entry per component origin (E=1, not a right-half sprite, not wire or
+# ground), packed from index 0. Only words 0..component_count-1 are valid; the
+# rebuild does not clear the rest.
+#   [39:36]  unit (codes as value_units_shadow)
+#   [35:27]  index (= the word's own address)
+#   [26:23]  type: sprite id [3:0] of the origin cell (5 resistor, 7 voltage,
+#            9 current, 11 inductor, 13 capacitor)
+#   [22:21]  rotation (cell [8:7])
+#   [20:9]   value, three BCD digits
+#   [8:0]    position: [8:5] row j, [4:0] column i
+[[dump]]
+name = "component_store"
+path = "dut.component_store_ram_inst.mem"
+
+# Cell -> ComponentStore index (9 bits; 0x1ff = none), written for both cells
+# of each component during the same rebuild.
+[[dump]]
+name = "component_index_map"
+path = "dut.component_index_map_ram_inst.mem"
+
+# Frontend UART client memories (meaningful with SW[5] = 1, `--set SW=32`).
+# Solver reply banks: 32 words of float32 bits, address = node index; the
+# active one is probes.reply_bank.
+[[dump]]
+name = "voltages_bank0"
+path = "dut.frontend_reply_ram0_inst.mem"
+
+[[dump]]
+name = "voltages_bank1"
+path = "dut.frontend_reply_ram1_inst.mem"
+
+# Extracted netlist nodes (8 bits, FF = ground) of each component's two
+# terminals, as sent in @NC n0/n1; address = ComponentStore index.
+[[dump]]
+name = "netlist_n0"
+path = "dut.netlist_node0_ram_inst.mem"
+
+[[dump]]
+name = "netlist_n1"
+path = "dut.netlist_node1_ram_inst.mem"

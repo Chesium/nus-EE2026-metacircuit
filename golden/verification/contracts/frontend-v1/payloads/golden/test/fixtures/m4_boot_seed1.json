@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "seed": 1,
+  "blocks": [],
+  "scenario": {
+    "name": "m4_seed_1",
+    "description": "M4 v1 cold-start canvas stress; settled state checks use the accepted M1 latency. No solver/stall/PS2 qualification.",
+    "steps": [
+      {
+        "op": "wait",
+        "frames": 3
+      },
+      {
+        "op": "checkpoint",
+        "label": "boot"
+      }
+    ]
+  }
+}

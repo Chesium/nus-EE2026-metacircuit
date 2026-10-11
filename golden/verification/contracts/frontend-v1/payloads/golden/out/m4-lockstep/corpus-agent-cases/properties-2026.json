@@ -1,0 +1,555 @@
+{
+  "version": 2,
+  "seed": 2026,
+  "corpus": "properties",
+  "blocks": [
+    [
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "capacitor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          3
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          3
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          9,
+          3
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          9,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click",
+        "x": 280,
+        "y": 34
+      },
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      },
+      {
+        "op": "click",
+        "x": 500,
+        "y": 368
+      },
+      {
+        "op": "click",
+        "x": 531,
+        "y": 368
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 593,
+        "y": 368
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 624,
+        "y": 368
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 593,
+        "y": 400
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 624,
+        "y": 400
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 593,
+        "y": 432
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 624,
+        "y": 432
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 500,
+        "y": 464
+      },
+      {
+        "op": "click",
+        "x": 531,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click",
+        "x": 280,
+        "y": 54
+      }
+    ]
+  ],
+  "scenario": {
+    "name": "m4_directed_properties_seed_2026",
+    "description": "M4 directed properties corpus, seed 2026; accepted settled canvas state contract. No solver/stall/PS2 qualification.",
+    "steps": [
+      {
+        "op": "wait",
+        "frames": 3
+      },
+      {
+        "op": "checkpoint",
+        "label": "boot"
+      },
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_0"
+      },
+      {
+        "op": "click_tool",
+        "tool": "capacitor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_1"
+      },
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_2"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          9,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_3"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          9,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click",
+        "x": 280,
+        "y": 34
+      },
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      },
+      {
+        "op": "click",
+        "x": 500,
+        "y": 368
+      },
+      {
+        "op": "click",
+        "x": 531,
+        "y": 368
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_4"
+      },
+      {
+        "op": "click",
+        "x": 593,
+        "y": 368
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_5"
+      },
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_6"
+      },
+      {
+        "op": "click",
+        "x": 624,
+        "y": 368
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_7"
+      },
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_8"
+      },
+      {
+        "op": "click",
+        "x": 593,
+        "y": 400
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_9"
+      },
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_10"
+      },
+      {
+        "op": "click",
+        "x": 624,
+        "y": 400
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_11"
+      },
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_12"
+      },
+      {
+        "op": "click",
+        "x": 593,
+        "y": 432
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_13"
+      },
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_14"
+      },
+      {
+        "op": "click",
+        "x": 624,
+        "y": 432
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_15"
+      },
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_16"
+      },
+      {
+        "op": "click",
+        "x": 570,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_17"
+      },
+      {
+        "op": "click",
+        "x": 500,
+        "y": 464
+      },
+      {
+        "op": "click",
+        "x": 531,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_18"
+      },
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_19"
+      },
+      {
+        "op": "click",
+        "x": 280,
+        "y": 54
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_20"
+      }
+    ]
+  }
+}

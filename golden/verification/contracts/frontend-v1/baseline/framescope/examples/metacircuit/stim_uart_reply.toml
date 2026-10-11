@@ -1,0 +1,16 @@
+# A scripted solver reply on RsRx (no host process): node 0 = 2.0 V
+# (float32 0x40000000) for netlist snapshot 0x0001, the boot circuit's id
+# (ids only change with netlist content since metacircuit 59ca445; a reply
+# with another id is dropped and counted in probes.reply_stale_count).
+# Needs SW[5] = 1:
+#   framescope run -c examples/metacircuit -s examples/metacircuit/stim_uart_reply.toml --set SW=32
+# Then probes reply_valid = 1, reply_frame = 1 and voltage_node0 = 0x40000000
+# from frame 1 on; `--dump last` shows it at address 0 of voltages_bank<reply_bank>.
+frames = 2
+
+# Frame 0, line 420: after the frame's @NE line (which ends near line 400).
+[[uart]]
+link = "uart"
+frame = 0
+line = 420
+text = "@VB,0001,01,00*38\r\n@VN,0001,00,40000000*31\r\n@VE,0001,01,00*3F\r\n"

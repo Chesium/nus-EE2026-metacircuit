@@ -1,0 +1,2707 @@
+{
+  "version": 2,
+  "seed": 2026,
+  "corpus": "dense",
+  "blocks": [
+    [
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "capacitor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          0
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          1
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          2
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          3
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          4
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          5
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          6
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          7
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          8
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "drag",
+        "from": {
+          "screen": [
+            300,
+            340
+          ]
+        },
+        "to": {
+          "screen": [
+            300,
+            40
+          ]
+        },
+        "frames": 15
+      },
+      {
+        "op": "assume_pan",
+        "x": 0,
+        "y": -224
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "capacitor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          9
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          10
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          11
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          12
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          13
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          14
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          15
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "resistor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          15
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "delete"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          1,
+          15
+        ],
+        "hold": 1
+      }
+    ],
+    [
+      {
+        "op": "click_tool",
+        "tool": "resistor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          15
+        ],
+        "hold": 1
+      }
+    ]
+  ],
+  "scenario": {
+    "name": "m4_directed_dense_seed_2026",
+    "description": "M4 directed dense corpus, seed 2026; accepted settled canvas state contract. No solver/stall/PS2 qualification.",
+    "steps": [
+      {
+        "op": "wait",
+        "frames": 3
+      },
+      {
+        "op": "checkpoint",
+        "label": "boot"
+      },
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click",
+        "x": 620,
+        "y": 464
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_0"
+      },
+      {
+        "op": "click_tool",
+        "tool": "capacitor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          0
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_1"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          1
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_2"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          2
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_3"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          3
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_4"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          4
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_5"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          5
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_6"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          6
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_7"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          7
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_8"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          8
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_9"
+      },
+      {
+        "op": "click_tool",
+        "tool": "pan"
+      },
+      {
+        "op": "drag",
+        "from": {
+          "screen": [
+            300,
+            340
+          ]
+        },
+        "to": {
+          "screen": [
+            300,
+            40
+          ]
+        },
+        "frames": 15
+      },
+      {
+        "op": "assume_pan",
+        "x": 0,
+        "y": -224
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_10"
+      },
+      {
+        "op": "click_tool",
+        "tool": "capacitor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          9
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_11"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          10
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_12"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          11
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_13"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          12
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_14"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          13
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_15"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          14
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_16"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          2,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          4,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          6,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          8,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          10,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          12,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          14,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          16,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_17"
+      },
+      {
+        "op": "click_tool",
+        "tool": "resistor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_18"
+      },
+      {
+        "op": "click_tool",
+        "tool": "delete"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          1,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_19"
+      },
+      {
+        "op": "click_tool",
+        "tool": "resistor"
+      },
+      {
+        "op": "click_cell",
+        "cell": [
+          0,
+          15
+        ],
+        "hold": 1
+      },
+      {
+        "op": "wait",
+        "frames": 2
+      },
+      {
+        "op": "checkpoint",
+        "label": "operation_20"
+      }
+    ]
+  }
+}

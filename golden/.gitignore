@@ -1,6 +1,8 @@
 node_modules/
 dist/
 out/
+# The frozen contract stores copies of saved golden/out corpora.
+!/verification/contracts/*/payloads/golden/out/
 test-results/
 playwright-report/
 *.tsbuildinfo

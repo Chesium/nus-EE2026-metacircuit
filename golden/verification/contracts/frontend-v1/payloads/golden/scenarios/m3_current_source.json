@@ -1,0 +1,53 @@
+{
+  "name": "m3_current_source",
+  "description": "Replace the boot voltage source with a 2 mA current source pointing toward ground: its tail is n0 and node 0 must read -0.1 V through the two 100 ohm resistors. Check both display halves.",
+  "steps": [
+    "wait 5",
+    "checkpoint boot",
+    "click_tool delete",
+    "click_cell 3 2",
+    "wait 7",
+    "checkpoint source_removed",
+    "click_tool current",
+    "click_cell 3 2",
+    "wait 7",
+    "checkpoint blank_current_source",
+    "click_tool pan",
+    "click_cell 3 2",
+    "click 280 34",
+    "click 620 464",
+    "click 531 464",
+    "click 531 368",
+    "click 593 400",
+    "wait 7",
+    "checkpoint current_2mA",
+    "wait 4",
+    "checkpoint current_upper",
+    "wait 4",
+    "checkpoint current_lower"
+  ],
+  "m3": {
+    "buttons": [
+      {
+        "frame": 59,
+        "input": "BTNU",
+        "value": 1
+      },
+      {
+        "frame": 60,
+        "input": "BTNU",
+        "value": 0
+      },
+      {
+        "frame": 63,
+        "input": "BTND",
+        "value": 1
+      },
+      {
+        "frame": 64,
+        "input": "BTND",
+        "value": 0
+      }
+    ]
+  }
+}

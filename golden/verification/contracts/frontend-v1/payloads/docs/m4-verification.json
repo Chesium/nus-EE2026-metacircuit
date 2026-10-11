@@ -1,0 +1,3618 @@
+{
+  "schema_version": 1,
+  "milestone": "M4",
+  "status": "complete",
+  "recorded_at_utc": "2026-10-10T06:53:03.457367+00:00",
+  "scope": "Cold seeded RTL initialization, coverage and persistent settled canvas exploration; 64 named functional bins with explicit M5 exclusions; M2/M3 regressions qualify final frontend fixes",
+  "metacircuit_head": "f894fa8dcb487ff02c8f671e4126cc84cf169363",
+  "framescope_head": "de04a24f8212eedf218040dcc923daff2d7b857b",
+  "uncommitted_changes": true,
+  "source_hashes": {
+    "src/design/rendering/GlobalRender_top.v": "254c8842d72c6c4801ef015c8c3274687a970c8794f9d09e6d966ced42657a66",
+    "src/design/rendering/ToolbarVGA.v": "4ee00f31d426b07cb30650e01cf6c05aca41d3e6a2eb0c8f1222474a859f983b",
+    "golden/src/scenario/stress.ts": "bbc914190dc79e9a3550247278a4f389788f6353a78723e1a8b4bdd122fa09af",
+    "golden/tools/verify_m4.py": "c8fc264a3aa93a141aa8038369ee17c4c0778fd11d475c6ef218e896ba4db561",
+    "golden/tools/lockstep_m4.py": "dadd5ce7ffb7f85951dbb9a0f5b3ad653e952e36aedbe9fb56e063a2603088e1",
+    "golden/tools/functional_m4.py": "58254ebedcb50e0e678742df2f141db6ba42cd56992b64044ec620acf5379347"
+  },
+  "checks": {
+    "golden_tests": {
+      "passed": 217
+    },
+    "golden_typecheck": "passed",
+    "runner_tests": {
+      "passed": 3
+    },
+    "lockstep_tests": {
+      "passed": 4
+    },
+    "seed_tool_tests": {
+      "native": 8,
+      "docker": 8
+    },
+    "coverage_tool_tests": {
+      "native": 5,
+      "docker": 5
+    },
+    "session_tool_tests": {
+      "native": 6,
+      "docker": 6
+    },
+    "merged_native_session_tests": 6,
+    "merged_native_coverage_tests": 5,
+    "m1_native": {
+      "frames": 267,
+      "passed": 25,
+      "failed": 0,
+      "report": "golden/out/m4/m1-fixed-native/state-compare.json"
+    },
+    "seeded_canvas_native": {
+      "ok": true,
+      "total_frames": 121,
+      "results": [
+        {
+          "seed": 1,
+          "frames": 35,
+          "checks": {
+            "checkpoints": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "initialization": {
+            "seed": 1,
+            "seed_explicit": true,
+            "rand_reset": 2,
+            "x_initial": "unique",
+            "x_assign": "unique"
+          },
+          "scenario_sha256": "7291c5f2a8132d4581a4253c47b2ec3389326dcfe61b8d805e6645236d549c41",
+          "functional_coverage": {
+            "evidence": "passing RTL settled checkpoints decoded by accepted golden comparator",
+            "eligible": [
+              "component:capacitor:rotation:0",
+              "component:capacitor:rotation:1",
+              "component:capacitor:rotation:2",
+              "component:capacitor:rotation:3",
+              "component:current:rotation:0",
+              "component:current:rotation:1",
+              "component:current:rotation:2",
+              "component:current:rotation:3",
+              "component:inductor:rotation:0",
+              "component:inductor:rotation:1",
+              "component:inductor:rotation:2",
+              "component:inductor:rotation:3",
+              "component:resistor:rotation:0",
+              "component:resistor:rotation:1",
+              "component:resistor:rotation:2",
+              "component:resistor:rotation:3",
+              "component:voltage:rotation:0",
+              "component:voltage:rotation:1",
+              "component:voltage:rotation:2",
+              "component:voltage:rotation:3",
+              "edge:bottom",
+              "edge:left",
+              "edge:right",
+              "edge:top",
+              "tool:capacitor",
+              "tool:current",
+              "tool:delete",
+              "tool:ground",
+              "tool:inductor",
+              "tool:pan",
+              "tool:resistor",
+              "tool:rotate",
+              "tool:voltage",
+              "tool:wire"
+            ],
+            "reached": [
+              "component:resistor:rotation:0",
+              "component:voltage:rotation:2",
+              "edge:right",
+              "tool:ground",
+              "tool:inductor",
+              "tool:pan",
+              "tool:rotate",
+              "tool:wire"
+            ],
+            "uncovered": [
+              "component:capacitor:rotation:0",
+              "component:capacitor:rotation:1",
+              "component:capacitor:rotation:2",
+              "component:capacitor:rotation:3",
+              "component:current:rotation:0",
+              "component:current:rotation:1",
+              "component:current:rotation:2",
+              "component:current:rotation:3",
+              "component:inductor:rotation:0",
+              "component:inductor:rotation:1",
+              "component:inductor:rotation:2",
+              "component:inductor:rotation:3",
+              "component:resistor:rotation:1",
+              "component:resistor:rotation:2",
+              "component:resistor:rotation:3",
+              "component:voltage:rotation:0",
+              "component:voltage:rotation:1",
+              "component:voltage:rotation:3",
+              "edge:bottom",
+              "edge:left",
+              "edge:top",
+              "tool:capacitor",
+              "tool:current",
+              "tool:delete",
+              "tool:resistor",
+              "tool:voltage"
+            ],
+            "excluded": {
+              "solver/UART/stalls/PS2/capacity": "outside M4 canvas v1 scope; M5/FS-10 required",
+              "transient state timing": "settled checkpoints only; continuous invariants remain M5-4"
+            }
+          }
+        },
+        {
+          "seed": 7,
+          "frames": 43,
+          "checks": {
+            "checkpoints": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "initialization": {
+            "seed": 7,
+            "seed_explicit": true,
+            "rand_reset": 2,
+            "x_initial": "unique",
+            "x_assign": "unique"
+          },
+          "scenario_sha256": "66e23c9adec54d80fb07bde40cbd3b7c1f26d4ee0174c2737b0e724b3a28ce0c",
+          "functional_coverage": {
+            "evidence": "passing RTL settled checkpoints decoded by accepted golden comparator",
+            "eligible": [
+              "component:capacitor:rotation:0",
+              "component:capacitor:rotation:1",
+              "component:capacitor:rotation:2",
+              "component:capacitor:rotation:3",
+              "component:current:rotation:0",
+              "component:current:rotation:1",
+              "component:current:rotation:2",
+              "component:current:rotation:3",
+              "component:inductor:rotation:0",
+              "component:inductor:rotation:1",
+              "component:inductor:rotation:2",
+              "component:inductor:rotation:3",
+              "component:resistor:rotation:0",
+              "component:resistor:rotation:1",
+              "component:resistor:rotation:2",
+              "component:resistor:rotation:3",
+              "component:voltage:rotation:0",
+              "component:voltage:rotation:1",
+              "component:voltage:rotation:2",
+              "component:voltage:rotation:3",
+              "edge:bottom",
+              "edge:left",
+              "edge:right",
+              "edge:top",
+              "tool:capacitor",
+              "tool:current",
+              "tool:delete",
+              "tool:ground",
+              "tool:inductor",
+              "tool:pan",
+              "tool:resistor",
+              "tool:rotate",
+              "tool:voltage",
+              "tool:wire"
+            ],
+            "reached": [
+              "component:resistor:rotation:0",
+              "component:voltage:rotation:2",
+              "edge:left",
+              "tool:ground",
+              "tool:inductor",
+              "tool:pan",
+              "tool:resistor",
+              "tool:wire"
+            ],
+            "uncovered": [
+              "component:capacitor:rotation:0",
+              "component:capacitor:rotation:1",
+              "component:capacitor:rotation:2",
+              "component:capacitor:rotation:3",
+              "component:current:rotation:0",
+              "component:current:rotation:1",
+              "component:current:rotation:2",
+              "component:current:rotation:3",
+              "component:inductor:rotation:0",
+              "component:inductor:rotation:1",
+              "component:inductor:rotation:2",
+              "component:inductor:rotation:3",
+              "component:resistor:rotation:1",
+              "component:resistor:rotation:2",
+              "component:resistor:rotation:3",
+              "component:voltage:rotation:0",
+              "component:voltage:rotation:1",
+              "component:voltage:rotation:3",
+              "edge:bottom",
+              "edge:right",
+              "edge:top",
+              "tool:capacitor",
+              "tool:current",
+              "tool:delete",
+              "tool:rotate",
+              "tool:voltage"
+            ],
+            "excluded": {
+              "solver/UART/stalls/PS2/capacity": "outside M4 canvas v1 scope; M5/FS-10 required",
+              "transient state timing": "settled checkpoints only; continuous invariants remain M5-4"
+            }
+          }
+        },
+        {
+          "seed": 2026,
+          "frames": 43,
+          "checks": {
+            "checkpoints": 5,
+            "passed": 5,
+            "failed": 0
+          },
+          "initialization": {
+            "seed": 2026,
+            "seed_explicit": true,
+            "rand_reset": 2,
+            "x_initial": "unique",
+            "x_assign": "unique"
+          },
+          "scenario_sha256": "bd3df5b68ef61d6b016a2b963b83525c474d5e7ed3b431bda8008942f2293f50",
+          "functional_coverage": {
+            "evidence": "passing RTL settled checkpoints decoded by accepted golden comparator",
+            "eligible": [
+              "component:capacitor:rotation:0",
+              "component:capacitor:rotation:1",
+              "component:capacitor:rotation:2",
+              "component:capacitor:rotation:3",
+              "component:current:rotation:0",
+              "component:current:rotation:1",
+              "component:current:rotation:2",
+              "component:current:rotation:3",
+              "component:inductor:rotation:0",
+              "component:inductor:rotation:1",
+              "component:inductor:rotation:2",
+              "component:inductor:rotation:3",
+              "component:resistor:rotation:0",
+              "component:resistor:rotation:1",
+              "component:resistor:rotation:2",
+              "component:resistor:rotation:3",
+              "component:voltage:rotation:0",
+              "component:voltage:rotation:1",
+              "component:voltage:rotation:2",
+              "component:voltage:rotation:3",
+              "edge:bottom",
+              "edge:left",
+              "edge:right",
+              "edge:top",
+              "tool:capacitor",
+              "tool:current",
+              "tool:delete",
+              "tool:ground",
+              "tool:inductor",
+              "tool:pan",
+              "tool:resistor",
+              "tool:rotate",
+              "tool:voltage",
+              "tool:wire"
+            ],
+            "reached": [
+              "component:resistor:rotation:0",
+              "component:voltage:rotation:2",
+              "edge:right",
+              "edge:top",
+              "tool:capacitor",
+              "tool:pan",
+              "tool:resistor",
+              "tool:wire"
+            ],
+            "uncovered": [
+              "component:capacitor:rotation:0",
+              "component:capacitor:rotation:1",
+              "component:capacitor:rotation:2",
+              "component:capacitor:rotation:3",
+              "component:current:rotation:0",
+              "component:current:rotation:1",
+              "component:current:rotation:2",
+              "component:current:rotation:3",
+              "component:inductor:rotation:0",
+              "component:inductor:rotation:1",
+              "component:inductor:rotation:2",
+              "component:inductor:rotation:3",
+              "component:resistor:rotation:1",
+              "component:resistor:rotation:2",
+              "component:resistor:rotation:3",
+              "component:voltage:rotation:0",
+              "component:voltage:rotation:1",
+              "component:voltage:rotation:3",
+              "edge:bottom",
+              "edge:left",
+              "tool:current",
+              "tool:delete",
+              "tool:ground",
+              "tool:inductor",
+              "tool:rotate",
+              "tool:voltage"
+            ],
+            "excluded": {
+              "solver/UART/stalls/PS2/capacity": "outside M4 canvas v1 scope; M5/FS-10 required",
+              "transient state timing": "settled checkpoints only; continuous invariants remain M5-4"
+            }
+          }
+        }
+      ],
+      "report": "golden/out/m4/seed-fixed-native/summary.json"
+    },
+    "docker_reduced_boot": {
+      "ok": true,
+      "frames": 3,
+      "seed": 1,
+      "report": "golden/out/m4/boot-fixed-docker/summary.json"
+    },
+    "metacircuit_coverage_native": {
+      "ok": true,
+      "frames": 11,
+      "passed": 2,
+      "complete": true,
+      "boundary": {
+        "event": "coverage_boundary",
+        "frame": 3,
+        "t_ps": 120131495000
+      },
+      "provenance": {
+        "build_id": "ea8d48e8819fabce",
+        "tool_version": "Verilator 5.046 2026-02-28 rev v5.046-55-g1264184fb",
+        "runtime": "native",
+        "runtime_identity": "native:Verilator 5.046 2026-02-28 rev v5.046-55-g1264184fb",
+        "sources": [
+          {
+            "path": "/home/chesium/ee2026_ws/framescope/examples/metacircuit/stubs/MouseCtl.sv",
+            "sha256": "874ed88de9b43b192a07b66a8504436da0368e36ef8405fb348bd0527e3447b0"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/framescope/examples/metacircuit/stubs/MouseDisplay.sv",
+            "sha256": "0ed1435ed0f1a158b797e7343b44a22c36828e2a8a8ac0a6d5bd77b033a888f9"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Dashboard/CompactDigitROM.v",
+            "sha256": "2fa52850dbde85eff792d4bd24e60521d65cfa139ada8246b6abc25ecd61adff"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Dashboard/ComponentPropertyPanel.v",
+            "sha256": "5880297db9a89662309c107fd25bffef7335cbf964447ebececb7b7d1c301554"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Dashboard/DynamicTextBox.v",
+            "sha256": "988d24a33f8ae6472591475953731e10c02f35e4bcdd80646c38a5d35e2b1769"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Dashboard/DynamicTextDisplay.v",
+            "sha256": "327cc353b6e522215a21faf132bee138fda3cc395df657b99907205f0763227a"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Dashboard/FontROM.v",
+            "sha256": "3969458efdd55181812b73b46995e161ed4ee0ff00454339b47d1d5b12971ae4"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Dashboard/MatrixDisplay.v",
+            "sha256": "b887fbcc8248ce272b71fed8332ddfb5747544ff9a0b2c1dce46efa533f3a408"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Dashboard/TextBox.v",
+            "sha256": "5c42c2745a493ff68055b5c46dca47f1260046fee303ffeb3c484d22c7bb1194"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Dashboard/TextDisplay.v",
+            "sha256": "cf87de669f0c1264c887669cabcbf3a4d145a5c24319dc4d68a4e9cc60975014"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Keyboard/Calculator.v",
+            "sha256": "59b2d12c0bffdb5623fc46a46a61669b3c1081a7221191a0bf467d7506e109d8"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Keyboard/Keyboard.v",
+            "sha256": "26770d0a42052075697d51eb4097d2ff46c03bc9d51ff6f82da6e09a5baebf44"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/Keyboard/one_bit_adder.v",
+            "sha256": "56ce32cf1e5437d7a6141dcb6742820ae0d4d7c0a84d0a9df6aadfb67d102d4f"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/CanvasBufferRam.v",
+            "sha256": "08ec153fd9e5e33558a2a927e23e025b58208d7eb402eba77460456455ba57da"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/ClockDivider.v",
+            "sha256": "834229ac133a512b34016668eeabc3d881b95c90e567624540dd6baad7a8a4e3"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/ClockDividerMs.v",
+            "sha256": "a9b98aeb1bb4dea75393adc4fad5a39b5157e3fbd4a5a751170ac803ae8cdda2"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/ExtractComponentNodesCombPkg.sv",
+            "sha256": "338f5641e430c5d6bf077cab8bcf3697b62b1cb99fe3033c470b61a3da429834"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/FloodQueueStore.v",
+            "sha256": "16cdebf7a03ce1b212c25f27a6ececa91b2ceb2850809295d05fb983b00e41ba"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/FloodingCombPkg.sv",
+            "sha256": "60cbd2fcb410042c506219b80669e0b7129a95ff3e8d01b20b747aef65f600d6"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/PingPongBuffer.v",
+            "sha256": "3c454204bac63ce06d16d53ca354f7a2416cdb34ceb47135ceec14ac5ba779e5"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/SimpleDualRam.v",
+            "sha256": "b3fbe6488b06093ed9c76aa8bae2e2bc07ae8328328404533b3c9cc3ac57f2ef"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/SimpleRam.v",
+            "sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/StampingCombPkg.sv",
+            "sha256": "6aebae14601683d732939886c77d8c717a8db92cb694dc76a74087ca414c9fc1"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/common/StampingNetlistStore.sv",
+            "sha256": "6679c3b5019381b46b8d21f13c0431365eee1446a16791b12bd8ff1a603a4014"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/driver/Oled_Display.v",
+            "sha256": "c2ee74702ca14cc3952823dcf213e31f69c9b5013e6d88346403c6831156dede"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/driver/VGAControl.v",
+            "sha256": "794dd15ea2a2e80aeb275e1840c349b6d32b29f25256d035b1d06ff44abe0d87"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/interaction/CanvasCommandGuard.v",
+            "sha256": "41d6a26e95d4e875a2c37756630bee141bf1917aabb382fe22993779304a78d7"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/interaction/InteractionController.v",
+            "sha256": "a4c7222b0034aa46555d9cc3abb8be0e2834456a349e43848b884808642cd88e"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/interaction/InteractionFrameCapture.v",
+            "sha256": "a3f7c7585110a7f1281825e11c0123899b1d5cd959bffcf47f76d227bf603eeb"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/interaction/WireDrawMode.v",
+            "sha256": "6a148e613a368af517f716dc2d5c0a8cdd1148a234e7676e7d494f8b89839090"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/matrix/LUdecomp.v",
+            "sha256": "6096cc01ec2e5745563c93d53f3264978fc5fd3ad578c383b5ad1fdf7298a926"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/matrix/PortGridStore.v",
+            "sha256": "4028b2347b8c506ba49dd35afcfbbdb8e57e7316481661f731a822ad757c04f6"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/matrix/ResultMatrixStore.v",
+            "sha256": "23829a5220eb7d3ad01d87a894da4ea92587e8b86cf98de77231b890904e13cf"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/matrix/SolverMatrixStore.sv",
+            "sha256": "7fea8857a2f667d04925a96094856fa031fc2ebd56aae3822e7221f59aeba896"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/matrix/SolverVectorStore.sv",
+            "sha256": "7be2dc13ff437ec165a41aa6f114b13882c90c8474faaa56335b4a452c06a162"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/matrix/VisitedMatrixStore.v",
+            "sha256": "106aad11ab4a418787ea2ae6bb3b48baa26c1ea174bd7a2c3874e31a53fa7c56"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/matrix/bmatrixStore.v",
+            "sha256": "9ad7e6c4e4e7a0e80de38d2ae924ea49a4d94ef210a1554996fd765010b165f4"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/matrix/lu_core.sv",
+            "sha256": "0156e46523fae22be98a1ce65c84d8f43be576200b69739fe04adb2d15013326"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/matrix/matrixStore.v",
+            "sha256": "dfde515dbe24d12e86b4acaceaca8c07e4adc5512615abcb7ec039439f033290"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/rendering/ButtonVGA.v",
+            "sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/rendering/CircuitCanvas.v",
+            "sha256": "6d6b45b6faf2a07029b2b43d857320dd2ea143d0e7b630dad684022adba4027a"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/rendering/DummyDataGenerate.v",
+            "sha256": "1d75f7bf6fbe26da16995887a03321998ff8ddafd57ae981bce7a5bb85fa9e51"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/rendering/GlobalRender_top.v",
+            "sha256": "254c8842d72c6c4801ef015c8c3274687a970c8794f9d09e6d966ced42657a66"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/rendering/KeyboardVGA.v",
+            "sha256": "47e9bebd27d49c2d27e17c165db5468482130ff6f9cd436728e288d0c80651b9"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/rendering/ToolbarVGA.v",
+            "sha256": "739f6699ba3288a0d5067b3aa6c9f26a6a8ea46b13049b2416853ba81f7a6813"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/rendering/WaveformPlot.v",
+            "sha256": "9510a79fb5bd31a703550a27c6ce3cf8172fc6afc1fcea845a689933a5e19f76"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver/BackendFetchers.v",
+            "sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver/FloodingBackendWrapper.sv",
+            "sha256": "74590ccdc3e32e943498f2a75c5b5898d02da7122d9ea79317ee7c06384c6a36"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver/extract_component_nodes.sv",
+            "sha256": "b8fea465c372050b2dab0dd8501b86463dd7267444a22bdb5a77765b1cd658e0"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver/flooding_core.sv",
+            "sha256": "2abb9d7b416ad1b45269b0d86166f5c47b5f2954fd275b4e1dea7296afbc6ff1"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver/solve_core_dc.sv",
+            "sha256": "f620083cb4eb58f29e2c9dce8f4c6ab5702e0893a301c7f3d27d125407820db5"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver_board/BcdUnitToFp32Rom.sv",
+            "sha256": "b4e237a0b191be44a3d40edba3a38ecea8bd4f064e277b9ec72407c1b9ff44c3"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver_board/SolverBoard_top.sv",
+            "sha256": "760ab046c59809d7796f26d7a1c6814c821f9bae2fc4fd2e5358eadd0ead8233"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver_board/SolverDcPipeline.sv",
+            "sha256": "d2e2054db49d707575c6fe748467013240bc4455c236fcc0f16155c9a0eeec75"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver_board/SolverUartLineTransmitter.sv",
+            "sha256": "b0d442d4f5a9cede5370131aa7e4a6139550256ea515f98ffff2b7b8ee992908"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver_board/UartLineAssembler.sv",
+            "sha256": "4bcb05c69620c20074711b70cd1896552d62ed0a2cc0fa8882bdeacf71ccaaf3"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver_board/UartPacketParser.sv",
+            "sha256": "1e0e9eb9f57a20d57b5d69fdf3e2114396bd7bc393c088af7c13551ced97df87"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/solver_board/UartRx.v",
+            "sha256": "6738df782ee5ff926458b92421f3aceb0a8f7a20849772f625688b32d21bf4a3"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/uart/FrontendNetlistLineTransmitter.sv",
+            "sha256": "15b376f6040814aa41a6654d72c258af2c088f5df1e1b350a7317708c6734823"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/uart/FrontendVoltagePacketParser.sv",
+            "sha256": "ec61eaf4e151cf4e027f8a5f885b88c35867341d253e85afc15982c43cb2c2d7"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/uart/Hex7SegMux.v",
+            "sha256": "a6ac74cc6851f85e7bd9875ac07097e2da7652a4ac8a2fdf1c4840a8aff28a86"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/uart/UART_FrameDemo_top.v",
+            "sha256": "43cd776cf23a7e9f96ec37638571a4dbabfb7259e2b0f66234206a5aa08f81e1"
+          },
+          {
+            "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/src/design/uart/UartTx.v",
+            "sha256": "06e864767bac4f2906a2f87696c63d61d1d119d6a12968cc3a015a9cff612d7c"
+          }
+        ],
+        "top": "GlobalRender_top",
+        "build_options": {
+          "cxx_opt": "-O2",
+          "cxx_flags": [],
+          "threads": 1,
+          "x_initial": "unique",
+          "x_assign": "unique",
+          "coverage": true
+        }
+      },
+      "report": "golden/out/m4/coverage-native/case-0/rtl/coverage/coverage.json",
+      "modules": [
+        {
+          "module": "ButtonVGA__pi10",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[6].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 222,
+              "uncovered": 236,
+              "gaps_omitted": 172
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi11",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[7].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 222,
+              "uncovered": 236,
+              "gaps_omitted": 172
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi12",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[8].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 226,
+              "uncovered": 232,
+              "gaps_omitted": 168
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi13",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[9].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 226,
+              "uncovered": 232,
+              "gaps_omitted": 168
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi14",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[10].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 222,
+              "uncovered": 236,
+              "gaps_omitted": 172
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi15",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[11].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 222,
+              "uncovered": 236,
+              "gaps_omitted": 172
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi16",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[12].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 222,
+              "uncovered": 236,
+              "gaps_omitted": 172
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi17",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[13].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 226,
+              "uncovered": 232,
+              "gaps_omitted": 168
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi18",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[14].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 226,
+              "uncovered": 232,
+              "gaps_omitted": 168
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi19",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[15].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 210,
+              "uncovered": 248,
+              "gaps_omitted": 184
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi20",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[16].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 222,
+              "uncovered": 236,
+              "gaps_omitted": 172
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi21",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[17].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 17,
+              "uncovered": 13,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 23,
+              "uncovered": 38,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 238,
+              "uncovered": 220,
+              "gaps_omitted": 156
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi22",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[18].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 17,
+              "uncovered": 13,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 23,
+              "uncovered": 38,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 234,
+              "uncovered": 224,
+              "gaps_omitted": 160
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi23",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[19].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 0,
+              "uncovered": 30,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 0,
+              "uncovered": 61,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 88,
+              "uncovered": 370,
+              "gaps_omitted": 306
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi24",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[0].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 21,
+              "uncovered": 40,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 235,
+              "uncovered": 223,
+              "gaps_omitted": 159
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi25",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[1].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 13,
+              "uncovered": 17,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 23,
+              "uncovered": 38,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 275,
+              "uncovered": 183,
+              "gaps_omitted": 119
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi26",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[2].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 10,
+              "uncovered": 20,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 19,
+              "uncovered": 42,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 198,
+              "uncovered": 260,
+              "gaps_omitted": 196
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi27",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[3].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 10,
+              "uncovered": 20,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 19,
+              "uncovered": 42,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 198,
+              "uncovered": 260,
+              "gaps_omitted": 196
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi28",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[4].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 10,
+              "uncovered": 20,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 19,
+              "uncovered": 42,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 198,
+              "uncovered": 260,
+              "gaps_omitted": 196
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi29",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[5].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 10,
+              "uncovered": 20,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 19,
+              "uncovered": 42,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 198,
+              "uncovered": 260,
+              "gaps_omitted": 196
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi30",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[6].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 10,
+              "uncovered": 20,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 19,
+              "uncovered": 42,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 198,
+              "uncovered": 260,
+              "gaps_omitted": 196
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi31",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[7].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 10,
+              "uncovered": 20,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 19,
+              "uncovered": 42,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 198,
+              "uncovered": 260,
+              "gaps_omitted": 196
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi32",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[8].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 10,
+              "uncovered": 20,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 19,
+              "uncovered": 42,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 198,
+              "uncovered": 260,
+              "gaps_omitted": 196
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi33",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[9].toolbar_button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 10,
+              "uncovered": 20,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 19,
+              "uncovered": 42,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 198,
+              "uncovered": 260,
+              "gaps_omitted": 196
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi4",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[0].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 218,
+              "uncovered": 240,
+              "gaps_omitted": 176
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi5",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[1].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 222,
+              "uncovered": 236,
+              "gaps_omitted": 172
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi6",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[2].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 222,
+              "uncovered": 236,
+              "gaps_omitted": 172
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi7",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[3].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 226,
+              "uncovered": 232,
+              "gaps_omitted": 168
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi8",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[4].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 224,
+              "uncovered": 234,
+              "gaps_omitted": 170
+            }
+          }
+        },
+        {
+          "module": "ButtonVGA__pi9",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[5].button_inst",
+          "types": {
+            "branch": {
+              "eligible": 30,
+              "reached": 11,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 61,
+              "reached": 20,
+              "uncovered": 41,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 458,
+              "reached": 222,
+              "uncovered": 236,
+              "gaps_omitted": 172
+            }
+          }
+        },
+        {
+          "module": "CanvasCommandGuard",
+          "hierarchy": "TOP.framescope_top.dut.canvas_command_guard_inst",
+          "types": {
+            "branch": {
+              "eligible": 14,
+              "reached": 8,
+              "uncovered": 6,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 22,
+              "reached": 13,
+              "uncovered": 9,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 396,
+              "reached": 56,
+              "uncovered": 340,
+              "gaps_omitted": 276
+            }
+          }
+        },
+        {
+          "module": "CircuitCanvas__pi1",
+          "hierarchy": "TOP.framescope_top.dut.circuit_canvas_inst",
+          "types": {
+            "branch": {
+              "eligible": 64,
+              "reached": 52,
+              "uncovered": 12,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 623,
+              "reached": 300,
+              "uncovered": 323,
+              "gaps_omitted": 259
+            },
+            "toggle": {
+              "eligible": 1742,
+              "reached": 943,
+              "uncovered": 799,
+              "gaps_omitted": 735
+            }
+          }
+        },
+        {
+          "module": "ClockDivider__F17d7840",
+          "hierarchy": "TOP.framescope_top.dut.clkdiv_pixel_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 3,
+              "reached": 1,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 8,
+              "reached": 6,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "ComponentPropertyPanel",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel",
+          "types": {
+            "branch": {
+              "eligible": 34,
+              "reached": 25,
+              "uncovered": 9,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 43,
+              "reached": 14,
+              "uncovered": 29,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 4150,
+              "reached": 696,
+              "uncovered": 3454,
+              "gaps_omitted": 3390
+            }
+          }
+        },
+        {
+          "module": "DynamicTextBox__M10",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_coord_textbox",
+          "types": {
+            "branch": {
+              "eligible": 28,
+              "reached": 13,
+              "uncovered": 15,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 636,
+              "reached": 255,
+              "uncovered": 381,
+              "gaps_omitted": 317
+            }
+          }
+        },
+        {
+          "module": "DynamicTextBox__M10",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_input_textbox",
+          "types": {
+            "branch": {
+              "eligible": 28,
+              "reached": 9,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 636,
+              "reached": 92,
+              "uncovered": 544,
+              "gaps_omitted": 480
+            }
+          }
+        },
+        {
+          "module": "DynamicTextBox__M10",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_label_textbox",
+          "types": {
+            "branch": {
+              "eligible": 28,
+              "reached": 13,
+              "uncovered": 15,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 636,
+              "reached": 356,
+              "uncovered": 280,
+              "gaps_omitted": 216
+            }
+          }
+        },
+        {
+          "module": "DynamicTextBox__M10",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_pos_title_textbox",
+          "types": {
+            "branch": {
+              "eligible": 28,
+              "reached": 12,
+              "uncovered": 16,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 636,
+              "reached": 166,
+              "uncovered": 470,
+              "gaps_omitted": 406
+            }
+          }
+        },
+        {
+          "module": "DynamicTextBox__M10",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_type_title_textbox",
+          "types": {
+            "branch": {
+              "eligible": 28,
+              "reached": 12,
+              "uncovered": 16,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 636,
+              "reached": 154,
+              "uncovered": 482,
+              "gaps_omitted": 418
+            }
+          }
+        },
+        {
+          "module": "DynamicTextBox__M10",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_value_label_textbox",
+          "types": {
+            "branch": {
+              "eligible": 28,
+              "reached": 9,
+              "uncovered": 19,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 636,
+              "reached": 92,
+              "uncovered": 544,
+              "gaps_omitted": 480
+            }
+          }
+        },
+        {
+          "module": "FloodQueueStore__D480",
+          "hierarchy": "TOP.framescope_top.dut.flooding_backend_wrapper_inst.queue_store_inst",
+          "types": {
+            "branch": {
+              "eligible": 8,
+              "reached": 6,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 8,
+              "reached": 6,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 340,
+              "reached": 124,
+              "uncovered": 216,
+              "gaps_omitted": 152
+            }
+          }
+        },
+        {
+          "module": "FloodingBackendWrapper",
+          "hierarchy": "TOP.framescope_top.dut.flooding_backend_wrapper_inst",
+          "types": {
+            "branch": {
+              "eligible": 6,
+              "reached": 5,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 9,
+              "reached": 6,
+              "uncovered": 3,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 476,
+              "reached": 242,
+              "uncovered": 234,
+              "gaps_omitted": 170
+            }
+          }
+        },
+        {
+          "module": "FontROM",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_coord_textbox.u_font",
+          "types": {
+            "line": {
+              "eligible": 943,
+              "reached": 83,
+              "uncovered": 860,
+              "gaps_omitted": 796
+            },
+            "toggle": {
+              "eligible": 36,
+              "reached": 32,
+              "uncovered": 4,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "FontROM",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_input_textbox.u_font",
+          "types": {
+            "line": {
+              "eligible": 943,
+              "reached": 2,
+              "uncovered": 941,
+              "gaps_omitted": 877
+            },
+            "toggle": {
+              "eligible": 36,
+              "reached": 0,
+              "uncovered": 36,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "FontROM",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_label_textbox.u_font",
+          "types": {
+            "line": {
+              "eligible": 943,
+              "reached": 40,
+              "uncovered": 903,
+              "gaps_omitted": 839
+            },
+            "toggle": {
+              "eligible": 36,
+              "reached": 34,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "FontROM",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_pos_title_textbox.u_font",
+          "types": {
+            "line": {
+              "eligible": 943,
+              "reached": 64,
+              "uncovered": 879,
+              "gaps_omitted": 815
+            },
+            "toggle": {
+              "eligible": 36,
+              "reached": 34,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "FontROM",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_type_title_textbox.u_font",
+          "types": {
+            "line": {
+              "eligible": 943,
+              "reached": 37,
+              "uncovered": 906,
+              "gaps_omitted": 842
+            },
+            "toggle": {
+              "eligible": 36,
+              "reached": 32,
+              "uncovered": 4,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "FontROM",
+          "hierarchy": "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_value_label_textbox.u_font",
+          "types": {
+            "line": {
+              "eligible": 943,
+              "reached": 3,
+              "uncovered": 940,
+              "gaps_omitted": 876
+            },
+            "toggle": {
+              "eligible": 36,
+              "reached": 0,
+              "uncovered": 36,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "FrontendNetlistLineTransmitter",
+          "hierarchy": "TOP.framescope_top.dut.frontend_netlist_tx_inst",
+          "types": {
+            "branch": {
+              "eligible": 14,
+              "reached": 2,
+              "uncovered": 12,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 96,
+              "reached": 2,
+              "uncovered": 94,
+              "gaps_omitted": 30
+            },
+            "toggle": {
+              "eligible": 500,
+              "reached": 2,
+              "uncovered": 498,
+              "gaps_omitted": 434
+            }
+          }
+        },
+        {
+          "module": "FrontendVoltagePacketParser",
+          "hierarchy": "TOP.framescope_top.dut.frontend_voltage_parser_inst",
+          "types": {
+            "branch": {
+              "eligible": 16,
+              "reached": 2,
+              "uncovered": 14,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 43,
+              "reached": 1,
+              "uncovered": 42,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 626,
+              "reached": 2,
+              "uncovered": 624,
+              "gaps_omitted": 560
+            }
+          }
+        },
+        {
+          "module": "GlobalRender_top",
+          "hierarchy": "TOP.framescope_top.dut",
+          "types": {
+            "branch": {
+              "eligible": 430,
+              "reached": 127,
+              "uncovered": 303,
+              "gaps_omitted": 239
+            },
+            "line": {
+              "eligible": 723,
+              "reached": 86,
+              "uncovered": 637,
+              "gaps_omitted": 573
+            },
+            "toggle": {
+              "eligible": 8530,
+              "reached": 1054,
+              "uncovered": 7476,
+              "gaps_omitted": 7412
+            }
+          }
+        },
+        {
+          "module": "Hex7SegMux",
+          "hierarchy": "TOP.framescope_top.dut.frontend_hex_mux_inst",
+          "types": {
+            "line": {
+              "eligible": 25,
+              "reached": 7,
+              "uncovered": 18,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 106,
+              "reached": 50,
+              "uncovered": 56,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "InteractionController__pi2",
+          "hierarchy": "TOP.framescope_top.dut.interaction_controller_inst",
+          "types": {
+            "branch": {
+              "eligible": 66,
+              "reached": 18,
+              "uncovered": 48,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 123,
+              "reached": 17,
+              "uncovered": 106,
+              "gaps_omitted": 42
+            },
+            "toggle": {
+              "eligible": 1634,
+              "reached": 124,
+              "uncovered": 1510,
+              "gaps_omitted": 1446
+            }
+          }
+        },
+        {
+          "module": "InteractionFrameCapture",
+          "hierarchy": "TOP.framescope_top.dut.interaction_controller_inst.frame_capture_inst",
+          "types": {
+            "branch": {
+              "eligible": 4,
+              "reached": 3,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 9,
+              "reached": 1,
+              "uncovered": 8,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 220,
+              "reached": 44,
+              "uncovered": 176,
+              "gaps_omitted": 112
+            }
+          }
+        },
+        {
+          "module": "KeyboardVGA__K13_KB1e5",
+          "hierarchy": "TOP.framescope_top.dut.keyboard_vga_inst",
+          "types": {
+            "branch": {
+              "eligible": 14,
+              "reached": 8,
+              "uncovered": 6,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 87,
+              "reached": 5,
+              "uncovered": 82,
+              "gaps_omitted": 18
+            },
+            "toggle": {
+              "eligible": 820,
+              "reached": 649,
+              "uncovered": 171,
+              "gaps_omitted": 107
+            }
+          }
+        },
+        {
+          "module": "MouseCtl",
+          "hierarchy": "TOP.framescope_top.dut.mouse_ctrl_inst",
+          "types": {
+            "line": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 104,
+              "reached": 23,
+              "uncovered": 81,
+              "gaps_omitted": 17
+            }
+          }
+        },
+        {
+          "module": "MouseDisplay",
+          "hierarchy": "TOP.framescope_top.dut.mouse_disp_inst",
+          "types": {
+            "branch": {
+              "eligible": 8,
+              "reached": 8,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 100,
+              "reached": 98,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 200,
+              "reached": 161,
+              "uncovered": 39,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "ResultMatrixStore__G12_GB10",
+          "hierarchy": "TOP.framescope_top.dut.flooding_backend_wrapper_inst.result_store_inst",
+          "types": {
+            "branch": {
+              "eligible": 10,
+              "reached": 10,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 6,
+              "reached": 4,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 220,
+              "reached": 99,
+              "uncovered": 121,
+              "gaps_omitted": 57
+            }
+          }
+        },
+        {
+          "module": "SimpleDualClockRam__W10_WB120",
+          "hierarchy": "TOP.framescope_top.dut.circuit_canvas_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 106,
+              "reached": 47,
+              "uncovered": 59,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "SimpleDualClockRam__W28_WB120",
+          "hierarchy": "TOP.framescope_top.dut.component_store_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 202,
+              "reached": 32,
+              "uncovered": 170,
+              "gaps_omitted": 106
+            }
+          }
+        },
+        {
+          "module": "SimpleDualClockRam__W4_WB120",
+          "hierarchy": "TOP.framescope_top.dut.circuit_canvas_bg_color_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 58,
+              "reached": 50,
+              "uncovered": 8,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "SimpleDualClockRam__W4_WB120",
+          "hierarchy": "TOP.framescope_top.dut.circuit_canvas_fg_color_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 58,
+              "reached": 26,
+              "uncovered": 32,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "SimpleRam__W2_WB120",
+          "hierarchy": "TOP.framescope_top.dut.component_value_digit_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 48,
+              "reached": 5,
+              "uncovered": 43,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "SimpleRam__W40_WB120",
+          "hierarchy": "TOP.framescope_top.dut.component_value_text_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 296,
+              "reached": 5,
+              "uncovered": 291,
+              "gaps_omitted": 227
+            }
+          }
+        },
+        {
+          "module": "SimpleRam__W4_WB120",
+          "hierarchy": "TOP.framescope_top.dut.component_value_text_len_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 56,
+              "reached": 5,
+              "uncovered": 51,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "SimpleRam__W8_WB120",
+          "hierarchy": "TOP.framescope_top.dut.netlist_node0_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 72,
+              "reached": 2,
+              "uncovered": 70,
+              "gaps_omitted": 6
+            }
+          }
+        },
+        {
+          "module": "SimpleRam__W8_WB120",
+          "hierarchy": "TOP.framescope_top.dut.netlist_node1_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 72,
+              "reached": 2,
+              "uncovered": 70,
+              "gaps_omitted": 6
+            }
+          }
+        },
+        {
+          "module": "SimpleRam__W9_WB120",
+          "hierarchy": "TOP.framescope_top.dut.component_index_map_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 76,
+              "reached": 43,
+              "uncovered": 33,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "SimpleRam__WB20",
+          "hierarchy": "TOP.framescope_top.dut.frontend_reply_ram0_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 152,
+              "reached": 2,
+              "uncovered": 150,
+              "gaps_omitted": 86
+            }
+          }
+        },
+        {
+          "module": "SimpleRam__WB20",
+          "hierarchy": "TOP.framescope_top.dut.frontend_reply_ram1_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 152,
+              "reached": 2,
+              "uncovered": 150,
+              "gaps_omitted": 86
+            }
+          }
+        },
+        {
+          "module": "SimpleRam__Wc_WB120",
+          "hierarchy": "TOP.framescope_top.dut.component_value_ram_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 88,
+              "reached": 5,
+              "uncovered": 83,
+              "gaps_omitted": 19
+            }
+          }
+        },
+        {
+          "module": "ToolbarVGA",
+          "hierarchy": "TOP.framescope_top.dut.toolbar_vga_inst",
+          "types": {
+            "branch": {
+              "eligible": 20,
+              "reached": 18,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 260,
+              "reached": 195,
+              "uncovered": 65,
+              "gaps_omitted": 1
+            },
+            "toggle": {
+              "eligible": 470,
+              "reached": 412,
+              "uncovered": 58,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "UartLineAssembler",
+          "hierarchy": "TOP.framescope_top.dut.frontend_uart_line_assembler_inst",
+          "types": {
+            "branch": {
+              "eligible": 6,
+              "reached": 2,
+              "uncovered": 4,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 12,
+              "reached": 1,
+              "uncovered": 11,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 60,
+              "reached": 2,
+              "uncovered": 58,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "UartRx",
+          "hierarchy": "TOP.framescope_top.dut.frontend_uart_rx_inst",
+          "types": {
+            "branch": {
+              "eligible": 16,
+              "reached": 2,
+              "uncovered": 14,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 12,
+              "reached": 2,
+              "uncovered": 10,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 82,
+              "reached": 2,
+              "uncovered": 80,
+              "gaps_omitted": 16
+            }
+          }
+        },
+        {
+          "module": "UartTx",
+          "hierarchy": "TOP.framescope_top.dut.frontend_netlist_tx_inst.uart_tx_inst",
+          "types": {
+            "branch": {
+              "eligible": 10,
+              "reached": 1,
+              "uncovered": 9,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 12,
+              "reached": 2,
+              "uncovered": 10,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 78,
+              "reached": 2,
+              "uncovered": 76,
+              "gaps_omitted": 12
+            }
+          }
+        },
+        {
+          "module": "UartTx",
+          "hierarchy": "TOP.framescope_top.dut.uart_cell_debug_tx_inst",
+          "types": {
+            "branch": {
+              "eligible": 10,
+              "reached": 1,
+              "uncovered": 9,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 12,
+              "reached": 2,
+              "uncovered": 10,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 78,
+              "reached": 2,
+              "uncovered": 76,
+              "gaps_omitted": 12
+            }
+          }
+        },
+        {
+          "module": "UartTx",
+          "hierarchy": "TOP.framescope_top.dut.uart_flood_debug_tx_inst",
+          "types": {
+            "branch": {
+              "eligible": 10,
+              "reached": 1,
+              "uncovered": 9,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 12,
+              "reached": 2,
+              "uncovered": 10,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 78,
+              "reached": 2,
+              "uncovered": 76,
+              "gaps_omitted": 12
+            }
+          }
+        },
+        {
+          "module": "VGAControl",
+          "hierarchy": "TOP.framescope_top.dut.vga_ctrl_inst",
+          "types": {
+            "branch": {
+              "eligible": 6,
+              "reached": 6,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 14,
+              "reached": 8,
+              "uncovered": 6,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 122,
+              "reached": 112,
+              "uncovered": 10,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "VisitedMatrixStore__G12_GB10",
+          "hierarchy": "TOP.framescope_top.dut.flooding_backend_wrapper_inst.visited_store_inst",
+          "types": {
+            "branch": {
+              "eligible": 8,
+              "reached": 8,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 6,
+              "reached": 4,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 174,
+              "reached": 91,
+              "uncovered": 83,
+              "gaps_omitted": 19
+            }
+          }
+        },
+        {
+          "module": "WireDrawMode__pi3",
+          "hierarchy": "TOP.framescope_top.dut.interaction_controller_inst.wire_draw_mode_inst",
+          "types": {
+            "branch": {
+              "eligible": 4,
+              "reached": 3,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 330,
+              "reached": 107,
+              "uncovered": 223,
+              "gaps_omitted": 159
+            }
+          }
+        },
+        {
+          "module": "extract_component_nodes",
+          "hierarchy": "TOP.framescope_top.dut.netlist_extract_inst",
+          "types": {
+            "branch": {
+              "eligible": 126,
+              "reached": 2,
+              "uncovered": 124,
+              "gaps_omitted": 60
+            },
+            "line": {
+              "eligible": 143,
+              "reached": 3,
+              "uncovered": 140,
+              "gaps_omitted": 76
+            },
+            "toggle": {
+              "eligible": 1986,
+              "reached": 6,
+              "uncovered": 1980,
+              "gaps_omitted": 1916
+            }
+          }
+        },
+        {
+          "module": "fetchAnchorPositionX",
+          "hierarchy": "TOP.framescope_top.dut.backend_fetch_x_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 7,
+              "reached": 2,
+              "uncovered": 5,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 140,
+              "reached": 2,
+              "uncovered": 138,
+              "gaps_omitted": 74
+            }
+          }
+        },
+        {
+          "module": "fetchAnchorPositionX",
+          "hierarchy": "TOP.framescope_top.dut.netlist_extract_fetch_x_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 7,
+              "reached": 2,
+              "uncovered": 5,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 140,
+              "reached": 2,
+              "uncovered": 138,
+              "gaps_omitted": 74
+            }
+          }
+        },
+        {
+          "module": "fetchAnchorPositionY",
+          "hierarchy": "TOP.framescope_top.dut.backend_fetch_y_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 7,
+              "reached": 2,
+              "uncovered": 5,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 138,
+              "reached": 2,
+              "uncovered": 136,
+              "gaps_omitted": 72
+            }
+          }
+        },
+        {
+          "module": "fetchAnchorPositionY",
+          "hierarchy": "TOP.framescope_top.dut.netlist_extract_fetch_y_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 7,
+              "reached": 2,
+              "uncovered": 5,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 138,
+              "reached": 2,
+              "uncovered": 136,
+              "gaps_omitted": 72
+            }
+          }
+        },
+        {
+          "module": "fetchCell",
+          "hierarchy": "TOP.framescope_top.dut.flood_debug_p_fetch_inst.fetch_cell_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 6,
+              "reached": 2,
+              "uncovered": 4,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 114,
+              "reached": 2,
+              "uncovered": 112,
+              "gaps_omitted": 48
+            }
+          }
+        },
+        {
+          "module": "fetchCell",
+          "hierarchy": "TOP.framescope_top.dut.flooding_backend_wrapper_inst.fetchP_inst.fetch_cell_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 2,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 6,
+              "reached": 4,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 114,
+              "reached": 82,
+              "uncovered": 32,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "fetchCell",
+          "hierarchy": "TOP.framescope_top.dut.netlist_extract_fetch_cell_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 6,
+              "reached": 2,
+              "uncovered": 4,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 114,
+              "reached": 2,
+              "uncovered": 112,
+              "gaps_omitted": 48
+            }
+          }
+        },
+        {
+          "module": "fetchCell",
+          "hierarchy": "TOP.framescope_top.dut.uart_cell_fetch_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 6,
+              "reached": 2,
+              "uncovered": 4,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 114,
+              "reached": 2,
+              "uncovered": 112,
+              "gaps_omitted": 48
+            }
+          }
+        },
+        {
+          "module": "fetchCell",
+          "hierarchy": "TOP.framescope_top.dut.uart_cell_p_fetch_inst.fetch_cell_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 6,
+              "reached": 2,
+              "uncovered": 4,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 114,
+              "reached": 2,
+              "uncovered": 112,
+              "gaps_omitted": 48
+            }
+          }
+        },
+        {
+          "module": "fetchComponentRotation",
+          "hierarchy": "TOP.framescope_top.dut.netlist_extract_fetch_rot_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 7,
+              "reached": 2,
+              "uncovered": 5,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 134,
+              "reached": 2,
+              "uncovered": 132,
+              "gaps_omitted": 68
+            }
+          }
+        },
+        {
+          "module": "fetchComponentType",
+          "hierarchy": "TOP.framescope_top.dut.backend_fetch_type_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 7,
+              "reached": 2,
+              "uncovered": 5,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 138,
+              "reached": 2,
+              "uncovered": 136,
+              "gaps_omitted": 72
+            }
+          }
+        },
+        {
+          "module": "fetchComponentType",
+          "hierarchy": "TOP.framescope_top.dut.netlist_extract_fetch_type_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 7,
+              "reached": 2,
+              "uncovered": 5,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 138,
+              "reached": 2,
+              "uncovered": 136,
+              "gaps_omitted": 72
+            }
+          }
+        },
+        {
+          "module": "fetchComponentValue",
+          "hierarchy": "TOP.framescope_top.dut.backend_fetch_value_inst",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 1,
+              "uncovered": 1,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 7,
+              "reached": 2,
+              "uncovered": 5,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 154,
+              "reached": 2,
+              "uncovered": 152,
+              "gaps_omitted": 88
+            }
+          }
+        },
+        {
+          "module": "fetchP",
+          "hierarchy": "TOP.framescope_top.dut.flood_debug_p_fetch_inst",
+          "types": {
+            "branch": {
+              "eligible": 4,
+              "reached": 1,
+              "uncovered": 3,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 22,
+              "reached": 1,
+              "uncovered": 21,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 122,
+              "reached": 2,
+              "uncovered": 120,
+              "gaps_omitted": 56
+            }
+          }
+        },
+        {
+          "module": "fetchP",
+          "hierarchy": "TOP.framescope_top.dut.flooding_backend_wrapper_inst.fetchP_inst",
+          "types": {
+            "branch": {
+              "eligible": 4,
+              "reached": 4,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 22,
+              "reached": 15,
+              "uncovered": 7,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 122,
+              "reached": 90,
+              "uncovered": 32,
+              "gaps_omitted": 0
+            }
+          }
+        },
+        {
+          "module": "fetchP",
+          "hierarchy": "TOP.framescope_top.dut.uart_cell_p_fetch_inst",
+          "types": {
+            "branch": {
+              "eligible": 4,
+              "reached": 1,
+              "uncovered": 3,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 22,
+              "reached": 1,
+              "uncovered": 21,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 122,
+              "reached": 2,
+              "uncovered": 120,
+              "gaps_omitted": 56
+            }
+          }
+        },
+        {
+          "module": "flooding_core",
+          "hierarchy": "TOP.framescope_top.dut.flooding_backend_wrapper_inst.flooding_core_inst",
+          "types": {
+            "branch": {
+              "eligible": 72,
+              "reached": 63,
+              "uncovered": 9,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 75,
+              "reached": 71,
+              "uncovered": 4,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 868,
+              "reached": 370,
+              "uncovered": 498,
+              "gaps_omitted": 434
+            }
+          }
+        },
+        {
+          "module": "framescope_top",
+          "hierarchy": "TOP.framescope_top",
+          "types": {
+            "branch": {
+              "eligible": 2,
+              "reached": 0,
+              "uncovered": 2,
+              "gaps_omitted": 0
+            },
+            "line": {
+              "eligible": 40,
+              "reached": 37,
+              "uncovered": 3,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 10196,
+              "reached": 158,
+              "uncovered": 10038,
+              "gaps_omitted": 9974
+            }
+          }
+        },
+        {
+          "module": "storeNode0",
+          "hierarchy": "TOP.framescope_top.dut.netlist_extract_store_node0_inst",
+          "types": {
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 78,
+              "reached": 2,
+              "uncovered": 76,
+              "gaps_omitted": 12
+            }
+          }
+        },
+        {
+          "module": "storeNode1",
+          "hierarchy": "TOP.framescope_top.dut.netlist_extract_store_node1_inst",
+          "types": {
+            "line": {
+              "eligible": 1,
+              "reached": 1,
+              "uncovered": 0,
+              "gaps_omitted": 0
+            },
+            "toggle": {
+              "eligible": 78,
+              "reached": 2,
+              "uncovered": 76,
+              "gaps_omitted": 12
+            }
+          }
+        }
+      ]
+    },
+    "lockstep_native_boot": {
+      "ok": true,
+      "report": "golden/out/m4-lockstep/boot-native/summary.json"
+    },
+    "framescope_combined_native": {
+      "ok": true,
+      "tests": 133,
+      "skipped": 7,
+      "note": "post-merge FS-8/FS-9/FS-11 suite; 7 skips are opt-in FRAMESCOPE_METACIRCUIT_TEST cases",
+      "checked_at_utc": "2026-10-10"
+    },
+    "framescope_combined_docker": {
+      "ok": true,
+      "tests": 133,
+      "skipped": 7,
+      "note": "same suite on the pinned Docker runtime",
+      "checked_at_utc": "2026-10-10"
+    },
+    "lockstep_native_m1_canvas_editing": {
+      "ok": true,
+      "frames": 267,
+      "checkpoints": "25/25",
+      "seed": 1,
+      "report": "golden/out/m4-lockstep/m1-canvas-native/summary.json",
+      "scope": "settled M1 canvas state, one persistent RTL process from a cold seeded start; no transient qualification"
+    },
+    "lockstep_negative_rotation_mutant": {
+      "ok": true,
+      "expected_failure": true,
+      "mutation": "scratch copy of src/: InteractionController.v RotateCellData next_rotation + 2'b01 -> - 2'b01 (single-cell rotation reversed); repository RTL untouched",
+      "result": "persistent session stopped at first divergent settled checkpoint rotate_wire (frame 121) after 13/13 earlier checkpoints passed; 122 of 267 frames simulated",
+      "cold_replay": "separate cold seeded run with FST trace frames 118-121 exited 0; all six compared memories at frame 121 word-identical to the persistent session dumps",
+      "report": "golden/out/m4-lockstep/m1-canvas-rotate-mutant/summary.json",
+      "tooling": "golden/tools/lockstep_m4.py gained --metacircuit (RTL checkout to simulate; golden inputs unchanged)"
+    },
+    "lockstep_docker_m1_canvas_editing": {
+      "ok": true,
+      "frames": 267,
+      "checkpoints": "25/25",
+      "seed": 1,
+      "report": "golden/out/m4-lockstep/m1-canvas-docker-2/summary.json",
+      "note": "first attempt (out/m4-lockstep/m1-canvas-docker) stopped at frame 0 with max_time: Docker 5.020 seed-1 cold boot reaches frame 0 at 123.7 ms vs the session's 120 ms default step budget; fixed by session step max_time_ms and lockstep BOOT_STEP_MAX_TIME_MS=1000 for frame 0 only"
+    },
+    "lockstep_native_stress16_seed1": {
+      "ok": true,
+      "frames": 155,
+      "checkpoints": "17/17",
+      "operations": 16,
+      "case": "golden/out/m4-lockstep/cases16/seed-1.json",
+      "report": "golden/out/m4-lockstep/stress16-seed1-native/summary.json"
+    },
+    "lockstep_native_stress16_seed7": {
+      "ok": true,
+      "frames": 155,
+      "checkpoints": "17/17",
+      "operations": 16,
+      "case": "golden/out/m4-lockstep/cases16/seed-7.json",
+      "report": "golden/out/m4-lockstep/stress16-seed7-native/summary.json"
+    },
+    "lockstep_native_stress16_seed2026": {
+      "ok": true,
+      "frames": 147,
+      "checkpoints": "17/17",
+      "operations": 16,
+      "case": "golden/out/m4-lockstep/cases16/seed-2026.json",
+      "report": "golden/out/m4-lockstep/stress16-seed2026-native/summary.json"
+    },
+    "lockstep_docker_stress16_seed1": {
+      "ok": true,
+      "frames": 155,
+      "checkpoints": "17/17",
+      "operations": 16,
+      "case": "golden/out/m4-lockstep/cases16/seed-1.json",
+      "report": "golden/out/m4-lockstep/stress16-seed1-docker/summary.json"
+    },
+    "lockstep_docker_stress16_seed7": {
+      "ok": true,
+      "frames": 155,
+      "checkpoints": "17/17",
+      "operations": 16,
+      "case": "golden/out/m4-lockstep/cases16/seed-7.json",
+      "report": "golden/out/m4-lockstep/stress16-seed7-docker/summary.json"
+    },
+    "lockstep_docker_stress16_seed2026": {
+      "ok": true,
+      "frames": 147,
+      "checkpoints": "17/17",
+      "operations": 16,
+      "case": "golden/out/m4-lockstep/cases16/seed-2026.json",
+      "report": "golden/out/m4-lockstep/stress16-seed2026-docker/summary.json"
+    },
+    "framescope_combined_after_session_budget": {
+      "ok": true,
+      "native": "134 tests OK, 7 opt-in skips",
+      "docker": "134 tests OK, 7 opt-in skips"
+    },
+    "golden_suite": {
+      "ok": true,
+      "tsc": "clean",
+      "vitest": "218 passed",
+      "python_tools": "test_verify_m4 + test_lockstep_m4 OK"
+    },
+    "lockstep_native_stress16_v2_seed1": {
+      "ok": true,
+      "generator": 2,
+      "frames": 170,
+      "checkpoints": "17/17",
+      "operations": 16,
+      "case": "golden/out/m4-lockstep/cases16-v2/seed-1.json",
+      "report": "golden/out/m4-lockstep/stress16v2-seed1-native/summary.json"
+    },
+    "lockstep_native_stress16_v2_seed7": {
+      "ok": true,
+      "generator": 2,
+      "frames": 184,
+      "checkpoints": "17/17",
+      "operations": 16,
+      "case": "golden/out/m4-lockstep/cases16-v2/seed-7.json",
+      "report": "golden/out/m4-lockstep/stress16v2-seed7-native/summary.json"
+    },
+    "lockstep_native_stress16_v2_seed2026": {
+      "ok": true,
+      "generator": 2,
+      "frames": 192,
+      "checkpoints": "17/17",
+      "operations": 16,
+      "case": "golden/out/m4-lockstep/cases16-v2/seed-2026.json",
+      "report": "golden/out/m4-lockstep/stress16v2-seed2026-native/summary.json"
+    },
+    "functional_bins_union_native": {
+      "ok": true,
+      "reached": 37,
+      "eligible": 48,
+      "uncovered": [
+        "component:capacitor:rotation:2",
+        "component:capacitor:rotation:3",
+        "component:current:rotation:1",
+        "component:current:rotation:2",
+        "component:current:rotation:3",
+        "component:inductor:rotation:1",
+        "component:inductor:rotation:3",
+        "component:resistor:rotation:2",
+        "component:resistor:rotation:3",
+        "component:voltage:rotation:1",
+        "store:empty"
+      ],
+      "report": "golden/out/m4-lockstep/functional-bins-union.json",
+      "definition": "golden/tools/verify_m4.py functional_coverage: transition bins (placed/deleted/rotated component and cell, slot reuse, blocked placement, held click, empty store) require two consecutive passing checkpoints; lockstep summaries now include functional_coverage",
+      "runs": [
+        "m1-canvas-native",
+        "stress16-seed1-native",
+        "stress16-seed7-native",
+        "stress16-seed2026-native",
+        "stress16v2-seed1-native",
+        "stress16v2-seed7-native",
+        "stress16v2-seed2026-native"
+      ]
+    },
+    "lockstep_native_stress64_v2_seed11": {
+      "ok": true,
+      "generator": 2,
+      "frames": 727,
+      "checkpoints": "65/65",
+      "operations": 64,
+      "case": "golden/out/m4-lockstep/cases64-v2/seed-11.json",
+      "report": "golden/out/m4-lockstep/stress64v2-seed11-native/summary.json"
+    },
+    "lockstep_native_stress64_v2_seed12": {
+      "ok": false,
+      "finding": true,
+      "generator": 2,
+      "frames": 618,
+      "checkpoints": "49/50",
+      "first_divergence": "operation_48 frame 617: probe wire_variant RTL 0 vs golden 1; mode_select 0 vs 1; cell (17,5) Wire vs Junction",
+      "cause": "unresolved. RTL selected_wire_variant drops 1->0 when the wire tool is re-selected at frame 603, but hand-made minimal sequences (wire, wire, [rotate off-canvas click], current, wire) keep variant 1 on RTL and pass cold (out/m4/wire-variant-witness-native-2, -3), so the reset depends on earlier history. Golden A-007 keeps the variant; ToolbarVGA.v:376-382 contains a reset-on-reselect branch that these minimal runs do not exercise as expected.",
+      "cold_replay_exit": 0,
+      "reduced_case": "pending: chunked cold-run reducer golden/out/m4/wire-variant-ddmin (progress.jsonl, result.json)",
+      "report": "golden/out/m4-lockstep/stress64v2-seed12-native/summary.json",
+      "decision": "open: identify trigger first; then the user chooses intended semantics"
+    },
+    "wire_reselection_native": {
+      "ok": true,
+      "seed": 12,
+      "runtime": "native",
+      "frames": 23,
+      "checkpoints": 5,
+      "report": "golden/out/m4-lockstep/wire-reselection-fixed-native/summary.json",
+      "build_dir": "/home/chesium/ee2026_ws/framescope/.framescope-m4/build/2d05620f55ba5867"
+    },
+    "wire_reselection_docker": {
+      "ok": true,
+      "seed": 12,
+      "runtime": "docker",
+      "frames": 23,
+      "checkpoints": 5,
+      "report": "golden/out/m4-lockstep/wire-reselection-fixed-docker-retry/summary.json",
+      "build_dir": "/home/chesium/ee2026_ws/framescope/.framescope-m4/build/c667b6671949d54d"
+    },
+    "directed_boundaries_native": {
+      "ok": true,
+      "seed": 2026,
+      "runtime": "native",
+      "frames": 133,
+      "checkpoints": 13,
+      "report": "golden/out/m4-lockstep/corpus-agent-boundaries-native-fixed/summary.json",
+      "build_dir": "/home/chesium/ee2026_ws/framescope/.framescope-m4/build/2d05620f55ba5867"
+    },
+    "directed_properties_native": {
+      "ok": true,
+      "seed": 2026,
+      "runtime": "native",
+      "frames": 135,
+      "checkpoints": 22,
+      "report": "golden/out/m4-lockstep/corpus-agent-properties-native-fixed/summary.json",
+      "build_dir": "/home/chesium/ee2026_ws/framescope/.framescope-m4/build/2d05620f55ba5867"
+    },
+    "golden_final": {
+      "ok": true,
+      "typecheck": "clean",
+      "vitest": 224,
+      "python_m4_tests": 17
+    },
+    "build_concurrency": {
+      "ok": true,
+      "native": "1 actual cold concurrent-build test passed",
+      "docker": "1 actual cold concurrent-build test passed",
+      "fix": "framescope build cache generation/compilation serialized with host file lock"
+    },
+    "functional_report_negative_controls": {
+      "ok": true,
+      "rejected": [
+        "failed run",
+        "truncated frame count",
+        "wrong initialization seed",
+        "failed comparator checkpoint",
+        "actual before-fix reselection witness"
+      ]
+    },
+    "m2_final_source": {
+      "ok": true,
+      "runtimes": [
+        "native",
+        "docker"
+      ],
+      "scenarios": 4,
+      "frames_per_runtime": 298,
+      "checkpoints_per_runtime": 61,
+      "comparison": "state, UI, all pixels, cross-runtime CRC/probes/732 dumps",
+      "evidence": "golden/out/m4/regression-agent-evidence.json"
+    },
+    "expanded_cold_corpus_final_source": {
+      "ok": true,
+      "seeds": [
+        2,
+        3,
+        17,
+        42,
+        65535,
+        2147483647
+      ],
+      "frames_per_runtime": 234,
+      "checkpoints_per_runtime": 30,
+      "runtimes": [
+        "native",
+        "docker"
+      ],
+      "initialization": "unique initial/assign, explicit seed, rand_reset 2, cold run",
+      "evidence": "golden/out/m4/regression-agent-evidence.json"
+    },
+    "functional_final_source_partial": {
+      "ok": true,
+      "reached": 61,
+      "eligible": 64,
+      "uncovered": [
+        "canvas:dense",
+        "canvas:full",
+        "edit:capacity_blocked"
+      ],
+      "report": "golden/out/m4-lockstep/functional-final-partial.json",
+      "note": "superseded by functional_final_source"
+    },
+    "framescope_final_native": {
+      "ok": true,
+      "tests": 135,
+      "skipped": 7,
+      "log": "/tmp/m4-framescope-final-native.log"
+    },
+    "framescope_final_docker": {
+      "ok": true,
+      "tests": 135,
+      "skipped": 7,
+      "log": "/tmp/m4-framescope-final-docker.log"
+    },
+    "reduced_reselection_cold_witness": {
+      "ok": true,
+      "expected_simulation_result": "state mismatch before fix",
+      "frames": 23,
+      "first_frame": 22,
+      "cold_reproduced": true,
+      "same_initialization": true,
+      "memory_word_equality": {
+        "cells_render": true,
+        "cells_shadow": true,
+        "values_shadow": true,
+        "value_units_shadow": true,
+        "component_store": true,
+        "component_index_map": true
+      },
+      "report": "golden/out/m4-lockstep/reselection-reduced-cold-witness/summary.json",
+      "trace_hashes": "golden/out/m4-lockstep/reselection-reduced-cold-witness/witness-artifact-hashes.json"
+    },
+    "directed_rotations_native": {
+      "ok": true,
+      "seed": 2026,
+      "runtime": "native",
+      "frames": 174,
+      "checkpoints": 22,
+      "report": "golden/out/m4-lockstep/corpus-agent-rotations-native-fixed/summary.json",
+      "build_dir": "/home/chesium/ee2026_ws/framescope/.framescope-m4/build/2d05620f55ba5867"
+    },
+    "directed_rotations_docker": {
+      "ok": true,
+      "seed": 2026,
+      "runtime": "docker",
+      "frames": 174,
+      "checkpoints": 22,
+      "report": "golden/out/m4-lockstep/corpus-agent-rotations-docker-fixed/summary.json",
+      "build_dir": "/home/chesium/ee2026_ws/framescope/.framescope-m4/build/c667b6671949d54d"
+    },
+    "directed_properties_docker": {
+      "ok": true,
+      "seed": 2026,
+      "runtime": "docker",
+      "frames": 135,
+      "checkpoints": 22,
+      "report": "golden/out/m4-lockstep/corpus-agent-properties-docker-fixed/summary.json",
+      "build_dir": "/home/chesium/ee2026_ws/framescope/.framescope-m4/build/c667b6671949d54d"
+    },
+    "directed_boundaries_docker": {
+      "ok": true,
+      "seed": 2026,
+      "runtime": "docker",
+      "frames": 133,
+      "checkpoints": 13,
+      "report": "golden/out/m4-lockstep/corpus-agent-boundaries-docker-fixed/summary.json",
+      "build_dir": "/home/chesium/ee2026_ws/framescope/.framescope-m4/build/c667b6671949d54d"
+    },
+    "functional_report_corruption_tests": {
+      "ok": true,
+      "tests": 12,
+      "accepted_comparator_rechecked": true,
+      "source": "golden/tools/test_functional_m4.py"
+    },
+    "directed_dense_native": {
+      "ok": true,
+      "seed": 2026,
+      "runtime": "native",
+      "frames": 531,
+      "checkpoints": 22,
+      "report": "golden/out/m4-lockstep/corpus-agent-dense-native-compact/summary.json",
+      "scope": "settled endpoint state; continuous atomicity not qualified"
+    },
+    "functional_final_source": {
+      "ok": true,
+      "reached": 64,
+      "eligible": 64,
+      "uncovered": [],
+      "excluded": {
+        "solver/UART/stalls/PS2": "outside settled canvas scope; M5/FS-10 required",
+        "physical component-store exhaustion": "288 store slots exceed the 144 two-cell logical canvas limit",
+        "property UI selection/text/caret": "M1 comparator verifies property RAM but not selection or panel probes/pixels",
+        "transient state timing": "settled checkpoints only; continuous invariants remain M5-4"
+      },
+      "report": "golden/out/m4-lockstep/functional-final-union.json",
+      "runs": 9,
+      "accepted_comparator_rechecked": true,
+      "per_runtime": {
+        "native": "64/64",
+        "docker": "64/64"
+      }
+    },
+    "m3_final_native": {
+      "ok": true,
+      "scenarios": 5,
+      "frames": 482,
+      "checkpoints": 42,
+      "TX_lines": 2265,
+      "complete_netlists": 442,
+      "solver_replies": 439,
+      "aborts": 4,
+      "rejections": 36,
+      "stale_replies": 19,
+      "evidence": "golden/out/m4/regression-agent-evidence.json"
+    },
+    "rtl_coverage_final_native": {
+      "ok": true,
+      "seed": 12,
+      "frames": 23,
+      "checkpoints": {
+        "checkpoints": 5,
+        "passed": 5,
+        "failed": 0
+      },
+      "report": "golden/out/m4/coverage-final-native/summary.json",
+      "complete": true,
+      "module_groups": 101,
+      "tool_version": "Verilator 5.046 2026-02-28 rev v5.046-55-g1264184fb",
+      "artifacts": {
+        "boot": {
+          "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m4/coverage-final-native/case-0/rtl/coverage/boot.dat",
+          "sha256": "3631d1cd4e2395e3c4945a777afe8003f28e8522547e50b2bf1b22c5dd0af077"
+        },
+        "scenario": {
+          "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m4/coverage-final-native/case-0/rtl/coverage/scenario.dat",
+          "sha256": "a29801bc9cbb75fdeb3551c895919e785c718a455cc7c332d41de9581bf61e3c"
+        }
+      },
+      "coverage_report": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m4/coverage-final-native/case-0/rtl/coverage/coverage.json",
+      "note": "module/hierarchy/type eligible, reached, uncovered and bounded gaps available; no aggregate percentage acceptance inferred"
+    },
+    "rtl_coverage_final_docker": {
+      "ok": true,
+      "seed": 12,
+      "frames": 23,
+      "checkpoints": {
+        "checkpoints": 5,
+        "passed": 5,
+        "failed": 0
+      },
+      "report": "golden/out/m4/coverage-final-docker/summary.json",
+      "complete": true,
+      "module_groups": 101,
+      "tool_version": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "artifacts": {
+        "boot": {
+          "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m4/coverage-final-docker/case-0/rtl/coverage/boot.dat",
+          "sha256": "edb029b258fa3347f6bc1661d2a5bf17bc4eb3f4367f9c8a286046b0e2ab7ee4"
+        },
+        "scenario": {
+          "path": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m4/coverage-final-docker/case-0/rtl/coverage/scenario.dat",
+          "sha256": "46046081fc082274130b40529ffa69dfb68ef8f08b171ecc22aad7f3e03eeeec"
+        }
+      },
+      "coverage_report": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m4/coverage-final-docker/case-0/rtl/coverage/coverage.json",
+      "note": "module/hierarchy/type eligible, reached, uncovered and bounded gaps available; no aggregate percentage acceptance inferred"
+    },
+    "final_source_regression_qualification": {
+      "ok": true,
+      "complete": true,
+      "report": "golden/out/m4/regression-agent-evidence.json",
+      "source_snapshot": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m4/regression-agent-source-snapshot.json",
+      "source_consistency": {
+        "native": {
+          "ordinary_build_keys": [
+            "227232b1fed6389b"
+          ],
+          "seeded_build_keys": [
+            "2d05620f55ba5867"
+          ],
+          "consistent": true
+        },
+        "docker": {
+          "ordinary_build_keys": [
+            "761d4ec114f25928"
+          ],
+          "seeded_build_keys": [
+            "c667b6671949d54d"
+          ],
+          "consistent": true
+        }
+      },
+      "scope": "Final startup-clear and accepted A-007 toolbar fixes against existing accepted M2 full-state/UI/full-pixels, M3 Python solver-host integration, and four-operation M1 canvas cold seeded corpus; no M5 solver-pipeline or continuous invariant claim."
+    },
+    "stress64_v2_seed12_final_native": {
+      "ok": true,
+      "seed": 12,
+      "generator": 2,
+      "operations": 64,
+      "frames": 794,
+      "checkpoints": 65,
+      "report": "golden/out/m4-lockstep/stress64v2-seed12-native-fixed/summary.json"
+    },
+    "directed_dense_docker": {
+      "ok": true,
+      "frames": 531,
+      "checkpoints": 22,
+      "report": "golden/out/m4-lockstep/corpus-agent-dense-docker-compact/summary.json",
+      "scope": "settled endpoint state; continuous atomicity not qualified"
+    }
+  },
+  "retained_failure": {
+    "seed": 1,
+    "first_frame": 2,
+    "first_differences": [
+      "mirrored cell RAMs differ at address 1",
+      "mirrored cell RAMs differ at address 2",
+      "values_shadow[1] is 0xab8, expected 0x000",
+      "values_shadow[2] is 0xab8, expected 0x000",
+      "value_units_shadow[1] is 0xf, expected 0x0",
+      "value_units_shadow[2] is 0xf, expected 0x0"
+    ],
+    "blocks_after_reduction": 0,
+    "cold_reproduced_before_fix": true,
+    "fixture": "golden/test/fixtures/m4_boot_seed1.json",
+    "fix": "Mouse limit setup no longer skips clearing RAM cells1/2"
+  },
+  "remaining": [],
+  "retained_failures": [
+    {
+      "seed": 1,
+      "first_frame": 2,
+      "first_differences": [
+        "mirrored cell RAMs differ at address 1",
+        "mirrored cell RAMs differ at address 2",
+        "values_shadow[1] is 0xab8, expected 0x000",
+        "values_shadow[2] is 0xab8, expected 0x000",
+        "value_units_shadow[1] is 0xf, expected 0x0",
+        "value_units_shadow[2] is 0xf, expected 0x0"
+      ],
+      "blocks_after_reduction": 0,
+      "cold_reproduced_before_fix": true,
+      "fixture": "golden/test/fixtures/m4_boot_seed1.json",
+      "fix": "Mouse limit setup no longer skips clearing RAM cells1/2"
+    },
+    {
+      "seed": 12,
+      "first_frame": 617,
+      "first_checkpoint": "operation_48",
+      "difference": "Wire variant reset instead of preserved Junction after reselecting wire toolbar tool",
+      "accepted_contract": "A-007 (golden/ASSUMPTIONS.md and existing golden/test/tools.test.ts)",
+      "reduced_fixture": "golden/test/fixtures/m4_wire_reselection_seed12.json",
+      "reduced_frames": 23,
+      "reduced_first_frame": 22,
+      "before_fix_native_reproduced": true,
+      "original_cold_reproduced": true,
+      "original_cold_verification": "golden/out/m4-lockstep/stress64v2-seed12-native/cold-replay-verification.json",
+      "fix": "ToolbarVGA preserves selected_wire_variant on returning from another tool"
+    }
+  ],
+  "framescope_source_hashes": {
+    "src/framescope/__init__.py": "7e3bd3c5c6514f345709855c950bdd0c0124053d94a372b52c0dacd3c2d5fd4a",
+    "src/framescope/__main__.py": "13a1a5b340cdcfc1902b62be90e508c7c71886000d5bf087e7854aadf09fb35e",
+    "src/framescope/batch.py": "05e13a8d30815d872db832f0e7a89e4c2f2d4d6c48f9419d7b06550bbed2e3f5",
+    "src/framescope/build.py": "9f8480e0af06150eaa5f1fe2cd05d1acd050d66ab7052a56691954fb8408f613",
+    "src/framescope/checkpoint.py": "16b69209b694ce99621ea4a11536c8df943943360e2a92343c92513fa6dc14db",
+    "src/framescope/cli.py": "e92e429eec7f4c807de225c818357916969dd358182ba7435e40f8b5f7172500",
+    "src/framescope/codegen.py": "b05a8f5dc69c56329f13dda1150ee902128c08498d61bbc2352c35362f9b3388",
+    "src/framescope/compare.py": "eb30970eeee9823360124506bce80b9295c5491087f804e3bfb3da1a9d1c8065",
+    "src/framescope/coverage.py": "8ee2b546f94d623ab91355e8a4628d68d372cd063323c38538d4d0b84692b52e",
+    "src/framescope/harness/checkpoint.cpp": "98c55b4eb0043b8c39a8aa33097d22da2737b939f3721c3eb0dd059ece255039",
+    "src/framescope/harness/dpi.cpp": "5a86e68930989dcb4ccbb5420c2a43b2043dbc3d2b5111d47254151368f36800",
+    "src/framescope/harness/framescope.hpp": "25a58c5283524e88b48dfddc226fde45bff858719be3600cc01e44f9efffbd24",
+    "src/framescope/harness/harness.cpp": "45bb182e54a69e524587859a27f00a6865d08b4c8dc12c758fade5b01212c660",
+    "src/framescope/harness/json.hpp": "04a6eb4f088a2e9fc19d67bf31fdf19f5a3f5b73e09c39f76f46cd2841b7f98c",
+    "src/framescope/harness/main.cpp": "a29be06c5e704ae7fe31f0229af26463eefa52e4ce040572b8faf37ee421e10c",
+    "src/framescope/harness/png.cpp": "c244600fa02dc7c17ddf70f8a03039a26b2bc560e86cc2a3c9c0f5ea732d415b",
+    "src/framescope/harness/png.hpp": "82a59bacf07ab8d1add5860c366be31faf034df7c90292815b1171ee0d347cc8",
+    "src/framescope/harness/profile.hpp": "95c6ab971c56aae8326592e2691792a3ca9ac9412567f2028b5fd0aa5a4598bb",
+    "src/framescope/harness/state.hpp": "e92600fdcc7ea0112725926a692305f989ced9a61b79991ae7562be113afd21e",
+    "src/framescope/harness/uart_monitor.cpp": "d3a6bfb16a7f3e30a073e3da72269880df6d2556907b4df232d4fd1509c36c98",
+    "src/framescope/harness/uart_monitor.hpp": "723ee2d3dd0561d912127aa8ae5c13077ea6dad483178946182b15d8f1c1bc74",
+    "src/framescope/harness/vga_monitor.cpp": "efa73098a93db57f60f4aa879d028b9640a524daa7603158a4c145809b7f1ea3",
+    "src/framescope/harness/vga_monitor.hpp": "ca681d61147efed9a9c706fb276633653fd7c2bf63941a6d045f6fbb70e92c1a",
+    "src/framescope/host.py": "c919277afe9f73f448c723d1f6513e0c4515faaf7648864b461714e03ddbec40",
+    "src/framescope/manifest.py": "c1fccb373452b2080e79d8ddd3efb11b31d44c5e9e721b1cb92e1c00c39b2847",
+    "src/framescope/png.py": "40fd8be1fa8a5e7df56671916624b87472e3e94bb46a0a8d8c3c3e0f046ebd61",
+    "src/framescope/ports.py": "b7b63064d6035d75eb9e6ffce52773d30cbb52921a97b950df6099133caeb482",
+    "src/framescope/protocols/__init__.py": "c1aa9d64f0c8ffc10300a3e748468881c00d2340b52f3c590a97139847ed7976",
+    "src/framescope/protocols/base.py": "7be919595fbe128301070819adb06a660c03b1c02b10ccab5c4b21efdc25dffd",
+    "src/framescope/protocols/uart.py": "bb55d1944a9c5219d8ac33657363a222afed30cd4d4e4f559c89fc2f4cdadc81",
+    "src/framescope/protocols/vga.py": "0da02c5a28eb8aad465439003ef2a5c9a9e8fc824e98993e31dff69f140fca61",
+    "src/framescope/rtl/framescope_dpi_pkg.sv": "4338a84538ef2b1258fdffee8593d72786d7fbda0a883597875aa4c479c85f11",
+    "src/framescope/run.py": "a3bba8aefa93b305bbc07f75fae31eaedd021080fb21734a9082be1790053547",
+    "src/framescope/rundir.py": "44f892cc296ceade681f6814311e3f79a00a2eaa821fa6044de56d7aacaa20e8",
+    "src/framescope/runtime.py": "27ed967875ade35b8598770d91d2578657ca8fb752cd7c2532a3a370e099e48d",
+    "src/framescope/scenario.py": "0d1e6071c184eca504d9696b85a9c751177115402a38d9338375cdf46c2de175",
+    "src/framescope/session.py": "76ced2e08f47c84daeec9093c257c6c1da4874d308cff6290635c61638318cb8",
+    "src/framescope/stimulus.py": "a4566a67e01c8f44a7792213295786e47c3dff370d40436459288bb3606c85e5",
+    "src/framescope/timing.py": "47472bf00263e5ec9bb1f2a6c93fbcbc3693f952fd6bb1b5d714585393c60ac7",
+    "tests/helpers.py": "c51a244da181382e6363c4e017b1e97dac5f07a832ce90cc47c1e212e88de000",
+    "tests/pngread.py": "142a9c41d1cd774c9b5263f7f4cf0b6d1eb747796db3baff41a16523fc36896e",
+    "tests/test_batch.py": "616a6e52f0ec01f28b30aa17c7c5be3b0c9fae9bd77cb69d71da2ed096998215",
+    "tests/test_build_concurrency.py": "8c4cb39ea52133fb291e91221611e30a46c56e47f6283d28b53c7de31106f1f3",
+    "tests/test_checkpoint.py": "53e62ef384b31af75d9cc87cc01de78ef489135a2430703380aecedc8fc94086",
+    "tests/test_codegen.py": "88b61054d83743c5d16ca37983c0d5c8bfcb700928cd553b0443dc62f93555ae",
+    "tests/test_compare.py": "7a83738407c54c22d95447b8f900ce7a91c432185338cbe583a71ffc578ad1c7",
+    "tests/test_coverage.py": "6e5cd1c3c2cf7bcc983600cd3ed27ca4d37692b3e7032f91c73609fe62d8cfe4",
+    "tests/test_integration.py": "971c21cfe9e8c719acdb25dfc9d4e9602f7f928f715097f686ab44d0aadce2f2",
+    "tests/test_manifest.py": "0b27f478822d55f1fc4e6e6d6666cec122377cb22c4ff084cd98b4b6895da066",
+    "tests/test_png.py": "a646128c9f129725c620a7181c1fcb4d1ee5024974a6f9918418ef7407cce312",
+    "tests/test_ports.py": "51969b3a7225f5041a9f1867f9c67e8a0909782307cdb7cdd3755461b2134936",
+    "tests/test_run.py": "739fae9c5a30844e6457ed7e4c2617fc9e7eab589bbd4dea1418e7a2a593fdd1",
+    "tests/test_runtime.py": "7884e5c9118e56343fdedba115261b103fd585eb8929439be342e07cc5541fe2",
+    "tests/test_seed.py": "073e99c3beb5aa5357c2cceab622274f7abc1db0f825cdb9edb24aca56b845e4",
+    "tests/test_session.py": "26340218dc8019f33b7ec8c1dbf1500f443053d276078281ea1e9df02171a5f2",
+    "tests/test_stimulus.py": "356bb3b33284b9e29bedb3bc3994a3f488056af1d4ff616fbdea64a6e209d728",
+    "tests/test_timing.py": "f59baad7d595bd6a9c3ccff7525b58efebc3a02f6a41e59a9e6686e9c0eced23",
+    "tests/test_uart.py": "749c2f376b6cb0e2e32b9eb9d53c0d5176ba4265d500b0b98fdeea8ea56781ba",
+    "tests/test_uart_integration.py": "40a1d65f7eff0fac4840fc150b70a9dce338952f1b7d2b4f9ca3401ac5a493e2"
+  },
+  "directed_corpus": {
+    "frames_per_runtime": 973,
+    "checkpoints_per_runtime": 79,
+    "report": "golden/out/m4-lockstep/corpus-agent-summary.json"
+  },
+  "deferred_to_m5": [
+    "frozen contract and stable adapters",
+    "continuous invariants and memory stalls",
+    "actual solver RTL with configured floating-point IP",
+    "unified functional/coverage/Vivado acceptance gate and measured optimization"
+  ],
+  "optional_not_required": [
+    "FS12 MCP",
+    "FS10 real PS/2 path (required if that scope changes)"
+  ]
+}

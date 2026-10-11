@@ -35,7 +35,7 @@ module fpo_fma (
 
   wire        m_axis_result_tvalid;
   wire [31:0] m_axis_result_tdata;
-  wire [ 3:0] m_axis_result_tuser;  // 假设只开了3个异常位
+  wire [ 2:0] m_axis_result_tuser;  // 假设只开了3个异常位
 
   // 仅作为示例：异常位映射
   localparam integer ExcUnderflowBit = 0;

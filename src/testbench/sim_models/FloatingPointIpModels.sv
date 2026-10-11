@@ -19,7 +19,7 @@ module floating_point_fma #(
     input  wire [31:0] s_axis_c_tdata,
     output wire        m_axis_result_tvalid,
     output wire [31:0] m_axis_result_tdata,
-    output wire [3:0]  m_axis_result_tuser
+    output wire [2:0]  m_axis_result_tuser
 );
   reg [LATENCY-1:0] valid_pipe = '0;
   reg [31:0] data_pipe [0:LATENCY-1];
@@ -35,7 +35,7 @@ module floating_point_fma #(
 
   assign m_axis_result_tvalid = valid_pipe[LATENCY-1];
   assign m_axis_result_tdata = data_pipe[LATENCY-1];
-  assign m_axis_result_tuser = 4'd0;
+  assign m_axis_result_tuser = 3'd0;
 endmodule
 
 module floating_point_div #(

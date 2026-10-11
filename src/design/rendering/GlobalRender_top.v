@@ -97,6 +97,12 @@ module GlobalRender_top (
     wire        keyboard_key_is_action;
     (* ASYNC_REG = "TRUE" *) reg  [7:0]  keyboard_ascii_sys_ff0 = 8'h00;
     (* ASYNC_REG = "TRUE" *) reg  [7:0]  keyboard_ascii_sys_ff1 = 8'h00;
+    // Character class of keyboard_ascii_sys_ff1, registered from ff0 on the same
+    // edge so it always equals the decode of ff1 without adding latency; keeps the
+    // decode off the keypad edit -> value shadow / netlist dirty paths.
+    reg          keyboard_ascii_value_char_ff1 = 1'b0;
+    reg          keyboard_ascii_backspace_ff1 = 1'b0;
+    reg          keyboard_ascii_delete_ff1 = 1'b0;
 
     wire        keyboard_region_active;
 
@@ -3219,9 +3225,7 @@ module GlobalRender_top (
     wire [CANVAS_ADDR_W-1:0] selected_pair_addr = pair_addr_for_cell(selected_cell_addr_sys, selected_sprite_type, selected_rotation);
     wire keyboard_edit_event = (keyboard_event_sync1 != keyboard_event_seen);
     wire keyboard_ascii_is_digit = (keyboard_ascii_sys_ff1 >= "0") && (keyboard_ascii_sys_ff1 <= "9");
-    wire keyboard_ascii_is_dot = (keyboard_ascii_sys_ff1 == ".");
-    wire keyboard_ascii_is_unit = keyboard_ascii_is_unit_char(keyboard_ascii_sys_ff1);
-    wire keyboard_ascii_is_value_char = keyboard_ascii_is_digit || keyboard_ascii_is_dot || keyboard_ascii_is_unit;
+    wire keyboard_ascii_is_value_char = keyboard_ascii_value_char_ff1;
     wire [3:0] keyboard_ascii_digit = keyboard_ascii_sys_ff1 - "0";
 
     integer edit_text_idx;
@@ -3250,13 +3254,13 @@ module GlobalRender_top (
                     end
                 end
                 edit_value_valid = 1'b1;
-            end else if (keyboard_ascii_sys_ff1 == 8'h08) begin
+            end else if (keyboard_ascii_backspace_ff1) begin
                 if (selected_value_text_len != 4'd0) begin
                     edit_value_next_text = text_delete8(selected_value_text, selected_value_text_len);
                     edit_value_next_text_len = selected_value_text_len - 1'b1;
                     edit_value_valid = 1'b1;
                 end
-            end else if (keyboard_ascii_sys_ff1 == 8'h7F) begin
+            end else if (keyboard_ascii_delete_ff1) begin
                 edit_value_next_bcd = 12'd0;
                 edit_value_next_digits = 2'd0;
                 edit_value_next_text = 64'd0;
@@ -3294,6 +3298,11 @@ module GlobalRender_top (
     always @(posedge CLK100MHZ) begin
         keyboard_ascii_sys_ff0 <= keyboard_event_ascii_pix;
         keyboard_ascii_sys_ff1 <= keyboard_ascii_sys_ff0;
+        keyboard_ascii_value_char_ff1 <= ((keyboard_ascii_sys_ff0 >= "0") && (keyboard_ascii_sys_ff0 <= "9")) ||
+                                         (keyboard_ascii_sys_ff0 == ".") ||
+                                         keyboard_ascii_is_unit_char(keyboard_ascii_sys_ff0);
+        keyboard_ascii_backspace_ff1 <= (keyboard_ascii_sys_ff0 == 8'h08);
+        keyboard_ascii_delete_ff1 <= (keyboard_ascii_sys_ff0 == 8'h7F);
     end
 
     generate
@@ -3656,7 +3665,7 @@ module GlobalRender_top (
             keyboard_event_seen <= keyboard_event_sync1;
         end
 
-        if (keyboard_edit_event && (keyboard_ascii_sys_ff1 == 8'h7F) && !selected_is_editable) begin
+        if (keyboard_edit_event && keyboard_ascii_delete_ff1 && !selected_is_editable) begin
             clear_canvas_active <= 1'b1;
             clear_canvas_addr <= {CANVAS_ADDR_W{1'b0}};
             init_cycles <= INIT_DELAY_CYCLES;

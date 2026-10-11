@@ -1,0 +1,1447 @@
+{
+  "schema_version": 1,
+  "milestone": "M5",
+  "status": "in_progress_paused_for_quota",
+  "recorded_at_utc": "2026-10-11T01:34:48.037818+00:00",
+  "m4_prerequisite": "docs/m4-verification.json",
+  "scope": "Frozen frontend contract and settled adapters qualified; real synthesis baseline characterized; scoped invariant/actual-IP evidence added; full refactor readiness remains incomplete.",
+  "checks": {
+    "contract_foundation": {
+      "ok": true,
+      "tests": 10,
+      "entries": 254,
+      "contract": "golden/verification/contracts/frontend-v1/contract.json",
+      "trusted_sha256": "475a48362f0f353104abfde654c25f7bdc60acc266c7a774ca6b256d315b540e",
+      "scope": "foundation only; unqualified internal bounds/adapter pinning/gate integration remain"
+    },
+    "adapter_foundation": {
+      "ok": true,
+      "controls": 8,
+      "captures": 18,
+      "checkpoints": 206,
+      "runtime_pairs": 9,
+      "report": "golden/out/m5/adapter/qualification.json",
+      "scope": "strict settled core/UI/backend normalization; independent M2/M3 comparators remain mandatory; M4 corpus qualification not run"
+    },
+    "vivado_runner_tests": {
+      "ok": true,
+      "tests": 8,
+      "scope": "parser/provenance controls; actual complete synthesis/routed report integration unverified"
+    },
+    "vivado_baseline_attempt": {
+      "ok": false,
+      "complete": false,
+      "directory": "golden/out/qor/m5-baseline",
+      "reasons": [
+        "legacy floating-point IP locked2018.2rev6 vs2025.2rev21",
+        "IP generation ERROR and unsupported project-mode synth_ip",
+        "runner/Tcl changed during initial run, stale provenance",
+        "quota shutdown interrupted synth.dcp; integrity unverified",
+        "no synthesis/route completion markers/reports"
+      ],
+      "owned_job_stopped": true
+    },
+    "continuous_request_invariant_foundation": {
+      "ok": false,
+      "report": "golden/out/m5-invariants/native-fixed/summary.json",
+      "native_compile_exit": 0,
+      "normal_bench_exit": 0,
+      "negative_detected": true,
+      "observed_guard_background_stalls": {
+        "reads": 17,
+        "writes": 3
+      },
+      "uncovered": [
+        "controller upstream read/write stalls"
+      ],
+      "docker": "not run because native readiness result failed",
+      "scope": "existing directed controller/guard bench with continuous stalled request stability/address checks; overall runner fails missing upstream stall coverage; no formal/arbitrary stall/global invariants claim"
+    },
+    "adapter_m4_qualification": {
+      "ok": true,
+      "captures": 8,
+      "checkpoints": 158,
+      "core_runtime_pairs": 4,
+      "report": "golden/out/m5/adapter/m4-qualification-resume.json",
+      "scope": "Independent core RAM/state comparison, exact observed timestamps retained; cross-runtime absolute startup time equality not claimed."
+    },
+    "continuous_request_invariants": {
+      "ok": true,
+      "reports": [
+        "golden/out/m5-invariants/resume-native-v2/summary.json",
+        "golden/out/m5-invariants/resume-docker-v2/summary.json"
+      ],
+      "reply_delays": [
+        1,
+        3,
+        9
+      ],
+      "settled_boundaries_per_run": 42,
+      "exact_writes_per_run": 16,
+      "read_reply_pairs_per_run": 21,
+      "specific_negative_controls": 4,
+      "parser_tests": 14,
+      "scope": "Real controller and guard read/write stalls, local guard queue/reply environment checks, settled memory geometry; global/formal/atomic visibility/progress still unqualified."
+    },
+    "frontend_synth_baseline": {
+      "ok": true,
+      "evidence_status": "complete",
+      "timing_clean": false,
+      "report": "golden/out/qor/baseline-final-synth/summary.json",
+      "resources": {
+        "lut": 24117,
+        "ff": 13677,
+        "bram": 10,
+        "dsp": 0
+      },
+      "wns_ns": -5.176,
+      "scope": "Immutable source/settings/constraints snapshot, actual Vivado2025.2 real MouseCtl; synthesis characterization only."
+    },
+    "frontend_routed_baseline": {
+      "ok": false,
+      "report": "golden/out/qor/frontend-baseline-resume/summary.json",
+      "reason": "Actual place_design UTLZ-1: post-opt22138 LUT exceed20800; source clock/I/O and CDC readiness incomplete."
+    },
+    "solver_provisional": {
+      "ok": false,
+      "provisional_benches_pass": true,
+      "report": "golden/out/m5-solver/qualification-final-20261010/report.json",
+      "extraction_fixtures": 320,
+      "uart_circuits": 36,
+      "scope": "Actual generated RTL, analytic1/2node solver circuits, physically wired frontend/SolverBoard boot/edit; FP stand-ins not accepted."
+    },
+    "actual_fp_characterization": {
+      "ok": true,
+      "report": "golden/out/m5-fp/characterization-final-20261010/report.json",
+      "fma_cases": 527,
+      "div_cases": 527,
+      "latencies": {
+        "fma": 16,
+        "div": 28
+      },
+      "negative_controls": 4,
+      "scope": "Actual XSim existing rev21 generated products match70original MODELPARAM values; original rev6 XCI lock/synthesis provenance unresolved; no stand-in acceptance."
+    },
+    "native_baseline_gate": {
+      "ok": true,
+      "ready": false,
+      "report": "golden/out/m5-acceptance/baseline-native-v2/summary.json",
+      "scope": "Native fast checks plus unchanged-source64directedbins and independent M2/M3 repeated comparisons; final gate refinements were added subsequently."
+    },
+    "address_candidate_equivalence": {
+      "ok": true,
+      "reports": [
+        "golden/out/m5-address/candidate-native/summary.json",
+        "golden/out/m5-address/candidate-docker/summary.json"
+      ],
+      "inputs": 512,
+      "invalid_addresses": 224,
+      "scope": "Actual production candidate helper vs frozen original, exhaustive known-bit domain; whole-design/four-state equivalence not claimed."
+    },
+    "actual_solver_pipeline": {
+      "ok": true,
+      "report": "golden/out/m5-solver-xsim/qualification-direct-final-20261010/report.json",
+      "source_overrides": {},
+      "solves": 38,
+      "uart_reply_lines": 127,
+      "fma_results": 244,
+      "div_results": 173,
+      "latencies": {
+        "fma": 16,
+        "div": 28
+      },
+      "scope": "Direct production SolverBoard with actual config-equivalent rev21IP;1/2node analytic circuits plus checksum,recovery,singularstatus05/-inf and coldcorruption; fullM5IPrevision/capacity/general-netlist/frontendscope incomplete."
+    },
+    "fma_wrapper_fix": {
+      "ok": true,
+      "file": "src/design/floating_point/fpo_fma.v",
+      "sha256": "9c1daa50bb18196ff22615da92bcf8a3b0697647e821db45376d735948f05ec7",
+      "before": "Four-bitwrapper/four-bitstand-in hid actualthree-bitvendorport; realxelab VRFC10-9380 fails.",
+      "after": "Three-bitwrapper/stand-ininterface; actualproductionXSim passes preservingflags0..2. Stand-in latency/arithmetic notpromoted."
+    },
+    "frontend_continuous_observers": {
+      "ok": true,
+      "reports": [
+        "golden/out/m5-frontend-invariants/native-final/summary.json",
+        "golden/out/m5-frontend-invariants/docker-final/summary.json"
+      ],
+      "source_scope": "Historical addresscandidate1 SHA0b32341; revertedafter successfulproof/observations. Direct restored-source observer rerun remains outstanding.",
+      "map_ready_boundaries": 2,
+      "atomic_commits": 3,
+      "staged_nodes": 5,
+      "stale_events": 2,
+      "queue_adds_pops": 370,
+      "specific_negative_controls": 4,
+      "scope": "Actual maps/store, staged replybank preservation, queuebounds/conservation;0stagedaborts exercised, limitedlayouts, noformal/architecturalprogress/CDCqualification."
+    },
+    "address_experiments": {
+      "accepted": false,
+      "production_helpers_restored": true,
+      "baseline_resources": {
+        "lut": 24117,
+        "ff": 13677,
+        "bram": 10,
+        "dsp": 0
+      },
+      "baseline_wns_ns": -5.176,
+      "candidates": [
+        {
+          "kind": "compare/subtract",
+          "resources": {
+            "lut": 24471,
+            "ff": 13668,
+            "bram": 10,
+            "dsp": 0
+          },
+          "wns_ns": -6.262,
+          "functional_smoke_per_runtime": {
+            "frames": 78,
+            "checkpoints": 29
+          },
+          "comparison": "golden/out/qor/candidate-address-synth/comparison.json",
+          "verdict": "rejected objective despite finite equivalent helpers and native/Docker frontend smoke pass"
+        },
+        {
+          "kind": "exactreciprocal",
+          "resources": {
+            "lut": 25055,
+            "ff": 13650,
+            "bram": 9.5,
+            "dsp": 0
+          },
+          "wns_ns": -5.696,
+          "comparison": "golden/out/qor/candidate-reciprocal-synth/comparison.json",
+          "verdict": "rejected objective; scratchsource only,512-inputproofbothruntimes"
+        }
+      ]
+    },
+    "framescope_docker_transient": {
+      "initial_gate_ok": false,
+      "failure_log": "golden/out/m5-acceptance/candidate-fast-docker/framescope-tests.log",
+      "reason": "Verilator Internal Error: attempted to destroy locked Thread Pool, tinyseedbuild",
+      "isolated_seed_retry_tests": 8,
+      "full_retry_tests": 135,
+      "full_retry_skips": 7,
+      "full_retry_ok": true,
+      "retry_log": "golden/out/m5-acceptance/framescope-docker-retry.log"
+    },
+    "missing_readiness_negative": {
+      "ok": true,
+      "expected_gate_exit": 1,
+      "report": "golden/out/m5-acceptance/missing-readiness-negative/summary.json",
+      "scope": "Missing mandatory routedQoR/objective fails before costlybatch; fullgate scope remains incomplete."
+    },
+    "final_fast_gates": {
+      "ok": true,
+      "reports": [
+        "golden/out/m5-acceptance/final-fast-native-v2/summary.json",
+        "golden/out/m5-acceptance/final-fast-docker-v2/summary.json"
+      ],
+      "ready": false,
+      "scope": "Both pinned runtimes, final FMAwidth3/restored frontend, trustedcontract/golden/typecheck/Python/framescope suites; exact counts below,7optional harness skips; fullM5readinessfalse.",
+      "test_counts": {
+        "native": {
+          "golden-python-tests": 90,
+          "gate-and-qor-tests": 40,
+          "framescope-tests": 135
+        },
+        "docker": {
+          "golden-python-tests": 90,
+          "gate-and-qor-tests": 40,
+          "framescope-tests": 135
+        }
+      }
+    },
+    "gate_negative_controls": {
+      "ok": true,
+      "tests": 7,
+      "scope": "Missing/corrupted/incomplete route evidence, optimizationgain/tradeoff/finitenumberlimits, added/changedRTL rejects savedbaseline, exit0withouttrueJSON verdict rejects."
+    },
+    "a008_m3_both_runtimes": {
+      "ok": true,
+      "native_report": "golden/out/m5-a008/m3-native-20261011/summary.json",
+      "docker_scenario_reports": [
+        "golden/out/m5-a008/m3-docker-20261011/m3_backend/summary.json",
+        "golden/out/m5-a008/m3-docker-20261011/m3_connectivity/summary.json",
+        "golden/out/m5-a008/m3-docker-20261011/m3_current_source/summary.json",
+        "golden/out/m5-a008/m3-docker-20261011/m3_display/summary.json",
+        "golden/out/m5-a008-m3-docker-errors-20261011b/m3_errors/summary.json"
+      ],
+      "frames_per_runtime": 482,
+      "checkpoints_per_runtime": 42,
+      "scope": "All5 corrected-source M3 scenarios; independent state, UART netlist/reply/display comparisons. Native earlier completed; missing Docker errors freshly completed."
+    },
+    "candidate_coverage_audit_resume": {
+      "ok": true,
+      "ready": false,
+      "report": "golden/out/m5-coverage/candidate-both-reviewed-scope-audit/summary.json",
+      "scope": "Genuine current isolated candidate native+Docker4frame boot/idle coverage; all101module rows, canonical parameter identities and reviewed-input obligations. Gap/input/counter completeness enforced; broad reachability still unqualified."
+    },
+    "flood_queue_lifetime_witness": {
+      "ok": false,
+      "reports": [
+        "golden/out/m5-flood-queue/native-lifetime-20261011b/report.json",
+        "golden/out/m5-flood-queue/docker-lifetime-20261011b/report.json"
+      ],
+      "actual_depth": 1152,
+      "first_failing_sequence": 1152,
+      "observed": "00000",
+      "expected": "0a693",
+      "power_of_two_control_depth": 4,
+      "specific_negative_detected_both_runtimes": true,
+      "production_changed": false,
+      "scope": "Actual queue reset-free FIFO witness; depth1/3/1152fail, depth4passes. Per-flood core appears to visit each cell once with <=4enqueues/cell and wrapper clears each run; integrated failing lifetime reachability remains unproven, not claimed as canvas failure."
+    },
+    "gate_scope_integration_resume": {
+      "ok": true,
+      "gate_control_tests": 13,
+      "generated_extraction_control_tests": 9,
+      "full_mode_requires": [
+        "supplemental first-ready map/read/staged aborts",
+        "actual default-baud frontend edited loop verdict",
+        "actual generated seeded extraction both runtimes separately from FPmodels"
+      ],
+      "coverage_tool_sha256": "534a8694400da4389cdfdc466c5694d4592c1c68d84c115ce2414e2bf8827514",
+      "coverage_policy_sha256": "f88e8509d4f37db7615628a2a30f7a2033485480bcc0133d5400eae610ca15a8",
+      "scope": "New executable requirements and controls; final current-source fastgates pending."
+    },
+    "current_generated_extraction": {
+      "ok": true,
+      "reports": [
+        "golden/out/m5-extraction/native-final-20261011b/report.json",
+        "golden/out/m5-extraction/docker-final-20261011b/report.json"
+      ],
+      "fixtures_per_runtime": 320,
+      "specific_negative": "extraction mismatch case=0",
+      "scope": "Scoped actual generated RTL bounded seeded terminal-extraction/stall cases; source-stable and pinned runtime. No FPmodel or actualsolver promotion."
+    },
+    "candidate_native_m3_resume": {
+      "ok": true,
+      "report": "golden/out/m5-shadow-m3-native-20261011b/summary.json",
+      "frames": 482,
+      "checkpoints": 42,
+      "top_sha256": "93bc76d3019d3d1e5a8949a00e32d217d934b4ece5289ec26e1421b7a2a001fb",
+      "scope": "Independent full M3 UART/state/reply/display corpus on isolated source; production unchanged."
+    },
+    "isolated_capacity_guard": {
+      "ok": true,
+      "production_applied": false,
+      "candidate": "golden/out/m5-capacity-candidate-source/proposal.json",
+      "reports": [
+        "golden/out/m5-solver-capacity-xsim/candidate-guard-20261011b/report.json",
+        "golden/out/m5-solver-xsim/candidate-capacity-supported-20261011b/report.json"
+      ],
+      "supported_solves": 59,
+      "supported_uart_lines": 300,
+      "exact_supported_reply_equal_to_baseline": true,
+      "scope": "STATUS_CAPACITY03/0021 rejection before solve and specific cold corruption; all supported actual-IP corpus preserved; inferred supplemental safety policy, no production integration yet."
+    },
+    "candidate_m1_exact_frame": {
+      "ok": true,
+      "report": "golden/out/m5-shadow-m1-latency-native-20261011b/state-compare.json",
+      "frames": 11,
+      "checkpoints": 11,
+      "scope": "Independent frozen exact-frame N+1 frontend latency on isolated shadow candidate; no settlement padding."
+    },
+    "final_pinned_fast_native_resume": {
+      "ok": true,
+      "ready": false,
+      "report": "golden/out/m5-acceptance/final-pinned-native-20261011b/summary.json",
+      "scope": "Current supplemental pins and stable HDL/tool/observer inventories; Docker still running."
+    },
+    "candidate_full_m2_m3_resume": {
+      "ok": true,
+      "m2_reports": [
+        "golden/out/m5-shadow-m2-native-pixel-recompare-20261011b/summary.json",
+        "golden/out/m5-shadow-corpus-20261011b/native-m2_boot/summary.json",
+        "golden/out/m5-shadow-corpus-20261011b/native-m2_node_colours/summary.json",
+        "golden/out/m5-shadow-corpus-20261011b/native-m2_recorded/summary.json",
+        "golden/out/m5-shadow-corpus-20261011b/docker-m2_boot/summary.json",
+        "golden/out/m5-shadow-corpus-20261011b/docker-m2_node_colours/summary.json",
+        "golden/out/m5-shadow-corpus-20261011b/docker-m2_recorded/summary.json",
+        "golden/out/m5-shadow-corpus-20261011b/docker-m2_full_ui/summary.json"
+      ],
+      "m3_reports": [
+        "golden/out/m5-shadow-m3-native-20261011b/summary.json",
+        "golden/out/m5-shadow-corpus-20261011b/docker-m3/summary.json"
+      ],
+      "m2_frames_per_runtime": 298,
+      "m2_checkpoints_per_runtime": 61,
+      "m3_frames_per_runtime": 482,
+      "m3_checkpoints_per_runtime": 42,
+      "scope": "All fixed M2pixels/UI/state and independent M3UART/state/reply/display, both pinned runtimes; isolated shadow fullsource, production unchanged."
+    },
+    "frontend_restart_resume": {
+      "ok": true,
+      "reports": [
+        "golden/out/m5-frontend-invariants/native-restart-20261011b/summary.json",
+        "golden/out/m5-frontend-invariants/docker-restart-20261011b/summary.json"
+      ],
+      "refreshed_original_reports": [
+        "golden/out/m5-frontend-invariants/native-frozen-expansion-20261011b/summary.json",
+        "golden/out/m5-frontend-invariants/native-supplemental-expansion-20261011b/summary.json",
+        "golden/out/m5-frontend-invariants/docker-frozen-expansion-20261011b/summary.json",
+        "golden/out/m5-frontend-invariants/docker-supplemental-expansion-20261011b/summary.json"
+      ],
+      "parser_tests": 19,
+      "restart_phases": 5,
+      "declared_bound_clocks": 1744,
+      "observed_max_clocks": 1058,
+      "scope": "Continuous deadline after eventual edit quiescence with five directed rebuild-phase edits, literal map/store readiness, four specific negatives; original UART suites eightcontrols preserved; not formal arbitrary-stall/lifetime proof."
+    },
+    "candidate_editing_coverage_resume": {
+      "ok": true,
+      "ready": false,
+      "report": "golden/out/m5-coverage/candidate-editing-merged-audit-20261011b/summary.json",
+      "frames_per_runtime": 11,
+      "checkpoints_per_runtime": 2,
+      "observed_operation": "capacitor placement logical[4,0] at frame10",
+      "functional_bins_reached": 8,
+      "functional_bins_uncovered": 56,
+      "new_reached_counters": {
+        "native": {
+          "branch": 88,
+          "line": 383,
+          "toggle": 2848
+        },
+        "docker": {
+          "branch": 58,
+          "line": 385,
+          "toggle": 1620
+        }
+      },
+      "scope": "Source-correct idle+boundedediting merge; rawcounter integrity true, named obligations/gaps stillfail fullpolicy."
+    },
+    "actual_frontend_default_baud_resume": {
+      "ok": true,
+      "report": "golden/out/m5-solver-frontend-xsim/diagnostics-20261011b/report.json",
+      "primary_wall_seconds": 977,
+      "baud": 115200,
+      "accepted_frames": [
+        3,
+        5,
+        12
+      ],
+      "specific_cold_negative_detected": true,
+      "scope": "Actual vendor-IP boot10V, duplicate stability and split-rail10V/0V; source-stable RTL/bench. Historical FP preflight valid at startup; common helper changed during run; current-helper FP characterized separately, product/core identities retained. Physical PS2/raster and fullboard outside scope."
+    },
+    "fresh_actual_fp_helper_resume": {
+      "ok": true,
+      "report": "golden/out/m5-fp/fresh-helper-20261011b/report.json",
+      "fma_cases": 527,
+      "div_cases": 527,
+      "latencies": [
+        16,
+        28
+      ],
+      "changed_identity_since_historical": [
+        "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/tools/verify_solver_m5.py"
+      ],
+      "scope": "Current helper/source/tool/library fingerprints; allfour actual-IP controls pass; original rev6 synthesis remains unqualified."
+    },
+    "dual_clock_shadow_characterization": {
+      "ok": false,
+      "complete": true,
+      "report": "golden/out/qor/dualclock-shadow-routed-20261011/characterization.json",
+      "production_constraints_changed": false,
+      "resources": {
+        "lut": 10081,
+        "ff": 4167,
+        "bram": 10,
+        "dsp": 0
+      },
+      "system_wns_ns": -1.816,
+      "hold_ns": 0.011,
+      "hidden_hold_failures_repaired": 115,
+      "remaining": [
+        "484setupfail endpoints",
+        "2no-clock/1unconstrained inferredlatch",
+        "10input/44output delays unqualified",
+        "asyncpad/reset/PS2 ingress qualification"
+      ],
+      "scope": "Actual route with derived40ns pixel clock, no exceptions; preserved original reports, scoped strengthened constraint characterization, no fullacceptance."
+    },
+    "bcd_timing_proposals_resume": {
+      "accepted": false,
+      "handoff": "docs/handoffs/m5/agents/qor-resume-20261011b.md",
+      "proposals": [
+        {
+          "name": "rank",
+          "synth_lut_gain": -141,
+          "route_wns_ns": -2.689
+        },
+        {
+          "name": "prefix",
+          "synth_lut_gain": -131,
+          "route_wns_ns": -1.399
+        }
+      ],
+      "scope": "Both exact83bit arbitrary-input SAT/corruption controls pass but frozen positive-area/setup objectives fail; rejected, no production integration."
+    },
+    "final_pinned_fast_docker_initial_resume": {
+      "ok": false,
+      "ready": false,
+      "report": "golden/out/m5-acceptance/final-pinned-docker-20261011b/summary.json",
+      "reason": "3real framescope tiny builds fail Verilator lockedThreadPool; no source/harness changes, newfullretryrunning."
+    },
+    "capacity_guard_recovery_resume": {
+      "ok": true,
+      "production_applied": false,
+      "report": "golden/out/m5-solver-capacity-xsim/recovery-candidate-20261011b/report.json",
+      "scope": "Actual-IP one/twoVsource dimension33 ER03/0021 rejection before solve, dimension32 exact supported recovery/status00,2solves, freshFP and cold specific negative."
+    },
+    "final_pinned_fast_docker_retry_resume": {
+      "ok": false,
+      "ready": false,
+      "report": "golden/out/m5-acceptance/final-pinned-docker-retry-20261011b/summary.json",
+      "reason": "1real Verilator lockedThreadPool build failure in coverage integration test;135tests/7optional skips; no successful final Docker gate claimed."
+    },
+    "candidate_seed64_interrupted_resume": {
+      "ok": false,
+      "driver": "golden/out/m5-shadow-seed64-native-20261011b-driver/result.json",
+      "returncode": -15,
+      "stopped_for_quota": true,
+      "complete_cases": 0,
+      "scope": "713frame seed1 unfinished when ordered shutdown began; saved inputs/partial dumps are not passing qualification."
+    },
+    "production_augmented_capacity_guard": {
+      "ok": true,
+      "report": "golden/out/m5-solver-capacity-xsim/production-guard-20261010c/report.json",
+      "source_sha256": "77a637aaf93df02f6adc1dbd50375eeb0fc5d1f08063811300d294597e5ee78b",
+      "scope": "Exact prior candidate integrated; dimension33 rejected with ER03/0021 before solve; supported/recovery/current frontend jobs pending"
+    },
+    "production_supported_actual_ip": {
+      "ok": true,
+      "report": "golden/out/m5-solver-xsim/production-capacity-supported-20261010c/report.json",
+      "solves": 59,
+      "uart_lines": 300,
+      "prior_candidate_lines_byte_equal": true,
+      "scope": "Direct current production capacity guard, no source overrides/drift,59supported solves and300UART lines; near-singular accuracy remains excluded recorded failure"
+    },
+    "production_capacity_recovery": {
+      "ok": true,
+      "report": "golden/out/m5-solver-capacity-xsim/production-recovery-20261010c/report.json",
+      "scope": "Derived directproduction driver,2dimension33 rejects and2dimension32 recoveries with exact31..1V/zeroV, coldcontrol; maintained portable final runner qualification pending"
+    },
+    "production_capacity_recovery_portable": {
+      "ok": true,
+      "report": "golden/out/m5-solver-capacity-xsim/portable-final-production-20261010c/report.json",
+      "reject_dimension": 33,
+      "recover_dimension": 32,
+      "negative_controls": 2,
+      "source_overrides": {},
+      "scope": "Maintained CLI, exact one/two-voltage rejection before solve, inclusive one/zero-voltage recovery; source/report/tool/library pins rechecked after run. Original XCI synthesis remains unqualified."
+    },
+    "frontend_domains": {
+      "ok": true,
+      "reports": [
+        "golden/out/m5-frontend-domains/native-pixel-selection-20261010c/summary.json",
+        "golden/out/m5-frontend-domains/docker-pixel-selection-20261010c/summary.json"
+      ],
+      "layouts": 15,
+      "capacity_components": 144,
+      "keyboard_events": 41,
+      "unit_suffixes": 6,
+      "selection_transitions": 8,
+      "specific_negative_controls": 7,
+      "scope": "Finite source-stable command/UI fixtures with unchanged continuous observer, capacity/value/unit/selection/restart/backpressure; zero UART/queue activity. No arbitrary/formal proof."
+    },
+    "production_guard_native_fast_gate": {
+      "ok": true,
+      "ready": false,
+      "report": "golden/out/m5-acceptance/production-guard-native-20261010c/summary.json",
+      "scope": "Current production+new mandatory capacity/domain pins; all mandatory fast checks pass, full readiness unqualified"
+    },
+    "full_missing_qor_negative_20261010c": {
+      "ok": true,
+      "report": "golden/out/m5-acceptance/full-missing-qor-negative-20261010c/summary.json",
+      "expected_exit": 1,
+      "scope": "Full mode rejects missing mandatory candidate/baseline routed QoR and objective before regression batch"
+    },
+    "production_guard_docker_fast_gate": {
+      "ok": true,
+      "ready": false,
+      "report": "golden/out/m5-acceptance/final-pinned-docker-20261010c/summary.json",
+      "scope": "Current frozen verification pins, unchanged harness135tests/7optional skips; historical ThreadPool failure recovered without repin or workaround"
+    },
+    "isolated_latch_correction": {
+      "ok": true,
+      "full_m5_ready": false,
+      "report": "golden/out/qor/coord-default-candidate-routed-20261010c/qualification.json",
+      "qor_report": "golden/out/qor/coord-default-candidate-routed-20261010c/summary.json",
+      "proof": "golden/out/qor/coord-default-proof-20261010c/report.json",
+      "lut": 10250,
+      "ff": 4159,
+      "bram": 9.5,
+      "dsp": 0,
+      "setup_wns_ns": -1.585,
+      "hold_whs_ns": 0.022,
+      "setup_improvement_ns": 0.231,
+      "scope": "Isolated panel-only default, frozen bounded latch objective passed; full M2 regressions pending, external IO/CDC/setup remain unqualified; no production integration"
+    },
+    "fifo_wrapper_bound_and_epoch_defect": {
+      "ok": true,
+      "full_m5_ready": false,
+      "report": "golden/out/m5-fifo-bound-20261010c/report.json",
+      "candidate_report": "golden/out/m5-fifo-bound-20261010c/candidate-report.json",
+      "local_qor": "golden/out/m5-fifo-bound-20261010c/store-qor-report.json",
+      "epoch_defect_reproduced": true,
+      "isolated_correction_passed": true,
+      "candidate_lut_increase": 813,
+      "candidate_ff_increase": 578,
+      "scope": "Both runtimes directed continuous FIFO data/bound checks after reset/clear; real epoch alias retained; candidate local synth only, not integrated/full frontend/formal/cold pre-clear proof"
+    },
+    "shadow_cold_seed1_64op": {
+      "ok": true,
+      "report": "golden/out/m5-shadow-seed64-native-20261010c/case-0/result.json",
+      "frames": 713,
+      "checkpoints": 65,
+      "initialization": "seed1/unique/rand_reset2",
+      "scope": "One of required five native corpus cases on unchanged isolated shadow; remaining seeds active; no five-case gate PASS"
+    },
+    "shadow_bounded_native_coverage": {
+      "ok": true,
+      "ready": false,
+      "report": "golden/out/m5-coverage/candidate-corpus-native-merged-audit-20261010c/summary.json",
+      "frames": 182,
+      "checkpoints": 17,
+      "functional_reached": 28,
+      "functional_eligible": 64,
+      "marginal_functional_bins": 20,
+      "marginal_branch_points": 77,
+      "marginal_line_points": 481,
+      "marginal_toggle_points": 3623,
+      "scope": "Source-correct native candidate v2seed12/16operations; merged native counters and historical Docker kept distinct. Fresh Docker fallback pending; no full policy readiness."
+    },
+    "production_guard_actual_frontend": {
+      "ok": true,
+      "report": "golden/out/m5-solver-frontend-xsim/production-capacity-guard-20261010c/report.json",
+      "scope": "Direct current production with exact integrated capacity guard and configured vendor FP, unchanged default115200baud stimulus/watchdogs: bootframe3/duplicate5/splitrail12, cold corruption control and final source pins passed. No override."
+    },
+    "shadow_bounded_both_coverage": {
+      "ok": true,
+      "ready": false,
+      "report": "golden/out/m5-coverage/candidate-corpus-merged-audit-20261010c/summary.json",
+      "functional_native": 28,
+      "functional_docker": 12,
+      "eligible_functional": 64,
+      "scope": "182frame/17checkpoint native and11frame/2checkpoint Docker cold inputs, six compatible raw reports,101module rows/runtime, thresholds/exclusions unchanged; partial182frameDocker attempt preserved as interrupted"
+    },
+    "isolated_latch_full_m2": {
+      "ok": true,
+      "report": "golden/out/m5-latch-m2-20261010c/summary.json",
+      "frames_per_runtime": 298,
+      "checkpoints_per_runtime": 61,
+      "runtimes": [
+        "native",
+        "docker"
+      ],
+      "scope": "Only panel default differs from reviewed shadow source; exact state/UI/pixels/accepted initialization and all source/oracle/harness hashes pass; not integrated/current-production/full-readiness"
+    }
+  },
+  "remaining": [
+    "M5-3 configurable stalls/exact-frame scope beyond settled exploration",
+    "M5-4 global invariants, atomic visibility, architectural progress and formal assumptions",
+    "M5-5 complete actual solver/FP pipeline qualification and synthesis provenance",
+    "M5-6 routed baseline/candidate fitting and constraints/CDC characterization",
+    "M5-7/INF4 complete fail-closed corpus/coverage/functional/QoR acceptance",
+    "M5-8 accepted measured optimization and complete negative-control demonstration"
+  ],
+  "quota_shutdown": {
+    "trigger_at_utc": "2026-10-10T06:59:39Z",
+    "five_hour_remaining_percent": 9,
+    "weekly_remaining_percent": 48,
+    "last_check_at_utc": "2026-10-10T07:03:53.828809Z",
+    "last_five_hour_remaining_percent": 3,
+    "last_weekly_remaining_percent": 47,
+    "team_stopped": true,
+    "historical": true
+  },
+  "source_hashes": {
+    "golden/tools/freeze_contract.py": "65e169bfbf32f0fcf5713665d687e8bc2f95b0f38fe3d3c48e65d07598e1b5e6",
+    "golden/tools/semantic_adapter.py": "6d33a6825c9a56bc4a1786285030045313716ce898c0439356c74c2e4ef8048b",
+    "golden/tools/verify_invariants_m5.py": "e3349d7262996a32460292eb7924281c94583af0a6d3e53e6faceae2e5a4df57",
+    "src/testbench/M5CanvasInvariants.sv": "4a4e534fbab97f085efc47938980156fc641591bbccf8bdaa6766e38d7e8ff14",
+    "tools/vivado_qor.py": "084affc406db7a6087b3f0f099840ee5d7132f997625077ac9ddc290b7deb1bb",
+    "tools/vivado_qor.tcl": "37198ec0ba60a8c65d6217f50d551f7e88c90eeb65afb7be2a736a427b95cd7f",
+    "tools/acceptance_m5.py": "309923ffc2256befbaab3d6857c0dc293bcf297cd56f5229b83894a66f801575",
+    "tools/m5_acceptance_policy.json": "8c75f71b51196f3a0f8e6f9894ac73d56ef21a50f5e9d3a132a14a1146b1b8b4",
+    "tools/verify_solver_m5.py": "308e99391cd3990f21651ff0574c2bc9e84a9c20d57d8dd11511d9fa76881115",
+    "tools/verify_fp_m5.py": "a327b00cc22414abc5c8e0eea312ce8f7aa9438a18c7507db85459a01b31b90e",
+    "tools/verify_solver_xsim_m5.py": "574bd8b3dc39b9fa81e8bff0f5004fd7fc243cdb2be75c9403ea3ff994d30498",
+    "golden/tools/verify_frontend_invariants_m5.py": "6241037c8b03a32e2300667bf126df6c79d62d54ad74a8e0f1cd5bbfacf71feb",
+    "src/testbench/M5FrontendInvariants.sv": "cc9e9aa8814e2afd1e023fd0648864c7d0fe29ea3c976671d729d43489e5bee6",
+    "src/design/floating_point/fpo_fma.v": "9c1daa50bb18196ff22615da92bcf8a3b0697647e821db45376d735948f05ec7"
+  },
+  "active_session_quota": {
+    "five_hour_remaining_percent": 7,
+    "weekly_remaining_percent": 85,
+    "checked_at_utc": "2026-10-10T20:05:05.044518Z",
+    "resets_at_utc": [
+      "2026-10-11T00:35:03Z",
+      "2026-10-17T19:35:03Z"
+    ]
+  },
+  "active_session_shutdown": {
+    "latched_at_utc": "2026-10-10T20:02:38.800161Z",
+    "trigger_percentages": [
+      9,
+      86
+    ],
+    "all_owned_descendants_completed": true,
+    "owned_jobs_remaining": false,
+    "cleanup_report": "golden/out/m5-quota-cleanup-20261011b.json"
+  },
+  "resume_20261011": {
+    "recorded_at_utc": "2026-10-10T19:25:59.260834+00:00",
+    "status": "paused_for_quota",
+    "full_m5_ready": false,
+    "production_changes": [
+      {
+        "decision": "A-008",
+        "source": "src/design/rendering/GlobalRender_top.v",
+        "sha256": "4e62e63dd68ba9e946006a86129d48c39dd7570710a73451f0fd1fba68c2bb16",
+        "behavior": "readiness waits for registered writes and synchronous read refresh",
+        "decision_document": "docs/m5-decisions.md"
+      }
+    ],
+    "frontend": [
+      {
+        "report": "golden/out/m5-frontend-invariants/native-fixed-frozen-20261011/summary.json",
+        "sha256": "7492308a9b4714a3abb1ad539e33166cff04851eedaef006ac6276c139e3cc99",
+        "ok": true,
+        "schema": 1
+      },
+      {
+        "report": "golden/out/m5-frontend-invariants/native-fixed-supplemental-20261011/summary.json",
+        "sha256": "8a1622c2125585097db172ecff81f67f4b3a22d146cd327fb051cc3fbab6285d",
+        "ok": true,
+        "schema": 1
+      },
+      {
+        "report": "golden/out/m5-frontend-invariants/docker-fixed-frozen-20261011/summary.json",
+        "sha256": "2236e4eb61ae0595cb246521c140ceaefef8626ce85d295d8f7dbe93fab67277",
+        "ok": true,
+        "schema": 1
+      },
+      {
+        "report": "golden/out/m5-frontend-invariants/docker-fixed-supplemental-20261011/summary.json",
+        "sha256": "312b884b91b8b63f9935c2b164256547c72736252351d8a0e5b177507fdc337c",
+        "ok": true,
+        "schema": 1
+      }
+    ],
+    "candidate_frontend": [
+      {
+        "report": "golden/out/m5-frontend-invariants/native-shadow-frozen-20261011/summary.json",
+        "sha256": "76dba6db424d7e7dcb1b4bf0d0ee025e0eb3a4b864eb4a945f49cdd906b82f78",
+        "ok": true,
+        "schema": 1
+      },
+      {
+        "report": "golden/out/m5-frontend-invariants/native-shadow-supplemental-20261011/summary.json",
+        "sha256": "7b8a7d446d390531af2815402cca2e22ca8fabd950bd3344bc863fbe36c1bac3",
+        "ok": true,
+        "schema": 1
+      },
+      {
+        "report": "golden/out/m5-frontend-invariants/docker-shadow-frozen-20261011/summary.json",
+        "sha256": "4fe62ced3672a7ccaf725a0166f95f867a0f4e515e4c8950086fd9c0a9c13221",
+        "ok": true,
+        "schema": 1
+      },
+      {
+        "report": "golden/out/m5-frontend-invariants/docker-shadow-supplemental-20261011/summary.json",
+        "sha256": "90c1d82eaf8b95f5750a242a9e0e9b84a58cf010b68599207c378a50e4364611",
+        "ok": true,
+        "schema": 1
+      }
+    ],
+    "cold_candidate_lockstep": [
+      {
+        "report": "golden/out/m5-shadow-functional/wire-native-20261011/summary.json",
+        "sha256": "e323586c46197330c8c00d90914190798d2f204cf5453f8f5a93a4b458c043ee",
+        "ok": true,
+        "schema": null,
+        "frames": 43,
+        "first_divergence": null
+      },
+      {
+        "report": "golden/out/m5-shadow-functional/wire-docker-20261011/summary.json",
+        "sha256": "9bb9b62fa2e62ca754026fb91a80238e8b843304dddd56b6a38500c505828e33",
+        "ok": true,
+        "schema": null,
+        "frames": 43,
+        "first_divergence": null
+      }
+    ],
+    "regressions": [
+      {
+        "report": "golden/out/m5-a008/m2-native-20261011/summary.json",
+        "sha256": "417d877897ffaa5ae8b15b7fbd9ea34172af78c53c094f8f4c4e9651a5ccb029",
+        "ok": true,
+        "schema": null
+      },
+      {
+        "report": "golden/out/m5-a008/m2-docker-20261011/summary.json",
+        "sha256": "2cab886930c86cb0291b7668055cee11480280092f2fb6a968f72a238d74f70c",
+        "ok": true,
+        "schema": null
+      }
+    ],
+    "solver_general": {
+      "report": "golden/out/m5-solver-xsim/general-controls-20261011/report.json",
+      "sha256": "d3b1cf5b0ffcc0a48c678a5a8b91c3edf899f5006845915171876b038a8a1db8",
+      "ok": true,
+      "schema": "metacircuit.m5-solver-xsim.v1"
+    },
+    "remaining": [
+      "all-frame/global formal invariants and arbitrary dirty restart progress",
+      "actual solver ill-conditioned numerical accuracy and augmented MNA capacity handling",
+      "routed candidate timing/constraints/CDC acceptance",
+      "fresh full candidate corpus and reviewed coverage requirements",
+      "full acceptance before production optimization adoption"
+    ],
+    "negative_solver_robustness": [
+      {
+        "report": "golden/out/m5-solver-xsim/near-singular-20261011/report.json",
+        "sha256": "7444ead573f078e0ff44f1618c539eb58939485395c2aa52b8ba4c0b67fb090f",
+        "ok": false,
+        "schema": "metacircuit.m5-solver-xsim.v1"
+      },
+      {
+        "report": "golden/out/m5-solver-capacity-xsim/augmented33-20261011/report.json",
+        "sha256": "6eaa76427d0b57becf3de077a7fc02e25f48036b5dc0550cf80c3c661b465d76",
+        "ok": null,
+        "schema": "metacircuit.m5-capacity-xsim.v1"
+      }
+    ],
+    "candidate_source": "golden/out/m5-shadow-functional-source",
+    "candidate_top_sha256": "93bc76d3019d3d1e5a8949a00e32d217d934b4ece5289ec26e1421b7a2a001fb",
+    "quota": {
+      "source": "local Codex CLI account/rateLimits/read",
+      "policy": {
+        "prepare_five_hour": 10,
+        "stop_five_hour": 3,
+        "prepare_weekly": 6,
+        "stop_weekly": 2
+      },
+      "status": "ok",
+      "exit_code": 0,
+      "limit_id": "codex",
+      "plan_type": "plus",
+      "five_hour": {
+        "used_percent": 77,
+        "remaining_percent": 23,
+        "window_minutes": 300,
+        "resets_at_utc": "2026-10-11T00:05:41+00:00",
+        "resets_in_seconds": 16783
+      },
+      "weekly": {
+        "used_percent": 80,
+        "remaining_percent": 20,
+        "window_minutes": 10080,
+        "resets_at_utc": "2026-10-14T15:27:22+00:00",
+        "resets_in_seconds": 331284
+      },
+      "reasons": [],
+      "cli_version": "0.155.1",
+      "active_subagents": 3,
+      "next_check_seconds": 60,
+      "checked_at_utc": "2026-10-10T19:25:58.497109+00:00"
+    },
+    "shutdown_trigger": {
+      "checked_at_utc": "2026-10-10T19:29:28.609947Z",
+      "five_hour_remaining_percent": 9,
+      "weekly_remaining_percent": 18
+    },
+    "last_root_quota": {
+      "checked_at_utc": "2026-10-10T19:30:02.162539Z",
+      "five_hour_remaining_percent": 5,
+      "weekly_remaining_percent": 18
+    },
+    "root_cleanup_report": "golden/out/m5-quota-cleanup-20261011.json",
+    "routed_candidate": {
+      "report": "golden/out/qor/a008-current-shadow-routed/summary.json",
+      "lut": 10089,
+      "ff": 4166,
+      "bram": 10,
+      "dsp": 0,
+      "wns_ns": -1.657,
+      "full_acceptance": false
+    },
+    "native_m3": {
+      "report": "golden/out/m5-a008/m3-native-20261011/summary.json",
+      "ok": true,
+      "frames": 482,
+      "checkpoints": 42
+    },
+    "docker_m3": "interrupted for quota; completed per-scenario reports retained",
+    "candidate_m3": "two scratch UART-host setup failures; no full regression qualification",
+    "native_fast": {
+      "report": "golden/out/m5-acceptance/fast-native-refreshed-20261011/summary.json",
+      "ok": true,
+      "scope": "before final coverage-policy pin integration"
+    },
+    "docker_fast": "interrupted for quota; partial logs retained",
+    "coverage_tool": "tools/verify_coverage_m5.py",
+    "coverage_remaining": "new native candidate audit and Docker retry; policy gaps/unreviewed input scope fail readiness"
+  },
+  "resume_20261011b": {
+    "recorded_at_utc": "2026-10-10T19:45:48.925372+00:00",
+    "full_m5_ready": false,
+    "handoff": "docs/handoffs/m5-verification.md",
+    "candidate_capacity_guard": "golden/out/m5-capacity-candidate-source/proposal.json",
+    "production_capacity_guard_applied": false,
+    "candidate_full_regressions": "bothM2/M3passed",
+    "latest_quota": {
+      "source": "local Codex CLI account/rateLimits/read",
+      "policy": {
+        "prepare_five_hour": 10,
+        "stop_five_hour": 3,
+        "prepare_weekly": 6,
+        "stop_weekly": 2
+      },
+      "status": "ok",
+      "exit_code": 0,
+      "limit_id": "codex",
+      "plan_type": "plus",
+      "five_hour": {
+        "used_percent": 88,
+        "remaining_percent": 12,
+        "window_minutes": 300,
+        "resets_at_utc": "2026-10-11T00:35:03+00:00",
+        "resets_in_seconds": 16475
+      },
+      "weekly": {
+        "used_percent": 14,
+        "remaining_percent": 86,
+        "window_minutes": 10080,
+        "resets_at_utc": "2026-10-17T19:35:03+00:00",
+        "resets_in_seconds": 603275
+      },
+      "reasons": [],
+      "cli_version": "0.155.1",
+      "active_subagents": 1,
+      "next_check_seconds": 60,
+      "checked_at_utc": "2026-10-10T20:00:28.307856+00:00"
+    },
+    "shutdown": {
+      "latched_at_utc": "2026-10-10T20:02:38.800161Z",
+      "trigger_percentages": [
+        9,
+        86
+      ],
+      "all_owned_descendants_completed": true,
+      "owned_jobs_remaining": false,
+      "cleanup_report": "golden/out/m5-quota-cleanup-20261011b.json"
+    },
+    "quota": {
+      "five_hour_remaining_percent": 7,
+      "weekly_remaining_percent": 85,
+      "checked_at_utc": "2026-10-10T20:05:05.044518Z",
+      "resets_at_utc": [
+        "2026-10-11T00:35:03Z",
+        "2026-10-17T19:35:03Z"
+      ]
+    }
+  },
+  "current_source_hashes": {
+    "src/design/rendering/GlobalRender_top.v": "93bc76d3019d3d1e5a8949a00e32d217d934b4ece5289ec26e1421b7a2a001fb",
+    "src/design/floating_point/fpo_fma.v": "9c1daa50bb18196ff22615da92bcf8a3b0697647e821db45376d735948f05ec7",
+    "tools/acceptance_m5.py": "5380e92964cd764582a24313b919c339405b66f1d133f1cfe173ad02d3b1c470",
+    "tools/m5_acceptance_policy.json": "091fde68b24335e30fcd2560e527c87f4940794308d4ac6397e68aff7f0df28f",
+    "src/design/common/FloodQueueStore.v": "6e80cfbf5b6b456462822014b15808814b2c6b0208ad7ef0bbd4da4c664adfb8",
+    "src/design/Dashboard/ComponentPropertyPanel.v": "45ca2444a42286dce2cb0c71b1364762a8ec60b825277f94f086cc2337c73786",
+    "src/design/solver_board/SolverBoard_top.sv": "77a637aaf93df02f6adc1dbd50375eeb0fc5d1f08063811300d294597e5ee78b"
+  },
+  "current_quota_checkpoint": {
+    "checked_at_utc": "2026-10-11T06:52:55.152983Z",
+    "five_hour_remaining_percent": 8,
+    "weekly_remaining_percent": 86,
+    "status": "document",
+    "team_shutdown_latched": true,
+    "five_hour_resets_at_utc": "2026-10-11T11:09:37Z",
+    "weekly_resets_at_utc": "2026-10-18T06:09:37Z",
+    "all_owned_jobs_ended": true
+  },
+  "resume_20261011d": {
+    "started_at_utc": "2026-10-11T06:09:43Z",
+    "guard": "default quota policy, root40secondmonitor and <=60seconds checks",
+    "main_handoff": "docs/handoffs/m5-verification.md",
+    "production_corrections": {
+      "fifo_wrap": "6e80cfbf5b6b456462822014b15808814b2c6b0208ad7ef0bbd4da4c664adfb8",
+      "panel_default": "45ca2444a42286dce2cb0c71b1364762a8ec60b825277f94f086cc2337c73786",
+      "scope": "Exact isolated corrections adopted; current production maintained safety verifier underway. Full frontend and current-source QoR still pending.",
+      "shadow_normalization": "93bc76d3019d3d1e5a8949a00e32d217d934b4ece5289ec26e1421b7a2a001fb"
+    },
+    "checks": {
+      "isolated_fifo_induction": {
+        "ok": true,
+        "report": "golden/out/m5-fifo-wrap-20261011d/proof-report.json",
+        "scope": "resetbase/one-step actual-source range/count at1/3/4/1152; original control counterexamples; not cold-pre-reset/data-order theorem"
+      },
+      "isolated_fifo_ledgers": {
+        "ok": true,
+        "reports": [
+          "golden/out/m5-fifo-wrap-20261011d/ledger-native/report.json",
+          "golden/out/m5-fifo-wrap-20261011d/ledger-docker/report.json",
+          "golden/out/m5-fifo-wrap-20261011d/lifetime-native/report.json",
+          "golden/out/m5-fifo-wrap-20261011d/lifetime-docker/report.json"
+        ]
+      },
+      "production_fifo_safety": {
+        "ok": true,
+        "reports": [
+          "golden/out/m5-flood-queue/production-safety-native-20261011d/report.json",
+          "golden/out/m5-flood-queue/production-safety-docker-20261011d/report.json"
+        ],
+        "scope": "Both pinned runtimes, all4depths, original cold lifetime/control, overlap dynamic ledger/control, actual-source mandatory resetbase/one-step range count induction; no coldpre-reset/formal dataorder theorem"
+      },
+      "gate_fixture_checks": {
+        "ok": true,
+        "count": 15,
+        "log": "golden/out/m5-fifo-wrap-20261011d/gate-tests.log"
+      },
+      "composed_epoch_qor": {
+        "accepted": false,
+        "report": "golden/out/qor/composed-epoch-routed-20261011d/comparison.json",
+        "source_strict": true,
+        "lut": 10671,
+        "ff": 4740,
+        "bram": 9.5,
+        "wns_ns": -2.699,
+        "whs_ns": 0.007,
+        "scope": "Safety objective fixedsetupfloor-2.0fail, candidate remains isolated; originalqueue/shadow/panel relatedclock route, externalIO/globalsetup unqualified"
+      },
+      "queue_panel_fast_native": {
+        "ok": false,
+        "ready": false,
+        "report": "golden/out/m5-acceptance/queue-panel-native-20261011d/summary.json",
+        "scope": "Current production queue/panel corrections and newgate/policy; completefastgatefailed, passing harnesssubset doesnot qualifygate. Corrected temporary documentation aggregation error."
+      },
+      "five_native_cold_shadow_seeds": {
+        "ok": true,
+        "new_audit": "golden/out/m5-shadow-cold-corpus-20261011d-driver/audit.json",
+        "historical_seed1": "golden/out/m5-shadow-seed64-native-20261010c/case-0/result.json",
+        "frames": 3784,
+        "checkpoints": 325,
+        "scope": "Allfiveactual completed coldcases on same reviewedshadow source,64v2operations each; originalqueue/panel/oldsolver guard, notcurrentproduction."
+      },
+      "isolated_shadow_panel_native_m3": {
+        "ok": true,
+        "report": "golden/out/m5-composed-functional-20261011d/native-audited-summary.json",
+        "frames": 482,
+        "checkpoints": 42,
+        "scope": "OldFIFO/epoch but exact panel/shadow/currentguard, frozenUART/state/voltage/display corpus, acceptedinitialization/harnesspins"
+      },
+      "old_queue_panel_fast_docker": {
+        "ok": false,
+        "report": "golden/out/m5-acceptance/queue-panel-docker-20261011d/summary.json",
+        "scope": "Stale assetprovenance PLUS two actual5.020lockedThreadPool errors; noPASSclaim"
+      },
+      "asset_provenance_refresh": {
+        "ok": true,
+        "checks": 254,
+        "scope": "Only provenance refresh, immutablebehavior/oracle preserved",
+        "asset_tests": "golden/out/m5-fifo-wrap-20261011d/asset-tests.log"
+      },
+      "current_queue_panel_shadow_m2": {
+        "ok": true,
+        "reports": [
+          "golden/out/m5-queue-panel-shadow-m2-20261011d/native-driver/summary.json",
+          "golden/out/m5-queue-panel-shadow-m2-20261011d/docker-driver/summary.json"
+        ],
+        "frames_each": 298,
+        "checkpoints_each": 61,
+        "scope": "Current entire-src composition, exact source/harness/simpyhls/init/state/UI/pixels, canonically ignored provenance-only assetmetadata differs from refreshedmain."
+      },
+      "current_scoped_qor": {
+        "accepted_scoped_objective": true,
+        "ready": false,
+        "report": "golden/out/qor/queue-panel-shadow-routed-20261011d/comparison.json",
+        "wns_ns": -1.333,
+        "whs_ns": 0.047,
+        "lut": 10092,
+        "ff": 4157,
+        "bram": 9.5
+      },
+      "current_native_fast": {
+        "ok": true,
+        "ready": false,
+        "report": "golden/out/m5-acceptance/shadow-queue-panel-native-20261011d/summary.json"
+      },
+      "isolated_shadow_panel_docker_m3": {
+        "ok": true,
+        "report": "golden/out/m5-composed-functional-20261011d/docker-audited-summary.json",
+        "frames": 482,
+        "checkpoints": 42,
+        "scope": "OldFIFO/epoch, currentguard+panel+shadow, completedindependentresultaudit"
+      },
+      "old_shadow_expanded_coverage": {
+        "integrity": true,
+        "ready": false,
+        "report": "golden/out/m5-coverage/candidate-directed-final-merged-audit-20261011d/summary.json",
+        "native_bins": 61,
+        "docker_bins": 20,
+        "scope": "Oldshadow source all10rawreports; doesnot qualify currentqueue/panel/guard source. Current-source negatives fail correctly."
+      },
+      "current_docker_fast": {
+        "ok": true,
+        "ready": false,
+        "report": "golden/out/m5-acceptance/shadow-queue-panel-docker-20261011d/summary.json",
+        "scope": "All8mandatorychecks currentproduction/policy/source metadata; originalThreadPool2failures preserved, unknowncause, isolated+completeunchangedretriesPASS"
+      },
+      "epoch_isolated_qualification": {
+        "ok": true,
+        "optimization_accepted": false,
+        "ready": false,
+        "report": "golden/out/m5-epoch-qualification-20261011d/summary.json",
+        "frames_each": 780,
+        "checkpoints_each": 103,
+        "scope": "Originaltop/queue/panel +currentguard+bitmap, watchedcellinduction/storeledgers and fullM2/M3 onbothruntimes. Composed bitmapsetupobjectivefail preserved; candidateisolated."
+      },
+      "direct_current_source_m3_fixture": {
+        "ok": true,
+        "reports": [
+          "golden/out/m5-current-m3-current-source-20261011d/native/summary.json",
+          "golden/out/m5-current-m3-current-source-20261011d/docker/summary.json"
+        ],
+        "frames_each": 67,
+        "checkpoints_each": 6,
+        "scope": "Only unchangedfrozen m3_current_source on directcurrentproduction, Pythonhost replies; exactmain/harness source/init stability. Not fullcurrentM3/actualvendorFP."
+      },
+      "current_source_raw_coverage": {
+        "integrity": true,
+        "ready": false,
+        "scenario_report": "golden/out/m5-coverage/current-composition-scenario-audit-20261011d/summary.json",
+        "boot_report": "golden/out/m5-coverage/current-composition-boot-audit-20261011d/summary.json",
+        "functional_bins_each": 8,
+        "scope": "Exactly2freshcurrent-source reports,11coldframes/2actualcheckpoints each, runtimespartitioned and explicitcurrentRoot. Fullpolicy/stalesourcecontrolsreject, nooldsourcejoins."
+      },
+      "current_actual_frontend": {
+        "ok": true,
+        "report": "golden/out/m5-solver-frontend-xsim/shadow-queue-panel-production-20261011d/report.json",
+        "scope": "Directcurrentproduction unchangeddefault115200/vendorrev21FP bootframe3/duplicate5/editedsplitrail12,52FMA/53DIV,coldcorruptioncontrol/sourcefinalPASS. OriginalXCIrev6synth/physicaltransport/globalfrontend remainunqualified."
+      },
+      "invalid_scoped_objective_full_negative": {
+        "rejected": true,
+        "report": "golden/out/m5-acceptance/current-qor-source-negative-20261011d/summary.json",
+        "scope": "Scoped correction objective schema is intentionally insufficient for fulloptimization schema; rejectedbeforetests. Original rejection reason was objectivefields, notsolelysourceclock."
+      },
+      "valid_objective_current_qor_full_negative": {
+        "rejected": true,
+        "report": "golden/out/m5-acceptance/current-qor-valid-objective-negative-20261011d/summary.json",
+        "scope": "Validpredeclaredglobalsetup>=0/LUTgain>=1/resourceobjective; isolatedrelated-clockQor fails completecurrentproduction evidence because mainXDCdiffers; beforeexpensivechecks."
+      }
+    },
+    "remaining": "cold seeds7/2026/11/12; current production full regression/QoR; epoch isolated corpora/composed route; expanded coverage; global progress/formal/clockIO/solver readiness",
+    "ready": false,
+    "shutdown": {
+      "latched_at_utc": "2026-10-11T06:51:29.432752Z",
+      "reason": "five-hour9%<document10%,orderedteamshutdown",
+      "all_owned_agents_completed": true,
+      "no_descendants": true,
+      "cleanup": "golden/out/m5-quota-cleanup-20261011d.json",
+      "handoff": "docs/handoffs/m5-verification.md",
+      "ready": false,
+      "final_quota": {
+        "checked_at_utc": "2026-10-11T06:52:55.152983Z",
+        "five_hour_remaining_percent": 8,
+        "weekly_remaining_percent": 86,
+        "status": "document"
+      }
+    }
+  },
+  "continuation_20261011e": {
+    "started_at_utc": "2026-10-11T11:11:46Z",
+    "workspace": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit",
+    "source_pins": "golden/out/m5-current-corpora-20261011e/pins.json",
+    "production_rtl_changed": false,
+    "current_production_m3": {
+      "ok": true,
+      "frames_per_runtime": 482,
+      "checkpoints_per_runtime": 42,
+      "native_report": "golden/out/m5-current-corpora-20261011e/m3-native/summary.json",
+      "docker_report": "golden/out/m5-current-corpora-20261011e/m3-docker/summary.json",
+      "cross_runtime": "golden/out/m5-current-corpora-20261011e/m3-cross-runtime.json",
+      "equal_dump_files": 504,
+      "scope": "All five acceptedM3 scenarios, actual production frontend/Python solverhost. Source/helper/harness/init pins unchanged. Actual hardware solver evidence separately required."
+    },
+    "fifo_order": {
+      "ok": true,
+      "report": "golden/out/m5-flood-queue/order-proof-20261011e/report.json",
+      "depths": [
+        1,
+        3,
+        4,
+        1152
+      ],
+      "scope": "Arbitrary selected accepted transaction rank/truncated payload to pop capture/delayed result after actual reset/clear. One symbolic address; exact-source single-cell RAM projection. No cold/liveness/arbitrarywidths/physicalRAM claim.",
+      "maintained_report": "golden/out/m5-flood-queue/maintained-order-covers-20261011e/report.json",
+      "positive_covers": 4,
+      "tool": "tools/verify_flood_queue_order_m5.py"
+    },
+    "selected_address_candidate": {
+      "accepted": false,
+      "production_adopted": false,
+      "comparison": "golden/out/qor/selected-address-candidate-routed-20261011e/comparison.json",
+      "proof": "golden/out/qor/selected-address-proof-20261011e/report.json",
+      "wns_ns": -2.547,
+      "baseline_wns_ns": -1.333,
+      "frozen_floor_ns": -1.0
+    },
+    "valid_only_candidate": {
+      "production_adopted": false,
+      "store_native": "golden/out/m5-valid-only-qualification-20261011e/store-native/summary.json",
+      "store_docker": "golden/out/m5-valid-only-qualification-20261011e/store-docker/summary.json",
+      "formal": "golden/out/m5-valid-only-qualification-20261011e/proof/report.json",
+      "scope": "Independent86123clock logicalstore ledger and watched-cell write/value/latency proofs; no integrated/frontend/QoR acceptance yet.",
+      "objective": "golden/out/qor/valid-only-objective-20261011e.json",
+      "route_status": "rejected",
+      "comparison": "golden/out/qor/valid-only-candidate-routed-20261011e/comparison.json",
+      "wns_ns": -2.04,
+      "bram_gain": 1
+    },
+    "guard_progress": {
+      "qualified": true,
+      "tool": "tools/verify_guard_progress_m5.py",
+      "report": "golden/out/m5-guard-maintained-covers-20261011e/report.json",
+      "bounds_clocks": [
+        11,
+        29,
+        61
+      ],
+      "ready_reply_bounds": [
+        [
+          1,
+          1
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          7,
+          11
+        ]
+      ],
+      "positive_covers": 3,
+      "scope": "Actual guard initialized synchronous two-state control/arrays, explicit upstream and memory fairness. Proved ranking/phase lemmas; no controller/global/physical progress claim. Earlier missing-lemma/undef/timeout attempts preserved, not relabeled."
+    },
+    "current_cold_and_coverage": {
+      "status": "scoped-complete",
+      "raw_native": "golden/out/m5-current-corpora-20261011e",
+      "noninstrumented": "golden/out/m5-current-fast-corpora-20261011e",
+      "docker_raw_interrupted": "golden/out/m5-current-corpora-20261011e/docker-raw-budget-replan.json",
+      "scope": "Interrupted Docker raw captures have no passing verdict. Full noninstrumented fivecold64op/fourdirected inputs and boundedraw coverage separately qualified; all gaps remain.",
+      "full_cold_frames_per_runtime": 3784,
+      "full_cold_checks_per_runtime": 325,
+      "directed_frames_per_runtime": 973,
+      "directed_checks_per_runtime": 79,
+      "functional_bins_per_runtime": 64,
+      "functional_report": "golden/out/m5-current-corpora-20261011e/directed-functional-audit.json",
+      "raw_scenario_audit": "golden/out/m5-current-corpora-20261011e/raw-scenario-audit/summary.json",
+      "raw_boot_audit": "golden/out/m5-current-corpora-20261011e/raw-boot-audit/summary.json",
+      "raw_scope": "Only complete sixnative/onecurrentDocker reports; partialrawthird excluded, allgap requirements unchanged."
+    },
+    "ready": false,
+    "handoff": "docs/handoffs/m5-verification.md",
+    "row_valid_candidate": {
+      "accepted": false,
+      "production_adopted": false,
+      "wns_ns": -2.726,
+      "resources": {
+        "lut": 11003,
+        "ff": 4713,
+        "bram": 8.5,
+        "dsp": 0
+      },
+      "store_native": "golden/out/m5-row-valid-qualification-20261011e/store-native/summary.json",
+      "store_docker": "golden/out/m5-row-valid-qualification-20261011e/store-docker/summary.json",
+      "proof": "golden/out/m5-row-valid-qualification-20261011e/proof/report.json",
+      "qor": "golden/out/qor/row-valid-candidate-routed-20261011e/summary.json",
+      "scope": "Ledger and scoped proofs pass; exact setup floor-2.0 fails. Production unchanged."
+    },
+    "component_quiescent_progress": {
+      "qualified": true,
+      "tool": "tools/verify_component_progress_m5.py",
+      "report": "golden/out/m5-component-progress-final-20261011e/report.json",
+      "deadline_clocks": 1744,
+      "maximum_potential": 1733,
+      "scope": "Initialized actual extracted scheduler/drain/busy cone; arbitrary scan predicates/data cuts and no further content changes after chosen boundary. Strict decrease and range lemmas, stuck-clear base counterexample and reachable dirty restart/drain witness; no map/content/global flooding/solver proof."
+    },
+    "reply_integrity": {
+      "qualified": false,
+      "status": "integrated-fresh-gates-and-vendor-frontend-running",
+      "out": "golden/out/m5-reply-integrity-20261011e",
+      "scope": "Actual coldserial/BTN+memoryfields/scopedformal/routedfloor pass; fullfunctional/source qualification pending. Nofullreadiness or RAMpayload/physicalCDC claim.",
+      "baseline_defects": [
+        "duplicate VN falselycommits",
+        "VN outside declared count falselycommits",
+        "N32 view-count truncation preventsnavigation"
+      ],
+      "serial_view_candidates_passed": true,
+      "oracle_audit": "golden/out/m5-reply-integrity-20261011e/oracle-audit.json",
+      "parser_cone": "golden/out/m5-reply-parser-control-20261011e/report.json",
+      "bank_cone": "golden/out/m5-reply-banks-20261011e/report.json",
+      "qor": "golden/out/qor/reply-integrity-view32-candidate-routed-20261011e/comparison.json",
+      "functional": "golden/out/m5-reply-integrity-functional-20261011e",
+      "production_adopted": true,
+      "production_top_sha256": "9b7e4d062a06142994d828d49c45feba8893fe32af7e489745f84458b82667e9",
+      "functional_audit": "golden/out/m5-reply-integrity-functional-20261011e/final-audit.json",
+      "fixed_frames_per_runtime": 780,
+      "fixed_checks_per_runtime": 103,
+      "cold_smoke_frames_per_runtime": 245,
+      "cold_smoke_checks_per_runtime": 25,
+      "maintained_serial_reports": [
+        "golden/out/m5-reply-integrity-maintained-native-20261011e/report.json",
+        "golden/out/m5-reply-integrity-maintained-docker-20261011e/report.json"
+      ],
+      "ready": false
+    },
+    "fresh_gates": {
+      "status": "both-fast-gates-pass",
+      "native": "golden/out/m5-acceptance/reply-integrity-native-20261011e/summary.json",
+      "docker": "golden/out/m5-acceptance/reply-integrity-docker-20261011e/summary.json",
+      "gate_tests": 17,
+      "actual_fp_frontend": "golden/out/m5-solver-frontend-xsim/reply-integrity-production-qualified-20261011e/report.json",
+      "ready": false,
+      "checks_per_runtime": 14,
+      "native_ok": true,
+      "docker_ok": true,
+      "actual_fp_frontend_status": "scoped-pass",
+      "actual_fp_source_drift": [],
+      "actual_fp_events": [
+        "boot3",
+        "duplicatestable5",
+        "editedsplit12",
+        "coldnegativecaught"
+      ]
+    },
+    "watched_reply_payload": {
+      "ok": true,
+      "report": "golden/out/m5-reply-payload-20261011e/report.json",
+      "scope": "Arbitrarynode0..31 logicalarray payload matches completecurrentstage; actualregisterwrite pipeline andbinary initialmemoryprojected. Artifact-only, physical/read-refresh/UART/CDC/UI-overlap remainunsupported."
+    },
+    "post_correction_coverage": {
+      "scope": "Only fresh11frame/2check eachruntime, nominal8/64functionalbins each; rawcounterreadinessfalse",
+      "control": "golden/out/m5-post-reply-coverage-control-20261011e",
+      "old_source_rejection": "golden/out/m5-reply-integration-audit-20261011e/old-source-negative.json",
+      "ready": false,
+      "audits_passed": true
+    },
+    "post_correction_long_cold": {
+      "status": "interrupted-at-quota-safe-checkpoint",
+      "output": "golden/out/m5-post-reply-cold-corpora-20261011e",
+      "source_pins": "golden/out/m5-post-reply-cold-corpora-20261011e/pins.json",
+      "seeds": [
+        1,
+        7,
+        2026,
+        11,
+        12
+      ],
+      "operations_per_seed": 64,
+      "scope": "New currentmain exact source, noninstrumentedcold fullcorpus; no inheritedolder3784/325or64bin verdict.",
+      "completed_cases": [
+        {
+          "runtime": "native",
+          "seed": 1,
+          "frames": 713,
+          "checks": 65,
+          "report": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m5-post-reply-cold-corpora-20261011e/m4-native/corpus/case-0/result.json"
+        },
+        {
+          "runtime": "native",
+          "seed": 7,
+          "frames": 794,
+          "checks": 65,
+          "report": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m5-post-reply-cold-corpora-20261011e/m4-native/corpus/case-1/result.json"
+        },
+        {
+          "runtime": "native",
+          "seed": 2026,
+          "frames": 756,
+          "checks": 65,
+          "report": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m5-post-reply-cold-corpora-20261011e/m4-native/corpus/case-2/result.json"
+        },
+        {
+          "runtime": "native",
+          "seed": 11,
+          "frames": 727,
+          "checks": 65,
+          "report": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m5-post-reply-cold-corpora-20261011e/m4-native/corpus/case-3/result.json"
+        },
+        {
+          "runtime": "docker",
+          "seed": 1,
+          "frames": 713,
+          "checks": 65,
+          "report": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m5-post-reply-cold-corpora-20261011e/m4-docker/corpus/case-0/result.json"
+        },
+        {
+          "runtime": "docker",
+          "seed": 7,
+          "frames": 794,
+          "checks": 65,
+          "report": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m5-post-reply-cold-corpora-20261011e/m4-docker/corpus/case-1/result.json"
+        },
+        {
+          "runtime": "docker",
+          "seed": 2026,
+          "frames": 756,
+          "checks": 65,
+          "report": "/home/chesium/ee2026_ws/nus-EE2026-metacircuit/golden/out/m5-post-reply-cold-corpora-20261011e/m4-docker/corpus/case-2/result.json"
+        }
+      ],
+      "completed_seeds": [
+        1,
+        7,
+        2026,
+        11
+      ],
+      "completed_frames_per_runtime": 2990,
+      "completed_checks_per_runtime": 260,
+      "incomplete_excluded_seeds": [
+        12
+      ],
+      "full_corpus_passed": false,
+      "cleanup": "golden/out/m5-post-reply-cold-corpora-20261011e/quota-cleanup.json"
+    },
+    "unit_tree_candidate": {
+      "status": "rejected",
+      "source": "golden/out/qor/unit-tree-candidate-source-20261011e",
+      "proof": "golden/out/qor/unit-tree-proof-20261011e/report.json",
+      "objective": "golden/out/qor/unit-tree-objective-20261011e.json",
+      "out": "golden/out/qor/unit-tree-candidate-routed-20261011e",
+      "production_adopted": false,
+      "ready": false,
+      "comparison": "golden/out/qor/unit-tree-candidate-routed-20261011e/comparison.json",
+      "wns_ns": -2.58,
+      "minimum_wns_ns": -1.5
+    },
+    "quota": {
+      "checked_at_utc": "2026-10-11T14:05:56.036063Z",
+      "five_hour_remaining_percent": 2,
+      "weekly_remaining_percent": 70,
+      "status": "stop",
+      "five_hour_reset_utc": "2026-10-11T16:11:45Z",
+      "weekly_reset_utc": "2026-10-18T06:09:37Z"
+    },
+    "shutdown": {
+      "all_owned_jobs_stopped": true,
+      "no_subagents": true,
+      "quota": {
+        "checked_at_utc": "2026-10-11T14:05:56.036063Z",
+        "five_hour_remaining_percent": 2,
+        "weekly_remaining_percent": 70,
+        "status": "stop",
+        "five_hour_reset_utc": "2026-10-11T16:11:45Z",
+        "weekly_reset_utc": "2026-10-18T06:09:37Z"
+      },
+      "handoff": "docs/handoffs/m5-verification.md",
+      "next_step": "Freshquota read; replayonlyseed12x64bothruntimes withcurrentpins, thenauditcomplete5casecorpus; M5 stillincomplete."
+    }
+  }
+}

@@ -4,7 +4,7 @@ Living document for making MetaCircuit deterministically testable without hardwa
 Track progress here: tick TODOs, append to the log, and move questions from
 "to be made" to "made" when settled. IDs are stable; never reuse one.
 
-Last updated: 2026-10-10 (client date; M4 accepted baseline complete)
+Last updated: 2026-10-10 (client date; M4 accepted baseline complete, M5 qualification in progress)
 
 ## Goal
 
@@ -48,7 +48,7 @@ produce reproducible correctness and resource/timing results.
 | M2 | Full-UI pixel golden: toolbar, keypad, property panel, cursor, node colours; masked pixel compare | done: human accepted; 3 scenarios (full UI, node-colour edits, web recording) pass state, UI probes, node-colour RAM and every pixel on native and Docker |
 | M3 | Backend in the loop: netlist over UART matches golden; solver replies; voltage display checked | done: 5 scenarios / 482 frames / 42 checkpoints pass on native and Docker; UART records, ids, solver replies, voltage RAM, 7-segment display and LEDs checked |
 | M4 | Coverage, seeded RTL stress tests and lockstep sessions; optional agent interface (MCP) | done in declared settled frontend scope: 64/64 bins per runtime, 1,946 directed frames/158 checkpoints; seeded regressions, coverage and persistent negative replay pass; MCP optional |
-| M5 | Final milestone: prepared for large-scale autonomous refactoring with preserved behavior and measured FPGA improvements | not started: requires M5-1..M5-8, FS-8/FS-11 and INF-4; readiness is scoped explicitly |
+| M5 | Final milestone: prepared for large-scale autonomous refactoring with preserved behavior and measured FPGA improvements | in progress: frontend contract/adapter qualified; scoped stalls pass both runtimes; real frontend synthesis characterized but over Basys 3 LUT capacity and route fails; solver/IP, global invariants, coverage policy and full acceptance remain |
 
 M1 needs FS-1..FS-3, RTL-1..RTL-3, GM-1..GM-3 and SC-1..SC-2. It does not need the renderer.
 
@@ -118,8 +118,8 @@ conditional on the modules being changed.
 
 ### Autonomous refactor readiness (M5)
 
-- [ ] M5-1 (P1) Freeze the accepted baseline and contract: start from metacircuit `2ff7f3a`, simpyhls `0d6f22a` and the framescope revision pinned by M3 evidence. Pin golden behavior, visual payloads, scenarios, constraints and known limitations; define exact output timing versus bounded internal latency. Record the modules and input ranges covered by readiness.
-- [ ] M5-2 (P1) Stable semantic observation adapter: expose logical cells/components, UI state, netlist events and accepted voltages independently of instance names, FSM encodings, slot packing or physical RAM banks. Validate adapters against the frozen baseline. Preserve semantic guarantees and required atomicity while allowing implementation layout to change.
+- [x] M5-1 (P1) Freeze the accepted baseline and contract: start from metacircuit `2ff7f3a`, simpyhls `0d6f22a` and the framescope revision pinned by M3 evidence. Pin golden behavior, visual payloads, scenarios, constraints and known limitations; define exact output timing versus bounded internal latency. Record the modules and input ranges covered by readiness.
+- [x] M5-2 (P1) Stable semantic observation adapter: expose logical cells/components, UI state, netlist events and accepted voltages independently of instance names, FSM encodings, slot packing or physical RAM banks. Validate adapters against the frozen baseline. Preserve semantic guarantees and required atomicity while allowing implementation layout to change.
 - [ ] M5-3 (P1) Seeded randomized tests against actual RTL, using FS-8/FS-11: interaction sequences, rapid edits, dense circuits, boundaries/capacity limits and configurable memory stalls. Check every frame where the contract defines a result; use continuous properties elsewhere. Save seed, inputs and first divergence, reduce failures to replayable scenarios, and require the reduced case to reproduce in a cold run.
 - [ ] M5-4 (P1) Continuous invariants and progress bounds: stalled request data stays stable, commands are neither lost nor duplicated, rejected edits produce no partial writes, cell/component maps agree, queues stay in range, replies commit atomically and accepted work finishes within specified bounds. Add targeted old/new equivalence or formal proofs for suitable modules; preserve proof assumptions and report unsupported/inconclusive checks separately from passes.
 - [ ] M5-5 (P1) Extend backend verification to the generated RTL and real solver pipeline: feed randomized extraction/solver fixtures through RTL, and exercise the frontend-to-`SolverBoard_top` UART path. Validate floating-point primitive behavior and latency against the configured IP before using stand-ins as acceptance evidence. The M3 Python-host result alone does not qualify solver datapath changes.
@@ -483,3 +483,273 @@ and then passing the full gate before accepting each implementation change. The 
 repeat this across a large refactor without changing the accepted oracle to
 fit the candidate. Intentional functionality changes are tracked separately
 from implementation optimizations.
+
+## M5 resume checkpoint (2026-10-10)
+
+M4 completion applies to the accepted corrected frontend baseline. M5-1 freezes
+254 immutable entries under trusted frontend-v1 identity
+`475a48362f0f353104abfde654c25f7bdc60acc266c7a774ca6b256d315b540e`;
+M5-2 qualifies settled adapters on 18 M2/M3 captures (206 checkpoints) and eight
+M4 directed captures (158 checkpoints). UI/backend independent oracles remain
+mandatory. The separate gate policy pins adapter/config and supplemental inputs.
+
+Continuous controller/guard invariants now exercise genuine read/write stalls,
+three reply delays and four specific corruption/withheld-reply controls on both
+runtimes. Global map/queue/reply visibility, formal assumptions and architectural
+progress bounds remain outside this scoped evidence; M5-4 stays incomplete.
+
+Actual generated extraction320 fixtures, solver UART36 analytic circuits and a
+physically connected frontend-to-SolverBoard boot/edit exchange pass provisionally.
+Actual configured FP qualification is being investigated with existing generated
+products, while original XCI revision/provenance remains explicit. M5-5 stays open.
+
+Vivado2025.2 frontend synthesis with real MouseCtl and unchanged constraints
+uses24117 LUT/13677 FF/10 BRAM/0 DSP; routed attempt fails UTLZ-1 after optimization
+still requires22138 LUT (>20800 available). Synth WNS=-5.176ns; missing clock/I/O
+constraint and CDC scope remain unqualified. A separate immutable-input synth
+baseline is complete. Two finite address decoder candidates passed exhaustive
+equivalence; compare/subtract candidate also passed native/Docker frontendsmoke.
+Both worsened measuredLUT/WNS and were rejected. Original acceptedfrontend
+arithmetic is restored; no optimization acceptance is claimed.
+
+New `tools/acceptance_m5.py` and manual native/Docker CI workflow share development,
+unchanged-baseline capture qualification and full-readiness modes. Native baseline
+qualification passed before the solver-wrapper fix; finalfast gates pass onboth
+runtimes. Full mode fails missing mandatory M5 scope, reports and
+coverage policy; INF-4/M5-7/M5-8 stay incomplete. See docs/m5-acceptance.md and
+docs/handoffs/m5-verification.md for current jobs and next steps.
+
+Final checkpoint: both native/Docker fast gates pass, including final production
+FMA exception-port correction (four bits to configured three). Actual XSim direct
+production SolverBoard passes38solves/127UARTlines with16/28cycle vendor FP,
+checksum recovery and singular status05/negative infinity; no source override.
+Both address optimization attempts are rejected (+354/+938LUT and worseWNS);
+accepted frontend arithmetic is restored. Frontend observers qualify maps/reply
+banks/queue conservation in their historical candidate capture scope; restored
+source and staged-abort/broader-layout runs remain. Full-readiness gate rejects
+missing routed QoR/objective before expensive tests. M5 remains incomplete.
+
+Quota checkpoint: M5 remainsincomplete; defaultguard teamshutdown at9%five-hour/33%weekly. Allagents/jobsfinished, finalfastgatespass; resume from docs/handoffs/m5-verification.md underfreshlivequota.
+
+
+## M5 resume checkpoint (2026-10-11)
+
+M4 remains complete. A-008 readiness/read-retirement defect fixed and coldwitnesses
+pass onbothruntimes. Expanded frontend stage/map/progress observers qualify fixed
+baseline and isolated shadowcandidate. BothM2fullcorpora and nativeM3pass;
+DockerM3 stopped at quota with partialpassing reports. ActualIP59solvercases pass;
+near-singularphysicalaccuracy and augmentedMNA33capacity fail explicitly.
+Defaultbaud actualfrontend boot/coldnegative pass; editedlooptimeout unqualified.
+Shadow write normalization saves14008synthesisLUTs and actuallyroutes10089LUT/
+4166FF, but setupWNS-1.657ns and clock/I/O/CDC findings fail acceptance. Candidate
+remains isolated. Executablecoveragepolicy rejects gaps/unreviewed scope. M5 is
+incomplete; guard latched9%five-hour/18%weekly shutdown, separatehandoffs saved.
+Continue from docs/handoffs/m5-verification.md under fresh quota.
+
+## M5 continuation checkpoint (2026-10-11, current)
+
+M4 remains complete. Corrected A-008 M3 now passes all five scenarios on both
+runtimes (482 frames /42 checkpoints each), including the newly completed Docker
+error/recovery scenario. Isolated shadow candidate native full M3 passes; its M2
+corpus and Docker M3 are being completed. Current candidate coverage passes
+native/Docker integrity audit, but module/input obligations and eligible gaps
+keep readiness false. Parameter-specialization identity matching is corrected.
+
+Five-phase mid-rebuild dirty-restart observations pass both runtimes, with four
+specific controls and a declared quiescent deadline1744 clocks after the last
+accepted edit. This is bounded directed evidence, not arbitrary-stall/formal
+proof. Separate actual generated extraction qualification passes320 seeded
+fixtures on both runtimes without promoting FP simulation models. Full gate now
+requires those scoped reports, supplemental first-ready observations, restart
+checks and the actual default-baud frontend edited loop; tool/observer inventory
+changes during a gate are rejected. Final fast gates are pending new pins.
+
+A separately declared capacity guard candidate rejects augmented dimension33
+with ER03/0021 before solver_start and preserves300 UART reply lines over59
+supported actual-IP solves. It remains isolated pending integration. Reset-free
+FIFO lifetime fails at enqueue1152 on both runtimes; integrated lifetime reachability
+is unresolved, because flooding clears each run and appears bounded to4enqueues
+per visited cell. No production queue change is claimed.
+
+Derived pixel-clock timing exposes previously omitted hold violations and a
+coord_len latch. External asynchronous pad/reset timing remains unqualified.
+A balanced BCD-text candidate fails its predeclared area objective (-141 LUT
+gain); it is rejected. Proper dual-clock isolated routing is planned. M5 remains
+incomplete. Current jobs, evidence and recreation assignments are recorded in
+[the M5 handoff](handoffs/m5-verification.md).
+
+Final2026-10-11checkpoint: isolated shadow fullM2/M3 passes both runtimes and
+exact-frameM1passes. Actual defaultbaud frontend+vendorFP/currenthelper controls
+and isolated augmented-capacity rejection/recovery pass. Full readiness remains
+incomplete; final nativefastgate passes, Dockerretry retains one real ThreadPool
+build error. Five64op coldcandidate seed corpus was safely interrupted before
+completecase qualification. Guard latched shutdown at9%five-hour/86%weekly;
+allagents/jobs stopped, separate handoffs saved. Resume from m5-verification.md.
+
+## M5 continuation (2026-10-10 client date, current guarded run)
+
+The independently qualified augmented-MNA capacity correction is integrated into
+production SolverBoard: dimensions above32 reject with ER03 and requested
+dimension before solve. Fresh actual-IP evidence passes59supported solves and
+300byte-identical replies, exact dimension33 rejection, and dimension32 recovery
+after one/two-voltage-source rejection. The maintained capacity runner rechecks
+source/tool/library/report pins and catches two specific cold corruptions.
+
+A separate frontend domain suite passes both pinned runtimes:144components,
+41keyboard events/all6unit suffixes,8selection transitions and bounded restart/
+clear backpressure fixtures. Existing six observer suites retain unchanged
+source identity. The unified full gate now requires this suite and current
+actual-IP capacity/recovery evidence. Current native fast gate passes; Docker
+retry is underway after its unchanged135test harness suite passed. Full mode
+continues to reject missing mandatory FPGA reports/objective before regressions.
+
+Isolated coord_len default insertion passes actual-source cone equivalence and
+negative controls, removes the inferred latch/no-clock/unconstrained endpoints,
+and improves routed setup from-1.816ns to-1.585ns, with hold+0.022ns. It passes
+its separately declared bounded objective; global setup and external I/O/CDC
+still fail full readiness. Two address-path proposals fail their frozen area
+objectives and remain rejected/unintegrated.
+
+Actual-wrapper flooding ledgers qualify the directed1152enqueue bound after
+real reset/clear, but do not prove arbitrary/cold pre-clear safety. A retained
+real-reset16-bit epoch alias returns stale region1 for blank input, reproduced
+onbothruntimes. A validity-bitmap correction passes isolated ledgers/alias
+controls; production integration and full frontend/QoR qualification remain
+open. Current defaultbaud frontend and cold64operation candidate corpus are
+running. M5 remains incomplete; see the coordinating handoff for current state.
+
+Final guarded checkpoint: production capacity guard,59actual-IP solves/300UART
+replies, capacity rejection/recovery and actual default115200frontend edited loop
+all pass fresh source/control checks. Both pinned fast gates pass. Latch-only
+isolated full M2 passes298frames/61checkpoints per runtime; scoped routed objective
+passes, global timing/IO still fails. Coverage reaches28/64native and12/64Docker
+with unchanged thresholds/exclusions. Seed1x64 passes713frames/65checks; four
+other coldcases were safely interrupted at quota and have no passing verdict.
+Team shutdown latched8%five-hour/71%weekly; finalcheck4%/70%, allownedagents/jobs
+stopped, separate handoffs inspected. M5 remains incomplete; continue from
+[the coordinating handoff](handoffs/m5-verification.md) after a fresh live check.
+
+## M5 continuation (2026-10-11 client date)
+
+Production now has exact FIFO head/tail wrap at DEPTH-1 and the panel coord_len
+combinational default. Both pinned runtimes pass maintained lifetime/ordered
+overlap ledgers at depths1/3/4/1152 with specific corruption controls. Actual-source
+Yosys0.33 reset-base/one-step induction proves range/count preservation; original
+non-power-of-two versions yield required counterexamples. Cold pre-reset safety
+and arbitrary formal FIFO data order remain separate gaps. The full gate pins and
+requires this queue safety verifier;15gate fixture tests pass. Fast gates and
+current queue/panel/shadow composed functional/QoR qualification are underway.
+
+The epoch bitmap's stronger watched-cell proof and both-runtime fullM2 pass remain
+isolated evidence. Its composed related-clock route measures10671LUT/4740FF/
+9.5BRAM/0DSP, hold+0.007, internal unknowns0/0, but WNS-2.699 fails the frozen
+-2.0ns floor, so the candidate remains rejected/unintegrated. Coverage expands
+to48/64native and20/64Docker functional bins; one native properties run and final
+raw audit remain active. Four remaining unchanged-shadow cold64operation seeds
+are progressing, not yet qualified. Full M5 remains incomplete; see the handoff
+for exact evolving source scopes and guarded job state.
+
+The remaining4coldnativev2x64cases complete794/756/727/794frames and65checks
+each, all source/initialization/comparison audits pass. Together with historical
+seed1 (713/65), fivecase corpus reaches3784frames/325checks. Root adopted exact
+reviewed shadow-write normalization with preserved same-edge NBA behavior.
+Current source also includes queue/panel corrections and the previous capacity
+guard; epochbitmap/XDC/rejected arithmetic remain separate. New isolated
+shadow+panel+guard native fullM3 passes482frames/42checks; current production
+composedM2/QoR/actualvendorFP frontend and freshfastgates remain in progress.
+Oldfastgatesfailed staleassetprovenance, and Docker additionally retains two
+lockedThreadPool errors; metadata refreshed with254frozenbehavior entries passing.
+A passing harness subset is not a complete gatePASS.
+
+Current adopted queue/panel/shadow/guard fullM2 passes298frames/61checks onBOTH
+runtimes, exactpixels/state/UI/source/init/harness/simpyhls preserved. Current
+relatedclock scopedroute passes10092LUT/4157FF/9.5BRAM,setup-1.333/hold+0.047;
+fullglobaltiming/externalIO/CDC stillfails. Both freshcurrentfastgates pass all
+mandatorychecks after provenance refresh and unchangedDocker retry; original
+ThreadPool failures remain recorded with unknowncause. OldFIFO/epoch isolated
+shadow+panel+currentguard fullM3 passes482/42onBOTH runtimes via completed-source
+audits. Oldshadowrawcoverage reaches61/64native,20/64Docker, integritytrue/
+readinessfalse; currentproduction freshrawcampaign and actualIPfrontend pending.
+
+Final currentactualdefault115200/vendorFP frontend passes bootframe3/duplicate5/
+editedsplitrail12 plus specificcoldnegative and sources unchanged (52FMA/53DIV).
+Both currentproduction m3_current_source fixtures also pass67frames/6checks;
+currentrawcoverage scenario/boot audits pass integrity,8/64bins eachruntime,
+explicitgap/readinessfalse. ProvidedisolatedrelatedclockQor cannotqualify
+productionXDC and fullgate rejects itbeforetests. M5 remainsincomplete.
+
+Guardedfinalcheckpoint: teamshutdownlatched at9%five-hour/86%weekly afterall
+ownedagents/testjobs completed naturally, separatehandoffs inspected, monitor
+cleanup recorded. Currentproduction fixes,fastgates/fullM2/focusedM3/actualIP
+frontend/scopedQor pass; globaltiming/current64bincoverage/proofs/IPgaps remain.
+M5 incomplete; resume from docs/handoffs/m5-verification.md with freshquota.
+
+## M5 solo continuation (2026-10-11, current production)
+
+Fresh direct-production full M3 passes all five accepted scenarios on both
+runtimes: 482 frames and 42 checkpoints each, with unchanged source/helper/
+harness and initialization pins. All frame CRCs/probes/timestamps, complete UART
+monitor data/timing, host logs and 504 RAM dump files agree across runtimes; only
+the validated absolute host-log output path differs. This qualifies the current
+shadow/FIFO/panel/capacity composition in the accepted Python-host frontend scope.
+
+A symbolic watched-transaction FIFO proof passes depths1/3/4/1152, preserving
+rank and truncated payload through pop capture and delayed completion after real
+reset/clear. It documents a single-cell RAM projection and catches read-payload
+corruption. The selected-address capture timing proposal passes its extracted
+cycle-equivalence proof but fails the frozen routed setup objective (-2.547ns
+versus -1.333ns baseline); it is rejected and remains isolated.
+
+A new validity-only matrix-store proposal removes finite epoch tags while
+retaining resettable validity, interfaces and read latency. Both runtimes pass
+the unchanged independent86123clock reset/overlap ledger and its corruption
+control; watched-cell value/latency proofs pass with missing-clear controls.
+Routing and integrated qualification remain pending, so production is unchanged.
+Full cold/functional/current-source coverage campaigns and guard-progress proofs
+continue under the usage guard. Slow Docker raw campaigns were stopped before
+their declared budgets, with partial artifacts retained and no passing verdict.
+M5 remains incomplete; [the handoff](handoffs/m5-verification.md) records jobs.
+
+## M5 integrated reply-safety checkpoint (2026-10-11)
+
+The previously unqualified receiver accepts repeated or undeclared voltage-node
+indices as complete packets. Cold real115200UART witnesses reproduce both on
+native/Docker; the unchanged golden decoder rejects those byte streams. A009
+tracks distinct declared nodes and cancels invalid staging while preserving the
+previous bank. A010 fixes32node view-count truncation. Elevenfixtures/101lines
+cover rejection/recovery, reverseorder, all32words and31next-node selections,
+nonwrap/selectionretention and empty replies onbothruntimes.
+
+The integrated correction passes fullM2/M3 (780frames/103checks eachruntime,
+zero pixel differences), fivecold4operation smoke cases(245/25 each), source/
+oracle/mask/initialization audits, six maintained source-based safety checks,
+and both fresh14check fastgates. Actual directproduction default115200/vendorFP
+frontend also passes boot/duplicate/editedsplitrail plus a coldnegative and
+source-final checks. Assets changed only source provenance;254frozenbehavior
+entries remain valid. M5 stays incomplete.
+
+New formal scope includes arbitrary selected FIFO transaction order under a
+single-cell array projection, guard completion under declared ready/reply bounds,
+and actual quiescent rebuild1744clock progress. Parser dispatch/range proof uses
+independentlyarbitrary purehelperreturns; full parser processing timedout and is
+not claimed. Receiver mask/count/complete-currentID commit/inactive-bank proofs
+and a separate watched-node logicalRAM payload theorem record their explicit
+unsupported physical/view/overlap scopes. Gate rejects missing/false results.
+
+The reply correction's scoped route passes10149LUT/4197FF/10BRAM,
+setup-1.953/hold+0.027; global100MHz/externalIO/CDC stillfails. Three independent
+address/epoch proposals and a balanced unitdecoder fail their frozen timing
+objectives and remain rejected. New current-source raw11frame/twocheck reports
+pass integrity onbothruntimes with8/64functional bins each and substantial
+eligiblecounter gaps. Pre-correction fullcold3784/325 and64functional-bin scopes
+are retained under their own source hashes. Fresh post-correction fivecold64op
+corpora are running and cannot inherit those old verdicts.
+
+Continue under the usage guard from [the coordinating handoff](handoffs/m5-verification.md).
+
+Guarded final checkpoint: newTop post-correction coldseeds1/7/2026/11 pass
+2990frames/260checks perruntime with allsource/helper/init pins stable; seed12
+interrupted andexcluded. Fourcase evidence isnotfivecase completion. Native/
+Docker gates andactualvendorFPfrontend pass; M5 incomplete. Guard STOP at
+2%five-hour/70%weekly; allownedjobs/CIDs absent. Resumeonlyseed12 thenremaining
+source-correctcoverage/globaltiming/proof/IPwork from the coordinating handoff.

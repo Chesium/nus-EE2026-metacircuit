@@ -14,6 +14,17 @@ spec.loader.exec_module(m)
 
 
 class SolverXsimTests(unittest.TestCase):
+    def test_accuracy_probe_attributes_misses_and_checks_baseline(self):
+        log = ('GENERAL_CASE bcd_999\nGENERAL_CASE ' + m.NEAR_SINGULAR + '\n'
+               'ACCURACY_MISS @VN,1016,01, expected=5.0e-01 got=5.2e-01\n')
+        result = m.accuracy(log, 0.04)
+        self.assertAlmostEqual(result['max_relative_error'], 0.04)
+        self.assertTrue(result['only_declared_cases_missed'] and result['within_baseline'])
+        self.assertFalse(m.accuracy(log, 0.039)['within_baseline'])
+        other = 'GENERAL_CASE bcd_999\nACCURACY_MISS @VN,1015,00, expected=1.0 got=1.1\n'
+        self.assertFalse(m.accuracy(other, 1.0)['only_declared_cases_missed'])
+        self.assertEqual(m.accuracy('GENERAL_CASE bcd_999\n', 0.0)['max_relative_error'], 0.0)
+
     def test_manifest_has_real_required_datapath_no_standins(self):
         paths = m.actual_sources()
         self.assertTrue(all(p.is_file() for p in paths))

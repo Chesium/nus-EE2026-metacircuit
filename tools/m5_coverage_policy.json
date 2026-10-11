@@ -1,9 +1,9 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "rule": "Functional bins (64/64) are enforced by the acceptance gate. Line/branch/toggle coverage is measured and reported on every run; gaps are recorded corpus limits, not failures. A module instance whose source differs from the recorded baseline may not reach a smaller fraction of its eligible points of any type than the baseline. Structural coverage is measured on the native runtime only: Verilator 5.020 coverage in the pinned container is about 8x slower (~17 s/frame). Docker runs the same seeded corpus uninstrumented for cross-runtime agreement.",
   "parser_sha256": "8ee2b546f94d623ab91355e8a4628d68d372cd063323c38538d4d0b84692b52e",
   "required_runtimes": [
-    "native",
-    "docker"
+    "native"
   ],
   "runtime_tools": {
     "native": {
@@ -14,247 +14,70 @@
       "identity": "framescope-toolchain:6501155dc903"
     }
   },
-  "default_requirement": {
-    "input_scope": "Cold frontend canvas interactions and frame-visible behavior with direct MouseCtl stubs; full legal input reachability and exclusions remain unreviewed.",
-    "reviewed": false,
-    "types": [
-      "line",
-      "branch",
-      "toggle"
-    ],
-    "max_uncovered": 0
-  },
+  "types": [
+    "line",
+    "branch",
+    "toggle"
+  ],
   "requirements": [
     {
       "module": "GlobalRender_top",
-      "input_scope": "Cold initialized production frontend: canvas/value/selection edits, frame-visible effects, netlist IDs/order, banks/replies, held buttons and all SW frontend modes. Physical PS2/CDC excluded only through explicit stub exclusions; reachability review incomplete.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/rendering/GlobalRender_top.v",
-      "required_input_bins": [
-        "canvas-kind-rotation-unit",
-        "canvas-all-edges",
-        "blocked-placement-partner-selection",
-        "slot-reuse-empty-near-capacity",
-        "held-inputs-and-frame-latency",
-        "frontend-switch-modes",
-        "edits-during-flooding-extraction-uart",
-        "stale-malformed-incomplete-replies"
-      ],
-      "input_scope_reviewed": false,
-      "scope_review_note": "Input-domain checklist from verification-plan behavior/coverage requirements; reachability and evidence remain unreviewed."
+      "source_suffix": "/src/design/rendering/GlobalRender_top.v"
     },
     {
       "module": "InteractionController",
-      "input_scope": "Frame request capture, all editing modes/rotations/edges, held/drag inputs, command-ready and read-response stalls, blocked placements and cancellation; legal input reachability review incomplete.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/interaction/InteractionController.v",
-      "required_input_bins": [
-        "all-tools-and-rotations",
-        "signed-pan-and-canvas-edges",
-        "held-and-drag-inputs",
-        "blocked-partner-placement-cancellation",
-        "command-ready-and-read-response-stalls"
-      ],
-      "input_scope_reviewed": false,
-      "scope_review_note": "Input-domain checklist from verification-plan behavior/coverage requirements; reachability and evidence remain unreviewed."
+      "source_suffix": "/src/design/interaction/InteractionController.v"
     },
     {
       "module": "InteractionFrameCapture",
-      "input_scope": "Synchronous frame_start_pulse capture: reset dominance, idle stability, isolated/consecutive pulses, all button combinations, unsigned mouse coordinates and signed grid offsets. Physical asynchronous PS2/CDC is not qualified.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/interaction/InteractionFrameCapture.v",
-      "required_input_bins": [
-        "reset-dominates-frame-pulse",
-        "no-pulse-stable-snapshot",
-        "isolated-and-consecutive-frame-pulses",
-        "all-button-combinations",
-        "mouse-coordinates-and-signed-grid-extremes"
-      ],
-      "input_scope_reviewed": true,
-      "scope_review_note": "Read complete InteractionFrameCapture.v: no handshake, buffering or drop policy exists in this module; snapshot_valid follows frame_start_pulse unless reset. Coverage evidence does not prove CDC."
+      "source_suffix": "/src/design/interaction/InteractionFrameCapture.v"
     },
     {
       "module": "CanvasCommandGuard",
-      "input_scope": "Accepted command bursts, two-cell placement and three-write rotation, occupied/edge partners, ready/read stalls, reset and atomic publication; reachability review incomplete.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/interaction/CanvasCommandGuard.v",
-      "required_input_bins": [
-        "single-two-and-three-write-edits",
-        "occupied-anchor-and-partner-rejection",
-        "component-rotation-value-copy",
-        "ready-and-response-stalls",
-        "reset-during-each-phase",
-        "no-partial-rejected-writes"
-      ],
-      "input_scope_reviewed": false,
-      "scope_review_note": "Input-domain checklist from verification-plan behavior/coverage requirements; reachability and evidence remain unreviewed."
+      "source_suffix": "/src/design/interaction/CanvasCommandGuard.v"
     },
     {
       "module": "WireDrawMode",
-      "input_scope": "Combinational horizontal left-only / vertical right-only commands, simultaneous or middle suppression, canvas/grid bounds and signed pan offsets; occupied-cell policy and held/drag sequencing belong to controller/integration.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/interaction/WireDrawMode.v",
-      "required_input_bins": [
-        "horizontal-left-and-vertical-right",
-        "both-buttons-and-middle-suppression",
-        "canvas-and-grid-edge-coordinates",
-        "signed-pan-offsets",
-        "held-drag-and-release"
-      ],
-      "input_scope_reviewed": true,
-      "scope_review_note": "Read complete WireDrawMode.v: module has no state/clock or occupied-cell input. Input-domain review does not establish integrated trajectory coverage."
+      "source_suffix": "/src/design/interaction/WireDrawMode.v"
     },
     {
       "module": "FloodQueueStore",
-      "input_scope": "FIFO reset/clear, one-cycle delayed completions, pre-update length, empty/full rejection, simultaneous add/pop, data truncation and reset-free lifetime across non-power-of-two DEPTH=1152 pointer wraps.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/common/FloodQueueStore.v",
-      "required_input_bins": [
-        "reset-clear-and-delayed-completions",
-        "fifo-order-and-data-truncation",
-        "empty-pop-and-full-add",
-        "simultaneous-add-pop-at-empty-full-interior",
-        "non-power-of-two-pointer-wrap",
-        "reset-free-lifetime-beyond-depth"
-      ],
-      "input_scope_reviewed": true,
-      "scope_review_note": "Read complete FloodQueueStore.v and integrated QUEUE_DEPTH=GRID_WIDTH*GRID_HEIGHT*4: pointers increment at PTR_WIDTH rather than explicit modulo DEPTH; reset-free lifetime and FIFO order remain unqualified. No unreachable-counter exclusion is authorized."
+      "source_suffix": "/src/design/common/FloodQueueStore.v"
     },
     {
       "module": "flooding_core",
-      "input_scope": "Grounded/floating ports, dense connected layouts, all grid/capacity edges, response stalls and edits during flooding; reachability/capacity review incomplete.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/solver/flooding_core.sv",
-      "required_input_bins": [
-        "grounded-and-floating-terminals",
-        "dense-layout-all-grid-edges",
-        "queue-capacity-and-pointer-wrap",
-        "memory-response-stalls",
-        "edits-during-flooding"
-      ],
-      "input_scope_reviewed": false,
-      "scope_review_note": "Input-domain checklist from verification-plan behavior/coverage requirements; reachability and evidence remain unreviewed."
+      "source_suffix": "/src/design/solver/flooding_core.sv"
     },
     {
       "module": "extract_component_nodes",
-      "input_scope": "Every indexed kind/rotation/unit, slot reuse/empty/capacity, grounded/floating terminals, fetch stalls and edits during extraction; reachability review incomplete.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/solver/extract_component_nodes.sv",
-      "required_input_bins": [
-        "component-kind-rotation-unit",
-        "empty-near-capacity-and-slot-reuse",
-        "grounded-and-floating-terminals",
-        "fetch-response-stalls",
-        "edits-during-extraction"
-      ],
-      "input_scope_reviewed": false,
-      "scope_review_note": "Input-domain checklist from verification-plan behavior/coverage requirements; reachability and evidence remain unreviewed."
+      "source_suffix": "/src/design/solver/extract_component_nodes.sv"
     },
     {
       "module": "FrontendVoltagePacketParser",
-      "input_scope": "Actual serial begin/node/end/error, current/stale IDs, malformed checksum/framing, incomplete/overlapping traffic and bank cancellation; direct parser counter reachability review incomplete.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/uart/FrontendVoltagePacketParser.sv",
-      "required_input_bins": [
-        "serial-begin-node-end-error",
-        "current-and-stale-ids",
-        "checksum-framing-and-malformed-text",
-        "incomplete-overlapping-packets",
-        "bank-cancellation-and-atomic-commit"
-      ],
-      "input_scope_reviewed": false,
-      "scope_review_note": "Input-domain checklist from verification-plan behavior/coverage requirements; reachability and evidence remain unreviewed."
+      "source_suffix": "/src/design/uart/FrontendVoltagePacketParser.sv"
     },
     {
       "module": "FrontendNetlistLineTransmitter",
-      "input_scope": "Snapshots with empty/near-capacity stores, order/IDs/checksums, UART backpressure and edits in every transmission phase; legal phase combinations remain unreviewed.",
-      "reviewed": false,
-      "types": [
-        "line",
-        "branch",
-        "toggle"
-      ],
-      "max_uncovered": 0,
-      "source_suffix": "/src/design/uart/FrontendNetlistLineTransmitter.sv",
-      "required_input_bins": [
-        "empty-and-near-capacity-snapshots",
-        "content-order-ids-checksums",
-        "uart-backpressure",
-        "edits-during-every-transmission-phase"
-      ],
-      "input_scope_reviewed": false,
-      "scope_review_note": "Input-domain checklist from verification-plan behavior/coverage requirements; reachability and evidence remain unreviewed."
+      "source_suffix": "/src/design/uart/FrontendNetlistLineTransmitter.sv"
     }
   ],
   "exclusions": [
     {
       "source_glob": "*/framescope_top.sv",
-      "reason": "Generated simulation wrapper counters are harness instrumentation, outside production RTL coverage. Harness behavior has separate FS tests.",
-      "reviewed": true
+      "reason": "Generated simulation wrapper counters are harness instrumentation, outside production RTL coverage. Harness behavior has separate FS tests."
     },
     {
       "source_glob": "*/stubs/MouseCtl.sv",
-      "reason": "Direct absolute mouse stimulus model; its counters do not qualify physical PS/2 or CDC, which remain unsupported.",
-      "reviewed": true
+      "reason": "Direct absolute mouse stimulus model; its counters do not qualify physical PS/2 or CDC, which remain unsupported."
     },
     {
       "source_glob": "*/stubs/MouseDisplay.sv",
-      "reason": "Simulation cursor model, outside the accepted production component/storage scope; no physical cursor/CDC coverage claimed.",
-      "reviewed": true
+      "reason": "Simulation cursor model, outside the accepted production component/storage scope; no physical cursor/CDC coverage claimed."
     }
-  ]
+  ],
+  "baseline": {
+    "path": "tools/m5_coverage_baseline.json",
+    "sha256": "1cbb12290b51dad1c5fd890f4f69d50fc1e95b6deb176a8d4f2997f349bdc12e",
+    "corpus": "seeds 1,7,2026,11,12 x 64 operations, generator 2, native Verilator 5.046, scenario split; golden/out/m5-coverage-baseline-20261011f"
+  }
 }

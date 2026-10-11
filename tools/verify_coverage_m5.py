@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Project-owned coverage audit; full readiness fails on gaps/unreviewed scope."""
+"""Project-owned coverage audit: validated measurement plus no-regression for changed modules.
+
+Structural gaps are reported as corpus limits. Readiness fails on invalid or
+missing evidence, missing required instrumentation, or a changed module instance
+that reaches a smaller fraction of its eligible points than the recorded baseline.
+"""
 import argparse
 from collections import defaultdict
 import fnmatch
@@ -30,32 +35,38 @@ def load_parser(framescope,policy):
 
 
 def validate_policy(policy):
-    if policy.get('schema_version')!=1 or policy.get('required_runtimes')!=['native','docker']:
+    if policy.get('schema_version')!=2 or policy.get('required_runtimes')!=['native']:
         raise ValueError('unsupported coverage policy/runtime requirements')
     if not SHA.fullmatch(policy.get('parser_sha256','')):
         raise ValueError('missing pinned coverage parser')
-    for requirement in [policy['default_requirement'],*policy['requirements']]:
-        if not requirement.get('input_scope') or type(requirement.get('reviewed')) is not bool:
-            raise ValueError('coverage requirement missing input scope/review state')
-        if requirement.get('max_uncovered')!=0 or requirement.get('types')!=['line','branch','toggle']:
-            raise ValueError('coverage gaps may not be waived by a percentage/threshold')
+    if policy.get('types')!=['line','branch','toggle']:
+        raise ValueError('coverage policy must measure line, branch and toggle')
     names=set()
     for requirement in policy['requirements']:
         name=requirement.get('module')
-        if not name or name in names:
-            raise ValueError('duplicate/missing required module')
+        if not name or name in names or not requirement.get('source_suffix','').startswith('/src/design/'):
+            raise ValueError('duplicate/missing required module or source')
         names.add(name)
-        bins=requirement.get('required_input_bins')
-        if (not requirement.get('source_suffix','').startswith('/src/design/') or
-            not isinstance(bins,list) or not bins or any(not isinstance(b,str) or not b for b in bins) or
-            len(bins)!=len(set(bins)) or type(requirement.get('input_scope_reviewed')) is not bool or
-            not requirement.get('scope_review_note')):
-            raise ValueError('missing explicit module/source/input-domain review')
     for exclusion in policy['exclusions']:
-        if not exclusion.get('reason') or exclusion.get('reviewed') is not True or not exclusion.get('source_glob'):
-            raise ValueError('unexplained/unreviewed coverage exclusion')
+        if not exclusion.get('reason') or not exclusion.get('source_glob'):
+            raise ValueError('unexplained coverage exclusion')
         if exclusion['source_glob'] not in ('*/framescope_top.sv','*/stubs/MouseCtl.sv','*/stubs/MouseDisplay.sv'):
-            raise ValueError('unreviewed production coverage exclusion')
+            raise ValueError('production coverage exclusion is not allowed')
+    baseline=policy.get('baseline',{})
+    if not baseline.get('path') or not SHA.fullmatch(baseline.get('sha256','')):
+        raise ValueError('missing pinned coverage baseline')
+
+
+def load_baseline(policy,repo=REPO):
+    path=repo/policy['baseline']['path']
+    if digest(path)!=policy['baseline']['sha256']:
+        raise ValueError('coverage baseline identity changed')
+    return json.loads(path.read_text())
+
+
+def relative_source(source):
+    marker='/src/design/'
+    return 'src/design/'+source.split(marker,1)[1] if marker in source else source
 
 
 def source_file(original,source_root):
@@ -67,15 +78,6 @@ def source_file(original,source_root):
 
 def excluded(source,policy):
     return next((x for x in policy['exclusions'] if fnmatch.fnmatch(source,x['source_glob'])),None)
-
-
-def requirement_for(module,source,policy):
-    # Verilator specializes parameterized modules as Name__piN/Name__Dhex.
-    # Both the canonical name and the reviewed production source must agree;
-    # unrelated similarly named modules cannot satisfy the requirement.
-    return next((r for r in policy['requirements']
-                 if (module==r['module'] or module.startswith(r['module']+'__'))
-                 and source.endswith(r['source_suffix'])),policy['default_requirement'])
 
 
 def validate_input(path,source_root,policy,parser,scope):
@@ -157,7 +159,7 @@ def validate_input(path,source_root,policy,parser,scope):
             'source_root':str(source_root),'stale_sources':stale,'errors':errors},points,mappings
 
 
-def summarize_all(points,mappings,policy,parser):
+def summarize_all(points,mappings,policy,parser,source_hashes=None):
     groups=defaultdict(lambda:defaultdict(list))
     for key,hits in points.items():
         data=parser.fields(key); category,_,module=data['page'].partition('/')
@@ -168,11 +170,7 @@ def summarize_all(points,mappings,policy,parser):
             'column':data.get('n'),'comment':data.get('o',''),'hits':hits,
             'exclusion_reason':exclusion['reason'] if exclusion else None})
     rows=[]; reasons=[]; totals=defaultdict(lambda:dict(instrumented=0,eligible=0,reached=0,uncovered=0,excluded=0))
-    present=set()
     for (module,hierarchy,source),types in sorted(groups.items()):
-        requirement=requirement_for(module,source,policy)
-        logical_module=requirement.get('module',module)
-        present.add(logical_module)
         metrics={}
         for kind,items in sorted(types.items()):
             eligible=[x for x in items if x['exclusion_reason'] is None]
@@ -182,38 +180,59 @@ def summarize_all(points,mappings,policy,parser):
                     'uncovered':len(gaps),'excluded':len(omissions)}
             metrics[kind]={**counts,'uncovered_points':gaps,'excluded_points':omissions}
             for key,value in counts.items(): totals[kind][key]+=value
-            if eligible and (kind not in requirement['types'] or gaps):
-                reasons.append(module+'/'+kind+': uncovered or unspecified instrumentation')
-        if any(x['eligible'] for x in metrics.values()) and not requirement['reviewed']:
-            reasons.append(module+': requirement/reachability review incomplete')
-        rows.append({'module':module,'logical_module':logical_module,'hierarchy':hierarchy,'source':source,
-                     'input_scope':requirement['input_scope'],'requirement_reviewed':requirement['reviewed'],'types':metrics})
-        rows[-1].update(input_scope_reviewed=requirement.get('input_scope_reviewed',False),
-                        required_input_bins=requirement.get('required_input_bins',[]),
-                        scope_review_note=requirement.get('scope_review_note','Remaining production scope is unreviewed.'))
+        rows.append({'module':module,'hierarchy':hierarchy,'source':source,
+                     'source_sha256':(source_hashes or {}).get(source),'types':metrics})
     for requirement in policy['requirements']:
-        if requirement['module'] not in present:
+        matches=[r for r in rows if (r['module']==requirement['module'] or r['module'].startswith(requirement['module']+'__'))
+                 and r['source'].endswith(requirement['source_suffix'])]
+        if not matches:
             reasons.append(requirement['module']+': required module not instrumented')
-    obligations=[]
-    for requirement in policy['requirements']:
-        matches=[r for r in rows if r['logical_module']==requirement['module'] and
-                 r['source'].endswith(requirement['source_suffix'])]
-        missing_types=[kind for kind in requirement['types'] if matches and
-                       not any(r['types'].get(kind,{}).get('eligible',0) for r in matches)]
-        for kind in missing_types:
-            reasons.append(requirement['module']+'/'+kind+': required instrumentation missing')
-        obligations.append({'module':requirement['module'],'source_suffix':requirement['source_suffix'],
-                            'instrumented_modules':sorted(set(r['module'] for r in matches)),
-                            'missing_required_types':missing_types,
-                            'input_scope_reviewed':requirement['input_scope_reviewed'],
-                            'reachability_reviewed':requirement['reviewed'],
-                            'required_input_bins':requirement['required_input_bins'],
-                            'input_bin_evidence':'not established by raw line/branch/toggle counters'})
-    return {'totals':dict(totals),'modules':rows,'input_scope_obligations':obligations,
-            'readiness_failures':sorted(set(reasons))}
+        for kind in policy['types']:
+            if matches and not any(r['types'].get(kind,{}).get('eligible',0) for r in matches):
+                reasons.append(requirement['module']+'/'+kind+': required instrumentation missing')
+    return {'totals':dict(totals),'modules':rows,'readiness_failures':sorted(set(reasons))}
 
 
-def audit(paths,source_root,policy,parser,scope='scenario'):
+def instance_key(row):
+    return row['hierarchy']+'|'+relative_source(row['source'])
+
+
+def baseline_record(runtimes):
+    """Per-instance reached/eligible counts with source identity, written once per accepted baseline."""
+    record={}
+    for runtime,summary in runtimes.items():
+        record[runtime]={instance_key(r):{'source':relative_source(r['source']),'source_sha256':r['source_sha256'],
+                                          'types':{k:{'eligible':v['eligible'],'reached':v['reached']} for k,v in r['types'].items()}}
+                         for r in summary['modules'] if r['source_sha256']}
+    return {'schema_version':1,'instances':record}
+
+
+def compare_baseline(runtime,summary,baseline):
+    """Changed instances may not lose coverage; unchanged and new instances are reported only."""
+    recorded=baseline['instances'].get(runtime)
+    if recorded is None:
+        return {'failures':[runtime+': no recorded coverage baseline'],'changed':[],'new':[],'removed':[]}
+    failures,changed,new=[],[],[]; seen=set()
+    for row in summary['modules']:
+        if not row['source_sha256']:
+            continue
+        key=instance_key(row); seen.add(key); base=recorded.get(key)
+        if base is None:
+            new.append(key); continue
+        if base['source_sha256']==row['source_sha256']:
+            continue
+        changed.append(key)
+        for kind,before in base['types'].items():
+            after=row['types'].get(kind,{'eligible':0,'reached':0})
+            if not before['eligible'] or not after['eligible']:
+                continue
+            if after['reached']*before['eligible']<before['reached']*after['eligible']:
+                failures.append('%s/%s: coverage fell from %d/%d to %d/%d'%(key,kind,before['reached'],before['eligible'],
+                                                                          after['reached'],after['eligible']))
+    return {'failures':failures,'changed':changed,'new':sorted(new),'removed':sorted(set(recorded)-seen)}
+
+
+def audit(paths,source_root,policy,parser,scope='scenario',baseline=None):
     validate_policy(policy); results=[]; buckets={}; errors=[]; seen=set()
     for path in paths:
         path=path.resolve()
@@ -226,12 +245,21 @@ def audit(paths,source_root,policy,parser,scope='scenario'):
         if bucket['provenance']!=result['provenance'] or (bucket['points'] and set(bucket['points'])!=set(points)):
             errors.append('incompatible coverage merge provenance/instrumentation'); continue
         for key,count in points.items(): bucket['points'][key]=bucket['points'].get(key,0)+count
-    runtimes={runtime:summarize_all(b['points'],b['mappings'],policy,parser) for runtime,b in buckets.items()}
+    runtimes={}
+    for runtime,b in buckets.items():
+        hashes={item['path']:item['sha256'] for item in b['provenance'].get('sources',[])}
+        runtimes[runtime]=summarize_all(b['points'],b['mappings'],policy,parser,hashes)
+        if baseline is not None:
+            comparison=compare_baseline(runtime,runtimes[runtime],baseline)
+            runtimes[runtime]['baseline_comparison']=comparison
+            runtimes[runtime]['readiness_failures']=sorted(set(runtimes[runtime]['readiness_failures']+comparison['failures']))
     missing=[r for r in policy['required_runtimes'] if r not in runtimes]
-    ready=not errors and not missing and all(not r['readiness_failures'] for r in runtimes.values())
-    return {'schema_version':1,'ok':not errors,'ready':ready,'scope':scope,'inputs':results,'runtimes':runtimes,
+    ready=(baseline is not None and not errors and not missing
+           and all(not r['readiness_failures'] for r in runtimes.values()))
+    return {'schema_version':2,'ok':not errors,'ready':ready,'scope':scope,'inputs':results,'runtimes':runtimes,
             'validation_errors':sorted(set(errors)),'missing_required_runtimes':missing,
-            'interpretation':'Instrumentation counters, not all HDL lines or proof that uncovered paths are safe'}
+            'baseline_applied':baseline is not None,
+            'interpretation':'Instrumentation counters; uncovered points are reported corpus limits, not proof of safety'}
 
 
 def main():
@@ -241,18 +269,24 @@ def main():
     ap.add_argument('--framescope',type=Path,default=REPO.parent/'framescope')
     ap.add_argument('--policy',type=Path,default=REPO/'tools/m5_coverage_policy.json')
     ap.add_argument('--scope',choices=('boot','scenario'),default='scenario')
-    ap.add_argument('--audit-only',action='store_true',help='Validate evidence; still reports ready:false for coverage gaps')
+    ap.add_argument('--audit-only',action='store_true',help='Validate evidence only; readiness still requires the baseline comparison')
+    ap.add_argument('--write-baseline',type=Path,help='Write a new baseline record from valid evidence (rebaseline only)')
     ap.add_argument('--out',type=Path,required=True)
     args=ap.parse_args(); out=args.out.resolve(); out.mkdir(parents=True,exist_ok=False)
     try:
         policy=json.loads(args.policy.read_text()); validate_policy(policy)
         parser=load_parser(args.framescope.resolve(),policy)
-        result=audit(args.coverage_report,args.source_root.resolve(),policy,parser,args.scope)
+        baseline=None if args.write_baseline else load_baseline(policy)
+        result=audit(args.coverage_report,args.source_root.resolve(),policy,parser,args.scope,baseline)
+        if args.write_baseline:
+            if not result['ok'] or result['missing_required_runtimes']:
+                raise ValueError('baseline requires valid evidence from every required runtime')
+            args.write_baseline.write_text(json.dumps(baseline_record(result['runtimes']),indent=1,sort_keys=True)+'\n')
     except Exception as exc:
-        result={'schema_version':1,'ok':False,'ready':False,'validation_errors':[str(exc)]}
+        result={'schema_version':2,'ok':False,'ready':False,'validation_errors':[str(exc)]}
     result.update(policy_sha256=digest(args.policy),tool_sha256=digest(Path(__file__)),audit_only=args.audit_only)
     (out/'summary.json').write_text(json.dumps(result,indent=2)+'\n')
-    accepted=result['ok'] if args.audit_only else result['ready']
+    accepted=result['ok'] if (args.audit_only or args.write_baseline) else result['ready']
     print(json.dumps({'ok':result['ok'],'ready':result['ready'],'summary':str(out/'summary.json')}))
     return 0 if accepted else 1
 

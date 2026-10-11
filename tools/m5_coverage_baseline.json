@@ -1,0 +1,1767 @@
+{
+ "instances": {
+  "native": {
+   "TOP.framescope_top.dut.backend_fetch_type_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 7,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 138,
+      "reached": 22
+     }
+    }
+   },
+   "TOP.framescope_top.dut.backend_fetch_value_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 7,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 154,
+      "reached": 22
+     }
+    }
+   },
+   "TOP.framescope_top.dut.backend_fetch_x_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 7,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 140,
+      "reached": 22
+     }
+    }
+   },
+   "TOP.framescope_top.dut.backend_fetch_y_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 7,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 138,
+      "reached": 22
+     }
+    }
+   },
+   "TOP.framescope_top.dut.canvas_command_guard_inst|src/design/interaction/CanvasCommandGuard.v": {
+    "source": "src/design/interaction/CanvasCommandGuard.v",
+    "source_sha256": "41d6a26e95d4e875a2c37756630bee141bf1917aabb382fe22993779304a78d7",
+    "types": {
+     "branch": {
+      "eligible": 14,
+      "reached": 10
+     },
+     "line": {
+      "eligible": 22,
+      "reached": 17
+     },
+     "toggle": {
+      "eligible": 396,
+      "reached": 293
+     }
+    }
+   },
+   "TOP.framescope_top.dut.circuit_canvas_bg_color_ram_inst|src/design/common/SimpleDualRam.v": {
+    "source": "src/design/common/SimpleDualRam.v",
+    "source_sha256": "b3fbe6488b06093ed9c76aa8bae2e2bc07ae8328328404533b3c9cc3ac57f2ef",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 58,
+      "reached": 58
+     }
+    }
+   },
+   "TOP.framescope_top.dut.circuit_canvas_fg_color_ram_inst|src/design/common/SimpleDualRam.v": {
+    "source": "src/design/common/SimpleDualRam.v",
+    "source_sha256": "b3fbe6488b06093ed9c76aa8bae2e2bc07ae8328328404533b3c9cc3ac57f2ef",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 58,
+      "reached": 42
+     }
+    }
+   },
+   "TOP.framescope_top.dut.circuit_canvas_inst|src/design/rendering/CircuitCanvas.v": {
+    "source": "src/design/rendering/CircuitCanvas.v",
+    "source_sha256": "6d6b45b6faf2a07029b2b43d857320dd2ea143d0e7b630dad684022adba4027a",
+    "types": {
+     "branch": {
+      "eligible": 64,
+      "reached": 60
+     },
+     "line": {
+      "eligible": 623,
+      "reached": 546
+     },
+     "toggle": {
+      "eligible": 1742,
+      "reached": 1214
+     }
+    }
+   },
+   "TOP.framescope_top.dut.circuit_canvas_ram_inst|src/design/common/SimpleDualRam.v": {
+    "source": "src/design/common/SimpleDualRam.v",
+    "source_sha256": "b3fbe6488b06093ed9c76aa8bae2e2bc07ae8328328404533b3c9cc3ac57f2ef",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 106,
+      "reached": 74
+     }
+    }
+   },
+   "TOP.framescope_top.dut.clkdiv_pixel_inst|src/design/common/ClockDivider.v": {
+    "source": "src/design/common/ClockDivider.v",
+    "source_sha256": "834229ac133a512b34016668eeabc3d881b95c90e567624540dd6baad7a8a4e3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 3,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 8,
+      "reached": 6
+     }
+    }
+   },
+   "TOP.framescope_top.dut.component_index_map_ram_inst|src/design/common/SimpleRam.v": {
+    "source": "src/design/common/SimpleRam.v",
+    "source_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 76,
+      "reached": 76
+     }
+    }
+   },
+   "TOP.framescope_top.dut.component_store_ram_inst|src/design/common/SimpleDualRam.v": {
+    "source": "src/design/common/SimpleDualRam.v",
+    "source_sha256": "b3fbe6488b06093ed9c76aa8bae2e2bc07ae8328328404533b3c9cc3ac57f2ef",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 202,
+      "reached": 78
+     }
+    }
+   },
+   "TOP.framescope_top.dut.component_value_digit_ram_inst|src/design/common/SimpleRam.v": {
+    "source": "src/design/common/SimpleRam.v",
+    "source_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 48,
+      "reached": 48
+     }
+    }
+   },
+   "TOP.framescope_top.dut.component_value_ram_inst|src/design/common/SimpleRam.v": {
+    "source": "src/design/common/SimpleRam.v",
+    "source_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 88,
+      "reached": 44
+     }
+    }
+   },
+   "TOP.framescope_top.dut.component_value_text_len_ram_inst|src/design/common/SimpleRam.v": {
+    "source": "src/design/common/SimpleRam.v",
+    "source_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 56,
+      "reached": 48
+     }
+    }
+   },
+   "TOP.framescope_top.dut.component_value_text_ram_inst|src/design/common/SimpleRam.v": {
+    "source": "src/design/common/SimpleRam.v",
+    "source_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 296,
+      "reached": 68
+     }
+    }
+   },
+   "TOP.framescope_top.dut.flood_debug_p_fetch_inst.fetch_cell_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 6,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 114,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.flood_debug_p_fetch_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 4,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 22,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 122,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.flooding_backend_wrapper_inst.fetchP_inst.fetch_cell_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 6,
+      "reached": 4
+     },
+     "toggle": {
+      "eligible": 114,
+      "reached": 82
+     }
+    }
+   },
+   "TOP.framescope_top.dut.flooding_backend_wrapper_inst.fetchP_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 4,
+      "reached": 4
+     },
+     "line": {
+      "eligible": 22,
+      "reached": 21
+     },
+     "toggle": {
+      "eligible": 122,
+      "reached": 90
+     }
+    }
+   },
+   "TOP.framescope_top.dut.flooding_backend_wrapper_inst.flooding_core_inst|src/design/solver/flooding_core.sv": {
+    "source": "src/design/solver/flooding_core.sv",
+    "source_sha256": "2abb9d7b416ad1b45269b0d86166f5c47b5f2954fd275b4e1dea7296afbc6ff1",
+    "types": {
+     "branch": {
+      "eligible": 72,
+      "reached": 66
+     },
+     "line": {
+      "eligible": 75,
+      "reached": 74
+     },
+     "toggle": {
+      "eligible": 868,
+      "reached": 422
+     }
+    }
+   },
+   "TOP.framescope_top.dut.flooding_backend_wrapper_inst.queue_store_inst|src/design/common/FloodQueueStore.v": {
+    "source": "src/design/common/FloodQueueStore.v",
+    "source_sha256": "6e80cfbf5b6b456462822014b15808814b2c6b0208ad7ef0bbd4da4c664adfb8",
+    "types": {
+     "branch": {
+      "eligible": 12,
+      "reached": 8
+     },
+     "line": {
+      "eligible": 8,
+      "reached": 6
+     },
+     "toggle": {
+      "eligible": 340,
+      "reached": 134
+     }
+    }
+   },
+   "TOP.framescope_top.dut.flooding_backend_wrapper_inst.result_store_inst|src/design/matrix/ResultMatrixStore.v": {
+    "source": "src/design/matrix/ResultMatrixStore.v",
+    "source_sha256": "23829a5220eb7d3ad01d87a894da4ea92587e8b86cf98de77231b890904e13cf",
+    "types": {
+     "branch": {
+      "eligible": 10,
+      "reached": 10
+     },
+     "line": {
+      "eligible": 6,
+      "reached": 4
+     },
+     "toggle": {
+      "eligible": 220,
+      "reached": 137
+     }
+    }
+   },
+   "TOP.framescope_top.dut.flooding_backend_wrapper_inst.visited_store_inst|src/design/matrix/VisitedMatrixStore.v": {
+    "source": "src/design/matrix/VisitedMatrixStore.v",
+    "source_sha256": "106aad11ab4a418787ea2ae6bb3b48baa26c1ea174bd7a2c3874e31a53fa7c56",
+    "types": {
+     "branch": {
+      "eligible": 8,
+      "reached": 8
+     },
+     "line": {
+      "eligible": 6,
+      "reached": 4
+     },
+     "toggle": {
+      "eligible": 174,
+      "reached": 125
+     }
+    }
+   },
+   "TOP.framescope_top.dut.flooding_backend_wrapper_inst|src/design/solver/FloodingBackendWrapper.sv": {
+    "source": "src/design/solver/FloodingBackendWrapper.sv",
+    "source_sha256": "74590ccdc3e32e943498f2a75c5b5898d02da7122d9ea79317ee7c06384c6a36",
+    "types": {
+     "branch": {
+      "eligible": 6,
+      "reached": 5
+     },
+     "line": {
+      "eligible": 9,
+      "reached": 6
+     },
+     "toggle": {
+      "eligible": 476,
+      "reached": 266
+     }
+    }
+   },
+   "TOP.framescope_top.dut.frontend_hex_mux_inst|src/design/uart/Hex7SegMux.v": {
+    "source": "src/design/uart/Hex7SegMux.v",
+    "source_sha256": "a6ac74cc6851f85e7bd9875ac07097e2da7652a4ac8a2fdf1c4840a8aff28a86",
+    "types": {
+     "line": {
+      "eligible": 25,
+      "reached": 7
+     },
+     "toggle": {
+      "eligible": 106,
+      "reached": 50
+     }
+    }
+   },
+   "TOP.framescope_top.dut.frontend_netlist_tx_inst.uart_tx_inst|src/design/uart/UartTx.v": {
+    "source": "src/design/uart/UartTx.v",
+    "source_sha256": "06e864767bac4f2906a2f87696c63d61d1d119d6a12968cc3a015a9cff612d7c",
+    "types": {
+     "branch": {
+      "eligible": 10,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 12,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 78,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.frontend_netlist_tx_inst|src/design/uart/FrontendNetlistLineTransmitter.sv": {
+    "source": "src/design/uart/FrontendNetlistLineTransmitter.sv",
+    "source_sha256": "15b376f6040814aa41a6654d72c258af2c088f5df1e1b350a7317708c6734823",
+    "types": {
+     "branch": {
+      "eligible": 14,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 96,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 500,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.frontend_reply_ram0_inst|src/design/common/SimpleRam.v": {
+    "source": "src/design/common/SimpleRam.v",
+    "source_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 152,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.frontend_reply_ram1_inst|src/design/common/SimpleRam.v": {
+    "source": "src/design/common/SimpleRam.v",
+    "source_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 152,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.frontend_uart_line_assembler_inst|src/design/solver_board/UartLineAssembler.sv": {
+    "source": "src/design/solver_board/UartLineAssembler.sv",
+    "source_sha256": "4bcb05c69620c20074711b70cd1896552d62ed0a2cc0fa8882bdeacf71ccaaf3",
+    "types": {
+     "branch": {
+      "eligible": 6,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 12,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 60,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.frontend_uart_rx_inst|src/design/solver_board/UartRx.v": {
+    "source": "src/design/solver_board/UartRx.v",
+    "source_sha256": "6738df782ee5ff926458b92421f3aceb0a8f7a20849772f625688b32d21bf4a3",
+    "types": {
+     "branch": {
+      "eligible": 16,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 12,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 82,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.frontend_voltage_parser_inst|src/design/uart/FrontendVoltagePacketParser.sv": {
+    "source": "src/design/uart/FrontendVoltagePacketParser.sv",
+    "source_sha256": "ec61eaf4e151cf4e027f8a5f885b88c35867341d253e85afc15982c43cb2c2d7",
+    "types": {
+     "branch": {
+      "eligible": 16,
+      "reached": 2
+     },
+     "line": {
+      "eligible": 43,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 626,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_coord_textbox.u_font|src/design/Dashboard/FontROM.v": {
+    "source": "src/design/Dashboard/FontROM.v",
+    "source_sha256": "3969458efdd55181812b73b46995e161ed4ee0ff00454339b47d1d5b12971ae4",
+    "types": {
+     "line": {
+      "eligible": 943,
+      "reached": 137
+     },
+     "toggle": {
+      "eligible": 36,
+      "reached": 32
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_coord_textbox|src/design/Dashboard/DynamicTextBox.v": {
+    "source": "src/design/Dashboard/DynamicTextBox.v",
+    "source_sha256": "988d24a33f8ae6472591475953731e10c02f35e4bcdd80646c38a5d35e2b1769",
+    "types": {
+     "branch": {
+      "eligible": 28,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 636,
+      "reached": 278
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_input_textbox.u_font|src/design/Dashboard/FontROM.v": {
+    "source": "src/design/Dashboard/FontROM.v",
+    "source_sha256": "3969458efdd55181812b73b46995e161ed4ee0ff00454339b47d1d5b12971ae4",
+    "types": {
+     "line": {
+      "eligible": 943,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 36,
+      "reached": 22
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_input_textbox|src/design/Dashboard/DynamicTextBox.v": {
+    "source": "src/design/Dashboard/DynamicTextBox.v",
+    "source_sha256": "988d24a33f8ae6472591475953731e10c02f35e4bcdd80646c38a5d35e2b1769",
+    "types": {
+     "branch": {
+      "eligible": 28,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 636,
+      "reached": 162
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_label_textbox.u_font|src/design/Dashboard/FontROM.v": {
+    "source": "src/design/Dashboard/FontROM.v",
+    "source_sha256": "3969458efdd55181812b73b46995e161ed4ee0ff00454339b47d1d5b12971ae4",
+    "types": {
+     "line": {
+      "eligible": 943,
+      "reached": 227
+     },
+     "toggle": {
+      "eligible": 36,
+      "reached": 36
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_label_textbox|src/design/Dashboard/DynamicTextBox.v": {
+    "source": "src/design/Dashboard/DynamicTextBox.v",
+    "source_sha256": "988d24a33f8ae6472591475953731e10c02f35e4bcdd80646c38a5d35e2b1769",
+    "types": {
+     "branch": {
+      "eligible": 28,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 636,
+      "reached": 392
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_pos_title_textbox.u_font|src/design/Dashboard/FontROM.v": {
+    "source": "src/design/Dashboard/FontROM.v",
+    "source_sha256": "3969458efdd55181812b73b46995e161ed4ee0ff00454339b47d1d5b12971ae4",
+    "types": {
+     "line": {
+      "eligible": 943,
+      "reached": 64
+     },
+     "toggle": {
+      "eligible": 36,
+      "reached": 34
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_pos_title_textbox|src/design/Dashboard/DynamicTextBox.v": {
+    "source": "src/design/Dashboard/DynamicTextBox.v",
+    "source_sha256": "988d24a33f8ae6472591475953731e10c02f35e4bcdd80646c38a5d35e2b1769",
+    "types": {
+     "branch": {
+      "eligible": 28,
+      "reached": 12
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 636,
+      "reached": 172
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_type_title_textbox.u_font|src/design/Dashboard/FontROM.v": {
+    "source": "src/design/Dashboard/FontROM.v",
+    "source_sha256": "3969458efdd55181812b73b46995e161ed4ee0ff00454339b47d1d5b12971ae4",
+    "types": {
+     "line": {
+      "eligible": 943,
+      "reached": 37
+     },
+     "toggle": {
+      "eligible": 36,
+      "reached": 32
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_type_title_textbox|src/design/Dashboard/DynamicTextBox.v": {
+    "source": "src/design/Dashboard/DynamicTextBox.v",
+    "source_sha256": "988d24a33f8ae6472591475953731e10c02f35e4bcdd80646c38a5d35e2b1769",
+    "types": {
+     "branch": {
+      "eligible": 28,
+      "reached": 12
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 636,
+      "reached": 156
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_value_label_textbox.u_font|src/design/Dashboard/FontROM.v": {
+    "source": "src/design/Dashboard/FontROM.v",
+    "source_sha256": "3969458efdd55181812b73b46995e161ed4ee0ff00454339b47d1d5b12971ae4",
+    "types": {
+     "line": {
+      "eligible": 943,
+      "reached": 46
+     },
+     "toggle": {
+      "eligible": 36,
+      "reached": 32
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel.u_value_label_textbox|src/design/Dashboard/DynamicTextBox.v": {
+    "source": "src/design/Dashboard/DynamicTextBox.v",
+    "source_sha256": "988d24a33f8ae6472591475953731e10c02f35e4bcdd80646c38a5d35e2b1769",
+    "types": {
+     "branch": {
+      "eligible": 28,
+      "reached": 12
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 636,
+      "reached": 164
+     }
+    }
+   },
+   "TOP.framescope_top.dut.gen_prop_panel.u_prop_panel|src/design/Dashboard/ComponentPropertyPanel.v": {
+    "source": "src/design/Dashboard/ComponentPropertyPanel.v",
+    "source_sha256": "45ca2444a42286dce2cb0c71b1364762a8ec60b825277f94f086cc2337c73786",
+    "types": {
+     "branch": {
+      "eligible": 34,
+      "reached": 32
+     },
+     "line": {
+      "eligible": 43,
+      "reached": 27
+     },
+     "toggle": {
+      "eligible": 4150,
+      "reached": 1052
+     }
+    }
+   },
+   "TOP.framescope_top.dut.interaction_controller_inst.frame_capture_inst|src/design/interaction/InteractionFrameCapture.v": {
+    "source": "src/design/interaction/InteractionFrameCapture.v",
+    "source_sha256": "a3f7c7585110a7f1281825e11c0123899b1d5cd959bffcf47f76d227bf603eeb",
+    "types": {
+     "branch": {
+      "eligible": 4,
+      "reached": 3
+     },
+     "line": {
+      "eligible": 9,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 220,
+      "reached": 134
+     }
+    }
+   },
+   "TOP.framescope_top.dut.interaction_controller_inst.wire_draw_mode_inst|src/design/interaction/WireDrawMode.v": {
+    "source": "src/design/interaction/WireDrawMode.v",
+    "source_sha256": "6a148e613a368af517f716dc2d5c0a8cdd1148a234e7676e7d494f8b89839090",
+    "types": {
+     "branch": {
+      "eligible": 4,
+      "reached": 3
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 330,
+      "reached": 208
+     }
+    }
+   },
+   "TOP.framescope_top.dut.interaction_controller_inst|src/design/interaction/InteractionController.v": {
+    "source": "src/design/interaction/InteractionController.v",
+    "source_sha256": "a4c7222b0034aa46555d9cc3abb8be0e2834456a349e43848b884808642cd88e",
+    "types": {
+     "branch": {
+      "eligible": 66,
+      "reached": 58
+     },
+     "line": {
+      "eligible": 123,
+      "reached": 49
+     },
+     "toggle": {
+      "eligible": 1634,
+      "reached": 1056
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[0].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 218
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[10].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 222
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[11].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 222
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[12].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 222
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[13].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 226
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[14].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 226
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[15].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 210
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[16].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 222
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[17].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 17
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 238
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[18].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 20
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 27
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 300
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[19].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 0
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 0
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 88
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[1].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 222
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[2].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 222
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[3].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 226
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[4].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 224
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[5].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 222
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[6].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 222
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[7].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 222
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[8].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 226
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst.button_gen[9].button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 20
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 226
+     }
+    }
+   },
+   "TOP.framescope_top.dut.keyboard_vga_inst|src/design/rendering/KeyboardVGA.v": {
+    "source": "src/design/rendering/KeyboardVGA.v",
+    "source_sha256": "47e9bebd27d49c2d27e17c165db5468482130ff6f9cd436728e288d0c80651b9",
+    "types": {
+     "branch": {
+      "eligible": 14,
+      "reached": 11
+     },
+     "line": {
+      "eligible": 87,
+      "reached": 16
+     },
+     "toggle": {
+      "eligible": 820,
+      "reached": 756
+     }
+    }
+   },
+   "TOP.framescope_top.dut.mouse_ctrl_inst|/home/chesium/ee2026_ws/framescope/examples/metacircuit/stubs/MouseCtl.sv": {
+    "source": "/home/chesium/ee2026_ws/framescope/examples/metacircuit/stubs/MouseCtl.sv",
+    "source_sha256": "874ed88de9b43b192a07b66a8504436da0368e36ef8405fb348bd0527e3447b0",
+    "types": {
+     "line": {
+      "eligible": 0,
+      "reached": 0
+     },
+     "toggle": {
+      "eligible": 0,
+      "reached": 0
+     }
+    }
+   },
+   "TOP.framescope_top.dut.mouse_disp_inst|/home/chesium/ee2026_ws/framescope/examples/metacircuit/stubs/MouseDisplay.sv": {
+    "source": "/home/chesium/ee2026_ws/framescope/examples/metacircuit/stubs/MouseDisplay.sv",
+    "source_sha256": "0ed1435ed0f1a158b797e7343b44a22c36828e2a8a8ac0a6d5bd77b033a888f9",
+    "types": {
+     "branch": {
+      "eligible": 0,
+      "reached": 0
+     },
+     "line": {
+      "eligible": 0,
+      "reached": 0
+     },
+     "toggle": {
+      "eligible": 0,
+      "reached": 0
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_extract_fetch_cell_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 6,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 114,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_extract_fetch_rot_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 7,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 134,
+      "reached": 22
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_extract_fetch_type_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 7,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 138,
+      "reached": 22
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_extract_fetch_x_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 7,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 140,
+      "reached": 22
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_extract_fetch_y_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 7,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 138,
+      "reached": 22
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_extract_inst|src/design/solver/extract_component_nodes.sv": {
+    "source": "src/design/solver/extract_component_nodes.sv",
+    "source_sha256": "b8fea465c372050b2dab0dd8501b86463dd7267444a22bdb5a77765b1cd658e0",
+    "types": {
+     "branch": {
+      "eligible": 126,
+      "reached": 3
+     },
+     "line": {
+      "eligible": 143,
+      "reached": 4
+     },
+     "toggle": {
+      "eligible": 1986,
+      "reached": 12
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_extract_store_node0_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 78,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_extract_store_node1_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 78,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_node0_ram_inst|src/design/common/SimpleRam.v": {
+    "source": "src/design/common/SimpleRam.v",
+    "source_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 72,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.netlist_node1_ram_inst|src/design/common/SimpleRam.v": {
+    "source": "src/design/common/SimpleRam.v",
+    "source_sha256": "7ccb0141765e6d84641846adf9460f2c6fed2bf42d9b5086db340f25ad9a4dd3",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 1,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 72,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[0].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[1].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[2].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[3].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[4].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[5].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[6].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[7].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[8].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst.toolbar_button_gen[9].toolbar_button_inst|src/design/rendering/ButtonVGA.v": {
+    "source": "src/design/rendering/ButtonVGA.v",
+    "source_sha256": "29f7164cd549a7a5b2640c683373e4ae18967148e29cbc15f5e4213fe602e021",
+    "types": {
+     "branch": {
+      "eligible": 30,
+      "reached": 13
+     },
+     "line": {
+      "eligible": 61,
+      "reached": 23
+     },
+     "toggle": {
+      "eligible": 458,
+      "reached": 276
+     }
+    }
+   },
+   "TOP.framescope_top.dut.toolbar_vga_inst|src/design/rendering/ToolbarVGA.v": {
+    "source": "src/design/rendering/ToolbarVGA.v",
+    "source_sha256": "4ee00f31d426b07cb30650e01cf6c05aca41d3e6a2eb0c8f1222474a859f983b",
+    "types": {
+     "branch": {
+      "eligible": 20,
+      "reached": 20
+     },
+     "line": {
+      "eligible": 260,
+      "reached": 215
+     },
+     "toggle": {
+      "eligible": 470,
+      "reached": 449
+     }
+    }
+   },
+   "TOP.framescope_top.dut.uart_cell_debug_tx_inst|src/design/uart/UartTx.v": {
+    "source": "src/design/uart/UartTx.v",
+    "source_sha256": "06e864767bac4f2906a2f87696c63d61d1d119d6a12968cc3a015a9cff612d7c",
+    "types": {
+     "branch": {
+      "eligible": 10,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 12,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 78,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.uart_cell_fetch_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 6,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 114,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.uart_cell_p_fetch_inst.fetch_cell_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 2,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 6,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 114,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.uart_cell_p_fetch_inst|src/design/solver/BackendFetchers.v": {
+    "source": "src/design/solver/BackendFetchers.v",
+    "source_sha256": "ac40a769afe736095dedf17d100f329dc1bdf021d04fadf18b462a109d5e82fa",
+    "types": {
+     "branch": {
+      "eligible": 4,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 22,
+      "reached": 1
+     },
+     "toggle": {
+      "eligible": 122,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.uart_flood_debug_tx_inst|src/design/uart/UartTx.v": {
+    "source": "src/design/uart/UartTx.v",
+    "source_sha256": "06e864767bac4f2906a2f87696c63d61d1d119d6a12968cc3a015a9cff612d7c",
+    "types": {
+     "branch": {
+      "eligible": 10,
+      "reached": 1
+     },
+     "line": {
+      "eligible": 12,
+      "reached": 2
+     },
+     "toggle": {
+      "eligible": 78,
+      "reached": 2
+     }
+    }
+   },
+   "TOP.framescope_top.dut.vga_ctrl_inst|src/design/driver/VGAControl.v": {
+    "source": "src/design/driver/VGAControl.v",
+    "source_sha256": "794dd15ea2a2e80aeb275e1840c349b6d32b29f25256d035b1d06ff44abe0d87",
+    "types": {
+     "branch": {
+      "eligible": 6,
+      "reached": 6
+     },
+     "line": {
+      "eligible": 14,
+      "reached": 8
+     },
+     "toggle": {
+      "eligible": 122,
+      "reached": 112
+     }
+    }
+   },
+   "TOP.framescope_top.dut|src/design/rendering/GlobalRender_top.v": {
+    "source": "src/design/rendering/GlobalRender_top.v",
+    "source_sha256": "9b7e4d062a06142994d828d49c45feba8893fe32af7e489745f84458b82667e9",
+    "types": {
+     "branch": {
+      "eligible": 438,
+      "reached": 145
+     },
+     "line": {
+      "eligible": 726,
+      "reached": 108
+     },
+     "toggle": {
+      "eligible": 8720,
+      "reached": 2351
+     }
+    }
+   }
+  }
+ },
+ "schema_version": 1
+}

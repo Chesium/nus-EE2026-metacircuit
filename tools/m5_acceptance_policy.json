@@ -5,9 +5,9 @@
     "golden/tools/semantic_adapter.py": "6d33a6825c9a56bc4a1786285030045313716ce898c0439356c74c2e4ef8048b",
     "golden/tools/m3_compare.ts": "09509077731d4d803142859d3f6f2b901215b5b3e8ad2247785d3ad75a3fe5b1",
     "golden/tools/test_rtl.py": "f689e8a693280a53baccdb300648227d9b22e6c2f4c585b76b79707069ded43d",
-    "tools/verify_coverage_m5.py": "534a8694400da4389cdfdc466c5694d4592c1c68d84c115ce2414e2bf8827514",
+    "tools/verify_coverage_m5.py": "a7af7d6eb6760d1b107762d4293e18a8cbbaed08242a72f1a0e664daa654bbf4",
     "tools/verify_fp_m5.py": "a327b00cc22414abc5c8e0eea312ce8f7aa9438a18c7507db85459a01b31b90e",
-    "tools/verify_solver_xsim_m5.py": "304162958b024634144bf9131e0589bb9c5515e578a219924851e2b9a09dc921",
+    "tools/verify_solver_xsim_m5.py": "45c1415ef035a0fcb20e2a3e68e903c8db41065848fd575d501e6421f5c28385",
     "tools/verify_solver_frontend_xsim_m5.py": "3be7456369d165472a36f2b0cc2b4cc48dea933fe0e872428e9eb0e229b213a4",
     "tools/verify_solver_m5.py": "c1c012be8da5647f9d13813a8056de6311dda84edbf43b74232946594eb1ad0a",
     "golden/tools/verify_frontend_invariants_m5.py": "f8b474739dc78a50d7153b336da3be763591d2bd6267e1c629a5030e81f18975",
@@ -16,7 +16,7 @@
     "src/testbench/M5FrontendSupplemental_test.sv": "c1f7e51cb4c8cead45a68fa01c3eab65a3523c285fb589885657d06ae8681d9c",
     "src/testbench/M5CanvasInvariants.sv": "4a4e534fbab97f085efc47938980156fc641591bbccf8bdaa6766e38d7e8ff14",
     "src/testbench/M5SolverExtraction.sv": "23b690dc42bbe9bb92bbde4f77b60dcafc752c90d7fe3efb197cf51184210b98",
-    "src/testbench/M5SolverUartXsim.sv": "9a45604c99b647a54ec0a759c48f1865d3446262da172c40233fba0a8291cabf",
+    "src/testbench/M5SolverUartXsim.sv": "1006f59aa871eb0815464d3f6622b79ccd9fec9597c71d4384bc01cd97fc69c9",
     "src/testbench/M5SolverFrontendXsim.sv": "11968c655f788c8f6d14f0d7b3393f04454008f3603e0fa4c1941cc3f5096fd0",
     "src/testbench/M5FpCharacterization.sv": "48aac0eaeb2daae73c7e2ab3dbf0c8e99588b1d671a4df6864030d5427db00ba",
     "tools/verify_solver_capacity_m5.py": "c719bea148b4bd60d6993b08816213e099808cda5291256f14abce118886626d",
@@ -47,8 +47,8 @@
   },
   "docker_image": "framescope-toolchain:6501155dc903",
   "functional_bins_required": 64,
-  "coverage_policy": "All named functional bins required; line/toggle exclusions not yet reviewed, so full readiness fails.",
-  "mandatory_scope": "Frontend frozen contract plus continuous global and capacity/value/unit/selection domain invariants, configured actual FP pipeline and augmented-capacity recovery, routed no-regression timing/CDC/DRC against the recorded baseline under the frozen comparison XDC and positive objective gain. FIFO reset-base/range-count induction and lifetime/overlap ledger on both runtimes. Actual-source watched FIFO order, conditional guard completion, quiescent rebuild ranking, parser control/range and reply bank integrity proofs, cold real-UART malformed rejection/recovery and32node view checks.",
+  "coverage_policy": "All 64 functional bins required; structural coverage reported, and changed modules may not lose coverage against tools/m5_coverage_baseline.json (D-031).",
+  "mandatory_scope": "Frontend frozen contract, 64/64 functional bins and native structural-coverage no-regression for changed modules, plus continuous global and capacity/value/unit/selection domain invariants, configured actual FP pipeline, augmented-capacity recovery and near-singular accuracy no-regression, routed no-regression timing/CDC/DRC against the recorded baseline under the frozen comparison XDC and positive objective gain. FIFO reset-base/range-count induction and lifetime/overlap ledger on both runtimes. Actual-source watched FIFO order, conditional guard completion, quiescent rebuild ranking, parser control/range and reply bank integrity proofs, cold real-UART malformed rejection/recovery and32node view checks.",
   "seed_corpus": [
     1,
     7,
@@ -72,7 +72,7 @@
     "docs/m5-decisions.md:A-009",
     "docs/m5-decisions.md:A-010"
   ],
-  "coverage_policy_sha256": "f88e8509d4f37db7615628a2a30f7a2033485480bcc0133d5400eae610ca15a8",
+  "coverage_policy_sha256": "489b4de067b37fe5ec644168255bddd950607cbe8fcf4bd8fe99875798bba132",
   "qor_timing_policy": {
     "decision": "docs/m5-decisions.md:M5 timing scope",
     "scope": "Timing closure is out of M5 scope (TIM-1). Candidates may not regress timing against the recorded baseline; the baseline setup violations and missing I/O delays are recorded debt.",
@@ -115,5 +115,12 @@
       ],
       "cdc": "All paths are Safely Timed"
     }
+  },
+  "solver_accuracy": {
+    "decision": "docs/m5-decisions.md:M5 harness scope",
+    "case": "near_singular_coupled_milli_vs999",
+    "max_relative_error": 0.03717903549630604,
+    "report": "golden/out/m5-solver-accuracy-baseline-20261011g/probe/report.json",
+    "rule": "Only the declared near-singular case may miss the strict numeric policy, and its relative error may not exceed this recorded baseline (BUG-2)."
   }
 }

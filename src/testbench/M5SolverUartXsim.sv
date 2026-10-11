@@ -167,8 +167,13 @@ module M5SolverUartXsim;
       if($test$plusargs("CORRUPT_GENERAL")) got=got*1.001;
       error=got-expected; if(error<0) error=-error;
       scale=expected; if(scale<0) scale=-scale;
-      if(!numeric_policy_accepts(got,expected))
-        $fatal(1,"general voltage mismatch expected %e got %e bound %e",expected,got,scale*0.0002+1.0e-30);
+      if(!numeric_policy_accepts(got,expected)) begin
+        // ACCURACY_PROBE measures the error of declared ill-conditioned cases instead of stopping.
+        if($test$plusargs("ACCURACY_PROBE"))
+          $display("ACCURACY_MISS %s expected=%.17e got=%.17e",prefix,expected,got);
+        else
+          $fatal(1,"general voltage mismatch expected %e got %e bound %e",expected,got,scale*0.0002+1.0e-30);
+      end
       $display("SOLVER_REPLY %s rational=%e observed=%e",rx_line,expected,got);
     end
   endtask

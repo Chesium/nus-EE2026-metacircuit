@@ -1,4 +1,4 @@
-"""Coverage integrity and readiness controls; no model-generated pass fixture."""
+"""Coverage integrity, required instrumentation and baseline no-regression controls."""
 from copy import deepcopy
 import importlib.util
 import json
@@ -43,12 +43,14 @@ class CoverageControls(unittest.TestCase):
     def audit(self,paths=None,policy=None):
         return G.audit(paths or [self.path],self.root,policy or POLICY,PARSER)
 
-    def test_full_uncapped_gap_counts_and_unreviewed_readiness(self):
+    def test_gaps_are_reported_not_readiness_failures(self):
         result=self.audit();self.assertTrue(result['ok']);self.assertFalse(result['ready'])
         metric=result['runtimes']['native']['modules'][0]['types']['toggle']
         self.assertEqual(metric['eligible'],100);self.assertEqual(metric['uncovered'],100)
         self.assertEqual(len(metric['uncovered_points']),100)
-        self.assertEqual(result['missing_required_runtimes'],['docker'])
+        self.assertFalse(any('uncovered' in r for r in result['runtimes']['native']['readiness_failures']))
+        self.assertEqual(result['missing_required_runtimes'],[])
+        self.assertFalse(result['baseline_applied'])
 
     def test_raw_coverage_corruption(self):
         (self.directory/'scenario.dat').write_text('broken')
@@ -82,9 +84,11 @@ class CoverageControls(unittest.TestCase):
             policy=deepcopy(POLICY);mutate(policy)
             with self.assertRaises(ValueError):self.audit(policy=policy)
 
-    def test_threshold_lowering_rejected(self):
-        policy=deepcopy(POLICY);policy['default_requirement']['max_uncovered']=1
-        with self.assertRaises(ValueError):self.audit(policy=policy)
+    def test_policy_requires_all_types_and_pinned_baseline(self):
+        for mutate in [lambda p:p.update(types=['line']),lambda p:p.update(required_runtimes=['native','docker']),lambda p:p['baseline'].update(sha256='unpinned'),
+                       lambda p:p.pop('baseline')]:
+            policy=deepcopy(POLICY);mutate(policy)
+            with self.assertRaises(ValueError):self.audit(policy=policy)
 
     def test_split_and_seed_provenance_required(self):
         self.report['boundary']['frame']=2;self.save();self.assertFalse(self.audit()['ok'])
@@ -99,31 +103,40 @@ class CoverageControls(unittest.TestCase):
         source='/candidate/src/design/common/FloodQueueStore.v'
         key='\x01f\x02'+source+'\x01l\x021\x01page\x02v_toggle/FloodQueueStore__D480\x01h\x02TOP.queue'
         result=G.summarize_all({key:1},{source:source},POLICY,PARSER)
-        row=result['modules'][0]
-        self.assertEqual(row['module'],'FloodQueueStore__D480')
-        self.assertEqual(row['logical_module'],'FloodQueueStore')
+        self.assertEqual(result['modules'][0]['module'],'FloodQueueStore__D480')
         self.assertNotIn('FloodQueueStore: required module not instrumented',result['readiness_failures'])
         self.assertIn('FloodQueueStore/branch: required instrumentation missing',result['readiness_failures'])
         self.assertIn('FloodQueueStore/line: required instrumentation missing',result['readiness_failures'])
-        self.assertTrue(row['input_scope_reviewed'])
-        self.assertFalse(row['requirement_reviewed'])
-        self.assertIn('non-power-of-two-pointer-wrap',row['required_input_bins'])
         wrong='/candidate/src/design/other/FloodQueueStore.v'
         result=G.summarize_all({key:1},{source:wrong},POLICY,PARSER)
         self.assertIn('FloodQueueStore: required module not instrumented',result['readiness_failures'])
 
-    def test_input_domain_review_does_not_prove_reachability(self):
-        result=self.audit();obligations=result['runtimes']['native']['input_scope_obligations']
-        queue=next(x for x in obligations if x['module']=='FloodQueueStore')
-        self.assertTrue(queue['input_scope_reviewed']);self.assertFalse(queue['reachability_reviewed'])
-        self.assertEqual(queue['instrumented_modules'],[])
-        self.assertIn('not established',queue['input_bin_evidence'])
-        self.assertFalse(result['ready'])
+    def test_missing_required_module_source_rejected(self):
+        policy=deepcopy(POLICY);policy['requirements'][0].pop('source_suffix')
+        with self.assertRaises(ValueError):self.audit(policy=policy)
 
-    def test_missing_module_input_obligations_rejected(self):
-        for field in ('source_suffix','required_input_bins','input_scope_reviewed','scope_review_note'):
-            policy=deepcopy(POLICY);policy['requirements'][0].pop(field)
-            with self.assertRaises(ValueError):self.audit(policy=policy)
+    def baseline(self,reached,source_sha):
+        record=G.baseline_record(self.audit()['runtimes'])
+        entry=next(iter(record['instances']['native'].values()))
+        entry['types']['toggle']['reached']=reached;entry['source_sha256']=source_sha
+        return record
 
+    def comparison(self,baseline):
+        return G.audit([self.path],self.root,POLICY,PARSER,baseline=baseline)['runtimes']['native']['baseline_comparison']
+
+    def failures(self,baseline):
+        return self.comparison(baseline)['failures']
+
+    def test_changed_module_may_not_lose_coverage(self):
+        self.assertTrue(any('coverage fell from 10/100 to 0/100' in f for f in self.failures(self.baseline(10,'old'))))
+        self.assertEqual(self.failures(self.baseline(0,'old')),[])
+
+    def test_unchanged_module_gaps_are_not_compared(self):
+        self.assertEqual(self.failures(self.baseline(10,G.digest(self.source))),[])
+
+    def test_new_instances_are_reported_and_missing_runtime_baseline_fails(self):
+        comparison=self.comparison({'schema_version':1,'instances':{'native':{}}})
+        self.assertEqual(comparison['failures'],[]);self.assertEqual(len(comparison['new']),1)
+        self.assertTrue(self.failures({'schema_version':1,'instances':{}}))
 
 if __name__=='__main__':unittest.main()

@@ -51,6 +51,12 @@ class AcceptanceControls(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_objective(objective, qor(), qor(90))
 
+    def test_setup_tolerance_must_be_finite_and_nonnegative(self):
+        self.assertTrue(validate_objective({**self.objective, 'setup_wns_tolerance_ns': 0.2}, qor(), qor(90))['ok'])
+        for value in (-0.1, float('nan'), True, '0.2'):
+            with self.assertRaises(ValueError):
+                validate_objective({**self.objective, 'setup_wns_tolerance_ns': value}, qor(), qor(90))
+
     def test_timing_objective_has_correct_direction(self):
         objective = {**self.objective, 'metric': 'wns_ns', 'minimum_gain': 0.2}
         self.assertTrue(validate_objective(objective, qor(100, 1), qor(100, 1.3))['ok'])
@@ -132,8 +138,8 @@ class AcceptanceControls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory)
             gate = Gate(out, out, 'native')
-            gate.policy = {'seed_corpus': [1], 'stress_operations': 1, 'stress_generator': 2}
-            gate.peer_coverage = []
+            gate.policy = {'seed_corpus': [1], 'stress_operations': 1, 'stress_generator': 2,
+                           'solver_accuracy': {'max_relative_error': 0.04}}
             frontend = out / 'actual-solver-frontend-xsim/report.json'
             frontend.parent.mkdir()
             actual_command = gate.command
@@ -171,8 +177,8 @@ class AcceptanceControls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory)
             gate = Gate(out, out, 'native')
-            gate.policy = {'seed_corpus': [1], 'stress_operations': 1, 'stress_generator': 2}
-            gate.peer_coverage = []
+            gate.policy = {'seed_corpus': [1], 'stress_operations': 1, 'stress_generator': 2,
+                           'solver_accuracy': {'max_relative_error': 0.04}}
             evidence = out / 'actual-solver-capacity/report.json'
             evidence.parent.mkdir()
             actual_command = gate.command
@@ -193,6 +199,51 @@ class AcceptanceControls(unittest.TestCase):
                     gate.checks.clear()
                     gate.full()
                     self.assertEqual(all(c['ok'] for c in gate.checks), verdict is True)
+
+    def test_full_rejects_missing_or_worse_solver_accuracy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            gate = Gate(out, out, 'native')
+            gate.policy = {'seed_corpus': [1], 'stress_operations': 1, 'stress_generator': 2,
+                           'solver_accuracy': {'max_relative_error': 0.04}}
+            evidence = out / 'solver-accuracy/report.json'
+            evidence.parent.mkdir()
+            actual_command = gate.command
+
+            def command(name, argv, **kwargs):
+                if name == 'solver-accuracy':
+                    self.assertEqual(argv[argv.index('--accuracy-baseline') + 1], '0.04')
+                    self.assertEqual(kwargs['verdict'], 'accuracy_no_regression')
+                    return actual_command(name, [sys.executable, '-c', 'pass'], **kwargs)
+                item = {'name': name, 'ok': True}
+                gate.checks.append(item)
+                return item
+
+            with patch.object(gate, 'command', side_effect=command):
+                for verdict in (None, False, True):
+                    if verdict is not None:
+                        evidence.write_text(json.dumps({'accuracy_no_regression': verdict}))
+                    gate.checks.clear()
+                    gate.full()
+                    self.assertEqual(all(c['ok'] for c in gate.checks), verdict is True)
+
+    def test_structural_coverage_runs_only_on_native(self):
+        for runtime, expected in (('native', True), ('docker', False)):
+            with tempfile.TemporaryDirectory() as directory:
+                gate = Gate(Path(directory), Path(directory), runtime)
+                gate.policy = {'seed_corpus': [1], 'stress_operations': 1, 'stress_generator': 2,
+                               'solver_accuracy': {'max_relative_error': 0.04}}
+                calls = {}
+
+                def command(name, argv, **kwargs):
+                    calls[name] = argv
+                    gate.checks.append({'name': name, 'ok': True})
+
+                with patch.object(gate, 'command', side_effect=command):
+                    gate.full()
+                corpus = calls['seeded-coverage' if expected else 'seeded-corpus']
+                self.assertEqual('--coverage' in corpus, expected)
+                self.assertEqual('coverage-policy' in calls, expected)
 
     def test_changed_observer_or_runner_rejects_run_identity(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -368,6 +419,15 @@ class TimingNoRegressionControls(unittest.TestCase):
         self.assertTrue(self.check(stale))
         unrouted = self.candidate(); unrouted['stages'].pop('routed')
         self.assertTrue(self.check(unrouted))
+
+    def test_declared_setup_tolerance_applies_only_when_declared(self):
+        self.assertTrue(self.check(self.candidate(wns=-2.2)))
+        errors = validate_timing_policy(self.policy, self.baseline, self.candidate(wns=-2.2), self.b, self.c,
+                                        self.root, {'setup_wns_tolerance_ns': 0.3})
+        self.assertEqual(errors, [])
+        errors = validate_timing_policy(self.policy, self.baseline, self.candidate(wns=-2.3), self.b, self.c,
+                                        self.root, {'setup_wns_tolerance_ns': 0.3})
+        self.assertTrue(errors)
 
     def test_cdc_summary_parser(self):
         self.assertEqual(cdc_findings(CDC_SAFE), {})

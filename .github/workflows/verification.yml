@@ -1,0 +1,60 @@
+name: MetaCircuit verification
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: fast development checks, baseline capture qualification, or full M5 readiness
+        type: choice
+        options: [full, fast, baseline]
+        default: full
+      candidate_qor:
+        description: Absolute candidate Vivado report directory for full readiness
+        type: string
+      baseline_qor:
+        description: Absolute accepted baseline Vivado report directory for full readiness
+        type: string
+      objective:
+        description: Absolute JSON objective file declared before measurement
+        type: string
+      baseline_route_attempt:
+        description: Optional matching real failed Basys 3 route for an explicit synth resource objective
+        type: string
+jobs:
+  verification:
+    runs-on: [self-hosted, metacircuit-verification]
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [docker, native]
+    env:
+      FRAMESCOPE_CHECKOUT: ${{ vars.FRAMESCOPE_CHECKOUT }}
+      CHECK_MODE: ${{ inputs.mode }}
+      CANDIDATE_QOR: ${{ inputs.candidate_qor }}
+      BASELINE_QOR: ${{ inputs.baseline_qor }}
+      OBJECTIVE_FILE: ${{ inputs.objective }}
+      BASELINE_ROUTE_ATTEMPT: ${{ inputs.baseline_route_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shared acceptance entry point
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FRAMESCOPE_CHECKOUT"
+          args=(--mode "$CHECK_MODE" --runtime "${{ matrix.runtime }}"
+                --framescope "$FRAMESCOPE_CHECKOUT"
+                --out "golden/out/ci-${{ matrix.runtime }}-${{ github.run_id }}")
+          if [[ "$CHECK_MODE" == full ]]; then
+            test -n "$CANDIDATE_QOR"
+            test -n "$BASELINE_QOR"
+            test -n "$OBJECTIVE_FILE"
+            args+=(--qor "$CANDIDATE_QOR" --baseline-qor "$BASELINE_QOR" --objective "$OBJECTIVE_FILE")
+            if [[ -n "$BASELINE_ROUTE_ATTEMPT" ]]; then
+              args+=(--baseline-route-attempt "$BASELINE_ROUTE_ATTEMPT")
+            fi
+          fi
+          python3 tools/acceptance_m5.py "${args[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-${{ matrix.runtime }}
+          path: golden/out/ci-${{ matrix.runtime }}-${{ github.run_id }}

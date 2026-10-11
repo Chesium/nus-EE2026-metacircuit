@@ -1,0 +1,70 @@
+{
+  "schema": "metacircuit-acceptance-policy/v1",
+  "contract_sha256": "475a48362f0f353104abfde654c25f7bdc60acc266c7a774ca6b256d315b540e",
+  "tool_hashes": {
+    "golden/tools/semantic_adapter.py": "6d33a6825c9a56bc4a1786285030045313716ce898c0439356c74c2e4ef8048b",
+    "golden/tools/m3_compare.ts": "09509077731d4d803142859d3f6f2b901215b5b3e8ad2247785d3ad75a3fe5b1",
+    "golden/tools/test_rtl.py": "f689e8a693280a53baccdb300648227d9b22e6c2f4c585b76b79707069ded43d",
+    "tools/verify_coverage_m5.py": "534a8694400da4389cdfdc466c5694d4592c1c68d84c115ce2414e2bf8827514",
+    "tools/verify_fp_m5.py": "a327b00cc22414abc5c8e0eea312ce8f7aa9438a18c7507db85459a01b31b90e",
+    "tools/verify_solver_xsim_m5.py": "304162958b024634144bf9131e0589bb9c5515e578a219924851e2b9a09dc921",
+    "tools/verify_solver_frontend_xsim_m5.py": "3be7456369d165472a36f2b0cc2b4cc48dea933fe0e872428e9eb0e229b213a4",
+    "tools/verify_solver_m5.py": "c1c012be8da5647f9d13813a8056de6311dda84edbf43b74232946594eb1ad0a",
+    "golden/tools/verify_frontend_invariants_m5.py": "f8b474739dc78a50d7153b336da3be763591d2bd6267e1c629a5030e81f18975",
+    "golden/tools/verify_invariants_m5.py": "e3349d7262996a32460292eb7924281c94583af0a6d3e53e6faceae2e5a4df57",
+    "src/testbench/M5FrontendInvariants.sv": "042d9513eb458e12a46592a198cae9c547a27c068a57579f30f3b712a50738d0",
+    "src/testbench/M5FrontendSupplemental_test.sv": "c1f7e51cb4c8cead45a68fa01c3eab65a3523c285fb589885657d06ae8681d9c",
+    "src/testbench/M5CanvasInvariants.sv": "4a4e534fbab97f085efc47938980156fc641591bbccf8bdaa6766e38d7e8ff14",
+    "src/testbench/M5SolverExtraction.sv": "23b690dc42bbe9bb92bbde4f77b60dcafc752c90d7fe3efb197cf51184210b98",
+    "src/testbench/M5SolverUartXsim.sv": "9a45604c99b647a54ec0a759c48f1865d3446262da172c40233fba0a8291cabf",
+    "src/testbench/M5SolverFrontendXsim.sv": "11968c655f788c8f6d14f0d7b3393f04454008f3603e0fa4c1941cc3f5096fd0",
+    "src/testbench/M5FpCharacterization.sv": "48aac0eaeb2daae73c7e2ab3dbf0c8e99588b1d671a4df6864030d5427db00ba",
+    "tools/verify_solver_capacity_m5.py": "c719bea148b4bd60d6993b08816213e099808cda5291256f14abce118886626d",
+    "golden/tools/verify_frontend_domains_m5.py": "47761906be3f3d05a4bda194a352a18244d55286addbc9c2bb783802abc51ad8",
+    "src/testbench/M5FrontendDomains_test.sv": "e0e636f647105162b9114e7bb6a19493eb9a37b53d1222c97afc3ecd8def0c06",
+    "tools/verify_flood_queue_safety_m5.py": "32142913872379b4241af34b68daa39a132ac03b8c6e29cdfe0784382647823d",
+    "tools/verify_flood_queue_range_m5.py": "16d17787e5dc36c3bbec25cdaafc8890f6e6e48e34d2f0578c6925b63f736abf",
+    "src/testbench/M5FloodQueueSafety_test.sv": "1ebd694ca05a354e5affed4c8c80ff845aca94b6acbcce2a683dc87ad39de696",
+    "src/testbench/M5FloodQueueLifetime.sv": "c6eb98ae2b623dc2385fd1f7cf0ef3c2e31357acd8cb39f661baac02e2a262cb",
+    "tools/formal_witness_m5.py": "cef52487c6d20789be3e17ffebf05f178409bc0361c706d22dc52b2b861bacf6",
+    "tools/verify_flood_queue_order_m5.py": "b1ac62442e059bb10839c461deba7b5fe8e908cee76dbbcacd08b50fb7895b68",
+    "tools/verify_guard_progress_m5.py": "d2241289d71a253af1602233289e936f1a5b190bf9e5990b078f6150c88632ee",
+    "tools/verify_component_progress_m5.py": "20bd46e3aa955cc9a158d898577e8fc5af0e817bd80cd09bec55f8a81b22eae7",
+    "tools/verify_reply_parser_m5.py": "1a02b26ec78c72c53701979324261e7734b0885b2d43016fc8dbedefdafbeae8",
+    "tools/verify_reply_banks_m5.py": "35e76cd06c508b8b4ccda68349f5593e306922c582dd1d06dfdffaef9d64e686",
+    "tools/verify_reply_integrity_m5.py": "224bd1d2ced808c3fa5de9ee973c9f8c4b99e19d4bc38c74d70ef2911551cd3d",
+    "tools/verify_address_m5.py": "72a7fa56fca5c889c3cfaa1a1f1c8d70ee8ecbeb7f995b2898d4c45b45d4fe07",
+    "src/testbench/M5ReplyIntegrity_test.sv": "66a56c070c1c66b787e8351a8f8e0e008804b4bbfe77c671ac60d2ccfbefb9b9"
+  },
+  "adapter_schema": "metacircuit-semantic/v1",
+  "adapter_config_sha256": "8bf96ca0ac9cf22979d4768fd6798ceb741acaf820ca3ef077cf3b89b2cb2ab9",
+  "baseline_supplement": {
+    "src/design/solver_board/bcd_unit_to_fp32_rom.mem": "2994a9bd5a8b1dcade5dd9f0291147bd5ec2c5c489e637dec6535514f7655397"
+  },
+  "runtime_versions": {
+    "native": "5.046",
+    "docker": "5.020"
+  },
+  "docker_image": "framescope-toolchain:6501155dc903",
+  "functional_bins_required": 64,
+  "coverage_policy": "All named functional bins required; line/toggle exclusions not yet reviewed, so full readiness fails.",
+  "mandatory_scope": "Frontend frozen contract plus continuous global and capacity/value/unit/selection domain invariants, configured actual FP pipeline and augmented-capacity recovery, routed timing/CDC and positive objective gain. FIFO reset-base/range-count induction and lifetime/overlap ledger on both runtimes. Actual-source watched FIFO order, conditional guard completion, quiescent rebuild ranking, parser control/range and reply bank integrity proofs, cold real-UART malformed rejection/recovery and32node view checks.",
+  "seed_corpus": [
+    1,
+    7,
+    2026,
+    11,
+    12
+  ],
+  "stress_operations": 64,
+  "stress_generator": 2,
+  "command_timeout_seconds": 3600,
+  "total_timeout_seconds": 21600,
+  "qor_baseline_corrections": {
+    "src/design/rendering/GlobalRender_top.v": "4e62e63dd68ba9e946006a86129d48c39dd7570710a73451f0fd1fba68c2bb16"
+  },
+  "qor_baseline_correction_decisions": [
+    "docs/m5-decisions.md:A-008"
+  ],
+  "coverage_policy_sha256": "f88e8509d4f37db7615628a2a30f7a2033485480bcc0133d5400eae610ca15a8"
+}

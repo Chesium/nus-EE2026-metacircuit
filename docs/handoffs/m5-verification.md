@@ -27,8 +27,10 @@ design, 100% structural coverage or global formal proofs.
    `ComponentPropertyPanel.v` changed, run `python3 golden/tools/extract_assets.py`
    (only source hashes/line ranges change) and commit it with the candidate.
 3. `tools/qor_root_m5.py --out <root>` then `tools/vivado_qor.py --root <root> --out <qor>`.
-4. Run `tools/acceptance_m5.py --mode full` per runtime. Do not edit the checkout
-   while any run is going: the gate fails on input or tool changes during checks.
+4. Run `tools/acceptance_m5.py --mode full` for native and Docker at the same time.
+   Each runs its checks in parallel (`--jobs`, default a quarter of the CPUs; M5-9).
+   Do not edit the checkout while any run is going: the gate fails on input or tool
+   changes during checks.
 
 ## Gate rules now in force
 

@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+import time
+import threading
+import shutil
 import unittest
 from unittest.mock import patch
 
@@ -241,9 +244,95 @@ class AcceptanceControls(unittest.TestCase):
 
                 with patch.object(gate, 'command', side_effect=command):
                     gate.full()
-                corpus = calls['seeded-coverage' if expected else 'seeded-corpus']
+                corpus = calls['seeded-coverage-1' if expected else 'seeded-corpus-1']
                 self.assertEqual('--coverage' in corpus, expected)
                 self.assertEqual('coverage-policy' in calls, expected)
+
+    def full_plan(self, runtime='native', seeds=(1, 7)):
+        """Run full() with a recording command; returns (calls in start order, gate)."""
+        directory = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, directory)
+        gate = Gate(Path(directory), Path(directory), runtime, jobs=4)
+        gate.policy = {'seed_corpus': list(seeds), 'stress_operations': 1, 'stress_generator': 2,
+                       'solver_accuracy': {'max_relative_error': 0.04}}
+        order, lock = [], threading.Lock()
+
+        def command(name, argv, **kwargs):
+            with lock:
+                order.append((name, [str(a) for a in argv]))
+            gate.checks.append({'name': name, 'ok': True})
+
+        with patch.object(gate, 'command', side_effect=command):
+            gate.full()
+        return order, gate
+
+    def test_full_runs_each_seed_as_a_separate_cold_corpus_run(self):
+        order, _ = self.full_plan(seeds=(1, 7, 12))
+        names = [n for n, _ in order]
+        seeds = [(n, argv) for n, argv in order if n.startswith('seeded-coverage-')]
+        self.assertEqual(sorted(n for n, _ in seeds), ['seeded-coverage-1', 'seeded-coverage-12', 'seeded-coverage-7'])
+        for name, argv in seeds:
+            self.assertEqual(argv[argv.index('--seeds') + 1], name.rsplit('-', 1)[1])
+            self.assertTrue(argv[argv.index('--out') + 1].endswith('seeded-coverage/seed-' + name.rsplit('-', 1)[1]))
+        self.assertGreater(names.index('coverage-policy'), max(names.index(n) for n, _ in seeds))
+        for solver in ('actual-solver-xsim', 'solver-accuracy', 'actual-solver-capacity', 'actual-solver-frontend-xsim'):
+            self.assertGreater(names.index(solver), names.index('actual-fp'))
+        self.assertIn('actual-fp', names[:4])  # first in priority; four workers start together
+
+    def test_parallel_tasks_overlap_and_respect_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            gate = Gate(Path(directory), Path(directory), 'native', jobs=3)
+            barrier, events, lock = threading.Barrier(3, timeout=5), [], threading.Lock()
+
+            def task(name, meet=False):
+                def run():
+                    if meet:
+                        barrier.wait()  # deadlocks unless three tasks really run at once
+                    with lock:
+                        events.append(name)
+                return run
+            gate.run_parallel([('a', task('a', True), ()), ('b', task('b', True), ()),
+                               ('c', task('c', True), ()), ('d', task('d'), ('a', 'b', 'c'))])
+            self.assertEqual(events[-1], 'd')
+
+    def test_parallel_failure_finishes_others_and_skips_dependents(self):
+        with tempfile.TemporaryDirectory() as directory:
+            gate = Gate(Path(directory), Path(directory), 'native', jobs=2)
+            ran = []
+
+            def boom():
+                raise ValueError('pinned runtime budget exhausted or command interrupted: a')
+            with self.assertRaisesRegex(ValueError, 'budget exhausted'):
+                gate.run_parallel([('a', boom, ()), ('b', lambda: ran.append('b'), ()),
+                                   ('c', lambda: ran.append('c'), ('a',))])
+            self.assertEqual(ran, ['b'])
+            self.assertEqual([c['name'] for c in gate.checks if not c['ok']], ['c'])
+
+    def test_parallel_plan_rejects_unknown_duplicate_and_cyclic_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            gate = Gate(Path(directory), Path(directory), 'native', jobs=2)
+            noop = lambda: None
+            for plan in ([('a', noop, ('missing',))], [('a', noop, ()), ('a', noop, ())],
+                         [('a', noop, ('b',)), ('b', noop, ('a',))]):
+                with self.assertRaises(ValueError):
+                    gate.run_parallel(plan)
+
+    def test_per_command_budget_override_and_stop(self):
+        with tempfile.TemporaryDirectory() as directory:
+            gate = Gate(Path(directory), Path(directory), 'native')
+            gate.policy = {'command_timeout_seconds': 10, 'total_timeout_seconds': 100,
+                           'command_timeout_overrides': {'seeded-coverage': 50}}
+            self.assertLessEqual(gate.budget('other'), 10)
+            self.assertGreater(gate.budget('seeded-coverage-1'), 10)
+            self.assertLessEqual(gate.budget('seeded-coverage-policy-x'), 50)
+            self.assertLessEqual(gate.budget('coverage-policy'), 10)
+            stopper = threading.Timer(0.5, gate.stop)
+            stopper.start()
+            started = time.monotonic()
+            with self.assertRaisesRegex(ValueError, 'interrupted'):
+                gate.command('sleeper', [sys.executable, '-c', 'import time; time.sleep(30)'])
+            self.assertLess(time.monotonic() - started, 15)
+            self.assertFalse(gate.checks[-1]['ok'])
 
     def test_changed_observer_or_runner_rejects_run_identity(self):
         with tempfile.TemporaryDirectory() as directory:

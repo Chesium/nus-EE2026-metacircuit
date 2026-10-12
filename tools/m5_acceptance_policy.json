@@ -122,5 +122,10 @@
     "max_relative_error": 0.03717903549630604,
     "report": "golden/out/m5-solver-accuracy-baseline-20261011g/probe/report.json",
     "rule": "Only the declared near-singular case may miss the strict numeric policy, and its relative error may not exceed this recorded baseline (BUG-2)."
+  },
+  "command_timeout_overrides": {
+    "seeded-coverage": 5400,
+    "seeded-corpus": 3600,
+    "actual-solver-frontend-xsim": 3600
   }
 }

@@ -2,6 +2,7 @@
 """Shared local/CI acceptance entry point; partial evidence never means readiness."""
 from __future__ import annotations
 import argparse
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -12,13 +13,14 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_SHA = '475a48362f0f353104abfde654c25f7bdc60acc266c7a774ca6b256d315b540e'
 CONTRACT = ROOT / 'golden/verification/contracts/frontend-v1'
 IMAGE = 'framescope-toolchain:6501155dc903'
-POLICY_SHA = 'ef809ac14dacb25448639573cc72317b02e84ce1f82750c4d1df0403c5479ab2'
+POLICY_SHA = '909f797a78d2e3c1dde4791dbe36061419135ac4e0745a5229cdbacd8ef77dfc'
 
 
 def sha(path):
@@ -261,33 +263,46 @@ def qor_preflight(baseline_dir, candidate_dir, objective_path, root=ROOT, baseli
 
 
 class Gate:
-    def __init__(self, out, framescope, runtime):
-        self.out, self.framescope, self.runtime = out, framescope, runtime
+    def __init__(self, out, framescope, runtime, jobs=1):
+        self.out, self.framescope, self.runtime, self.jobs = out, framescope, runtime, max(1, jobs)
         self.checks = []
         self.started = time.monotonic()
+        self.lock = threading.Lock()
+        self.stopping = threading.Event()
 
-    def budget(self):
+    def budget(self, name=None):
         policy = getattr(self, 'policy', {})
-        return min(policy.get('command_timeout_seconds', 3600),
-                   policy.get('total_timeout_seconds', 21600) - (time.monotonic() - self.started))
+        # An override for 'seeded-coverage' also covers its per-seed commands 'seeded-coverage-<seed>'.
+        overrides = policy.get('command_timeout_overrides', {})
+        keys = [k for k in overrides if name == k or (name or '').startswith(k + '-')]
+        limit = overrides[max(keys, key=len)] if keys else policy.get('command_timeout_seconds', 3600)
+        return min(limit, policy.get('total_timeout_seconds', 21600) - (time.monotonic() - self.started))
+
+    def stop(self):
+        """Called from the main thread's SIGTERM handler; running commands stop their groups."""
+        self.stopping.set()
 
     def command(self, name, argv, cwd=ROOT, env=None, evidence=None, verdict='ok'):
         log = self.out / (name + '.log')
         print(name, flush=True)
-        budget = self.budget()
-        timed_out = budget <= 0
+        budget = self.budget(name)
+        timed_out = budget <= 0 or self.stopping.is_set()
+        started = time.monotonic()
         with log.open('w') as stream:
             code = 124
             if not timed_out:
                 process = subprocess.Popen([str(x) for x in argv], cwd=cwd, env=env,
                                            stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
-                def interrupted(signum, frame):
-                    raise KeyboardInterrupt
-                previous_handler = signal.signal(signal.SIGTERM, interrupted)
-                try:
-                    code = process.wait(timeout=budget)
-                except (subprocess.TimeoutExpired, KeyboardInterrupt):
-                    timed_out = True
+                deadline = started + budget
+                while True:
+                    try:
+                        code = process.wait(timeout=1)
+                        break
+                    except subprocess.TimeoutExpired:
+                        if self.stopping.is_set() or time.monotonic() >= deadline:
+                            timed_out = True
+                            break
+                if timed_out:
                     try:
                         os.killpg(process.pid, signal.SIGTERM)
                     except ProcessLookupError:
@@ -305,10 +320,10 @@ class Gate:
                         os.killpg(process.pid, signal.SIGKILL)
                     except ProcessLookupError:
                         pass
-                finally:
-                    signal.signal(signal.SIGTERM, previous_handler)
+                    code = 124
         item = {'name': name, 'ok': code == 0, 'exit_code': code, 'command': [str(x) for x in argv],
-                'log': str(log), 'log_sha256': sha(log), 'timeout_seconds': max(0, budget)}
+                'log': str(log), 'log_sha256': sha(log), 'timeout_seconds': max(0, budget),
+                'seconds': round(time.monotonic() - started, 1)}
         if timed_out:
             item.update(ok=False, error='command interrupted or pinned runtime budget exhausted')
         if evidence is not None:
@@ -322,10 +337,53 @@ class Gate:
                 item.update(evidence=str(evidence), evidence_sha256=sha(evidence))
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 item.update(ok=False, error='missing/invalid result evidence: ' + str(exc))
-        self.checks.append(item)
+        with self.lock:
+            self.checks.append(item)
         if timed_out:
             raise ValueError('pinned runtime budget exhausted or command interrupted: ' + name)
         return item
+
+    def run_parallel(self, tasks):
+        """Run (name, fn, deps) tasks on up to self.jobs threads once their deps finish.
+
+        List order is priority: a free worker takes the earliest ready task, so
+        long critical-path tasks should come first. Every task runs (or is
+        skipped because a dependency raised); the first exception is re-raised
+        after all running tasks end.
+        """
+        pending = {name: (fn, set(deps)) for name, fn, deps in tasks}
+        unknown = set().union(*(deps for _, deps in pending.values())) - set(pending)
+        if unknown or len(pending) != len(tasks):
+            raise ValueError('invalid parallel task plan: ' + (', '.join(sorted(unknown)) or 'duplicate task'))
+        done, failed, errors, running = set(), set(), [], {}
+        with ThreadPoolExecutor(max_workers=self.jobs) as pool:
+            while pending or running:
+                for name in [n for n, (_, deps) in pending.items() if deps <= done | failed]:
+                    if len(running) >= self.jobs and not pending[name][1] & failed:
+                        break
+                    fn, deps = pending.pop(name)
+                    if deps & failed:
+                        failed.add(name)
+                        with self.lock:
+                            self.checks.append({'name': name, 'ok': False,
+                                                'error': 'skipped: dependency raised ' + ', '.join(sorted(deps & failed))})
+                        continue
+                    running[pool.submit(fn)] = name
+                if not running:
+                    if pending:
+                        raise ValueError('parallel task dependency cycle: ' + ', '.join(sorted(pending)))
+                    continue
+                finished, _ = wait(running, return_when=FIRST_COMPLETED)
+                for future in finished:
+                    name = running.pop(future)
+                    try:
+                        future.result()
+                        done.add(name)
+                    except Exception as exc:  # noqa: BLE001 - re-raised below
+                        failed.add(name)
+                        errors.append(exc)
+        if errors:
+            raise errors[0]
 
     def fast(self):
         tool = (['verilator', '--version'] if self.runtime == 'native' else
@@ -347,6 +405,7 @@ class Gate:
 
     def scoped_safety(self):
         """Fresh source proofs and real serial rejection checks for development/full gates."""
+        tasks = []
         for name, tool, extra in (
             ('flood-queue-order', 'verify_flood_queue_order_m5.py', []),
             ('guard-progress', 'verify_guard_progress_m5.py', []),
@@ -356,8 +415,10 @@ class Gate:
              ['--source', ROOT / 'src/design/rendering/GlobalRender_top.v']),
             ('reply-integrity', 'verify_reply_integrity_m5.py', ['--runtime', self.runtime]),
         ):
-            self.command(name, [sys.executable, ROOT / 'tools' / tool, *extra,
-                               '--out', self.out / name], evidence=self.out / name / 'report.json')
+            argv = [sys.executable, ROOT / 'tools' / tool, *extra, '--out', self.out / name]
+            tasks.append((name, lambda name=name, argv=argv: self.command(
+                name, argv, evidence=self.out / name / 'report.json'), ()))
+        self.run_parallel(tasks)
 
     def baseline(self):
         """Re-run independent comparators on exact-source saved M4 captures."""
@@ -417,82 +478,94 @@ class Gate:
                              '--out', self.out / (section + '-' + item['scenario'])])
 
     def full(self):
-        """Fresh fixed regressions and cold seeded coverage; never reuses baseline PASS."""
+        """Fresh fixed regressions and cold seeded coverage; never reuses baseline PASS.
+
+        Independent checks run concurrently (self.jobs). Only two orderings matter:
+        solver checks read the fresh FP characterization, and the coverage audit
+        reads every seeded coverage run.
+        """
+        tasks = []
+
+        def add(name, argv, deps=(), **kwargs):
+            tasks.append((name, lambda: self.command(name, argv, **kwargs), deps))
+
         for scenario in sorted((ROOT / 'golden/scenarios').glob('m[12]_*.json')):
             milestone = scenario.stem[:2]
-            self.command(scenario.stem, [sys.executable, ROOT / ('golden/tools/verify_' + milestone + '.py'),
-                         '--scenario', scenario, '--runtime', self.runtime, '--framescope', self.framescope,
-                         '--out', self.out / scenario.stem])
-        self.command('m3', [sys.executable, ROOT / 'golden/tools/verify_m3.py', '--runtime', self.runtime,
-                           '--framescope', self.framescope, '--out', self.out / 'm3'])
+            add(scenario.stem, [sys.executable, ROOT / ('golden/tools/verify_' + milestone + '.py'),
+                '--scenario', scenario, '--runtime', self.runtime, '--framescope', self.framescope,
+                '--out', self.out / scenario.stem])
+        add('m3', [sys.executable, ROOT / 'golden/tools/verify_m3.py', '--runtime', self.runtime,
+                   '--framescope', self.framescope, '--out', self.out / 'm3'])
         # Structural coverage is measured where the coverage policy requires it (native); other
-        # runtimes run the same seeded corpus uninstrumented for cross-runtime agreement.
+        # runtimes run the same seeded corpus uninstrumented for cross-runtime agreement. Each
+        # seed is a separate cold run of the frozen comparator, so seeds run concurrently.
         coverage_runtimes = json.loads((ROOT / 'tools/m5_coverage_policy.json').read_text())['required_runtimes']
         measured = self.runtime in coverage_runtimes
-        self.command('seeded-coverage' if measured else 'seeded-corpus',
-                     [sys.executable, ROOT / 'golden/tools/verify_m4.py', '--runtime', self.runtime,
-                      '--framescope', self.framescope, '--seeds', ','.join(str(x) for x in self.policy['seed_corpus']),
-                      '--operations', str(self.policy['stress_operations']), '--generator', str(self.policy['stress_generator']),
-                      *(['--coverage'] if measured else []),
-                      '--out', self.out / ('seeded-coverage' if measured else 'seeded-corpus')])
+        corpus = 'seeded-coverage' if measured else 'seeded-corpus'
+        seeds = []
+        for seed in self.policy['seed_corpus']:
+            seeds.append(corpus + '-' + str(seed))
+            add(seeds[-1], [sys.executable, ROOT / 'golden/tools/verify_m4.py', '--runtime', self.runtime,
+                            '--framescope', self.framescope, '--seeds', str(seed),
+                            '--operations', str(self.policy['stress_operations']),
+                            '--generator', str(self.policy['stress_generator']),
+                            *(['--coverage'] if measured else []), '--out', self.out / corpus / ('seed-' + str(seed))])
         if measured:
-            reports = sorted((self.out / 'seeded-coverage').rglob('coverage.json'))
-            self.command('coverage-policy', [sys.executable, ROOT / 'tools/verify_coverage_m5.py',
-                         '--framescope', self.framescope, '--out', self.out / 'coverage-policy',
-                         *[arg for path in reports for arg in ('--coverage-report', path)]],
-                         evidence=self.out / 'coverage-policy/summary.json', verdict='ready')
+            def coverage_policy():
+                reports = sorted((self.out / corpus).rglob('coverage.json'))
+                self.command('coverage-policy', [sys.executable, ROOT / 'tools/verify_coverage_m5.py',
+                             '--framescope', self.framescope, '--out', self.out / 'coverage-policy',
+                             *[arg for path in reports for arg in ('--coverage-report', path)]],
+                             evidence=self.out / 'coverage-policy/summary.json', verdict='ready')
+            tasks.append(('coverage-policy', coverage_policy, seeds))
         contract = json.loads((CONTRACT / 'contract.json').read_text())
         for entry in contract['entries']:
             if entry['group'] == 'saved_corpus' and '/corpus-agent-cases/' in entry['path']:
-                name = Path(entry['path']).stem
-                self.command('directed-' + name, [sys.executable, ROOT / 'golden/tools/lockstep_m4.py',
-                             '--case', CONTRACT / entry['stored'], '--runtime', self.runtime,
-                             '--framescope', self.framescope, '--out', self.out / ('directed-' + name)])
-        self.command('invariants', [sys.executable, ROOT / 'golden/tools/verify_invariants_m5.py',
-                                  '--runtime', self.runtime, '--out', self.out / 'invariants'],
-                     evidence=self.out / 'invariants/summary.json')
-        self.command('frontend-invariants', [sys.executable, ROOT / 'golden/tools/verify_frontend_invariants_m5.py',
-                     '--runtime', self.runtime, '--out', self.out / 'frontend-invariants'],
-                     evidence=self.out / 'frontend-invariants/summary.json')
-        self.command('frontend-supplemental', [sys.executable, ROOT / 'golden/tools/verify_frontend_invariants_m5.py',
-                     '--runtime', self.runtime, '--bench', 'supplemental',
-                     '--out', self.out / 'frontend-supplemental'],
-                     evidence=self.out / 'frontend-supplemental/summary.json')
-        self.command('frontend-restart', [sys.executable, ROOT / 'golden/tools/verify_frontend_invariants_m5.py',
-                     '--runtime', self.runtime, '--bench', 'restart',
-                     '--out', self.out / 'frontend-restart'],
-                     evidence=self.out / 'frontend-restart/summary.json')
-        self.command('flood-queue-safety', [sys.executable, ROOT / 'tools/verify_flood_queue_safety_m5.py',
-                     '--runtime', self.runtime, '--out', self.out / 'flood-queue-safety'],
-                     evidence=self.out / 'flood-queue-safety/report.json')
-        self.command('frontend-domains', [sys.executable, ROOT / 'golden/tools/verify_frontend_domains_m5.py',
-                     '--runtime', self.runtime, '--out', self.out / 'frontend-domains'],
-                     evidence=self.out / 'frontend-domains/summary.json')
-        self.command('actual-fp', [sys.executable, ROOT / 'tools/verify_fp_m5.py', '--out', self.out / 'actual-fp'],
-                     evidence=self.out / 'actual-fp/report.json', verdict='characterization_passed')
-        self.command('actual-solver-xsim', [sys.executable, ROOT / 'tools/verify_solver_xsim_m5.py',
-                     '--out', self.out / 'actual-solver-xsim', '--fp-report', self.out / 'actual-fp/report.json'],
-                     evidence=self.out / 'actual-solver-xsim/report.json', verdict='scoped_actual_pipeline_passed')
-        self.command('solver-accuracy', [sys.executable, ROOT / 'tools/verify_solver_xsim_m5.py',
-                     '--out', self.out / 'solver-accuracy', '--fp-report', self.out / 'actual-fp/report.json',
-                     '--accuracy-baseline', repr(self.policy['solver_accuracy']['max_relative_error'])],
-                     evidence=self.out / 'solver-accuracy/report.json', verdict='accuracy_no_regression')
-        self.command('actual-solver-capacity', [sys.executable, ROOT / 'tools/verify_solver_capacity_m5.py',
-                     '--out', self.out / 'actual-solver-capacity', '--fp-report', self.out / 'actual-fp/report.json'],
-                     evidence=self.out / 'actual-solver-capacity/report.json', verdict='capacity_recovery_passed')
-        self.command('actual-solver-frontend-xsim', [sys.executable, ROOT / 'tools/verify_solver_frontend_xsim_m5.py',
-                     '--out', self.out / 'actual-solver-frontend-xsim', '--timeout', '1800',
-                     '--fp-report', self.out / 'actual-fp/report.json'],
-                     evidence=self.out / 'actual-solver-frontend-xsim/report.json',
-                     verdict='scoped_actual_frontend_passed')
+                name = 'directed-' + Path(entry['path']).stem
+                add(name, [sys.executable, ROOT / 'golden/tools/lockstep_m4.py',
+                           '--case', CONTRACT / entry['stored'], '--runtime', self.runtime,
+                           '--framescope', self.framescope, '--out', self.out / name])
+        add('invariants', [sys.executable, ROOT / 'golden/tools/verify_invariants_m5.py',
+                           '--runtime', self.runtime, '--out', self.out / 'invariants'],
+            evidence=self.out / 'invariants/summary.json')
+        for name, bench in (('frontend-invariants', []), ('frontend-supplemental', ['--bench', 'supplemental']),
+                            ('frontend-restart', ['--bench', 'restart'])):
+            add(name, [sys.executable, ROOT / 'golden/tools/verify_frontend_invariants_m5.py',
+                       '--runtime', self.runtime, *bench, '--out', self.out / name],
+                evidence=self.out / name / 'summary.json')
+        add('flood-queue-safety', [sys.executable, ROOT / 'tools/verify_flood_queue_safety_m5.py',
+                                   '--runtime', self.runtime, '--out', self.out / 'flood-queue-safety'],
+            evidence=self.out / 'flood-queue-safety/report.json')
+        add('frontend-domains', [sys.executable, ROOT / 'golden/tools/verify_frontend_domains_m5.py',
+                                 '--runtime', self.runtime, '--out', self.out / 'frontend-domains'],
+            evidence=self.out / 'frontend-domains/summary.json')
+        add('actual-fp', [sys.executable, ROOT / 'tools/verify_fp_m5.py', '--out', self.out / 'actual-fp'],
+            evidence=self.out / 'actual-fp/report.json', verdict='characterization_passed')
+        fp = ['--fp-report', self.out / 'actual-fp/report.json']
+        add('actual-solver-xsim', [sys.executable, ROOT / 'tools/verify_solver_xsim_m5.py',
+                                   '--out', self.out / 'actual-solver-xsim', *fp], ['actual-fp'],
+            evidence=self.out / 'actual-solver-xsim/report.json', verdict='scoped_actual_pipeline_passed')
+        add('solver-accuracy', [sys.executable, ROOT / 'tools/verify_solver_xsim_m5.py',
+                                '--out', self.out / 'solver-accuracy', *fp,
+                                '--accuracy-baseline', repr(self.policy['solver_accuracy']['max_relative_error'])],
+            ['actual-fp'], evidence=self.out / 'solver-accuracy/report.json', verdict='accuracy_no_regression')
+        add('actual-solver-capacity', [sys.executable, ROOT / 'tools/verify_solver_capacity_m5.py',
+                                       '--out', self.out / 'actual-solver-capacity', *fp], ['actual-fp'],
+            evidence=self.out / 'actual-solver-capacity/report.json', verdict='capacity_recovery_passed')
+        add('actual-solver-frontend-xsim', [sys.executable, ROOT / 'tools/verify_solver_frontend_xsim_m5.py',
+                                            '--out', self.out / 'actual-solver-frontend-xsim', '--timeout', '1800', *fp],
+            ['actual-fp'], evidence=self.out / 'actual-solver-frontend-xsim/report.json',
+            verdict='scoped_actual_frontend_passed')
         solver = ROOT / 'tools/verify_solver_m5.py'
         if solver.exists():
-            self.command('generated-extraction', [sys.executable, solver, '--runtime', self.runtime,
-                         '--extraction-only', '--out', self.out / 'generated-extraction'],
-                         evidence=self.out / 'generated-extraction/report.json', verdict='extraction_qualified')
+            add('generated-extraction', [sys.executable, solver, '--runtime', self.runtime,
+                                         '--extraction-only', '--out', self.out / 'generated-extraction'],
+                evidence=self.out / 'generated-extraction/report.json', verdict='extraction_qualified')
         else:
             self.checks.append({'name': 'generated-extraction', 'ok': False, 'error': 'mandatory generated extraction verifier unavailable'})
-
+        first = ['actual-fp', *seeds, 'actual-solver-frontend-xsim', 'm3']
+        tasks.sort(key=lambda task: first.index(task[0]) if task[0] in first else len(first))
+        self.run_parallel(tasks)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -505,9 +578,16 @@ def main():
     parser.add_argument('--objective', type=Path)
     parser.add_argument('--baseline-route-attempt', type=Path,
                         help='matching retained UTLZ-1 failure for an explicit synth resource objective')
+    parser.add_argument('--jobs', type=int, default=max(1, (os.cpu_count() or 4) // 4),
+                        help='checks run at once in scoped/full stages (default: a quarter of the CPUs, '
+                             'so native and Docker gates can run side by side)')
     args = parser.parse_args()
+    if args.jobs < 1:
+        parser.error('--jobs must be at least 1')
     out = args.out.resolve(); out.mkdir(parents=True, exist_ok=False)
-    gate = Gate(out, args.framescope.resolve(), args.runtime)
+    gate = Gate(out, args.framescope.resolve(), args.runtime, args.jobs)
+    # Worker threads cannot install signal handlers; SIGTERM stops every running command group.
+    signal.signal(signal.SIGTERM, lambda signum, frame: gate.stop())
     before = inventory(ROOT)
     verification_before = verification_inventory(ROOT)
     errors, readiness_errors = [], []
@@ -579,7 +659,8 @@ def main():
     checks_ok = bool(gate.checks) and all(c['ok'] for c in gate.checks) and not errors
     ready = args.mode == 'full' and checks_ok and not readiness_errors
     report = {'schema': 'metacircuit-acceptance/v1', 'recorded_at_utc': datetime.now(timezone.utc).isoformat(),
-              'mode': args.mode, 'runtime': args.runtime, 'checks_ok': checks_ok, 'ready': ready,
+              'mode': args.mode, 'runtime': args.runtime, 'jobs': gate.jobs,
+              'wall_seconds': round(time.monotonic() - gate.started, 1), 'checks_ok': checks_ok, 'ready': ready,
               'ok': ready if args.mode == 'full' else checks_ok, 'contract_sha256': CONTRACT_SHA,
               'input_hashes': before, 'checks': gate.checks, 'errors': errors, 'readiness_errors': readiness_errors,
               'verification_input_hashes': verification_before,

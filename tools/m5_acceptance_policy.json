@@ -5,7 +5,7 @@
     "golden/tools/semantic_adapter.py": "6d33a6825c9a56bc4a1786285030045313716ce898c0439356c74c2e4ef8048b",
     "golden/tools/m3_compare.ts": "09509077731d4d803142859d3f6f2b901215b5b3e8ad2247785d3ad75a3fe5b1",
     "golden/tools/test_rtl.py": "f689e8a693280a53baccdb300648227d9b22e6c2f4c585b76b79707069ded43d",
-    "tools/verify_coverage_m5.py": "a7af7d6eb6760d1b107762d4293e18a8cbbaed08242a72f1a0e664daa654bbf4",
+    "tools/verify_coverage_m5.py": "5022ab13778986a5712bdba9c397def6cf00a5dea559f36f9d1752b0fd774927",
     "tools/verify_fp_m5.py": "a327b00cc22414abc5c8e0eea312ce8f7aa9438a18c7507db85459a01b31b90e",
     "tools/verify_solver_xsim_m5.py": "45c1415ef035a0fcb20e2a3e68e903c8db41065848fd575d501e6421f5c28385",
     "tools/verify_solver_frontend_xsim_m5.py": "3be7456369d165472a36f2b0cc2b4cc48dea933fe0e872428e9eb0e229b213a4",
@@ -72,7 +72,7 @@
     "docs/m5-decisions.md:A-009",
     "docs/m5-decisions.md:A-010"
   ],
-  "coverage_policy_sha256": "489b4de067b37fe5ec644168255bddd950607cbe8fcf4bd8fe99875798bba132",
+  "coverage_policy_sha256": "be7635a95cfc203cbb11370c1cd771c50743f5516350bbd3ce26498a25cb14f2",
   "qor_timing_policy": {
     "decision": "docs/m5-decisions.md:M5 timing scope",
     "scope": "Timing closure is out of M5 scope (TIM-1). Candidates may not regress timing against the recorded baseline; the baseline setup violations and missing I/O delays are recorded debt.",

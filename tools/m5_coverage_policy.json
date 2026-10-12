@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "rule": "Functional bins (64/64) are enforced by the acceptance gate. Line/branch/toggle coverage is measured and reported on every run; gaps are recorded corpus limits, not failures. A module instance whose source differs from the recorded baseline may not reach a smaller fraction of its eligible points of any type than the baseline. Structural coverage is measured on the native runtime only: Verilator 5.020 coverage in the pinned container is about 8x slower (~17 s/frame). Docker runs the same seeded corpus uninstrumented for cross-runtime agreement.",
+  "rule": "Functional bins (64/64) are enforced by the acceptance gate. Line/branch/toggle coverage is measured and reported on every run over the whole cold run (boot and scenario); gaps are recorded corpus limits, not failures. A module instance whose source differs from the recorded baseline may not reach a smaller fraction of its eligible points of any type than the baseline. Structural coverage is measured on the native runtime only: Verilator 5.020 coverage in the pinned container is about 8x slower (~17 s/frame). Docker runs the same seeded corpus uninstrumented for cross-runtime agreement.",
   "parser_sha256": "8ee2b546f94d623ab91355e8a4628d68d372cd063323c38538d4d0b84692b52e",
   "required_runtimes": [
     "native"
@@ -77,7 +77,8 @@
   ],
   "baseline": {
     "path": "tools/m5_coverage_baseline.json",
-    "sha256": "1cbb12290b51dad1c5fd890f4f69d50fc1e95b6deb176a8d4f2997f349bdc12e",
-    "corpus": "seeds 1,7,2026,11,12 x 64 operations, generator 2, native Verilator 5.046, scenario split; golden/out/m5-coverage-baseline-20261011f"
+    "sha256": "88c2a157f07d4574f5eff2c932f1f54886b08a88e2c6b0d4c1e3eb9cde06b577",
+    "corpus": "seeds 1,7,2026,11,12 x 64 operations, generator 2, native Verilator 5.046, scenario split; golden/out/m5-coverage-baseline-20261011f",
+    "scope": "run"
   }
 }

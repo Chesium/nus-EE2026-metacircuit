@@ -133,7 +133,10 @@ def validate_input(path,source_root,policy,parser,scope):
                 data=parser.fields(key); host=mappings.get(data['f'])
                 if not host or (host not in declared and not excluded(host,policy)):
                     errors.append('instrumented source absent from declared provenance'); break
-            if split==scope: points=parsed
+            # 'run' counts a point reached if either split hit it: declaration initializers
+            # and reset-only logic run during boot, so a scenario-only view can never reach them.
+            if split==scope or scope=='run':
+                for key,hits in parsed.items(): points[key]=points.get(key,0)+hits
         except Exception as exc:
             errors.append(split+' coverage parse failed: '+str(exc))
     # The enclosing successful simulation is a second independent record of
@@ -197,18 +200,21 @@ def instance_key(row):
     return row['hierarchy']+'|'+relative_source(row['source'])
 
 
-def baseline_record(runtimes):
+def baseline_record(runtimes,scope):
     """Per-instance reached/eligible counts with source identity, written once per accepted baseline."""
     record={}
     for runtime,summary in runtimes.items():
         record[runtime]={instance_key(r):{'source':relative_source(r['source']),'source_sha256':r['source_sha256'],
                                           'types':{k:{'eligible':v['eligible'],'reached':v['reached']} for k,v in r['types'].items()}}
                          for r in summary['modules'] if r['source_sha256']}
-    return {'schema_version':1,'instances':record}
+    return {'schema_version':1,'scope':scope,'instances':record}
 
 
-def compare_baseline(runtime,summary,baseline):
+def compare_baseline(runtime,summary,baseline,scope):
     """Changed instances may not lose coverage; unchanged and new instances are reported only."""
+    if baseline.get('scope')!=scope:
+        return {'failures':['coverage baseline scope %r differs from audit scope %r'%(baseline.get('scope'),scope)],
+                'changed':[],'new':[],'removed':[]}
     recorded=baseline['instances'].get(runtime)
     if recorded is None:
         return {'failures':[runtime+': no recorded coverage baseline'],'changed':[],'new':[],'removed':[]}
@@ -232,7 +238,7 @@ def compare_baseline(runtime,summary,baseline):
     return {'failures':failures,'changed':changed,'new':sorted(new),'removed':sorted(set(recorded)-seen)}
 
 
-def audit(paths,source_root,policy,parser,scope='scenario',baseline=None):
+def audit(paths,source_root,policy,parser,scope='run',baseline=None):
     validate_policy(policy); results=[]; buckets={}; errors=[]; seen=set()
     for path in paths:
         path=path.resolve()
@@ -250,7 +256,7 @@ def audit(paths,source_root,policy,parser,scope='scenario',baseline=None):
         hashes={item['path']:item['sha256'] for item in b['provenance'].get('sources',[])}
         runtimes[runtime]=summarize_all(b['points'],b['mappings'],policy,parser,hashes)
         if baseline is not None:
-            comparison=compare_baseline(runtime,runtimes[runtime],baseline)
+            comparison=compare_baseline(runtime,runtimes[runtime],baseline,scope)
             runtimes[runtime]['baseline_comparison']=comparison
             runtimes[runtime]['readiness_failures']=sorted(set(runtimes[runtime]['readiness_failures']+comparison['failures']))
     missing=[r for r in policy['required_runtimes'] if r not in runtimes]
@@ -268,7 +274,8 @@ def main():
     ap.add_argument('--source-root',type=Path,default=REPO)
     ap.add_argument('--framescope',type=Path,default=REPO.parent/'framescope')
     ap.add_argument('--policy',type=Path,default=REPO/'tools/m5_coverage_policy.json')
-    ap.add_argument('--scope',choices=('boot','scenario'),default='scenario')
+    ap.add_argument('--scope',choices=('run','boot','scenario'),default='run',
+                    help='run: boot and scenario hits together (default, used by the baseline)')
     ap.add_argument('--audit-only',action='store_true',help='Validate evidence only; readiness still requires the baseline comparison')
     ap.add_argument('--write-baseline',type=Path,help='Write a new baseline record from valid evidence (rebaseline only)')
     ap.add_argument('--out',type=Path,required=True)
@@ -281,7 +288,7 @@ def main():
         if args.write_baseline:
             if not result['ok'] or result['missing_required_runtimes']:
                 raise ValueError('baseline requires valid evidence from every required runtime')
-            args.write_baseline.write_text(json.dumps(baseline_record(result['runtimes']),indent=1,sort_keys=True)+'\n')
+            args.write_baseline.write_text(json.dumps(baseline_record(result['runtimes'],args.scope),indent=1,sort_keys=True)+'\n')
     except Exception as exc:
         result={'schema_version':2,'ok':False,'ready':False,'validation_errors':[str(exc)]}
     result.update(policy_sha256=digest(args.policy),tool_sha256=digest(Path(__file__)),audit_only=args.audit_only)

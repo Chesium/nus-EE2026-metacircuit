@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_SHA = '475a48362f0f353104abfde654c25f7bdc60acc266c7a774ca6b256d315b540e'
 CONTRACT = ROOT / 'golden/verification/contracts/frontend-v1'
 IMAGE = 'framescope-toolchain:6501155dc903'
-POLICY_SHA = '909f797a78d2e3c1dde4791dbe36061419135ac4e0745a5229cdbacd8ef77dfc'
+POLICY_SHA = 'b6c7a4a62aa828d74695f481e23d3b4c6a71056d8184d44fb506c77fff447ddc'
 
 
 def sha(path):
@@ -539,18 +539,20 @@ class Gate:
         add('frontend-domains', [sys.executable, ROOT / 'golden/tools/verify_frontend_domains_m5.py',
                                  '--runtime', self.runtime, '--out', self.out / 'frontend-domains'],
             evidence=self.out / 'frontend-domains/summary.json')
-        add('actual-fp', [sys.executable, ROOT / 'tools/verify_fp_m5.py', '--out', self.out / 'actual-fp'],
+        # Tool-internal XSim limits assume an idle machine; give them room when checks overlap.
+        xsim = ['--timeout', '1200']
+        add('actual-fp', [sys.executable, ROOT / 'tools/verify_fp_m5.py', '--out', self.out / 'actual-fp', *xsim],
             evidence=self.out / 'actual-fp/report.json', verdict='characterization_passed')
         fp = ['--fp-report', self.out / 'actual-fp/report.json']
         add('actual-solver-xsim', [sys.executable, ROOT / 'tools/verify_solver_xsim_m5.py',
-                                   '--out', self.out / 'actual-solver-xsim', *fp], ['actual-fp'],
+                                   '--out', self.out / 'actual-solver-xsim', *fp, *xsim], ['actual-fp'],
             evidence=self.out / 'actual-solver-xsim/report.json', verdict='scoped_actual_pipeline_passed')
         add('solver-accuracy', [sys.executable, ROOT / 'tools/verify_solver_xsim_m5.py',
-                                '--out', self.out / 'solver-accuracy', *fp,
+                                '--out', self.out / 'solver-accuracy', *fp, *xsim,
                                 '--accuracy-baseline', repr(self.policy['solver_accuracy']['max_relative_error'])],
             ['actual-fp'], evidence=self.out / 'solver-accuracy/report.json', verdict='accuracy_no_regression')
         add('actual-solver-capacity', [sys.executable, ROOT / 'tools/verify_solver_capacity_m5.py',
-                                       '--out', self.out / 'actual-solver-capacity', *fp], ['actual-fp'],
+                                       '--out', self.out / 'actual-solver-capacity', *fp, *xsim], ['actual-fp'],
             evidence=self.out / 'actual-solver-capacity/report.json', verdict='capacity_recovery_passed')
         add('actual-solver-frontend-xsim', [sys.executable, ROOT / 'tools/verify_solver_frontend_xsim_m5.py',
                                             '--out', self.out / 'actual-solver-frontend-xsim', '--timeout', '1800', *fp],
@@ -559,7 +561,7 @@ class Gate:
         solver = ROOT / 'tools/verify_solver_m5.py'
         if solver.exists():
             add('generated-extraction', [sys.executable, solver, '--runtime', self.runtime,
-                                         '--extraction-only', '--out', self.out / 'generated-extraction'],
+                                         '--extraction-only', '--out', self.out / 'generated-extraction', *xsim],
                 evidence=self.out / 'generated-extraction/report.json', verdict='extraction_qualified')
         else:
             self.checks.append({'name': 'generated-extraction', 'ok': False, 'error': 'mandatory generated extraction verifier unavailable'})

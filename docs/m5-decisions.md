@@ -235,3 +235,22 @@ readiness failures.
   tracked as BUG items and fixed through the rebaseline path in the plan.
 - An optimization objective may declare `setup_wns_tolerance_ns` (finite,
   nonnegative) before measurement; without it the policy default is 0 ns.
+
+## Coverage counted over the whole cold run (2026-10-12 client date)
+
+The first parallel full gate on the keypad candidate failed the coverage rule:
+`GlobalRender_top` line coverage fell from 108/726 to 108/729. The three new
+points were the initializers of the three new `reg … = 1'b0` declarations.
+Initializers execute at time zero, during boot, so a scenario-only count (after
+frame 3) can never reach them; the baseline already showed the same artifact for
+the existing synchronizer registers. The audit and baseline now use scope `run`:
+a point is reached if either the boot or the scenario split hit it. The baseline
+was regenerated from the same native corpus without new simulation
+(`GlobalRender_top` lines 419/726; totals branch 1026/2114, line 2913/10047,
+toggle 24984/45704), records its scope, and a baseline from another scope is
+rejected. Re-auditing the candidate's existing reports gives 422/729 lines, no
+coverage loss.
+
+The same run timed out the solver-capacity XSim at its internal 180 s limit
+while other checks overlapped it; the gate now passes `--timeout 1200` to the
+XSim-based tools.

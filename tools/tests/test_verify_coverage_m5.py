@@ -116,7 +116,7 @@ class CoverageControls(unittest.TestCase):
         with self.assertRaises(ValueError):self.audit(policy=policy)
 
     def baseline(self,reached,source_sha):
-        record=G.baseline_record(self.audit()['runtimes'])
+        record=G.baseline_record(self.audit()['runtimes'],'run')
         entry=next(iter(record['instances']['native'].values()))
         entry['types']['toggle']['reached']=reached;entry['source_sha256']=source_sha
         return record
@@ -135,8 +135,20 @@ class CoverageControls(unittest.TestCase):
         self.assertEqual(self.failures(self.baseline(10,G.digest(self.source))),[])
 
     def test_new_instances_are_reported_and_missing_runtime_baseline_fails(self):
-        comparison=self.comparison({'schema_version':1,'instances':{'native':{}}})
+        comparison=self.comparison({'schema_version':1,'scope':'run','instances':{'native':{}}})
         self.assertEqual(comparison['failures'],[]);self.assertEqual(len(comparison['new']),1)
-        self.assertTrue(self.failures({'schema_version':1,'instances':{}}))
+        self.assertTrue(self.failures({'schema_version':1,'scope':'run','instances':{}}))
+
+    def test_baseline_from_another_scope_is_rejected(self):
+        baseline=self.baseline(0,'old');baseline['scope']='scenario'
+        self.assertTrue(any('scope' in f for f in self.failures(baseline)))
+
+    def test_run_scope_counts_boot_only_hits(self):
+        boot=self.directory/'boot.dat';text=boot.read_text().replace(' 0\n',' 1\n',1);boot.write_text(text)
+        self.report['artifacts']['boot']['sha256']=G.digest(boot)
+        self.report['artifacts']['boot']['summary']=PARSER.summarize(PARSER.read_points(boot),source_paths=self.report['source_paths'])
+        self.save()
+        reached=lambda scope:G.audit([self.path],self.root,POLICY,PARSER,scope)['runtimes']['native']['modules'][0]['types']['toggle']['reached']
+        self.assertEqual(reached('scenario'),0);self.assertEqual(reached('run'),1)
 
 if __name__=='__main__':unittest.main()

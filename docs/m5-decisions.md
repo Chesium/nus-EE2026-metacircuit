@@ -254,3 +254,13 @@ coverage loss.
 The same run timed out the solver-capacity XSim at its internal 180 s limit
 while other checks overlapped it; the gate now passes `--timeout 1200` to the
 XSim-based tools.
+
+## Retry the known Docker Verilator crash once (2026-10-12 client date)
+
+Plan decision D-033. Two Docker parallel gates failed `framescope-tests` with
+`%Error: Internal Error: attempted to destroy locked Thread Pool` while the native
+gate's parallel stage loaded the host; earlier M5 runs recorded the same crash
+(`framescope_docker_transient`). The gate now retries that command once, only if
+every ERROR block in its unittest output contains this signature and there is no
+FAIL block. The first log is kept as `framescope-tests.attempt1.log` and the
+check records `retried_after`. Any other failure fails on the first attempt.

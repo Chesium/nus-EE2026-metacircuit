@@ -11,7 +11,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from acceptance_m5 import (Gate, baseline_identity, cdc_findings, inventory, verification_inventory, validate_objective,
+from acceptance_m5 import (KNOWN_TOOL_CRASH, Gate, baseline_identity, cdc_findings, only_known_tool_crash, inventory, verification_inventory, validate_objective,
                            validate_qor_pair, validate_capacity_failure, validate_timing_policy)
 
 
@@ -333,6 +333,38 @@ class AcceptanceControls(unittest.TestCase):
                 gate.command('sleeper', [sys.executable, '-c', 'import time; time.sleep(30)'])
             self.assertLess(time.monotonic() - started, 15)
             self.assertFalse(gate.checks[-1]['ok'])
+
+    def unittest_log(self, *blocks):
+        sep = '=' * 70
+        body = ''.join(f'{sep}\n{kind}: test_{i} (suite.Case.test_{i})\n{"-" * 70}\n{text}\n' for i, (kind, text) in enumerate(blocks))
+        return body + f'{"-" * 70}\nRan 9 tests in 1.0s\n\nFAILED (errors=1)\n'
+
+    def test_only_known_tool_crash_classifier(self):
+        crash = 'framescope.FramescopeError: build failed:\n' + KNOWN_TOOL_CRASH + '\n'
+        self.assertTrue(only_known_tool_crash(self.unittest_log(('ERROR', crash), ('ERROR', crash))))
+        self.assertFalse(only_known_tool_crash(self.unittest_log(('ERROR', crash), ('FAIL', 'AssertionError: 1 != 2'))))
+        self.assertFalse(only_known_tool_crash(self.unittest_log(('ERROR', 'KeyError: x'))))
+        self.assertFalse(only_known_tool_crash(self.unittest_log(('FAIL', crash))))
+        self.assertFalse(only_known_tool_crash('Ran 9 tests in 1.0s\n\nOK\n'))
+
+    def test_tool_crash_retried_once_and_recorded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            gate = Gate(out, out, 'docker')
+            marker = out / 'attempted'
+            crash_log = self.unittest_log(('ERROR', KNOWN_TOOL_CRASH))
+            script = (f"import pathlib,sys\nm=pathlib.Path({str(marker)!r})\n"
+                      f"if m.exists(): sys.exit(0)\nm.touch(); sys.stderr.write({crash_log!r}); sys.exit(1)\n")
+            item = gate.command_retrying_tool_crash('framescope-tests', [sys.executable, '-c', script])
+            self.assertTrue(item['ok'])
+            self.assertEqual(item['retried_after']['signature'], KNOWN_TOOL_CRASH)
+            self.assertTrue(Path(item['retried_after']['first_log']).is_file())
+            self.assertEqual([c['name'] for c in gate.checks], ['framescope-tests'])
+            real_failure = self.unittest_log(('FAIL', 'AssertionError'))
+            item = gate.command_retrying_tool_crash('other-tests', [sys.executable, '-c',
+                f"import sys; sys.stderr.write({real_failure!r}); sys.exit(1)"])
+            self.assertFalse(item['ok'])
+            self.assertNotIn('retried_after', item)
 
     def test_changed_observer_or_runner_rejects_run_identity(self):
         with tempfile.TemporaryDirectory() as directory:

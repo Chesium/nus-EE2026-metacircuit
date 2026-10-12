@@ -20,6 +20,9 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_SHA = '475a48362f0f353104abfde654c25f7bdc60acc266c7a774ca6b256d315b540e'
 CONTRACT = ROOT / 'golden/verification/contracts/frontend-v1'
 IMAGE = 'framescope-toolchain:6501155dc903'
+# Pinned Docker Verilator 5.020 can abort a compile under heavy host load; a unittest run
+# whose only problems are this crash is retried once (D-033).
+KNOWN_TOOL_CRASH = '%Error: Internal Error: attempted to destroy locked Thread Pool'
 POLICY_SHA = 'b6c7a4a62aa828d74695f481e23d3b4c6a71056d8184d44fb506c77fff447ddc'
 
 
@@ -51,6 +54,13 @@ def baseline_identity(root, contract, supplement=None):
               if p.is_file() and p.suffix.lower() in ('.v', '.sv', '.vhd', '.mem')}
     if actual != accepted:
         raise ValueError('saved baseline captures require exact frozen RTL inventory; use full mode for a candidate')
+
+
+def only_known_tool_crash(text):
+    """True if a unittest log failed only with ERROR blocks caused by KNOWN_TOOL_CRASH."""
+    blocks = re.split(r'^={20,}$', text, flags=re.M)[1:]
+    problems = [b for b in blocks if re.match(r'\s*(ERROR|FAIL):', b)]
+    return bool(problems) and all(b.lstrip().startswith('ERROR:') and KNOWN_TOOL_CRASH in b for b in problems)
 
 
 def validate_objective(objective, baseline, candidate, baseline_capacity_verified=False):
@@ -343,6 +353,21 @@ class Gate:
             raise ValueError('pinned runtime budget exhausted or command interrupted: ' + name)
         return item
 
+    def command_retrying_tool_crash(self, name, argv, *args, **kwargs):
+        """command(), retried once if a unittest log fails only with KNOWN_TOOL_CRASH."""
+        item = self.command(name, argv, *args, **kwargs)
+        log = Path(item['log'])
+        if item['ok'] or not only_known_tool_crash(log.read_text(errors='replace')):
+            return item
+        first = log.with_name(name + '.attempt1.log')
+        log.rename(first)
+        with self.lock:
+            self.checks.remove(item)
+        retry = self.command(name, argv, *args, **kwargs)
+        retry['retried_after'] = {'signature': KNOWN_TOOL_CRASH, 'first_log': str(first),
+                                  'first_log_sha256': sha(first), 'first_exit_code': item['exit_code']}
+        return retry
+
     def run_parallel(self, tasks):
         """Run (name, fn, deps) tasks on up to self.jobs threads once their deps finish.
 
@@ -399,7 +424,7 @@ class Gate:
         self.command('golden-tests', ['npm', 'test'], ROOT / 'golden')
         self.command('golden-python-tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'golden/tools', '-p', 'test_*.py'])
         self.command('gate-and-qor-tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tools/tests'])
-        self.command('framescope-tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests'],
+        self.command_retrying_tool_crash('framescope-tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests'],
                      self.framescope, {**os.environ, 'PYTHONPATH': str(self.framescope / 'src'),
                                        'FRAMESCOPE_RUNTIME': self.runtime})
 

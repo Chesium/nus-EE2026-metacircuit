@@ -1,6 +1,6 @@
 # M5 verification handoff
 
-Updated: 2026-10-12 (client date). State: in progress, no jobs running.
+Updated: 2026-10-12 (client date). State: **M5 complete** in the declared harness scope; no jobs running.
 Previous handoffs: [2026-10-11f](m5-verification-history-20261011f.md) and the
 other `m5-verification-history-*` files.
 
@@ -56,6 +56,25 @@ design, 100% structural coverage or global formal proofs.
 
 Correctness fixes (BUG items) use the rebaseline path in the plan, not the
 optimization gate.
+
+## Final result
+
+Both final full gates passed on the M5-8 candidate, run side by side:
+native 44/44 checks in 59.5 min, Docker 43/43 in 55.9 min
+(`golden/out/m5-acceptance/m5-8-final-{native,docker}-20261012/`). The candidate,
+branch `m5-8-keypad-decode` (keypad character class registered beside its
+synchronizer, cycle-equivalent), improves setup WNS from -1.953 to -1.074 ns.
+It is **not** merged into `verification`: adopting it moves the recorded timing
+and coverage baselines and is a separate decision.
+
+## Next steps (outside M5)
+
+1. Decide whether to adopt the M5-8 candidate. If yes: merge the branch, then
+   rebaseline per the plan (QoR corrections, `qor_timing_policy.baseline` from
+   its routed report, coverage baseline via `verify_coverage_m5.py
+   --write-baseline` on a fresh native corpus).
+2. Run the CI workflow once on a self-hosted runner (INF-4 remainder).
+3. Follow-up items: TIM-1, QOR-2, BUG-1..3.
 
 ## Evidence on the current source (HEAD after this round)
 

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "milestone": "M5",
-  "status": "in_progress",
+  "status": "complete",
   "recorded_at_utc": "2026-10-11T01:34:48.037818+00:00",
   "m4_prerequisite": "docs/m4-verification.json",
   "scope": "Frozen frontend contract and settled adapters qualified; real synthesis baseline characterized; scoped invariant/actual-IP evidence added; full refactor readiness remains incomplete.",
@@ -1539,6 +1539,74 @@
       "one full-mode gate run per runtime on current source (observers, proofs, regressions, coverage, accuracy)",
       "M5-8: one bounded optimization through full mode with routed QoR and a declared objective",
       "archive final scope/results here"
+    ]
+  },
+  "completion_20261012": {
+    "scope": "Verification/observability harness for autonomous timing/resource optimization experiments (D-030..D-033); not timing closure, a defect-free design, 100% structural coverage or global formal proofs.",
+    "final_gates": {
+      "native": {
+        "report": "golden/out/m5-acceptance/m5-8-final-native-20261012/summary.json",
+        "ready": true,
+        "checks": 44,
+        "wall_minutes": 59.5,
+        "jobs": 6,
+        "verilator": "5.046"
+      },
+      "docker": {
+        "report": "golden/out/m5-acceptance/m5-8-final-docker-20261012/summary.json",
+        "ready": true,
+        "checks": 43,
+        "wall_minutes": 55.9,
+        "jobs": 6,
+        "verilator": "5.020"
+      },
+      "run_concurrently": true,
+      "tool_crash_retries": 0
+    },
+    "m5_8_candidate": {
+      "branch": "m5-8-keypad-decode",
+      "change": "keypad character class registered beside its synchronizer (cycle-equivalent)",
+      "objective": "golden/out/qor/m5-8-keypad-decode-20261012/objective.json",
+      "qor": "golden/out/qor/m5-8-keypad-decode-20261012/routed",
+      "setup_wns_ns": [
+        -1.953,
+        -1.074
+      ],
+      "tns_ns": [
+        -582.452,
+        -108.765
+      ],
+      "resources": {
+        "lut": 10103,
+        "ff": 4213,
+        "bram": 9.5,
+        "dsp": 0
+      },
+      "whs_ns": 0.012,
+      "coverage": "GlobalRender_top lines 422/729 vs baseline 419/726 (whole-run scope)",
+      "adopted_into_main_line": false
+    },
+    "sequential_reference": {
+      "docker": "golden/out/m5-acceptance/m5-8-full-docker-20261012c/summary.json",
+      "ready": true,
+      "wall_minutes": 123
+    },
+    "harness_fixes_found_by_the_runs": [
+      "asset provenance must be regenerated after GlobalRender_top/ToolbarVGA/ComponentPropertyPanel edits",
+      "Yosys moved from /tmp to a persistent cache (tools/setup_yosys_m5.sh)",
+      "per-command time limits (command_timeout_overrides)",
+      "coverage counted over the whole cold run (declaration initializers execute at boot)",
+      "XSim tool timeouts widened under parallel load",
+      "one targeted retry for the known Docker Verilator 5.020 thread-pool crash"
+    ],
+    "follow_ups": [
+      "TIM-1 timing closure",
+      "QOR-2 SolverBoard QoR and FP IP upgrade",
+      "BUG-1 epoch alias",
+      "BUG-2 ill-conditioned solver accuracy",
+      "BUG-3 corpus coverage limits",
+      "run the CI workflow on a self-hosted runner",
+      "decide whether to adopt the M5-8 candidate and rebaseline"
     ]
   }
 }
